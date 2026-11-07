@@ -1741,7 +1741,9 @@ dependencies = [
  "rbx-net",
  "rbx-physics",
  "rbx-reflection",
+ "serde_json",
  "tracing",
+ "ureq",
 ]
 
 [[package]]

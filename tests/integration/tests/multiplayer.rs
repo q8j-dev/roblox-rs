@@ -112,3 +112,28 @@ fn admin_api_reports_jobs_and_executes_scripts() {
     assert_eq!(admin.get("/v1/status")["environmentCount"], 1);
     server.stop();
 }
+
+#[test]
+fn local_web_endpoints_serve_product_info() {
+    let assets = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../assets");
+    let server = server::spawn(server::Config {
+        http: "127.0.0.1:0".parse().unwrap(),
+        asset_dirs: vec![assets],
+        ..server::Config::default()
+    })
+    .unwrap();
+    let admin = Admin::new(server.http);
+    let info = admin.get("/marketplace/productinfo?assetId=25165538");
+    assert_eq!(info["AssetId"], 25165538);
+    admin.post(
+        "/v1/jobs",
+        json!({ "job": { "id": "web", "expirationInSeconds": 60 } }),
+    );
+    let base = format!("http://{}/", server.http);
+    let r = admin.execute(
+        "web",
+        &format!("game:GetService('ContentProvider'):SetBaseUrl('{base}') return game:GetService('MarketplaceService'):GetProductInfo(25165538).AssetId"),
+    );
+    assert_eq!(r, [json!(25165538)]);
+    server.stop();
+}

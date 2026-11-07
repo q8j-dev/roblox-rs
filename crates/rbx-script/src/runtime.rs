@@ -90,6 +90,7 @@ pub struct Engine {
     pub fps: f64,
     pub jobs_stats_window: f64,
     pub threads_throttled: f64,
+    pub base_url: String,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -205,6 +206,7 @@ impl Engine {
             fps: 0.0,
             jobs_stats_window: 5.0,
             threads_throttled: 0.0,
+            base_url: crate::api::http::DEFAULT_BASE_URL.to_string(),
         }
     }
 
@@ -388,6 +390,9 @@ pub struct State {
     pub callbacks: HashMap<(InstanceId, String), RegistryKey>,
     pub pending_invokes: Vec<(InstanceId, String, Thread, Vec<Value>)>,
     pub remote: crate::api::remote::RemoteState,
+    pub http: crate::api::http::HttpState,
+    pub captures: HashMap<usize, Option<Result<MultiValue, String>>>,
+    pub capture_threads: HashMap<usize, RegistryKey>,
     pub watchdog: Arc<Mutex<Watchdog>>,
 }
 
@@ -561,6 +566,9 @@ impl ScriptRuntime {
             callbacks: HashMap::new(),
             pending_invokes: Vec::new(),
             remote: Default::default(),
+            http: Default::default(),
+            captures: HashMap::new(),
+            capture_threads: HashMap::new(),
             watchdog: Arc::new(Mutex::new(Watchdog::default())),
         });
         let wd = with_state(&lua, |s| s.watchdog.clone());
@@ -649,6 +657,67 @@ impl ScriptRuntime {
         self.execute_named(source, "Script", identity, args)
     }
 
+    pub fn execute_captured(
+        &self,
+        source: &str,
+        name: &str,
+        identity: Identity,
+        args: MultiValue,
+    ) -> Result<usize, String> {
+        let env = new_environment(&self.lua, None).map_err(|e| e.to_string())?;
+        let func = self
+            .lua
+            .load(source)
+            .set_name(format!("={name}"))
+            .set_environment(env)
+            .into_function()
+            .map_err(|e| format_error(&e))?;
+        let thread = self.lua.create_thread(func).map_err(|e| e.to_string())?;
+        let key = thread_key(&thread);
+        with_state(&self.lua, |s| {
+            s.threads.insert(
+                key,
+                ThreadInfo {
+                    script: None,
+                    identity,
+                },
+            );
+            s.captures.insert(key, None);
+        });
+        let first = resume_thread_result(&self.lua, &thread, args);
+        if thread.status() != ThreadStatus::Resumable {
+            let outcome = first.unwrap_or_else(|| Ok(MultiValue::new()));
+            with_state(&self.lua, |s| {
+                s.captures.insert(key, Some(outcome));
+            });
+        }
+        let thread_ref = self
+            .lua
+            .create_registry_value(thread)
+            .map_err(|e| e.to_string())?;
+        with_state(&self.lua, |s| s.capture_threads.insert(key, thread_ref));
+        pump(&self.lua);
+        Ok(key)
+    }
+
+    pub fn take_capture(&self, key: usize) -> Option<Result<MultiValue, String>> {
+        let done = with_state(&self.lua, |s| match s.captures.get(&key) {
+            Some(Some(_)) => s.captures.remove(&key).flatten(),
+            _ => None,
+        });
+        if done.is_some() {
+            with_state(&self.lua, |s| s.capture_threads.remove(&key));
+        }
+        done
+    }
+
+    pub fn drop_capture(&self, key: usize) {
+        with_state(&self.lua, |s| {
+            s.captures.remove(&key);
+            s.capture_threads.remove(&key);
+        });
+    }
+
     pub fn execute_named(
         &self,
         source: &str,
@@ -723,6 +792,7 @@ impl ScriptRuntime {
             self.step_physics(dt);
         }
         self.step_debris();
+        crate::api::http::poll(&self.lua);
         resume_sleepers(&self.lua);
         run_ready(&self.lua);
         pump(&self.lua);
@@ -1073,6 +1143,16 @@ pub fn resume_thread_result(
                 s.remote.replies.remove(&key),
             )
         });
+        let captured = with_state(lua, |s| s.captures.contains_key(&key));
+        if captured {
+            let outcome = match &result {
+                Ok(values) => Ok(values.clone()),
+                Err(_) => Err(error_text.clone().unwrap_or_default()),
+            };
+            with_state(lua, |s| {
+                s.captures.insert(key, Some(outcome));
+            });
+        }
         if let Some(reply) = reply {
             let outcome = match &result {
                 Ok(values) => Ok(values.clone()),

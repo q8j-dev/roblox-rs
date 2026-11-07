@@ -12,6 +12,7 @@ use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
 pub const FRAME: f64 = 1.0 / 60.0;
+const EXECUTE_TIMEOUT: Duration = Duration::from_secs(60);
 const STANDARD_SERVICES: &[&str] = &[
     "Workspace",
     "Players",
@@ -262,18 +263,30 @@ impl Job {
         })
     }
 
-    fn execute(&self, name: &str, source: &str, args: &[Json]) -> Result<Vec<Json>, String> {
+    fn execute(&mut self, name: &str, source: &str, args: &[Json]) -> Result<Vec<Json>, String> {
         let lua = &self.runtime.lua;
         let mut values = Vec::with_capacity(args.len());
         for a in args {
             values.push(json_to_lua(lua, a).map_err(|e| e.to_string())?);
         }
-        let result = self.runtime.execute_named(
+        let key = self.runtime.execute_captured(
             source,
             name,
             Identity::WebService,
             mlua::MultiValue::from_vec(values),
         )?;
+        let started = Instant::now();
+        let result = loop {
+            if let Some(r) = self.runtime.take_capture(key) {
+                break r?;
+            }
+            if started.elapsed() > EXECUTE_TIMEOUT {
+                self.runtime.drop_capture(key);
+                return Err("script did not finish in time".into());
+            }
+            self.frame();
+            std::thread::sleep(Duration::from_secs_f64(FRAME));
+        };
         let mut out = Vec::new();
         for v in result.into_vec() {
             let rv = rbx_script::api::remote::to_remote(&v, 0).map_err(|e| e.to_string())?;
@@ -315,6 +328,17 @@ impl Job {
                 }
                 NetworkRequest::Connect { .. } | NetworkRequest::Disconnect => {}
             }
+        }
+    }
+
+    fn frame(&mut self) {
+        self.runtime.step(FRAME);
+        self.handle_network();
+        if let Some((net, quic)) = &mut self.net {
+            while let Some(conn) = quic.accept() {
+                net.accept(Box::new(conn));
+            }
+            net.tick(&self.runtime);
         }
     }
 
@@ -392,14 +416,7 @@ impl Job {
                 self.shutdown(&info);
                 return;
             }
-            self.runtime.step(FRAME);
-            self.handle_network();
-            if let Some((net, quic)) = &mut self.net {
-                while let Some(conn) = quic.accept() {
-                    net.accept(Box::new(conn));
-                }
-                net.tick(&self.runtime);
-            }
+            self.frame();
             self.update_info(&info, &expires);
             next += frame;
             let now = Instant::now();

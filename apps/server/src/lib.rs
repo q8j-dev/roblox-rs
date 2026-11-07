@@ -387,6 +387,39 @@ async fn asset(State(s): State<Shared>, Query(q): Query<AssetQuery>) -> Result<R
     Err(not_found("asset"))
 }
 
+#[derive(Deserialize)]
+pub struct ProductQuery {
+    #[serde(
+        alias = "assetId",
+        alias = "productId",
+        alias = "assetid",
+        alias = "productid"
+    )]
+    pub id: u64,
+}
+
+fn product_fixture(s: &AppState, dir: &str, id: u64) -> Result<Response, ApiError> {
+    s.config
+        .asset_dirs
+        .iter()
+        .find_map(|d| file_response(&d.join(dir).join(format!("{id}.json"))))
+        .ok_or_else(|| not_found("product"))
+}
+
+async fn product_info(
+    State(s): State<Shared>,
+    Query(q): Query<ProductQuery>,
+) -> Result<Response, ApiError> {
+    product_fixture(&s, "productinfo", q.id)
+}
+
+async fn product_details(
+    State(s): State<Shared>,
+    Query(q): Query<ProductQuery>,
+) -> Result<Response, ApiError> {
+    product_fixture(&s, "productdetails", q.id)
+}
+
 async fn content(State(s): State<Shared>, Path(path): Path<String>) -> Result<Response, ApiError> {
     let dir = s
         .config
@@ -432,6 +465,8 @@ pub fn router(config: Config) -> Router {
         .route_layer(middleware::from_fn_with_state(state.clone(), auth));
     let public = Router::new()
         .route("/asset", get(asset))
+        .route("/marketplace/productinfo", get(product_info))
+        .route("/marketplace/productDetails", get(product_details))
         .route("/content/{*path}", get(content));
     admin.merge(public).with_state(state)
 }

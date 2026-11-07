@@ -1,5 +1,6 @@
 pub mod animation;
 pub mod bindables;
+pub mod http;
 pub mod humanoid;
 pub mod instance;
 pub mod misc;
@@ -62,6 +63,7 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     remote::register(&mut r);
     network::register(&mut r);
     stats::register(&mut r);
+    http::register(&mut r);
     r
 });
 

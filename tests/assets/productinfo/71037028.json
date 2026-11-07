@@ -1,0 +1,25 @@
+{
+  "AssetId": 71037028,
+  "ProductId": 1001,
+  "Name": "Test asset 71037028",
+  "Description": "Local fixture for the MarketplaceService test place",
+  "AssetTypeId": 8,
+  "Creator": {
+    "Id": 1,
+    "Name": "Test"
+  },
+  "IconImageAssetId": 0,
+  "Created": "2016-01-01T00:00:00Z",
+  "Updated": "2016-01-01T00:00:00Z",
+  "PriceInRobux": null,
+  "PriceInTickets": null,
+  "Sales": 0,
+  "IsNew": false,
+  "IsForSale": false,
+  "IsPublicDomain": false,
+  "IsLimited": false,
+  "IsLimitedUnique": false,
+  "Remaining": null,
+  "MinimumMembershipLevel": 0,
+  "ContentRatingTypeId": 0
+}

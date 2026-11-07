@@ -628,6 +628,7 @@ dependencies = [
  "rbx-dom",
  "rbx-format",
  "rbx-math",
+ "rbx-physics",
  "rbx-reflection",
  "tracing",
 ]

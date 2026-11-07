@@ -99,6 +99,34 @@ fn build(class: &'static str) -> ClassLayout {
             aliases.insert(name, t.name.as_str());
         }
     }
+    for p in &all {
+        let name = p.name.as_str();
+        if CORE_PROPERTIES.contains(&name)
+            || aliases.contains_key(name)
+            || computed.contains(name)
+            || p.serialized()
+        {
+            continue;
+        }
+        let Some(getter) = p
+            .getter
+            .as_deref()
+            .filter(|g| !g.is_empty() && *g != "NULL")
+        else {
+            continue;
+        };
+        let twin = all.iter().find(|q| {
+            q.name != p.name
+                && q.serialized()
+                && q.class == p.class
+                && q.getter.as_deref() == Some(getter)
+                && same_type(&q.ty, &p.ty)
+                && !aliases.contains_key(q.name.as_str())
+        });
+        if let Some(t) = twin {
+            aliases.insert(name, t.name.as_str());
+        }
+    }
     let resolve = |mut n: &'static str, aliases: &HashMap<&'static str, &'static str>| {
         let mut guard = 0;
         while let Some(t) = aliases.get(n) {

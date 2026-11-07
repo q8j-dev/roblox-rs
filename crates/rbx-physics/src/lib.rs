@@ -2,6 +2,7 @@
 
 pub mod broadphase;
 pub mod hooks;
+pub mod humanoid;
 pub mod joins;
 pub mod math;
 pub mod queries;

@@ -295,6 +295,7 @@ pub struct Assembly {
     pub torque: Vec3,
     pub radius: f32,
     pub moved: bool,
+    pub kinematic: bool,
 }
 
 impl Assembly {
@@ -348,6 +349,7 @@ pub struct StepEvents {
     pub fallen: Vec<InstanceId>,
     pub reached_target: Vec<InstanceId>,
     pub broken_joints: Vec<InstanceId>,
+    pub humanoid: Vec<(InstanceId, crate::humanoid::HumanoidEvent)>,
 }
 
 pub struct PhysicsWorld {
@@ -369,6 +371,11 @@ pub struct PhysicsWorld {
     pub grid: Grid,
     pub grid_dirty: bool,
     pub mover_wake: HashMap<InstanceId, (Vec3, Vec3)>,
+    pub humanoids: HashMap<InstanceId, crate::humanoid::HumanoidSim>,
+    pub humanoid_events: Vec<(InstanceId, crate::humanoid::HumanoidEvent)>,
+    pub dm_writes: Vec<crate::humanoid::DmWrite>,
+    pub accoutrement_parts: HashSet<InstanceId>,
+    pub local_character: Option<InstanceId>,
     cursor: Option<EventCursor>,
     pending_events: StepEvents,
 }
@@ -455,11 +462,25 @@ pub fn part_size(dm: &DataModel, id: InstanceId) -> Vec3 {
         .unwrap_or_else(|| get_vec3(dm, id, "Size"))
 }
 
-fn sort_size(size: Vec3) -> u64 {
+fn sort_size(size: Vec3, multiplier: u64) -> u64 {
     let mut s = [size.x, size.y, size.z];
     s.sort_by(|a, b| b.total_cmp(a));
     let planar = s[0] * s[1];
-    (planar * 50.0).floor().max(0.0) as u64 + 1
+    (planar * 50.0).floor().max(0.0) as u64 * multiplier + 1
+}
+
+fn size_multiplier(dm: &DataModel, id: InstanceId) -> u64 {
+    if matches!(
+        dm.class_of(id),
+        Some("Seat" | "VehicleSeat" | "SkateboardPlatform")
+    ) {
+        return 20;
+    }
+    match dm.name_of(id) {
+        "HumanoidRootPart" => 10,
+        "Torso" => 5,
+        _ => 1,
+    }
 }
 
 impl PhysicsWorld {
@@ -483,6 +504,11 @@ impl PhysicsWorld {
             grid: Grid::new(16.0),
             grid_dirty: true,
             mover_wake: HashMap::new(),
+            humanoids: HashMap::new(),
+            humanoid_events: Vec::new(),
+            dm_writes: Vec::new(),
+            accoutrement_parts: HashSet::new(),
+            local_character: None,
             cursor: None,
             pending_events: StepEvents::default(),
         }
@@ -593,6 +619,7 @@ impl PhysicsWorld {
                 self.topology_dirty = true;
             }
             self.movers.remove(&id);
+            self.humanoids.remove(&id);
             return;
         }
         let class = dm.class_of(id).unwrap_or("");
@@ -606,6 +633,8 @@ impl PhysicsWorld {
             self.upsert_joint(dm, id, kind);
         } else if dm.is_a(id, "BodyMover") {
             self.upsert_mover(dm, id);
+        } else if class == "Humanoid" {
+            self.upsert_humanoid(dm, id);
         }
     }
 
@@ -826,7 +855,7 @@ impl PhysicsWorld {
             .compute_aabb(&to_pose(&(cframe * shape.local)));
         Part {
             id,
-            sort_size: sort_size(size),
+            sort_size: sort_size(size, size_multiplier(dm, id)),
             shape,
             cframe,
             anchored: dm.get_bool(id, "Anchored"),
@@ -994,6 +1023,30 @@ impl PhysicsWorld {
         }
         if self.movers.contains_key(&id) {
             self.upsert_mover(dm, id);
+        }
+        if let Some(h) = self.humanoids.get_mut(&id) {
+            match prop {
+                "WalkToPoint" => {
+                    h.set_walk_mode(true);
+                    h.move_direction = Vec3::ZERO;
+                }
+                "WalkToPart" => {
+                    let w = h.is_walking;
+                    h.set_walk_mode(w);
+                }
+                "WalkDirection" => {
+                    let v = dm
+                        .get(id, "WalkDirection")
+                        .ok()
+                        .and_then(|v| v.as_vec3())
+                        .unwrap_or(Vec3::ZERO);
+                    if v != Vec3::ZERO {
+                        h.is_walking = false;
+                        h.move_direction = Vec3::ZERO;
+                    }
+                }
+                _ => {}
+            }
         }
     }
 
@@ -1209,6 +1262,7 @@ impl PhysicsWorld {
                 torque: Vec3::ZERO,
                 radius: 0.0,
                 moved: true,
+                kinematic: false,
             });
         }
         for (i, c) in comp.iter().enumerate() {
@@ -1331,7 +1385,9 @@ impl PhysicsWorld {
     }
 
     pub fn take_events(&mut self) -> StepEvents {
-        std::mem::take(&mut self.pending_events)
+        let mut e = std::mem::take(&mut self.pending_events);
+        e.humanoid = std::mem::take(&mut self.humanoid_events);
+        e
     }
 
     pub(crate) fn events_mut(&mut self) -> &mut StepEvents {
@@ -1339,6 +1395,7 @@ impl PhysicsWorld {
     }
 
     pub fn write_back(&mut self, dm: &mut DataModel) {
+        self.apply_dm_writes(dm);
         for a in 0..self.assemblies.len() {
             if !self.assemblies[a].moved {
                 continue;

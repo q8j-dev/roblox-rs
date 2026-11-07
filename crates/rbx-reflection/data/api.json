@@ -1776,6 +1776,16 @@
     {
      "deprecated_by": null,
      "file": "App/v8datamodel/PartInstance.cpp",
+     "ident": "desc_getMass",
+     "kind": "CustomBoundFuncDesc",
+     "name": "GetMass",
+     "params": [],
+     "return": "float",
+     "security": "None"
+    },
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/PartInstance.cpp",
      "ident": "desc_getNetOwner",
      "kind": "BoundFuncDesc",
      "name": "GetNetworkOwner",
@@ -1898,6 +1908,16 @@
      "name": "breakJoints",
      "params": [],
      "return": "void",
+     "security": "None"
+    },
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/PartInstance.cpp",
+     "ident": "desc_getMassOld",
+     "kind": "CustomBoundFuncDesc",
+     "name": "getMass",
+     "params": [],
+     "return": "float",
      "security": "None"
     },
     {
@@ -2946,7 +2966,24 @@
    "yield_functions": []
   },
   {
-   "callbacks": [],
+   "callbacks": [
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/Bindable.cpp",
+     "ident": "callback_OnInvoke",
+     "kind": "BoundAsyncCallbackDesc",
+     "name": "OnInvoke",
+     "params": [
+      {
+       "default": "&BindableFunction::processQueue",
+       "name": "arguments",
+       "type": "Tuple"
+      }
+     ],
+     "return": "Tuple",
+     "security": "None"
+    }
+   ],
    "cpp": "BindableFunction",
    "creatable": true,
    "events": [],
@@ -6179,7 +6216,18 @@
    "yield_functions": []
   },
   {
-   "callbacks": [],
+   "callbacks": [
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/DataModel.cpp",
+     "ident": "callback_onClose",
+     "kind": "BoundAsyncCallbackDesc",
+     "name": "OnClose",
+     "params": [],
+     "return": "Tuple",
+     "security": "None"
+    }
+   ],
    "cpp": "DataModel",
    "creatable": false,
    "events": [
@@ -11594,7 +11642,29 @@
    "yield_functions": []
   },
   {
-   "callbacks": [],
+   "callbacks": [
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/GuiService.cpp",
+     "ident": "callback_notificationCallback",
+     "kind": "BoundAsyncCallbackDesc",
+     "name": "SendCoreUiNotification",
+     "params": [
+      {
+       "default": null,
+       "name": "title",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "text",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    }
+   ],
    "cpp": "GuiService",
    "creatable": false,
    "events": [
@@ -16982,7 +17052,24 @@
    "yield_functions": []
   },
   {
-   "callbacks": [],
+   "callbacks": [
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/MarketplaceService.cpp",
+     "ident": "callback_ProcessReceipt",
+     "kind": "BoundAsyncCallbackDesc",
+     "name": "ProcessReceipt",
+     "params": [
+      {
+       "default": "&MarketplaceService::processReceiptsCallbackChanged",
+       "name": "receiptInfo",
+       "type": "Dictionary"
+      }
+     ],
+     "return": "Enum:ProductPurchaseDecision",
+     "security": "None"
+    }
+   ],
    "cpp": "MarketplaceService",
    "creatable": true,
    "events": [
@@ -24647,6 +24734,16 @@
     {
      "deprecated_by": null,
      "file": "App/v8datamodel/PluginManager.cpp",
+     "ident": "func_createPlugin",
+     "kind": "CustomBoundFuncDesc",
+     "name": "CreatePlugin",
+     "params": [],
+     "return": "Instance:Instance",
+     "security": "Plugin"
+    },
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/PluginManager.cpp",
      "ident": "func_exportPlace",
      "kind": "BoundFuncDesc",
      "name": "ExportPlace",
@@ -25470,7 +25567,45 @@
    "yield_functions": []
   },
   {
-   "callbacks": [],
+   "callbacks": [
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/Remote.cpp",
+     "ident": "callback_OnClientInvoke",
+     "kind": "BoundAsyncCallbackDesc",
+     "name": "OnClientInvoke",
+     "params": [
+      {
+       "default": "&RemoteFunction::onClientInvokeChanged",
+       "name": "arguments",
+       "type": "Tuple"
+      }
+     ],
+     "return": "Tuple",
+     "security": "None"
+    },
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/Remote.cpp",
+     "ident": "callback_OnServerInvoke",
+     "kind": "BoundAsyncCallbackDesc",
+     "name": "OnServerInvoke",
+     "params": [
+      {
+       "default": null,
+       "name": "player",
+       "type": "Instance:Instance"
+      },
+      {
+       "default": "&RemoteFunction::onServerInvokeChanged",
+       "name": "arguments",
+       "type": "Tuple"
+      }
+     ],
+     "return": "Tuple",
+     "security": "None"
+    }
+   ],
    "cpp": "RemoteFunction",
    "creatable": true,
    "events": [
@@ -31839,6 +31974,27 @@
     {
      "deprecated_by": null,
      "file": "App/v8datamodel/MegaCluster.cpp",
+     "ident": "func_readVoxels",
+     "kind": "CustomBoundFuncDesc",
+     "name": "ReadVoxels",
+     "params": [
+      {
+       "default": null,
+       "name": "region",
+       "type": "Region3"
+      },
+      {
+       "default": null,
+       "name": "resolution",
+       "type": "float"
+      }
+     ],
+     "return": "Tuple",
+     "security": "None"
+    },
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/MegaCluster.cpp",
      "ident": "func_setCell",
      "kind": "BoundFuncDesc",
      "name": "SetCell",
@@ -31990,6 +32146,37 @@
       }
      ],
      "return": "Vector3",
+     "security": "None"
+    },
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/MegaCluster.cpp",
+     "ident": "func_writeVoxels",
+     "kind": "CustomBoundFuncDesc",
+     "name": "WriteVoxels",
+     "params": [
+      {
+       "default": null,
+       "name": "region",
+       "type": "Region3"
+      },
+      {
+       "default": null,
+       "name": "resolution",
+       "type": "float"
+      },
+      {
+       "default": null,
+       "name": "materials",
+       "type": "Array"
+      },
+      {
+       "default": null,
+       "name": "occupancy",
+       "type": "Array"
+      }
+     ],
+     "return": "void",
      "security": "None"
     }
    ],

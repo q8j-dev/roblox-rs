@@ -25,7 +25,9 @@ fn main() {
     let mut by_dir: BTreeMap<String, (usize, usize, usize)> = BTreeMap::new();
     for f in &files {
         let Ok(data) = std::fs::read(f) else { continue };
-        let Ok(tree) = rbx_format::read(&data) else { continue };
+        let Ok(tree) = rbx_format::read(&data) else {
+            continue;
+        };
         let ts = tree.instances.iter().position(|i| i.class == "TestService");
         let has_ts_scripts = ts.is_some_and(|t| {
             tree.instances[t]
@@ -53,5 +55,8 @@ fn main() {
         total.1 += t;
         total.2 += s;
     }
-    println!("{:4} {:4} {:4}  total (places, with TestService, with test scripts)", total.0, total.1, total.2);
+    println!(
+        "{:4} {:4} {:4}  total (places, with TestService, with test scripts)",
+        total.0, total.1, total.2
+    );
 }

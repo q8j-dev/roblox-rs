@@ -1,0 +1,5352 @@
+{
+ "AccessoriesAndAttachments": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ActionStationDebounceTime": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "2"
+ },
+ "AdColonyAppId": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "app02d1db3451cc4b6b97"
+ },
+ "AdColonyPercentage": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "100"
+ },
+ "AdColonyZoneId": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "vz073fd9a8cf0c447cbc"
+ },
+ "AdornRenderStats": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "AdornVB": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "AdornableLifetime": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "AllowClientFallback": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "AllowHideHudShortcut": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "AllowHideHudShortcutDefault": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "AllowInsertFreeModels": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "AnalyticsLog": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "AnalyzerGroupUIEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "Android": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "6"
+ },
+ "AndroidInfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "AnimationAllowProdUrls": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "AnimationEasingStylesEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "AnimationFailedToLoadContext": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "AnimationIdIsContentPropertyItem": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "ApiCapitalizationChanges": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "AssertOnConfigurationReportToGA": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "Asserts": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "AssetTypeHeaderForSounds": {
+  "kind": "String",
+  "dynamic": false,
+  "default": ""
+ },
+ "AssetUrlPiece": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "/Asset/?id="
+ },
+ "AssetVersionUrlPiece": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "/Asset/?assetversionid="
+ },
+ "AssetVersionsUrl": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "/assets/%i/versions?placeId=%i"
+ },
+ "AutoSave": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "BackTabInputInStudio": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "BadLogInfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "BadLogMask": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "BadTypeOnDelayErrorEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "BadTypeOnSpawnErrorEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "BallBlockNarrowphaseFixEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "BaseSetsUrlPiece": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "/Game/Tools/InsertAsset.ashx?nsets=10&type=base"
+ },
+ "BillboardGuiVR": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "BootstrapperVersionNumber": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "51261"
+ },
+ "BrowserActivity": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "BulletContactBreakOrthogonalThresholdActivatePercent": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "200"
+ },
+ "BulletContactBreakOrthogonalThresholdPercent": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "200"
+ },
+ "BulletContactBreakThresholdPercent": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "200"
+ },
+ "CLI10590_FixConversionDialog": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "COMCalls": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "CSGDelayParentingOperationToEnd": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CSGExportFailure": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CSGFixForNoChildData": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "CSGLoadBlocking": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CSGLoadFromCDN": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CSGMeshColorToolsEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CSGNewTriangulateFallBack": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "CSGPhysicsLevelOfDetailEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CSGRemoveScriptScaleRestriction": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CSGUnionsSizeShouldNeverBe000": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CSGVoxelizerFadeRadius": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "300"
+ },
+ "CacheModelExtents": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CachedPoseInitialized": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CameraInterpolateMethodEnhancement": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "CameraVR": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "CancelPendingTextureLoads": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "CardboardVR": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "ChangeHistoryService": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "CheckForHeadHit": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CheckMarketplaceAvailable": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CheckSleepOptimization": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CheckValidSessionInterval": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "60"
+ },
+ "ClampRunSignalMinSpeed": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CleanMutexHttp": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "CleanUpInterpolationTimestamps": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CleariOSAppStateOnTerminate": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "ClientABTestingEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "ClientExternalBrowserUserAgent": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "Roblox/WinInet"
+ },
+ "ClientInstanceQuotaCap": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10000"
+ },
+ "ClientInstanceQuotaInitial": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "2000"
+ },
+ "ClientSettings": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "CloseDataModel": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "CloseStatesBeforeChildRemoval": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CloudEditCheckClientPresent": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CloudEditDisablePlayerDestroy": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CloudEditGARespectsThrottling": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CloudEditRemoveScriptLockOnDocClose": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CloudEditSupportPlayersKickAndShutdown": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "CollectionUrlPiece": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "/Game/Tools/InsertAsset.ashx?sid="
+ },
+ "ConstructModerationFilterTextParamsAndHeadersUseLegacyFilterParams": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "ContactManagerOptimizedQueryExtents": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ContentProviderCleanup": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ContentProviderHttpCaching": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ContentProviderRequests": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ContentProviderThreadPoolSize": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "16"
+ },
+ "ConvertMyPlaceNameInXboxApp": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "CopyArrayReferences": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "CoreScripts": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "Crash": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "CrashReporterInit": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "CreatePlacePerMinute": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5"
+ },
+ "CreatePlacePerPlayerPerMinute": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "CreatePlayerGuiLocal": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CustomEmitterInstanceEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CustomEmitterLuaTypesEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CustomEmitterRenderEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "CyclicExecutiveForServerTweaks": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CyclicExecutiveThrottling": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "CyclicExecutiveThrottlingCancelWorldStepAccum": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "CyclicExecutiveTiming": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "CyclicExecutiveWorldSteps": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "CylinderSurfaceNormalHitFix": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DXVideoMemory": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "4"
+ },
+ "DataModelJobs": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "2"
+ },
+ "DataModelProcessHttpRequestResponseOnLockUseSubmitTask": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "DataStore": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "DataStoreAnalyticsReportEveryNSeconds": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "60"
+ },
+ "DataStoreBudget": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "DataStoreFetchFrequenceInSeconds": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "30"
+ },
+ "DataStoreFixedRequestLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "60"
+ },
+ "DataStoreInitialBudget": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "DataStoreJobFrequencyInSeconds": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "DataStoreKeyLengthLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "50"
+ },
+ "DataStoreMaxBudgetMultiplier": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "DataStoreMaxKeysToFetch": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "DataStoreMaxPageSize": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "DataStoreMaxThrottledQueue": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "30"
+ },
+ "DataStoreMaxValueSize": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "64*1024"
+ },
+ "DataStoreOrderedSetFixedRequestLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "30"
+ },
+ "DataStoreOrderedSetInitialBudget": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "50"
+ },
+ "DataStoreOrderedSetPerPlayerRequestLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5"
+ },
+ "DataStorePerPlayerRequestLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "DataStoreRefetchFixedRequestLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "30"
+ },
+ "DataStoreRefetchPerPlayerRequestLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5"
+ },
+ "DataStoreSameKeyPerMinute": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "DataStoreSortedFixedRequestLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5"
+ },
+ "DataStoreSortedInitialBudget": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "DataStoreSortedPerPlayerRequestLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "2"
+ },
+ "DataStoreTouchTimeoutInSeconds": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5"
+ },
+ "DebugAdornsDisabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugAnalyticsSendUserId": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "DebugBreakOnFMODErrors": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "DebugCrashEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "DebugCrashOnFailToLoadClientSettings": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DebugD3D11DebugMode": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugDisableLogServiceExecuteScript": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DebugDisableTimeoutDisconnect": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DebugDisplayFPS": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugForceRegenerateSchemaBitStream": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugGraphicsCrashOnLeaks": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "DebugGraphicsD3D9ForceFFP": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugGraphicsD3D9ForceSWVP": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugGraphicsGL": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugHttpAsyncCallsForStatsReporting": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "DebugHumanoidRendering": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugLocalRccServerConnection": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugLogProcessCharacterRequestTime": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DebugLogStaleInstanceCacheEntry": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DebugMovementPathNumTotalWayPoint": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1000"
+ },
+ "DebugPhysicsSenderLogCacheMissToGA": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DebugProtocolSynchronization": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugRenderDownloadAssets": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugRenderVRHUD": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugSSAOForce": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugScriptAnalyzer": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugSmoothTerrainRenderFixedLOD": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugTaskSchedulerProfiling": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DebugUnitDynamicFlag": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "DebugUseDefaultGlobalSettings": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DeferredVoxelUpdates": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "Dep": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "DeviceLost": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "DirectX11Enable": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DirectXEnable": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DisableBackendInsertConnection": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DisableGlobalSettingsParentChange": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "DisableInsertServiceForTeamCreate": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DisableInvalidateOnUnbind": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "DisablePlaceAuthenticationPoll": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DisplayTextBoxTextWhileTypingMobile": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DistanceMetricP1": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "DoNotCheckCanCloudEditWhenNotLoggedIn": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "DoNotCleanCSGDictionaryOnPublishInCloudEdit": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "DontOpenWikiOnClient": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DontProcessMouseEventsForGuiTarget": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DontReorderScreenGuisWhenDescendantRemoving": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DontSwallowInputForStudioShortcuts": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DontUseInsertServiceOnAnimLoad": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "DoubleCheckPurchase": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "DragProfile": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "DraggerInfiniteRecursionFix": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "DraggerMaxMovePercent": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "DraggerMaxMoveSteps": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10000"
+ },
+ "DraggerUsesNewPartOnDuplicate": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "Durango3DBackground": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "ElasticEasingUseTwoPi": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ElevatedPhysicsFPSReportThresholdTenths": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "610"
+ },
+ "ElseAutoIndentFix": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "Enable2edHumanoidDistanceLogging": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableCSGScripting": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "EnableClimbingDirection": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableFacebookConnection": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "EnableFacebookLoginMaster": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableGooglePlusConnection": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableHipHeight": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableLoginLogoutSignupWithApi": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableLuaFollowers": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "EnableMotionAnalytics": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableNativeGamesPage": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableNativeProfilePage": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableNativeSearchGameResults": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableNativeSearchPeopleResults": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableParticleDrag": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnablePhysicalPropertiesByDefault": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "EnablePinchToZoomOnSponsored": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "EnableSessionLogin": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableSetCoreTopbarEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "EnableShowStatsLua": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableTwitterConnection": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableVideoAds": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "EnableWebKit": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "EnableiOSSettingsLeave": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "EnrolledVariationGuestFlavorText": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "2"
+ },
+ "EnrolledVariationMobileGuestMode": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "2"
+ },
+ "ErrorOnFailedToLoadAnim": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ExpireMarketPlaceServiceCacheSeconds": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "60"
+ },
+ "ExplicitlyAssignDefaultPropVal": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "Explorer": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ExtendedCrashInfluxReporting": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ExternalHttpRequestSizeLimitKB": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1024"
+ },
+ "ExternalHttpResponseSizeLimitKB": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "4096"
+ },
+ "ExternalHttpResponseTimeoutMillis": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "30000"
+ },
+ "FMOD": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "FMODSoundChannels": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "100"
+ },
+ "FRM": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "FRMRecomputeDistanceFrameDelay": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "100"
+ },
+ "FWLifetime": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "FWUpdate": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "FastClusterUpdateWaitingBudgetMs": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "4"
+ },
+ "FileSystemGetCacheDirectoryLikeAndroid": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FilterAllPlayerPropChanges": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FilterDoublePass": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "FilterInvalidWhisper": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "FilterKickMessage": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FilterSinglePass": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "FilteringEnabledDialogFix": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FirePlayerAddedAndPlayerRemovingOnClient": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FixAnchoredSeatingPosition": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FixBulletGJKOptimization": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "FixBulletGJKOptimization2": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "FixCameraTargetStudio": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "FixClippedScrollingFrameNavigation": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "FixColorSettingsCancel": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "FixFallenPartsNotDeleted": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FixGlowingCSG": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "FixJumpGracePeriod": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "FixMatrixToAxisAngle": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FixMeshOffset": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "FixRotatedHorizontalScrollBar": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FixSeatingWhileSitting": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FixShapeChangeBug": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FixSlice9Scale": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "FixSlowLadderClimb": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FixTouchEndedReporting": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FixYieldThrottling": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FixedSitFirstPersonMove": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "FlyCamOnRenderStep": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "FontSizePadding": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1"
+ },
+ "ForceRetail": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "ForceWangTiles": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "FormFactorDeprecated": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "FreeDecalUrlPiece": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "/Game/Tools/InsertAsset.ashx?type=fd&rs=21&q="
+ },
+ "FreeModelUrlPiece": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "/Game/Tools/InsertAsset.ashx?type=fm&rs=21&q="
+ },
+ "FriendsOnlineUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "/my/friendsonline"
+ },
+ "FullRenderObjects": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "FullWindowMessages": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "FullscreenRefocusingFix": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "G3DQuatConstructorFix": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "GASendInsertRequestFail": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "GUIZFighterGPU": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "GameExplorerCopyId": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GameExplorerCopyPath": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GameExplorerUseV2AliasEndpoint": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GamePassServicePlayerHasPassUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "Game/GamePass/GamePassHandler.ashx?Action=HasPass&UserID=%d&PassID=%d"
+ },
+ "GamePerfMonitorPercentage": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2"
+ },
+ "GamePerfMonitorReportTimer": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "10"
+ },
+ "GameViewItemCap": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "200"
+ },
+ "GamepadCursorChanges": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GearVR": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GenerateOutOfMemoryReportIfBelowMB": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "GetCharacterAppearanceEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "GetFocusedTextBoxEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "GetFriendsUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "%susers/%i/friends"
+ },
+ "GetGlobalDataStorePcallFix": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "GetGroupsAsyncEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "GetGroupsUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "%susers/%i/groups"
+ },
+ "GetLastestAssetVersionEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "GetLocalTeleportData": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "GetUserIdUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "users/get-by-username?username=%s"
+ },
+ "GetUserNameUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "users/%i"
+ },
+ "GfxClusters": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "2"
+ },
+ "GfxClustersFull": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "GlowEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GoldenHashes": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "GoogleAnalyticsTracking": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "GoogleAnalyticsTrackingEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GoogleVideoAdUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": ""
+ },
+ "Graphics": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "GraphicsDebugMarkersEnable": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GraphicsGL3": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GraphicsGLReduceLatency": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GraphicsGLUseDiscard": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GraphicsReportingInitErrorsToGAEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "GraphicsTextureCommitChanges": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "GroupAlliesUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "%sgroups/%i/allies"
+ },
+ "GroupEnemiesUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "%sgroups/%i/enemies"
+ },
+ "GroupInfoUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "%sgroups/%i"
+ },
+ "GuiTargetLifetime": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "HangDetection": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "HardwareMouse": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "2"
+ },
+ "HashConfigP1": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "HashConfigP2": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "HashConfigP7": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "HashConfigP9": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "HeartBeatCanRunTwiceFor30Hz": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "HeartBeatFailure": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "Http": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "HttpCacheCleanBasedOnMemory": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "HttpCacheCleanIfGBLessThan": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5"
+ },
+ "HttpCacheCleanMaxFilesToKeep": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1500"
+ },
+ "HttpCacheCleanMinFilesRequired": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "3000"
+ },
+ "HttpCacheSendStatsEveryXSeconds": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "60"
+ },
+ "HttpConnectDefaultTimeoutMillis": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "60000"
+ },
+ "HttpConnectExtendedTimeoutMillis": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "600000"
+ },
+ "HttpCurlDeepErrorReportingCount": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "HttpCurlDomainTrimmingWithBaseURL": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "HttpCurlProxyHostAndPort": {
+  "kind": "String",
+  "dynamic": true,
+  "default": ""
+ },
+ "HttpDataSendDefaultTimeoutMillis": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "60000"
+ },
+ "HttpDataSendExtendedTimeoutMillis": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "600000"
+ },
+ "HttpGAFailureReportPercent": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "HttpInfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "HttpInfluxPassword": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "te$tu$3r"
+ },
+ "HttpInfluxURL": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "https:\nDYNAMIC_FASTSTRINGVARIABLE(HttpInfluxDatabase, \"Default"
+ },
+ "HttpInfluxUser": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "roblox"
+ },
+ "HttpMaxRedirects": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "HttpQueue": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "HttpRBXEventFailureReportHundredthsPercent": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "HttpRbxApiBudget": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "HttpRbxApiClientPerMinuteRequestLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "300"
+ },
+ "HttpRbxApiJobFrequencyInSeconds": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "HttpRbxApiMaxBudgetMultiplier": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "HttpRbxApiMaxRetryBudgetPerMinute": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "500"
+ },
+ "HttpRbxApiMaxRetryCount": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "HttpRbxApiMaxRetryQueueSize": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "500"
+ },
+ "HttpRbxApiMaxSyncRetries": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "3"
+ },
+ "HttpRbxApiMaxThrottledQueueSize": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "50"
+ },
+ "HttpRbxApiRequestsPerMinutePerPlayerInServerLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "HttpRbxApiRequestsPerMinuteServerLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "300"
+ },
+ "HttpRbxApiSyncRetryWaitTimeMSec": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "500"
+ },
+ "HttpResponseDefaultTimeoutMillis": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "60000"
+ },
+ "HttpResponseExtendedTimeoutMillis": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "600000"
+ },
+ "HttpSendDefaultTimeoutMillis": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "60000"
+ },
+ "HttpSendExtendedTimeoutMillis": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "600000"
+ },
+ "HttpSendStatsEveryXSeconds": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "60"
+ },
+ "HttpTrace": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "HttpZeroLatencyCaching": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "HumanoidCheckForNegatives": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "HumanoidCookieRecursive": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "HumanoidFeetIsPlastic": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "HumanoidFloorManualFrictionVelocityMultValue": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "HumanoidFloorPVUpdateSignal": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "HumanoidFloorProcess": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "HumanoidFloorTeleportWeightValue": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "50"
+ },
+ "HumanoidRenderBillboard": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "HumanoidRenderBillboardVR": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "ISteppedLifetime": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "IgnoreBlankDataOnStore": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "IgnoreDifferentPlayer": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "IgnoreInvalidTicket": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "ImageFailedToLoadContext": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "InferredCrashReportingHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "InfluxDb09Enabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "InfluxSendInsertRequestFail": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "InsertServiceLoadModelErrorDoNotCreateEmpty": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "InsertServiceLoadModelErrorNoLuaExceptionReturnNull": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "InsertUnderFolder": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "InstanceTreeManipulation": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "InterpolationBufferMaxSize": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "8"
+ },
+ "InterpolationBufferMinSize": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "2"
+ },
+ "InterpolationDelayFactorTenths": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "15"
+ },
+ "InterpolationMaxDelayMSec": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "500"
+ },
+ "IntersectingOthersCallsAllowedOnSpawn": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "5"
+ },
+ "JNIEnvScopeOptimization": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "JoinDataBonus": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "JoinDataCompressionLevel": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "JoinInfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "JoinSendExtraItemCount": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "JointInstanceLifetime": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "JointLifetime": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "KernelStats": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "KickUsersWhenTheyLoseAccessToCloudEdit": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "Legacy": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "LegacyLock": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "LimitScrollWheelMaxToHalfWindowSize": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "LoadGuisWithoutChar": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "LoadStarterGearWithoutLoadCharacter": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "LocalScriptSpawnPartAlwaysSetOwner": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "LockViolationInstanceCrash": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "LockViolationScriptCrash": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "LogAllPlayerPropChanges": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "LogFileSystem": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "LogPrivateModuleRequires": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "LuaBasedBubbleChat": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "LuaBridge": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "LuaChatFiltering": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "LuaChatFloodCheckInterval": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "15"
+ },
+ "LuaChatFloodCheckMessages": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "7"
+ },
+ "LuaChatPhoneFontSize": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "LuaControlsDisableMouse2Lock": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "LuaCrashOnIncorrectTables": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "LuaDebugger": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "LuaDebuggerBreakOnError": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "LuaExceptionPlaceFilter": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "LuaExceptionThrottlingPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "LuaGcBoost": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "LuaGcMaxKb": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "LuaMemoryBonus": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "0"
+ },
+ "LuaMemoryPool": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "LuaProfiler": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "LuaScriptTimeoutSeconds": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "MacInferredCrashReporting": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "MacInfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1000"
+ },
+ "MachineIdUploader": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "MaterialPropertiesEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "MaterialPropertiesNewIsDefault": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "MaxAwardPointsHttpCallsPerMinute": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "60"
+ },
+ "MaxClusterKBPerSecond": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "40"
+ },
+ "MaxClusterSendStepsAccumulated": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "15"
+ },
+ "MaxClusterSendStepsPerCyclic": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5"
+ },
+ "MaxConsecutiveStreamJobWorkLoad": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "MaxContentProviderRunsAccumulated": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "20"
+ },
+ "MaxContentProviderRunsPerStep": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "MaxDataOutJobScaling": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "MaxDataPacketPerSend": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "MaxDataStepsAccumulated": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "15"
+ },
+ "MaxDataStepsPerCyclic": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5"
+ },
+ "MaxJoinDataSizeKB": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "100"
+ },
+ "MaxLogHistory": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "512"
+ },
+ "MaxMissedWorldStepsRemembered": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "12"
+ },
+ "MaxNetworkReadTimeInCS": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "MaxNodesPerPathPacket": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "3"
+ },
+ "MaxProcessPacketsJobScaling": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "MaxProcessPacketsStepsAccumulated": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "15"
+ },
+ "MaxProcessPacketsStepsPerCyclic": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5"
+ },
+ "MaxServerStreamRegionRadius": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "16"
+ },
+ "MaxSpeedDeltaMillis": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "300"
+ },
+ "MaxStreamPacketsPerStep": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "16"
+ },
+ "MaxWaitTimeBeforeForcePacketProcessMS": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "MegaClusterDecodeStream": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "MegaClusterDirty": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "MegaClusterInit": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "MegaClusterNetwork": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "2"
+ },
+ "MegaClusterNetworkInit": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "MegaClusters": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "MemHashConfig": {
+  "kind": "String",
+  "dynamic": true,
+  "default": ""
+ },
+ "MiddleMouseButtonEvent": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "MinMaxDistanceEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "MinMsecBetweenTimePosEventReplication": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "100"
+ },
+ "MinSecondLengthForLongSoundChannel": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "5"
+ },
+ "MinSoundStreamSizeBytes": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "512000"
+ },
+ "MobileJoinRateFormatUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "Game/JoinRate.ashx?st=%d&i=%d&p=%d&c=%s&r=%s&d=%d&b=%d&platform=%s"
+ },
+ "MobileToggleChatVisibleIcon": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "ModifyDefaultMaterialProperties": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "MotionDiscontinuityThreshold": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "MouseCommand": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "MouseCommandLifetime": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "MouseDeltaWhenNotMouseLocked": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "MoveInGameChatToTopPlaceId": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "MutexLifetime": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "NamedMutex": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "NamesOccludedAsDefault": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "NativeSearchFastResultsEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "NativeSearchFastResultsWaitTime": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "Network": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "NetworkAlignBinaryString": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "NetworkAlignJoinData": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "NetworkCache": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "NetworkDisableStringCompression": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "NetworkInstances": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "NetworkJoin": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "NetworkOwnershipRuleReplicates": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "NetworkPacketsReceive": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "NetworkReadItem": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "NetworkStatsReport": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "NetworkStepsMultipliers": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "NetworkStreaming": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "NewGameTemplateId": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "95206881"
+ },
+ "NewInGameDevConsole": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "NewPhysicalPropertiesForcedOnAll": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "NoCacheForLocalContent": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "NoPromptOnAlreadySavedPlace": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "NoRandomColorsWithoutOutlines": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "NoWalkAnimWeld": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "NodeIntervalCapMS": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "NotificationPollingServiceEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "NotificationPollingServiceInterval": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "10"
+ },
+ "NotificationServiceEnabledForEveryone": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "NumDummyJobs": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "0"
+ },
+ "NumPhysicsPacketsPerStep": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "NumPhysicsTouchPacketsPerStep": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1"
+ },
+ "NumSmoothingPasses": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "0"
+ },
+ "OnCloseTimeoutInSeconds": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "30"
+ },
+ "OnScreenProfiler": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "OpenVR": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "Order66": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "OrthonormalizeJointCoords": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "OutlineBrightnessMax": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "160"
+ },
+ "OutlineBrightnessMin": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "50"
+ },
+ "OutlineThickness": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "40"
+ },
+ "PGSAlign2AxesCorrectionDamping": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "10"
+ },
+ "PGSAlwaysActiveMasterSwitch": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PGSApplyImpulsesAtMidpoints": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PGSBallInSocketCorrectionDamping": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "10"
+ },
+ "PGSFixGroundSinking": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PGSGlueJoint": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PGSJumpForceAdjustment": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "520"
+ },
+ "PGSPenetrationMarginMax": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "50000"
+ },
+ "PGSPenetrationMarginMaxBump": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "5"
+ },
+ "PGSPenetrationMarginMin": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "100"
+ },
+ "PGSPenetrationResolutionDamping": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "7"
+ },
+ "PGSPenetrationVelocityForMinMargin": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "20"
+ },
+ "PGSSolverDefaultOnNewPlaces": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PGSSolverFileDump": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PGSSolverIntegrateOnlyPositionsEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PGSSolverSimIslandsEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PGSSolverUsesIslandizableCode": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PGSSteppingMotorFix": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PGSUsesConstraintBasedBodyMovers": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PGSVariablePenetrationMarginFix": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PGSWakeOtherAssemblyForJoints": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PGSWakePrimitivesWithBodyMoverPropertyChanges": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PacketErrorInfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10000"
+ },
+ "PartInstanceLifetime": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "PartStreamingGCMinRegionLength": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "2"
+ },
+ "PartStreamingRequests": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "PasteWithCapsLockOn": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PathfindingAgeToCollectChunks": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1000"
+ },
+ "PathfindingAverageWindow": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "7"
+ },
+ "PathfindingChunksPerInvokation": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "PathfindingCollectPeriod": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "PathfindingDefaultBucketNum": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "2048"
+ },
+ "PathfindingDetail": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "PathfindingJobRunsPerSecond": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "PathfindingMaxDistance": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "512"
+ },
+ "PathfindingPerf": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "PathfindingSmoothIterations": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5"
+ },
+ "PathfindingVerticalChunkClamp": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "PercentApiRequestsRecordGoogleAnalytics": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "PersistenceCurlCookies": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PhysPropConstructFromMaterial": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PhysicalPropDensity_AIR_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "0"
+ },
+ "PhysicalPropDensity_ALUMINUM_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "7700"
+ },
+ "PhysicalPropDensity_BASALT_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2691"
+ },
+ "PhysicalPropDensity_BRICK_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1922"
+ },
+ "PhysicalPropDensity_COBBLESTONE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2691"
+ },
+ "PhysicalPropDensity_CONCRETE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2403"
+ },
+ "PhysicalPropDensity_CRACKED_LAVA_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2691"
+ },
+ "PhysicalPropDensity_DIAMONDPLATE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "7850"
+ },
+ "PhysicalPropDensity_FABRIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "700"
+ },
+ "PhysicalPropDensity_GLACIER_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "919"
+ },
+ "PhysicalPropDensity_GRANITE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2691"
+ },
+ "PhysicalPropDensity_GRASS_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "900"
+ },
+ "PhysicalPropDensity_GROUND_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "900"
+ },
+ "PhysicalPropDensity_ICE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "919"
+ },
+ "PhysicalPropDensity_MARBLE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2563"
+ },
+ "PhysicalPropDensity_METAL_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "7850"
+ },
+ "PhysicalPropDensity_MUD_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "900"
+ },
+ "PhysicalPropDensity_NEON_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "700"
+ },
+ "PhysicalPropDensity_PEBBLE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2403"
+ },
+ "PhysicalPropDensity_PLASTIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "700"
+ },
+ "PhysicalPropDensity_ROCK_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2691"
+ },
+ "PhysicalPropDensity_RUST_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "7850"
+ },
+ "PhysicalPropDensity_SANDSTONE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2691"
+ },
+ "PhysicalPropDensity_SAND_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1602"
+ },
+ "PhysicalPropDensity_SLATE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2691"
+ },
+ "PhysicalPropDensity_SMOOTH_PLASTIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "700"
+ },
+ "PhysicalPropDensity_SNOW_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "900"
+ },
+ "PhysicalPropDensity_WATER_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropDensity_WOODPLANKS_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "350"
+ },
+ "PhysicalPropDensity_WOOD_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "350"
+ },
+ "PhysicalPropEWeight_AIR_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_ALUMINUM_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_BASALT_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_BRICK_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_COBBLESTONE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_CONCRETE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_CRACKED_LAVA_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_DIAMONDPLATE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_FABRIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_GLACIER_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_GRANITE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_GRASS_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_GROUND_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_ICE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_MARBLE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_METAL_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_MUD_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_NEON_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_PEBBLE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_PLASTIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_ROCK_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_RUST_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_SANDSTONE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_SAND_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_SLATE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_SMOOTH_PLASTIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_SNOW_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_WATER_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_WOODPLANKS_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropEWeight_WOOD_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropElasticity_AIR_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "10"
+ },
+ "PhysicalPropElasticity_ALUMINUM_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "250"
+ },
+ "PhysicalPropElasticity_BASALT_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "150"
+ },
+ "PhysicalPropElasticity_BRICK_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "150"
+ },
+ "PhysicalPropElasticity_COBBLESTONE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "170"
+ },
+ "PhysicalPropElasticity_CONCRETE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "200"
+ },
+ "PhysicalPropElasticity_CRACKED_LAVA_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "150"
+ },
+ "PhysicalPropElasticity_DIAMONDPLATE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "250"
+ },
+ "PhysicalPropElasticity_FABRIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "50"
+ },
+ "PhysicalPropElasticity_GLACIER_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "150"
+ },
+ "PhysicalPropElasticity_GRANITE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "200"
+ },
+ "PhysicalPropElasticity_GRASS_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "100"
+ },
+ "PhysicalPropElasticity_GROUND_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "100"
+ },
+ "PhysicalPropElasticity_ICE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "150"
+ },
+ "PhysicalPropElasticity_MARBLE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "170"
+ },
+ "PhysicalPropElasticity_METAL_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "250"
+ },
+ "PhysicalPropElasticity_MUD_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "70"
+ },
+ "PhysicalPropElasticity_NEON_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "200"
+ },
+ "PhysicalPropElasticity_PEBBLE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "170"
+ },
+ "PhysicalPropElasticity_PLASTIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "500"
+ },
+ "PhysicalPropElasticity_ROCK_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "170"
+ },
+ "PhysicalPropElasticity_RUST_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "200"
+ },
+ "PhysicalPropElasticity_SANDSTONE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "150"
+ },
+ "PhysicalPropElasticity_SAND_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "50"
+ },
+ "PhysicalPropElasticity_SLATE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "200"
+ },
+ "PhysicalPropElasticity_SMOOTH_PLASTIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "500"
+ },
+ "PhysicalPropElasticity_SNOW_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "30"
+ },
+ "PhysicalPropElasticity_WATER_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "10"
+ },
+ "PhysicalPropElasticity_WOODPLANKS_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "200"
+ },
+ "PhysicalPropElasticity_WOOD_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "200"
+ },
+ "PhysicalPropFWeight_AIR_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_ALUMINUM_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_BASALT_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "300"
+ },
+ "PhysicalPropFWeight_BRICK_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "300"
+ },
+ "PhysicalPropFWeight_COBBLESTONE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_CONCRETE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "300"
+ },
+ "PhysicalPropFWeight_CRACKED_LAVA_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_DIAMONDPLATE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_FABRIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_GLACIER_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_GRANITE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_GRASS_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_GROUND_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_ICE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "3000"
+ },
+ "PhysicalPropFWeight_MARBLE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_METAL_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_MUD_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_NEON_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_PEBBLE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_PLASTIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_ROCK_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_RUST_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_SANDSTONE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "5000"
+ },
+ "PhysicalPropFWeight_SAND_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "5000"
+ },
+ "PhysicalPropFWeight_SLATE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_SMOOTH_PLASTIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_SNOW_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_WATER_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_WOODPLANKS_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFWeight_WOOD_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "PhysicalPropFriction_AIR_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "10"
+ },
+ "PhysicalPropFriction_ALUMINUM_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "400"
+ },
+ "PhysicalPropFriction_BASALT_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "700"
+ },
+ "PhysicalPropFriction_BRICK_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "800"
+ },
+ "PhysicalPropFriction_COBBLESTONE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "500"
+ },
+ "PhysicalPropFriction_CONCRETE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "700"
+ },
+ "PhysicalPropFriction_CRACKED_LAVA_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "650"
+ },
+ "PhysicalPropFriction_DIAMONDPLATE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "350"
+ },
+ "PhysicalPropFriction_FABRIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "350"
+ },
+ "PhysicalPropFriction_GLACIER_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "50"
+ },
+ "PhysicalPropFriction_GRANITE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "400"
+ },
+ "PhysicalPropFriction_GRASS_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "400"
+ },
+ "PhysicalPropFriction_GROUND_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "450"
+ },
+ "PhysicalPropFriction_ICE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "20"
+ },
+ "PhysicalPropFriction_MARBLE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "200"
+ },
+ "PhysicalPropFriction_METAL_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "400"
+ },
+ "PhysicalPropFriction_MUD_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "300"
+ },
+ "PhysicalPropFriction_NEON_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "300"
+ },
+ "PhysicalPropFriction_PEBBLE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "400"
+ },
+ "PhysicalPropFriction_PLASTIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "300"
+ },
+ "PhysicalPropFriction_ROCK_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "500"
+ },
+ "PhysicalPropFriction_RUST_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "700"
+ },
+ "PhysicalPropFriction_SANDSTONE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "500"
+ },
+ "PhysicalPropFriction_SAND_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "500"
+ },
+ "PhysicalPropFriction_SLATE_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "400"
+ },
+ "PhysicalPropFriction_SMOOTH_PLASTIC_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "200"
+ },
+ "PhysicalPropFriction_SNOW_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "300"
+ },
+ "PhysicalPropFriction_WATER_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "5"
+ },
+ "PhysicalPropFriction_WOODPLANKS_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "480"
+ },
+ "PhysicalPropFriction_WOOD_MATERIAL": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "480"
+ },
+ "Physics": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "PhysicsAnalyzerEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PhysicsBulletManifoldPoolSize": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1024"
+ },
+ "PhysicsCompressionSizeFilter": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "50"
+ },
+ "PhysicsFPSTimerFix": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PhysicsPacketSendWorldStepTimestamp": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PhysicsSenderBufferHealthThreasholdPercent": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "40"
+ },
+ "PhysicsSenderCheckPartInServiceBeforeSend": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PhysicsSenderRate": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "15"
+ },
+ "PhysicsSenderRotationThresholdThousandth": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "20"
+ },
+ "PhysicsSenderSleepingLog": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "PhysicsSenderSleepingUpdate": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PhysicsSenderUseOwnerTimestamp": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PhysicsSkipNonRealTimeHumanoidForceCalc": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PhysicsStepsPerSecond": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "PlaceLauncher": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "PlaceLauncherUsePOST": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "Player": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "PlayerChatInfoExponentialBackoffLimitMultiplier": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "9"
+ },
+ "PlayerDropDownEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PlayerShutdownLuaTimeoutSeconds": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "Plugins": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "PointBalanceCacheInvalidateTimeMs": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1000"
+ },
+ "PrefetchResourcesEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "PreloadLinkedScriptsTiming": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "PreventReturnOfElevatedPhysicsFPS": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PrimitiveLifetime": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ProcessAcceleratorsBeforeGUINavigation": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "PurchaseErrorReportRate": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "PurchaseMismatchReportRate": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "PushPixels": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "R15Character": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "RCCDataModelInit": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "RCCInfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1000"
+ },
+ "RCCServiceInit": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "RCCServiceJobs": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "RCCServiceThreadCount": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "RBX::TaskScheduler::Threads1"
+ },
+ "RCCSupportCloudEdit": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ROMAItemsInCarousel": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "RakNetDisconnect": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "RakNetMaxSplitPacketCount": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1400"
+ },
+ "RbxMegaClusterInit": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "2"
+ },
+ "RbxMegaClustersUpdate": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "2"
+ },
+ "ReadDeSerializeProcessFlow": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "ReflectionMetadata": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "RegLambda": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "-1000000000"
+ },
+ "RejectHashesInLinkedSource": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "RelativisticCameraFixEnable": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "ReloadSettingsOnTeleport": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "RemoteDelayedQueueLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "256"
+ },
+ "RemoveInterpolationReciever": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "RemoveInterpolationSmoothing": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "RemoveUnusedPhysicsSenders": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "RenderBreakdown": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "2"
+ },
+ "RenderBreakdownDetails": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "2"
+ },
+ "RenderCleanupInBackground": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "RenderFastCluster": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "RenderFixFog": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "RenderGBufferMinQLvl": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "20"
+ },
+ "RenderLightGrid": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "RenderLightGridAgeProportion": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "5"
+ },
+ "RenderLightGridBorderGlobalCutoff": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "32"
+ },
+ "RenderLightGridBorderSkylightCutoff": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "32"
+ },
+ "RenderLowLatencyLoop": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "RenderMaterialsOnMobile": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "RenderMaxParticleSize": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "200"
+ },
+ "RenderMoonBillboard": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "RenderNewExplosionEnable": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "RenderNewParticles2Enable": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "RenderRequest": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "RenderShadowIntensity": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "75"
+ },
+ "RenderStatsOnLogs": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "2"
+ },
+ "RenderTextureCompositor": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "RenderTextureCompositorBudget": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "RenderTextureManagerBudget": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "0"
+ },
+ "RenderTextureManagerBudgetFor4k": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "0"
+ },
+ "RenderThumbModelReflectionsFix": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "RenderUIAs3DInVR": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "RenderVR": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "ReplicateLuaMoveDirection": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ReplicationDataLifetime": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ReportBuildVSEditMode": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "ReportElevatedPhysicsFPSToGA": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "ReportTimeLimit1": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "4000"
+ },
+ "ReportTimeLimit2": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "8000"
+ },
+ "ReportTimeLimit3": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1500"
+ },
+ "RequestPlaceInfoRetryCount": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "5"
+ },
+ "RequestPlaceInfoTimeoutMS": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2000"
+ },
+ "RequireCuratedGames": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "RestoreTransparencyOnToolChange": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "RestrictSales": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "RetryWhenCloudEditEnabledEndpointFails": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "RobloxAnalyticsTrackingEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "RobloxAnalyticsURL": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "http:\n\nFASTFLAGVARIABLE(DebugAnalyticsForceLotteryWin, fals"
+ },
+ "RobloxWndInit": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "RollOffModeEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "RotateFirstPersonInVR": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "Rtl1InfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "Rtl2InfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "Rtl3InfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "Rtl5InfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "Rtl6InfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "RwxFailReport": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "SSAO": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "SSLErrorLogAll": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SavePlacePerMinute": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "ScopedConnection": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ScreenShotDuplicationFix": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ScriptAnalyzerIgnoreWarnings": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ScriptContext": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ScriptContextAdd": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ScriptContextClose": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "ScriptContextGuardAgainstCStackOverflow": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ScriptContextRemove": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ScriptContextSearchFix": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "ScriptExecutionContextApi": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ScriptPrint": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "3"
+ },
+ "SearchToolboxByDataModelSearchString": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "SecondsPerBatchAwardPointsCall": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10"
+ },
+ "SendStudioEventsWithStudioSID": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "Serializer": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "SetCoreDisableChatBar": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SetCoreDisableNotifications": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SetCoreMoveChat": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SetCoreSendNotifications": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SetNetworkOwnerFixAnchoring": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SetNetworkOwnerFixAnchoring2": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SetUpdateTimeOnClumpChanged": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SimpleHermiteSplineInterpolate": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SlowHttpRequest": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "SmoothTerrainMaxCppRegion": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "64*1024*1024"
+ },
+ "SmoothTerrainMaxLuaRegion": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "4*1024*1024"
+ },
+ "SmoothTerrainPhysicsCacheSize": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "16*1024*1024"
+ },
+ "SmoothTerrainPhysicsRayAabbSlop": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "SmoothTerrainRenderLOD": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "SmootherVehicleSeatControlSystem": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SocialServiceBestFriendUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "Game/LuaWebService/HandleSocialRequest.ashx?method=IsBestFriendsWith&playerid=%d&userid=%d"
+ },
+ "SocialServiceFriendUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "Game/LuaWebService/HandleSocialRequest.ashx?method=IsFriendsWith&playerid=%d&userid=%d"
+ },
+ "SocialServiceGroupRankUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "Game/LuaWebService/HandleSocialRequest.ashx?method=GetGroupRank&playerid=%d&groupid=%d"
+ },
+ "SocialServiceGroupRoleUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "Game/LuaWebService/HandleSocialRequest.ashx?method=GetGroupRole&playerid=%d&groupid=%d"
+ },
+ "SocialServiceGroupUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "Game/LuaWebService/HandleSocialRequest.ashx?method=IsInGroup&playerid=%d&groupid=%d"
+ },
+ "Sound": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "SoundFailedToLoadContext": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SoundTiming": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "SoundTrace": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "SpeedCountCap": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "5"
+ },
+ "SpeedTestPeriodMillis": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "SpheresAllowedCustom": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "SphericalSparklesEmission": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "StepAnimatedJoints": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "StepAnimatedJointsInBufferZone": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "StreamJobPriorityAmplifierRadius": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "StreamOutCompressionIdListLengthThreshold": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "250"
+ },
+ "StreamingCriticalLowMemWatermarkMB": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "5"
+ },
+ "StreamingLowMemWatermarkMB": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "10"
+ },
+ "StreamingMemoryUsagePercent": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "50"
+ },
+ "StreamingSafeMemWatermarkMB": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "30"
+ },
+ "StremingMemoryPoolReleaseThresholdMB": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "2"
+ },
+ "Studio3DGridUseAALines": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "StudioABTestEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioAnalytics": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "StudioBootstrapperVersionNumber": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "52886"
+ },
+ "StudioCSGAssets": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioCSGChildDataNoSizeLimit": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioCheckForUpgradeEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioCookieConstraintUrlFragment": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "fulfillconstraint"
+ },
+ "StudioCustomStatsEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioDE6194FixEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioDE8774CrashFixEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioDisableToolbarUpdateOnButtonActive": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioDoublingOnUploadFixEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "StudioEarlyCookieConstraintCheckGlobal": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioEmbeddedFindDialogEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioEnableGameAnimationsTab": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioEnableWebKitPlugins": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioExposeSessionID": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "StudioFixMacStartPage": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioInSyncWebKitAuthentication": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioInsertDeletionCheckTimeMS": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "8000"
+ },
+ "StudioIntellesenseShowNonDeprecatedMembers": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "StudioIntellisenseAllowUnderscore": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioIntellisenseCodeExecutionFixEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "StudioMaxCommandHistorySize": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "50"
+ },
+ "StudioMimeDataContainsInstancePath": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioNewWiki": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioOperationFailureHangFix": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "StudioPartSizeCameraDistRatio": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "30"
+ },
+ "StudioPropertyCompareOriginalVals": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "StudioPropertyErrorOutput": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioPropertyNameBarDisabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioPropertySearchDisabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioPushTreeWidgetUpdatesToMainThread": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioRecordToolboxInsert": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "StudioRemoveDebuggerResumeLock": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioRemoveInsertEvent": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioRightClickBuffer": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "500"
+ },
+ "StudioRightClickDelay": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "150"
+ },
+ "StudioRightClickMax": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "700"
+ },
+ "StudioRobloxAnalyticsLoad": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "100"
+ },
+ "StudioSeparateActionByActivationMethod": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioSettingsGAEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "StudioShowTutorialsByDefault": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioSplashScreenUntilOpen": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioSyntaxCheckTimerInterval": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "500"
+ },
+ "StudioTreeWidgetCheckDeletingFlagWhenDoingUpdates": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioTreeWidgetEventProcessingTime": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "10"
+ },
+ "StudioTreeWidgetFilterTime": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "30"
+ },
+ "StudioTreeWidgetProcessingTime": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "100"
+ },
+ "StudioTutorialSeeAll": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioTutorialsSeeAllUrl": {
+  "kind": "String",
+  "dynamic": false,
+  "default": "http:\nFASTSTRINGVARIABLE(StudioTutorialsUrl, \"http:\nFASTSTRINGVARIABLE(StudioTutorialsTOCUrl, \"http:\n\nRobloxTutorials::RobloxTutorials"
+ },
+ "StudioUpdateSAResultsInUIThread": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioUseDraggerGrid": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "StudioVariableIntellesense": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "StudioWebDialogMinimumHeight": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "480"
+ },
+ "StudioWebDialogMinimumWidth": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "970"
+ },
+ "StudioWorkspaceNotificationLevel": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "SuperClusterFastClusterSize": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "1000"
+ },
+ "SurfaceLightEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "TaskSchedularBatchErrorCalcFPS": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "300"
+ },
+ "TaskScheduler": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "TaskSchedulerCyclicExecutive": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "TaskSchedulerFindJob": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "TaskSchedulerInit": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "TaskSchedulerRun": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "TaskSchedulerSteps": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "TaskSchedulerThreadCountEnum": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1"
+ },
+ "TaskSchedulerTiming": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "TeamCreate9938FixEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "TeamCreateAcceptTerrainReplicatedUpdatesWhenFilteringEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "TeamCreateCheckInvalidUniverse": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "TeamCreateEnableCompleterFix": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "TeamCreateEnableContextHelp": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "TeamCreateEnableDownloadLocalCopy": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "TeamCreateEnablePublishOnLogin": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "TeamCreateIgnoreRunStateTransition": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "TeamCreateOptimizeRemoteSelection": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "TeamCreateRaiseChangedOperationForAssetId": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "TeamCreateReduceCopiesSelectionSet": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "TeleportRetryTimes": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5"
+ },
+ "TerrainCellListener": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "TestFalseValue": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "TestFastFlag": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "TestFastInt": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "3"
+ },
+ "TestLogGroup": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "TestSynchronizedFlag": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "TestTrueValue": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "TexAtlasUpdateLineHeight": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "150"
+ },
+ "TextBoxIsFocusedEnabled": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "TextFieldUTF8": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "TextScaleDontWrapInWords": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "TextTransparencyRenderingFix": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "TextureContentProvider": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ThreadRefCounts": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "ThumbnailRender": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "TimeBetweenCheckingApiAccessMillis": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "5000"
+ },
+ "TouchedSignal": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "TrackPhysicalPropertiesGA": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "TurnOffFakeEventsForCAS": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "TurnOffFakeEventsForInputEvents": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "TweenCallbacksDuringRenderStep": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "TypesettersReleaseResources": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "US14116": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "US21969": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "US25317p1": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "US25317p2": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "US26301": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "US27664p3": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "US28292p0": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "US28292p1": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "US28292p2": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "US28292p3": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "US28814": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "US29001p1": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "US29001p2": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "US30476": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "US30484p1": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "US30484p2": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "0"
+ },
+ "US30484p3": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "US30605p1": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "....7....6....5..rr4....3....2....1....0"
+ },
+ "US30605p2": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "____7____6____5____4__..3....2....1....0"
+ },
+ "US30605p3": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "....7....6....5....4....3....2....1._..0"
+ },
+ "US30605p4": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "____7____6____5____4____3____2____1____0"
+ },
+ "US30605p5": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "....7....6....5....4....3....2....1....0"
+ },
+ "US31006": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UnifyDragGridSizes": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "UnitSynchronizedInt": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "UnitTestOff": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "UnitTestOn": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "UpdateContextOnFollowingFrame": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UrlReconstructRejectInvalidSchemes": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UrlReconstructToAssetGame": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UrlReconstructToAssetGameSecure": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UseAssetGameSubdomainForGetCurrentUser": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "UseAssetTypeHeader": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UseBuildGenericGameUrl": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "UseComSiftUpdatedWebChatFilterParamsAndHeader": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "UseDataDomain": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "UseDynamicTypesetterUTF8": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UseFixedRightMouseClickBehaviour": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "UseFixedTransparencyNonCollidableBehaviour": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "UseGameLoadedInLoadingScript": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "UseInGameTopBar": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UseLuaMemoryPool": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "UseNewAnalyticsApi": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UseNewAppBridgeInputWindows": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UseNewBadgesCreatePage": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UseNewCarouselInXboxApp": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "UseNewDataStoreLogging": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "UseNewDataStoreRequestSetTimestampBehaviour": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "UseNewMemHashApi": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UseNewPersistenceSubdomain": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "UseNewPromptEndHandling": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UseNewSecurityKeyApi": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UseNewSubdomainsInCoreScripts": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UseNewUrlClass": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "UseNewWebGamesPage": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "UsePGSSolver": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UseProtocolCompatibilityCheck": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UseR15Character": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UseRemoveTypeIDTricks": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "UseStarterPlayerCharacter": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UseStarterPlayerCharacterScripts": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UseStarterPlayerHumanoid": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UseSubmitTaskWhenFiringSignalsOnSettings": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "UseTerrainCustomPhysicalProperties": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UseUserListMenu": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UserAllCamerasInLua": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UserBetterInertialScrolling": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "UserCameraZoomPersistThroughTeleport": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UserHttpRequestsPerMinuteLimit": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "500"
+ },
+ "UserInputProfile": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "UserInputViewportSizeFixStudio": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "UserInputViewportSizeFixWindows": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "true"
+ },
+ "UserMouseLockSettingSaveTeleport": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UserServerFollowers": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "UserSetsUrlPiece": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "/Game/Tools/InsertAsset.ashx?nsets=20&type=user&userid="
+ },
+ "UserUseNewControlScript": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "VR": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ValidateCharacterAppearanceUrl": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "ValidateLauncherPercent": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "0"
+ },
+ "VariableHeartbeat": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "Verbs": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "VideoCapture": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "ViewRbxBase": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "2"
+ },
+ "ViewRbxInit": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "1"
+ },
+ "VisualEngineInit": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "Voxelizer": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "WeakThreadRef": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "WebChatFilterHttpTimeoutSeconds": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "60"
+ },
+ "WebChatFiltering": {
+  "kind": "Log",
+  "dynamic": true,
+  "default": "0"
+ },
+ "WebkitDeveloperToolsEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "WebkitLocalStorageEnabled": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "false"
+ },
+ "WhiteListChatFilter": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "WindowsInferredCrashReporting": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ },
+ "WorkspaceMessageLink": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "std::string(\"http:\nDYNAMIC_FASTFLAGVARIABLE(WorkspaceNotificationMasterEnable, false"
+ },
+ "WorkspaceMessageText": {
+  "kind": "String",
+  "dynamic": true,
+  "default": "std::string(\"Test Me - Please Remove\""
+ },
+ "WorldStepMax": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "30"
+ },
+ "WorldStepsBehind": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "WorldStepsBehindG": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "WorldStepsOffsetAdjustRate": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "100"
+ },
+ "WriteFullDmpPercent": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "0"
+ },
+ "XboxFriendsPolling": {
+  "kind": "Int",
+  "dynamic": false,
+  "default": "30"
+ },
+ "XboxPlayMyPlace": {
+  "kind": "Flag",
+  "dynamic": false,
+  "default": "true"
+ },
+ "iOSInfluxHundredthsPercentage": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "1000"
+ },
+ "smoothnessReportThreshold": {
+  "kind": "Int",
+  "dynamic": true,
+  "default": "10000"
+ },
+ "ttMetricP1": {
+  "kind": "Log",
+  "dynamic": false,
+  "default": "0"
+ },
+ "xboxUseMaxNet": {
+  "kind": "Flag",
+  "dynamic": true,
+  "default": "false"
+ }
+}

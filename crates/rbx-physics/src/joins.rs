@@ -474,68 +474,76 @@ impl PhysicsWorld {
         created
     }
 
-    fn intersecting(&self, pi: usize, cf: &CFrame) -> bool {
-        let p = &self.parts[pi];
-        let world_cf = *cf * p.shape.local;
-        let pose = to_pose(&world_cf);
-        let aabb = p.shape.collider.compute_aabb(&pose);
-        if aabb.mins.y < MAX_DRAG_DEPTH {
-            return true;
-        }
-        for (j, o) in self.parts.iter().enumerate() {
-            if j == pi {
-                continue;
-            }
-            let opose = to_pose(&(o.cframe * o.shape.local));
-            let oa = o.shape.collider.compute_aabb(&opose);
-            if oa.mins.x > aabb.maxs.x
-                || oa.maxs.x < aabb.mins.x
-                || oa.mins.y > aabb.maxs.y
-                || oa.maxs.y < aabb.mins.y
-                || oa.mins.z > aabb.maxs.z
-                || oa.maxs.z < aabb.mins.z
-            {
-                continue;
-            }
-            if let Ok(Some(c)) = contact(
-                &pose,
-                p.shape.collider.as_ref(),
-                &opose,
-                o.shape.collider.as_ref(),
-                0.0,
-            ) && c.dist < -MAX_OVERLAP_OR_GAP
-            {
+    fn group_intersecting(&self, group: &[usize], delta: Vec3, tolerance: f32) -> bool {
+        let members: std::collections::HashSet<usize> = group.iter().copied().collect();
+        for &pi in group {
+            let p = &self.parts[pi];
+            let mut cf = p.cframe;
+            cf.translation += delta;
+            let pose = to_pose(&(cf * p.shape.local));
+            let aabb = p.shape.collider.compute_aabb(&pose);
+            if aabb.mins.y < MAX_DRAG_DEPTH {
                 return true;
+            }
+            for (j, o) in self.parts.iter().enumerate() {
+                if members.contains(&j) {
+                    continue;
+                }
+                let opose = to_pose(&(o.cframe * o.shape.local));
+                let oa = o.shape.collider.compute_aabb(&opose);
+                if oa.mins.x > aabb.maxs.x
+                    || oa.maxs.x < aabb.mins.x
+                    || oa.mins.y > aabb.maxs.y
+                    || oa.maxs.y < aabb.mins.y
+                    || oa.mins.z > aabb.maxs.z
+                    || oa.maxs.z < aabb.mins.z
+                {
+                    continue;
+                }
+                if let Ok(Some(c)) = contact(
+                    &pose,
+                    p.shape.collider.as_ref(),
+                    &opose,
+                    o.shape.collider.as_ref(),
+                    0.0,
+                ) && c.dist < -tolerance
+                {
+                    return true;
+                }
             }
         }
         false
     }
 
-    pub fn safe_move(&mut self, dm: &mut DataModel, id: InstanceId) {
-        self.sync(dm);
-        let Some(&pi) = self.index.get(&id) else {
-            return;
-        };
-        let start = self.parts[pi].cframe;
-        if !self.intersecting(pi, &start) {
-            return;
+    pub fn intersects_others(&self, id: InstanceId, tolerance: f32) -> bool {
+        match self.index.get(&id) {
+            Some(&pi) => self.group_intersecting(&[pi], Vec3::ZERO, tolerance),
+            None => false,
         }
-        let mut cf = start;
+    }
+
+    fn search_up(&self, group: &[usize], start: Vec3) -> Option<Vec3> {
+        if !self.group_intersecting(group, start, MAX_OVERLAP_OR_GAP) {
+            return Some(start);
+        }
         let mut moved = 0.0f32;
         let mut free = false;
         for _ in 0..10000 {
             if moved > 16000.0 {
                 break;
             }
-            cf.translation.y += 1.2;
             moved += 1.2;
-            if !self.intersecting(pi, &cf) {
+            if !self.group_intersecting(
+                group,
+                start + Vec3::new(0.0, moved, 0.0),
+                MAX_OVERLAP_OR_GAP,
+            ) {
                 free = true;
                 break;
             }
         }
         if !free {
-            return;
+            return None;
         }
         let mut lo = moved - 1.2;
         let mut hi = moved;
@@ -544,18 +552,134 @@ impl PhysicsWorld {
             if (mid - lo).abs() < 1e-4 || (mid - hi).abs() < 1e-4 {
                 break;
             }
-            let mut test = start;
-            test.translation.y += mid;
-            if self.intersecting(pi, &test) {
+            if self.group_intersecting(group, start + Vec3::new(0.0, mid, 0.0), MAX_OVERLAP_OR_GAP)
+            {
                 lo = mid;
             } else {
                 hi = mid;
             }
         }
-        let mut final_cf = start;
-        final_cf.translation.y += hi;
-        self.parts[pi].cframe = final_cf;
-        dm.set_unchecked(id, "CFrame", Variant::CFrame(final_cf));
-        dm.notify_changed(id, "Position");
+        Some(start + Vec3::new(0.0, hi, 0.0))
+    }
+
+    fn apply_group_delta(&mut self, dm: &mut DataModel, group: &[usize], delta: Vec3) {
+        if delta == Vec3::ZERO {
+            return;
+        }
+        for &pi in group {
+            let mut cf = self.parts[pi].cframe;
+            cf.translation += delta;
+            self.parts[pi].cframe = cf;
+            let id = self.parts[pi].id;
+            dm.set_unchecked(id, "CFrame", Variant::CFrame(cf));
+            dm.notify_changed(id, "Position");
+        }
+        self.topology_dirty = true;
+        self.grid_dirty = true;
+    }
+
+    pub fn safe_move(&mut self, dm: &mut DataModel, id: InstanceId) {
+        self.sync(dm);
+        let Some(&pi) = self.index.get(&id) else {
+            return;
+        };
+        if let Some(delta) = self.search_up(&[pi], Vec3::ZERO) {
+            self.apply_group_delta(dm, &[pi], delta);
+        }
+    }
+
+    pub fn move_group(&mut self, dm: &mut DataModel, ids: &[InstanceId], delta: Vec3, join: bool) {
+        self.sync(dm);
+        let group_ids: std::collections::HashSet<InstanceId> = ids.iter().copied().collect();
+        for &id in ids {
+            for j in self.joints_of(id) {
+                let other = self.joints.get(&j).and_then(|jj| {
+                    if jj.part0 == Some(id) {
+                        jj.part1
+                    } else {
+                        jj.part0
+                    }
+                });
+                if other.is_some_and(|o| !group_ids.contains(&o)) {
+                    if dm.contains(j) {
+                        let _ = dm.destroy(j);
+                    }
+                    self.joints.remove(&j);
+                    self.topology_dirty = true;
+                }
+            }
+        }
+        let group: Vec<usize> = ids
+            .iter()
+            .filter_map(|id| self.index.get(id).copied())
+            .collect();
+        if group.is_empty() {
+            return;
+        }
+        let final_delta = self.search_up(&group, delta).unwrap_or(delta);
+        self.apply_group_delta(dm, &group, final_delta);
+        if join {
+            for &id in ids {
+                self.join_filtered(dm, id, |o| !group_ids.contains(&o));
+            }
+        }
+    }
+
+    pub fn resize_part(
+        &mut self,
+        dm: &mut DataModel,
+        id: InstanceId,
+        face: NormalId,
+        amount: i32,
+        clamp: impl Fn(&DataModel, Vec3) -> Vec3,
+    ) -> bool {
+        self.destroy_joints(dm, id);
+        let result = self.resize_impl(dm, id, face, amount, clamp);
+        self.join(dm, id);
+        result
+    }
+
+    fn resize_impl(
+        &mut self,
+        dm: &mut DataModel,
+        id: InstanceId,
+        face: NormalId,
+        amount: i32,
+        clamp: impl Fn(&DataModel, Vec3) -> Vec3,
+    ) -> bool {
+        if amount == 0 {
+            return false;
+        }
+        let original_size = crate::world::part_size(dm, id);
+        let original_cf = dm
+            .get_raw(id, "CFrame")
+            .and_then(|v| v.as_cframe())
+            .unwrap_or_default();
+        let three_d = !(dm.class_of(id) == Some("Part")
+            && dm.get_raw(id, "shape").and_then(|v| v.as_enum()) == Some(0));
+        let mut delta = Vec3::ZERO;
+        if three_d {
+            delta[face as usize % 3] = amount as f32;
+        } else {
+            delta = Vec3::splat(amount as f32);
+        }
+        let pos_neg = if (face as usize) < 3 { 1.0 } else { -1.0 };
+        let new_size = clamp(dm, original_size + delta);
+        let delta_xml = new_size - original_size;
+        let delta_world = original_cf.rotation * delta_xml;
+        let new_cf = CFrame::new(
+            original_cf.rotation,
+            original_cf.translation + delta_world * 0.5 * pos_neg,
+        );
+        dm.set_unchecked(id, "CFrame", Variant::CFrame(new_cf));
+        dm.set_unchecked(id, "size", Variant::Vector3(new_size));
+        self.upsert_part(dm, id);
+        if self.intersects_others(id, 3.0 * MAX_OVERLAP_OR_GAP) {
+            dm.set_unchecked(id, "CFrame", Variant::CFrame(original_cf));
+            dm.set_unchecked(id, "size", Variant::Vector3(original_size));
+            self.upsert_part(dm, id);
+            return false;
+        }
+        true
     }
 }

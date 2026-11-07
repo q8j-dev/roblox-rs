@@ -165,6 +165,13 @@ impl PhysicsWorld {
             .is_multiple_of(WORLD_STEPS_PER_UI_STEP as u64)
         {
             self.ui_step();
+            if !self.humanoids.is_empty() {
+                self.refresh_humanoid_cache(dm);
+                let long = self
+                    .step_count
+                    .is_multiple_of(2 * WORLD_STEPS_PER_UI_STEP as u64);
+                self.humanoid_ui_step(dm, long, WORLD_STEPS_PER_UI_STEP as f32 * WORLD_DT);
+            }
         }
         self.apply_dirty_angles();
         self.compute_forces(dm);
@@ -333,6 +340,7 @@ impl PhysicsWorld {
             a.force = Vec3::new(0.0, -GRAVITY * a.mass, 0.0);
             a.torque = Vec3::ZERO;
         }
+        self.humanoid_forces();
         let mut ids: Vec<InstanceId> = self.movers.keys().copied().collect();
         ids.sort();
         let mut wake = Vec::new();
@@ -756,7 +764,7 @@ impl PhysicsWorld {
         let mut bodies = vec![SolverBody::ground()];
         let mut map: HashMap<usize, usize> = HashMap::new();
         for (ai, a) in self.assemblies.iter().enumerate() {
-            if a.is_moving() {
+            if a.is_moving() && !a.kinematic {
                 map.insert(ai, bodies.len());
                 bodies.push(SolverBody {
                     uid: a.uid,
@@ -786,13 +794,21 @@ impl PhysicsWorld {
             let a = &assemblies[ai];
             let idx = bodies.len();
             bodies.push(SolverBody {
-                uid: if a.anchored { 0 } else { a.uid },
+                uid: if a.anchored || a.kinematic { 0 } else { a.uid },
                 simulated: false,
                 state: BodyState {
                     position: a.position,
                     orientation: a.orientation,
-                    linear_velocity: if a.anchored { a.linear } else { Vec3::ZERO },
-                    angular_velocity: if a.anchored { a.angular } else { Vec3::ZERO },
+                    linear_velocity: if a.anchored || a.kinematic {
+                        a.linear
+                    } else {
+                        Vec3::ZERO
+                    },
+                    angular_velocity: if a.anchored || a.kinematic {
+                        a.angular
+                    } else {
+                        Vec3::ZERO
+                    },
                 },
                 mass_inv: 0.0,
                 inv_inertia_world: Mat3::ZERO,
@@ -997,7 +1013,7 @@ impl PhysicsWorld {
         }
         let mut candidates = Vec::new();
         for (ai, a) in self.assemblies.iter_mut().enumerate() {
-            if !a.is_moving() {
+            if !a.is_moving() || a.kinematic {
                 continue;
             }
             let q = rbx_math::quat_from_matrix(&a.orientation);

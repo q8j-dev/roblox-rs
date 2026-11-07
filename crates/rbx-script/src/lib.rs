@@ -2,6 +2,7 @@ pub mod api;
 mod convert;
 pub mod format;
 mod globals;
+pub mod harness;
 mod instance;
 mod libraries;
 mod materials;

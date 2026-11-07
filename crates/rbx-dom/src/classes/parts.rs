@@ -226,7 +226,7 @@ pub fn min_size(dm: &DataModel, id: InstanceId) -> Vec3 {
     Vec3::splat(0.2)
 }
 
-fn clamp_size(dm: &DataModel, id: InstanceId, ui: Vec3) -> Vec3 {
+pub fn clamp_size(dm: &DataModel, id: InstanceId, ui: Vec3) -> Vec3 {
     let min = min_size(dm, id);
     let mut s = ui.max(min);
     if dm.is_a(id, "FormFactorPart") {

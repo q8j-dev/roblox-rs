@@ -1,5 +1,8 @@
 pub mod bindables;
+pub mod humanoid;
 pub mod instance;
+pub mod misc;
+pub mod physics;
 pub mod services;
 pub mod test;
 
@@ -44,6 +47,9 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     services::register(&mut r);
     test::register(&mut r);
     bindables::register(&mut r);
+    physics::register(&mut r);
+    misc::register(&mut r);
+    humanoid::register(&mut r);
     r
 });
 

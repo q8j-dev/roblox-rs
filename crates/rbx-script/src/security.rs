@@ -31,6 +31,11 @@ impl Identity {
     }
 
     pub fn allows(self, p: Security) -> bool {
+        let p = if p == Security::TestLocalUser {
+            Security::LocalUser
+        } else {
+            p
+        };
         if p == Security::None {
             return true;
         }

@@ -77,7 +77,14 @@ fn find_service(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
     }
 }
 
+fn set_timeout(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let seconds = crate::convert::arg_number(args.first()).unwrap_or(0.0);
+    crate::runtime::set_script_timeout(lua, seconds);
+    super::none()
+}
+
 pub fn register(r: &mut Registry) {
+    r.add("ScriptContext", &["SetTimeout"], set_timeout);
     r.add(
         "ServiceProvider",
         &["GetService", "getService", "service"],

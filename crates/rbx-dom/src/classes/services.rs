@@ -1,6 +1,6 @@
 use crate::behavior::Behavior;
 use crate::datamodel::DataModel;
-use rbx_reflection::InstanceId;
+use rbx_reflection::{InstanceId, Variant};
 use std::collections::HashMap;
 
 pub const SERVICE_CLASSES: &[&str] = &[
@@ -116,7 +116,24 @@ impl Behavior for ServiceBehavior {
     }
 }
 
+pub struct DataModelBehavior;
+
+impl Behavior for DataModelBehavior {
+    fn computed(&self) -> &'static [&'static str] {
+        &["Workspace", "workspace", "lighting"]
+    }
+
+    fn get(&self, dm: &DataModel, _id: InstanceId, prop: &str) -> Option<Variant> {
+        match prop {
+            "Workspace" | "workspace" => Some(Variant::Ref(dm.find_service("Workspace"))),
+            "lighting" => Some(Variant::Ref(dm.find_service("Lighting"))),
+            _ => None,
+        }
+    }
+}
+
 pub fn register(map: &mut HashMap<&'static str, &'static dyn Behavior>) {
+    map.insert("DataModel", &DataModelBehavior);
     for &class in SERVICE_CLASSES {
         map.entry(class).or_insert(&ServiceBehavior);
     }

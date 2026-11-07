@@ -1,5 +1,6 @@
+mod humanoid;
 mod instance;
-mod parts;
+pub(crate) mod parts;
 mod services;
 
 use crate::behavior::Behavior;
@@ -11,6 +12,7 @@ pub fn registry() -> HashMap<&'static str, &'static dyn Behavior> {
     let mut map: HashMap<&'static str, &'static dyn Behavior> = HashMap::new();
     map.insert("Instance", &instance::InstanceBehavior);
     parts::register(&mut map);
+    humanoid::register(&mut map);
     services::register(&mut map);
     map
 }

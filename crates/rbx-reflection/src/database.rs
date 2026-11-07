@@ -132,6 +132,7 @@ struct RawProperty {
     security: Option<String>,
     read_only: bool,
     deprecated_by: Option<String>,
+    getter: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -204,6 +205,7 @@ pub struct PropertyDescriptor {
     pub security: Security,
     pub read_only: bool,
     pub deprecated_by: Option<String>,
+    pub getter: Option<String>,
 }
 
 impl PropertyDescriptor {
@@ -411,6 +413,7 @@ impl ReflectionDatabase {
                     security: Security::parse(p.security.as_deref()),
                     read_only: p.read_only,
                     deprecated_by: p.deprecated_by,
+                    getter: p.getter,
                 })
                 .collect();
             let mut functions = Vec::new();

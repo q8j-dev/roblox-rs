@@ -55,6 +55,13 @@ pub struct Engine {
     pub hooks: Vec<Box<dyn EngineHook>>,
     pub content_root: Option<std::path::PathBuf>,
     pub test: crate::api::test::TestState,
+    pub world: rbx_physics::SharedWorld,
+    pub physics_analyzer_break: bool,
+    pub model_in_primary: HashMap<InstanceId, rbx_math::Mat3>,
+    pub ownership: HashMap<InstanceId, (Option<InstanceId>, bool)>,
+    pub debris_timers: Vec<(f64, InstanceId)>,
+    pub debris_queue: Vec<InstanceId>,
+    pub debris_legacy_max_items: bool,
 }
 
 pub trait EngineHook: Send {
@@ -65,6 +72,8 @@ pub trait EngineHook: Send {
 impl Engine {
     pub fn new(mut dm: DataModel) -> Engine {
         let cursor = dm.subscribe();
+        let world = rbx_physics::shared_world();
+        rbx_physics::WorldHooksImpl::install(&mut dm, world.clone());
         Engine {
             dm,
             cursor,
@@ -79,7 +88,74 @@ impl Engine {
             hooks: Vec::new(),
             content_root: None,
             test: Default::default(),
+            world,
+            physics_analyzer_break: true,
+            model_in_primary: HashMap::new(),
+            ownership: HashMap::new(),
+            debris_timers: Vec::new(),
+            debris_queue: Vec::new(),
+            debris_legacy_max_items: false,
         }
+    }
+
+    fn ownership_root(&mut self, id: InstanceId) -> Result<InstanceId, String> {
+        let ws = self.dm.find_service("Workspace");
+        if !ws.is_some_and(|w| self.dm.is_descendant_of(id, w)) {
+            return Err(
+                "Can only call Network Ownership API on a part that is descendent of Workspace"
+                    .into(),
+            );
+        }
+        if self.dm.find_service("NetworkClient").is_some() {
+            return Err("Network Ownership API can only be called from the Server.".into());
+        }
+        if self.dm.class_of(id) == Some("Terrain") {
+            return Err("Network Ownership API cannot be used on Terrain".into());
+        }
+        let world = self.world.clone();
+        let mut w = world.lock();
+        w.sync(&mut self.dm);
+        w.rebuild_assemblies();
+        match w.assembly_of(id) {
+            Some(a) if !a.anchored => Ok(w.parts[a.root].id),
+            Some(_) => Err("Network Ownership API cannot be called on Anchored parts or parts welded to Anchored parts.".into()),
+            None => Ok(id),
+        }
+    }
+
+    pub fn can_set_network_owner(&mut self, id: InstanceId) -> Result<(), String> {
+        self.ownership_root(id).map(|_| ())
+    }
+
+    pub fn network_owner(&mut self, id: InstanceId) -> Option<InstanceId> {
+        let root = self.ownership_root(id).ok()?;
+        self.dm.find_service("NetworkServer")?;
+        self.ownership
+            .get(&root)
+            .and_then(|o| o.0)
+            .filter(|p| self.dm.contains(*p))
+    }
+
+    pub fn network_ownership_auto(&mut self, id: InstanceId) -> bool {
+        match self.ownership_root(id) {
+            Ok(root) => self.ownership.get(&root).is_none_or(|o| o.1),
+            Err(_) => true,
+        }
+    }
+
+    pub fn set_network_owner(&mut self, id: InstanceId, player: Option<InstanceId>, auto: bool) {
+        let Ok(root) = self.ownership_root(id) else {
+            return;
+        };
+        if auto {
+            let owner = self.ownership.get(&root).and_then(|o| o.0);
+            self.ownership.insert(root, (owner, true));
+            return;
+        }
+        if self.backend_processing() && self.frontend_processing() {
+            return;
+        }
+        self.ownership.insert(root, (player, false));
     }
 
     pub fn print(&mut self, kind: MessageType, text: impl Into<String>) {
@@ -169,6 +245,35 @@ pub struct State {
     pub finish_hooks: HashMap<usize, u32>,
     pub joins: HashMap<usize, Thread>,
     pub callbacks: HashMap<(InstanceId, String), RegistryKey>,
+    pub watchdog: Arc<Mutex<Watchdog>>,
+}
+
+#[derive(Debug)]
+pub struct Watchdog {
+    pub limit: Option<f64>,
+    pub start: Option<Stopwatch>,
+    pub identity: Identity,
+    pub depth: u32,
+}
+
+impl Default for Watchdog {
+    fn default() -> Self {
+        Watchdog {
+            limit: None,
+            start: None,
+            identity: Identity::GameScript,
+            depth: 0,
+        }
+    }
+}
+
+pub fn set_script_timeout(lua: &Lua, seconds: f64) {
+    let wd = with_state(lua, |s| s.watchdog.clone());
+    wd.lock().limit = if seconds > 0.0 && seconds.is_finite() {
+        Some(seconds)
+    } else {
+        None
+    };
 }
 
 static SEED: AtomicU64 = AtomicU64::new(0x2545_f491_4f6c_dd1d);
@@ -304,6 +409,21 @@ impl ScriptRuntime {
             finish_hooks: HashMap::new(),
             joins: HashMap::new(),
             callbacks: HashMap::new(),
+            watchdog: Arc::new(Mutex::new(Watchdog::default())),
+        });
+        let wd = with_state(&lua, |s| s.watchdog.clone());
+        lua.set_interrupt(move |_| {
+            let w = wd.lock();
+            if let (Some(limit), Some(start)) = (w.limit, w.start.as_ref())
+                && start.elapsed() > limit
+                && matches!(
+                    w.identity,
+                    Identity::GameScript | Identity::RobloxGameScript
+                )
+            {
+                return Err(rt("Game script timeout"));
+            }
+            Ok(mlua::VmState::Continue)
         });
         let sentinel = lua.create_table()?;
         lua.set_named_registry_value("rbx_yield", sentinel.clone())?;
@@ -369,17 +489,127 @@ impl ScriptRuntime {
     }
 
     pub fn step(&self, dt: f64) {
-        {
+        let running = {
             let eng = self.engine.clone();
             let mut e = eng.lock();
             e.game_time += dt;
-        }
+            let t = e.game_time;
+            if let Some(ws) = e.dm.find_service("Workspace") {
+                e.dm.store_silent(ws, "DistributedGameTime", Variant::Double(t));
+            }
+            e.running
+        };
         pump(&self.lua);
+        if running {
+            let (run_service, t) = {
+                let e = self.engine.lock();
+                (e.dm.find_service("RunService"), e.game_time)
+            };
+            if let Some(rs) = run_service {
+                fire_lua(
+                    &self.lua,
+                    rs,
+                    "Stepped",
+                    MultiValue::from_vec(vec![Value::Number(t), Value::Number(dt)]),
+                );
+                pump(&self.lua);
+            }
+            self.step_physics(dt);
+        }
+        self.step_debris();
         resume_sleepers(&self.lua);
         run_ready(&self.lua);
         pump(&self.lua);
+        if running {
+            let run_service = self.engine.lock().dm.find_service("RunService");
+            if let Some(rs) = run_service {
+                fire_lua(
+                    &self.lua,
+                    rs,
+                    "Heartbeat",
+                    MultiValue::from_vec(vec![Value::Number(dt)]),
+                );
+                pump(&self.lua);
+            }
+        }
         crate::api::test::on_timeout(&self.lua);
         self.collect();
+    }
+
+    pub fn step_physics(&self, dt: f64) {
+        let events = {
+            let eng = self.engine.clone();
+            let mut e = eng.lock();
+            let world = e.world.clone();
+            let mut w = world.lock();
+            w.step(&mut e.dm, dt)
+        };
+        for (a, b) in events.touched {
+            self.fire_touch(a, b, "Touched");
+        }
+        for (a, b) in events.touch_ended {
+            self.fire_touch(a, b, "TouchEnded");
+        }
+        crate::api::humanoid::fire_events(&self.lua, events.humanoid);
+        for id in events.reached_target {
+            fire_lua(&self.lua, id, "ReachedTarget", MultiValue::new());
+        }
+        if !events.fallen.is_empty() || !events.broken_joints.is_empty() {
+            let eng = self.engine.clone();
+            let mut e = eng.lock();
+            for id in events.fallen.into_iter().chain(events.broken_joints) {
+                if e.dm.contains(id) {
+                    let _ = e.dm.destroy(id);
+                }
+            }
+        }
+        pump(&self.lua);
+    }
+
+    fn step_debris(&self) {
+        {
+            let eng = self.engine.clone();
+            let mut guard = eng.lock();
+            let e = &mut *guard;
+            let now = e.game_time;
+            let due: Vec<InstanceId> = e
+                .debris_timers
+                .iter()
+                .filter(|(t, _)| *t <= now)
+                .map(|(_, id)| *id)
+                .collect();
+            if due.is_empty() {
+                return;
+            }
+            e.debris_timers.retain(|(t, _)| *t > now);
+            for id in due {
+                if e.dm.contains(id)
+                    && let Err(err) = e.dm.destroy(id)
+                {
+                    e.print(MessageType::Warning, err.to_string());
+                }
+            }
+            let dm = &e.dm;
+            e.debris_queue.retain(|id| dm.contains(*id));
+        }
+        pump(&self.lua);
+    }
+
+    fn fire_touch(&self, a: InstanceId, b: InstanceId, event: &'static str) {
+        let alive = {
+            let e = self.engine.lock();
+            e.dm.contains(a) && e.dm.contains(b)
+        };
+        if !alive {
+            return;
+        }
+        for (target, other) in [(a, b), (b, a)] {
+            if has_listeners(&self.lua, target, event)
+                && let Ok(v) = push_instance(&self.lua, other)
+            {
+                fire_lua(&self.lua, target, event, MultiValue::from_vec(vec![v]));
+            }
+        }
     }
 
     pub fn run_ready(&self) {
@@ -473,7 +703,23 @@ pub fn resume_thread(lua: &Lua, thread: &Thread, args: MultiValue) {
             return;
         }
     }
+    let wd = with_state(lua, |s| s.watchdog.clone());
+    {
+        let mut w = wd.lock();
+        if w.depth == 0 {
+            w.start = Some(Stopwatch::new());
+            w.identity = info.as_ref().map_or(Identity::GameScript, |i| i.identity);
+        }
+        w.depth += 1;
+    }
     let result = thread.resume::<MultiValue>(args);
+    {
+        let mut w = wd.lock();
+        w.depth = w.depth.saturating_sub(1);
+        if w.depth == 0 {
+            w.start = None;
+        }
+    }
     let key = thread_key(thread);
     let mut error_text = None;
     if let Err(e) = &result {
@@ -793,6 +1039,24 @@ fn dispatch_dom_event(lua: &Lua, ev: &DomEvent) {
             }
             if *property == "Name" {
                 crate::scripts::on_name_changed(lua, *id);
+            }
+            if class == "Humanoid"
+                && matches!(*property, "Health_XML" | "MaxHealth")
+                && has_listeners(lua, *id, "HealthChanged")
+            {
+                let h = eng
+                    .lock()
+                    .dm
+                    .get(*id, "Health_XML")
+                    .ok()
+                    .and_then(|v| v.as_f32())
+                    .unwrap_or(0.0);
+                fire_lua(
+                    lua,
+                    *id,
+                    "HealthChanged",
+                    MultiValue::from_vec(vec![Value::Number(h as f64)]),
+                );
             }
         }
         DomEvent::ChildAdded { parent, child } => {

@@ -14,17 +14,17 @@ Phase 3 (simulation). Phases 1 and 2 are done: workspace, CI, reflection data, m
 |---|---|---|---|
 | `Base/` (RbxAssert, RbxFormat, HardwareInfo, cpucount, rbx/, util/, microprofile) | `rbx-base` | in progress | asserts become `debug_assert!` and `tracing`; microprofile becomes `tracing` spans |
 | `Base/include/simd` | `rbx-math` | ported | glam handles SIMD |
-| `App/v8kernel` (math kernel, bodies, connectors) | `rbx-physics` | not started | |
-| `App/v8world` (World, Primitive, Assembly, Contact, Joints) | `rbx-physics` | not started | |
-| `App/solver` (PGS solver) | `rbx-physics` | not started | |
-| `App.BulletPhysics/` | `rbx-physics` via parry3d | not started | only collision detection is used |
+| `App/v8kernel` (math kernel, bodies, connectors) | `rbx-physics` | done | constants, units, joint K table and mass properties ported; spring connectors replaced by PGS (decision 14) |
+| `App/v8world` (World, Primitive, Assembly, Contact, Joints) | `rbx-physics` | in progress | assemblies, joints, auto-join, contacts, touch, sleep, fallen parts, movers done; humanoid stage and terrain contacts left |
+| `App/solver` (PGS solver) | `rbx-physics` | done | `solver.rs` is a line-by-line port of Constraint, SolverKernel and Solver |
+| `App.BulletPhysics/` | `rbx-physics` via parry3d | done | parry3d contact manifolds and ray casts |
 | `App/v8tree` (Instance, Service, reflection glue) | `rbx-dom` | ported | |
 | `App/reflection`, `Base/include/rbx` reflection | `rbx-reflection` | ported | |
 | `App/v8datamodel` | `rbx-dom` (classes), `rbx-format` (serializers), `rbx-script` (bindings) | in progress | |
 | `App/v8xml` | `rbx-format` | ported | XML place format |
 | `App/lz4` | `rbx-format` via the lz4_flex crate | ported | binary place chunks |
 | `App/script`, `App/Lua-5.1.4` | `rbx-script` (Luau via mlua) | not started | |
-| `App/humanoid` | `rbx-physics` (controller) and `rbx-dom` (class) | not started | |
+| `App/humanoid` | `rbx-physics` (controller) and `rbx-dom` (class) | in progress | state table, floor and ladder search, all state forces, death, MoveTo, events done; animation, tools and seats left |
 | `App/tool` | `rbx-dom` and `apps/studio` | not started | dragger, mouse commands |
 | `App/gui` | `rbx-dom` and `rbx-render` | not started | ScreenGui and friends |
 | `App/voxel`, `App/voxel2` | `rbx-physics` and `rbx-render` | not started | terrain |

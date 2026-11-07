@@ -7,6 +7,38 @@ use std::sync::LazyLock;
 static FLAGS: LazyLock<RwLock<HashMap<String, String>>> =
     LazyLock::new(|| RwLock::new(HashMap::new()));
 
+static DEFAULTS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
+    let mut map = HashMap::new();
+    if let Ok(Value::Object(obj)) =
+        serde_json::from_str::<Value>(include_str!("../data/flags.json"))
+    {
+        for (k, v) in obj {
+            if let Some(d) = v.get("default").and_then(Value::as_str) {
+                map.insert(k, d.to_string());
+            }
+        }
+    }
+    for (k, v) in ENGINE_VALUES {
+        map.insert((*k).to_string(), (*v).to_string());
+    }
+    map
+});
+
+const ENGINE_VALUES: &[(&str, &str)] = &[
+    ("UsePGSSolver", "true"),
+    ("MaterialPropertiesEnabled", "true"),
+    ("MaterialPropertiesNewIsDefault", "true"),
+    ("FixTouchEndedReporting", "true"),
+];
+
+pub fn flag_value(name: &str) -> Option<String> {
+    let name = strip_prefix(name);
+    if let Some(v) = FLAGS.read().get(name) {
+        return Some(v.clone());
+    }
+    DEFAULTS.get(name).cloned()
+}
+
 fn strip_prefix(name: &str) -> &str {
     for p in [
         "DFFlag", "DFInt", "DFString", "DFLog", "FFlag", "FInt", "FString", "FLog", "SFFlag",
@@ -25,7 +57,7 @@ pub fn set_flag(name: &str, value: &str) {
 }
 
 pub fn flag_bool(name: &str, default: bool) -> bool {
-    match FLAGS.read().get(name).map(|s| s.to_ascii_lowercase()) {
+    match flag_value(name).map(|s| s.to_ascii_lowercase()) {
         Some(v) if v == "true" || v == "1" => true,
         Some(v) if v == "false" || v == "0" => false,
         _ => default,
@@ -33,19 +65,13 @@ pub fn flag_bool(name: &str, default: bool) -> bool {
 }
 
 pub fn flag_int(name: &str, default: i64) -> i64 {
-    FLAGS
-        .read()
-        .get(name)
+    flag_value(name)
         .and_then(|v| v.trim().parse().ok())
         .unwrap_or(default)
 }
 
 pub fn flag_string(name: &str, default: &str) -> String {
-    FLAGS
-        .read()
-        .get(name)
-        .cloned()
-        .unwrap_or_else(|| default.to_string())
+    flag_value(name).unwrap_or_else(|| default.to_string())
 }
 
 pub fn load_flags_json(text: &str) -> Result<usize, String> {
@@ -70,6 +96,16 @@ pub fn load_flags_json(text: &str) -> Result<usize, String> {
 pub fn load_flags_file(path: &Path) -> Result<usize, String> {
     let text = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
     load_flags_json(&text)
+}
+
+pub fn all_values() -> Vec<(String, String)> {
+    let mut map: HashMap<String, String> = DEFAULTS.clone();
+    for (k, v) in FLAGS.read().iter() {
+        map.insert(k.clone(), v.clone());
+    }
+    let mut v: Vec<(String, String)> = map.into_iter().collect();
+    v.sort();
+    v
 }
 
 pub fn all_flags() -> Vec<(String, String)> {

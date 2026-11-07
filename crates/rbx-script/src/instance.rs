@@ -164,10 +164,19 @@ pub fn index(lua: &Lua, id: InstanceId, key: Value) -> Result<Value> {
 }
 
 pub fn event_static(class: &str, name: &str) -> &'static str {
-    database()
-        .find_event(class, name)
-        .map(|e| e.name.as_str())
-        .unwrap_or("Changed")
+    let db = database();
+    match db.find_event(class, name) {
+        Some(e) => match e
+            .deprecated_by
+            .as_deref()
+            .filter(|t| !t.is_empty() && *t != name)
+            .and_then(|t| db.find_event(class, t))
+        {
+            Some(c) => c.name.as_str(),
+            None => e.name.as_str(),
+        },
+        None => "Changed",
+    }
 }
 
 pub fn newindex(lua: &Lua, id: InstanceId, key: Value, value: Value) -> Result<()> {

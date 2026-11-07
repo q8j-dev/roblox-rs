@@ -21,6 +21,7 @@ pub mod terrain;
 pub mod test;
 pub mod tween;
 pub mod user_input;
+pub mod verbs;
 
 use crate::types::rt;
 use mlua::{IntoLuaMulti, Lua, MultiValue, Result, Value};

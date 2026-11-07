@@ -98,6 +98,7 @@ pub struct Engine {
     pub audio_state: crate::api::sound::AudioState,
     pub join_after_move: (Option<InstanceId>, Option<InstanceId>),
     pub selection: Vec<InstanceId>,
+    pub clipboard: Vec<InstanceId>,
     pub animate_fallback: bool,
 }
 
@@ -222,6 +223,7 @@ impl Engine {
             audio_state: Default::default(),
             join_after_move: (None, None),
             selection: Vec::new(),
+            clipboard: Vec::new(),
             animate_fallback: false,
         }
     }

@@ -196,16 +196,36 @@ fn done(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
 }
 
 fn get_command_names(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
-    ret(lua, lua.create_table()?)
+    let t = lua.create_table()?;
+    for (i, name) in super::verbs::COMMANDS.iter().enumerate() {
+        t.raw_set(i + 1, *name)?;
+    }
+    ret(lua, t)
 }
 
-fn do_command(_lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+fn do_command(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
     let name = arg_string(args.first()).unwrap_or_default();
+    if super::verbs::run(lua, &name) {
+        crate::runtime::pump(lua);
+        return none();
+    }
     Err(rt(format!("Unknown command {name}")))
 }
 
-fn command_query(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
-    ret(lua, false)
+fn command_enabled(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let name = arg_string(args.first()).unwrap_or_default();
+    match super::verbs::enabled(lua, &name) {
+        Some(v) => ret(lua, v),
+        None => Err(rt(format!("Unknown command {name}"))),
+    }
+}
+
+fn command_checked(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let name = arg_string(args.first()).unwrap_or_default();
+    match super::verbs::enabled(lua, &name) {
+        Some(_) => ret(lua, false),
+        None => Err(rt(format!("Unknown command {name}"))),
+    }
 }
 
 fn run(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
@@ -604,11 +624,8 @@ pub fn register(r: &mut Registry) {
     r.add("TestService", &["Run"], run);
     r.add("TestService", &["GetCommandNames"], get_command_names);
     r.add("TestService", &["DoCommand"], do_command);
-    r.add(
-        "TestService",
-        &["IsCommandEnabled", "IsCommandChecked"],
-        command_query,
-    );
+    r.add("TestService", &["IsCommandEnabled"], command_enabled);
+    r.add("TestService", &["IsCommandChecked"], command_checked);
     r.add("FunctionalTest", &["Pass", "Passed"], functional_pass);
     r.add("FunctionalTest", &["Error", "Failed"], functional_error);
     r.add("FunctionalTest", &["Warn"], functional_warn);

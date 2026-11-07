@@ -20837,8 +20837,8 @@
   },
   {
    "callbacks": [],
-   "cpp": "Base",
-   "creatable": false,
+   "cpp": "CustomParticleEmitter",
+   "creatable": true,
    "events": [
     {
      "deprecated_by": null,

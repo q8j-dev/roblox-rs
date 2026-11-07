@@ -106,6 +106,21 @@ fn main() {
         Vec3::new(10.0, 4.0, 0.0),
         true,
     );
+    for (i, class) in ["Fire", "Smoke", "Sparkles", "ParticleEmitter"]
+        .iter()
+        .enumerate()
+    {
+        let holder = part(
+            &mut dm,
+            ws,
+            class,
+            Vec3::new(2.0, 1.0, 2.0),
+            Vec3::new(-12.0 + i as f32 * 6.0, 1.0, -8.0),
+            true,
+        );
+        let fx = dm.create(class).expect("effect");
+        dm.set_parent(fx, Some(holder)).expect("parent");
+    }
     let cam = dm.create("Camera").expect("camera");
     dm.set(
         cam,
@@ -130,6 +145,15 @@ fn main() {
     let content = PathBuf::from("assets/content");
     let platform = PathBuf::from("assets/platform-content/pc");
     let mut off = Offscreen::new(width, height, &content, &platform).expect("gpu");
+    off.renderer.frame_dt = 1.0 / 30.0;
+    for _ in 0..90 {
+        let _ = off.render(&dm);
+    }
+    println!(
+        "effects {} particles {}",
+        rbx_render::scene::extract(&dm, 1.0).effects.len(),
+        off.renderer.particle_count()
+    );
     off.save_png(&dm, std::path::Path::new(&out))
         .expect("render");
     println!("wrote {out}");

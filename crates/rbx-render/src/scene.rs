@@ -83,6 +83,7 @@ pub struct Celestial {
 
 pub struct Scene {
     pub parts: Vec<PartDraw>,
+    pub effects: Vec<crate::particles::EffectDesc>,
     pub celestial: Celestial,
     pub camera: Camera,
     pub lighting: SceneLighting,
@@ -492,6 +493,127 @@ fn collect_parts(
     }
 }
 
+fn collect_effects(dm: &DataModel, root: InstanceId) -> Vec<crate::particles::EffectDesc> {
+    use crate::particles::{CustomEmitterDesc, EffectDesc, EffectKind};
+    let mut out = Vec::new();
+    let color = |id, name| {
+        let c = get_color3(dm, id, name, Color3::new(1.0, 1.0, 1.0));
+        [c.r, c.g, c.b]
+    };
+    let enabled = |id| {
+        dm.get(id, "Enabled")
+            .ok()
+            .and_then(|v| v.as_bool())
+            .unwrap_or(true)
+    };
+    let range = |id, name| match dm.get(id, name) {
+        Ok(Variant::NumberRange(r)) => (r.min, r.max),
+        _ => (0.0, 0.0),
+    };
+    for id in dm.descendants(root) {
+        let class = dm.class_of(id).unwrap_or("");
+        let kind = match class {
+            "Sparkles" => EffectKind::Sparkles {
+                enabled: enabled(id),
+                color: color(id, "SparkleColor"),
+            },
+            "Smoke" => EffectKind::Smoke {
+                enabled: enabled(id),
+                color: color(id, "Color"),
+                size: get_f32(dm, id, "Size", 1.0),
+                rise: get_f32(dm, id, "RiseVelocity", 1.0),
+                opacity: get_f32(dm, id, "Opacity", 0.5),
+            },
+            "Fire" => EffectKind::Fire {
+                enabled: enabled(id),
+                color: color(id, "Color"),
+                secondary: color(id, "SecondaryColor"),
+                size: get_f32(dm, id, "Size", 5.0),
+                heat: get_f32(dm, id, "Heat", 9.0),
+            },
+            "ForceField" => EffectKind::ForceField,
+            "Explosion" => EffectKind::Explosion {
+                position: dm
+                    .get(id, "Position")
+                    .ok()
+                    .and_then(|v| v.as_vec3())
+                    .unwrap_or(Vec3::ZERO),
+            },
+            "ParticleEmitter" => EffectKind::Custom(Box::new(CustomEmitterDesc {
+                enabled: enabled(id),
+                rate: get_f32(dm, id, "Rate", 20.0),
+                speed: range(id, "Speed"),
+                spread: get_f32(dm, id, "VelocitySpread", 0.0),
+                rotation: range(id, "Rotation"),
+                rot_speed: range(id, "RotSpeed"),
+                lifetime: range(id, "Lifetime"),
+                acceleration: dm
+                    .get(id, "Acceleration")
+                    .ok()
+                    .and_then(|v| v.as_vec3())
+                    .unwrap_or(Vec3::ZERO),
+                drag: get_f32(dm, id, "Drag", 0.0),
+                locked: dm
+                    .get(id, "LockedToPart")
+                    .ok()
+                    .and_then(|v| v.as_bool())
+                    .unwrap_or(false),
+                velocity_inheritance: get_f32(dm, id, "VelocityInheritance", 0.0),
+                light_emission: get_f32(dm, id, "LightEmission", 0.0),
+                z_offset: get_f32(dm, id, "ZOffset", 0.0),
+                direction: dm
+                    .get(id, "EmissionDirection")
+                    .ok()
+                    .and_then(|v| v.as_enum())
+                    .unwrap_or(1),
+                texture: content_prop(dm, id, "Texture").unwrap_or_default(),
+                color: match dm.get(id, "Color") {
+                    Ok(Variant::ColorSequence(c)) => c,
+                    _ => rbx_math::ColorSequence::constant(Color3::new(1.0, 1.0, 1.0)),
+                },
+                transparency: match dm.get(id, "Transparency") {
+                    Ok(Variant::NumberSequence(n)) => n,
+                    _ => rbx_math::NumberSequence::constant(0.0),
+                },
+                size: match dm.get(id, "Size") {
+                    Ok(Variant::NumberSequence(n)) => n,
+                    _ => rbx_math::NumberSequence::constant(1.0),
+                },
+                emit_total: dm.particle_emits.get(&id).copied().unwrap_or(0),
+            })),
+            _ => continue,
+        };
+        let Some(parent) = dm.parent_of(id) else {
+            continue;
+        };
+        let part = if class == "ForceField" {
+            dm.find_first_child(parent, "Torso", false)
+        } else {
+            Some(parent)
+        };
+        let part = part.filter(|p| dm.is_a(*p, "BasePart"));
+        if part.is_none() && class != "Explosion" {
+            continue;
+        }
+        let cframe = part
+            .and_then(|p| dm.get_raw(p, "CFrame").and_then(|v| v.as_cframe()))
+            .unwrap_or(CFrame::IDENTITY);
+        let vec = |name| {
+            part.and_then(|p| dm.get(p, name).ok().and_then(|v| v.as_vec3()))
+                .unwrap_or(Vec3::ZERO)
+        };
+        out.push(EffectDesc {
+            id,
+            kind,
+            cframe,
+            part_size: vec("Size"),
+            linear_velocity: vec("Velocity"),
+            angular_velocity: vec("RotVelocity"),
+        });
+    }
+    out
+}
+
 fn face_normal(face: u32, r: &Mat3) -> Vec3 {
     match face {
         0 => r.x_axis,
@@ -735,8 +857,10 @@ pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
             moon_size: 11.0,
         },
     };
+    let effects = ws.map(|w| collect_effects(dm, w)).unwrap_or_default();
     Scene {
         parts,
+        effects,
         celestial,
         lights,
         focus: focus.unwrap_or(camera.cframe.translation),

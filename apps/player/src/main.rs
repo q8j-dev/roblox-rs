@@ -407,6 +407,9 @@ impl App for Player {
 
     fn frame(&mut self, dt: f64) {
         self.update_gui_view();
+        if let Some(gpu) = &mut self.gpu {
+            gpu.renderer.frame_dt = dt as f32;
+        }
         self.accumulator += dt.min(0.25);
         let mut steps = 0;
         while self.accumulator >= STEP && steps < 4 {

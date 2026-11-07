@@ -24,6 +24,25 @@ pub fn register(r: &mut Registry) {
     r.add("RenderSettings", &["GetMaxQualityLevel"], max_quality_level);
     r.add("Teams", &["GetTeams"], get_teams);
     r.add("ContentProvider", &["Preload"], preload);
+    r.add("ParticleEmitter", &["Emit"], emit_particles);
+}
+
+fn emit_particles(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let n = crate::convert::arg_number(args.first())
+        .unwrap_or(16.0)
+        .max(0.0) as u64;
+    {
+        let eng = engine(lua);
+        let mut e = eng.lock();
+        *e.dm.particle_emits.entry(id).or_insert(0) += n;
+    }
+    crate::runtime::fire_lua(
+        lua,
+        id,
+        "OnEmitRequested",
+        mlua::MultiValue::from_vec(vec![Value::Integer(n as i64)]),
+    );
+    none()
 }
 
 fn get_teams(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {

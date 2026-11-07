@@ -42,6 +42,7 @@ const ENGINE_VALUES: &[(&str, &str)] = &[
     ("MobileToggleChatVisibleIcon", "true"),
     ("UserServerFollowers", "true"),
     ("FilteringEnabledDialogFix", "true"),
+    ("CustomEmitterRenderEnabled", "true"),
 ];
 
 pub fn flag_value(name: &str) -> Option<String> {

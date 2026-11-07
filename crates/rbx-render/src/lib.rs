@@ -9,6 +9,8 @@ pub mod lightgrid;
 pub mod lightgrid_terrain;
 pub mod lighting;
 pub mod offscreen;
+pub mod particle_pass;
+pub mod particles;
 pub mod renderer;
 pub mod scene;
 pub mod shadow;

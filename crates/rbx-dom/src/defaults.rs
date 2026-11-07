@@ -60,6 +60,28 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         }
         ("Players", "ClassicChat") => Variant::Bool(true),
         ("Players", "BubbleChat") => Variant::Bool(false),
+        ("Fire" | "Smoke" | "Sparkles" | "ParticleEmitter", "Enabled") => Variant::Bool(true),
+        ("ParticleEmitter", "Texture") => {
+            Variant::Content("rbxasset://textures/particles/sparkles_main.dds".into())
+        }
+        ("ParticleEmitter", "Color") => Variant::ColorSequence(rbx_math::ColorSequence::constant(
+            Color3::new(1.0, 1.0, 1.0),
+        )),
+        ("ParticleEmitter", "Transparency") => {
+            Variant::NumberSequence(rbx_math::NumberSequence::constant(0.0))
+        }
+        ("ParticleEmitter", "Size") => {
+            Variant::NumberSequence(rbx_math::NumberSequence::constant(1.0))
+        }
+        ("ParticleEmitter", "Rate") => Variant::Float(20.0),
+        ("ParticleEmitter", "Speed") => Variant::NumberRange(NumberRange::new(5.0, 5.0)),
+        ("ParticleEmitter", "Lifetime") => Variant::NumberRange(NumberRange::new(5.0, 10.0)),
+        ("ParticleEmitter", "Rotation" | "RotSpeed") => {
+            Variant::NumberRange(NumberRange::new(0.0, 0.0))
+        }
+        ("ParticleEmitter", "EmissionDirection") => Variant::Enum(1),
+        ("SpotLight" | "SurfaceLight", "Angle") => Variant::Float(90.0),
+        ("SpotLight" | "SurfaceLight", "Face") => Variant::Enum(5),
         ("BasePart", "Friction") => Variant::Float(0.3),
         ("BasePart", "Elasticity") => Variant::Float(0.5),
         ("BasePart", "size") | ("BasePart", "Size") => Variant::Vector3(Vec3::new(4.0, 1.2, 2.0)),
@@ -179,7 +201,6 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         ("Sky", "SkyboxUp") => Variant::Content("rbxasset://textures/sky/sky512_up.tex".into()),
         ("UserGameSettings", "StartScreenPosition") => Variant::Vector2(Vec2::new(20.0, 20.0)),
         ("UserGameSettings", "StartScreenSize") => Variant::Vector2(Vec2::new(800.0, 600.0)),
-        ("ParticleEmitter", "Lifetime") => Variant::NumberRange(NumberRange::new(5.0, 10.0)),
         _ => return None,
     })
 }

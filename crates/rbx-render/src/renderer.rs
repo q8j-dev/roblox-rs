@@ -105,6 +105,9 @@ pub struct Renderer {
     celestial_add: wgpu::RenderPipeline,
     celestial_alpha: wgpu::RenderPipeline,
     stars: crate::celestial::StarField,
+    particles: crate::particles::ParticleSystem,
+    particle_pass: crate::particle_pass::ParticlePass,
+    pub frame_dt: f32,
     lgrid_texture: wgpu::Texture,
     lgrid_active: bool,
     pub lighting_budget: usize,
@@ -477,6 +480,8 @@ impl Renderer {
                 operation: wgpu::BlendOperation::Add,
             },
         };
+        let particle_pass =
+            crate::particle_pass::ParticlePass::new(&device, &queue, &globals_layout, format);
         let celestial_add = make_celestial(additive, "sun and moon");
         let celestial_alpha = make_celestial(wgpu::BlendState::ALPHA_BLENDING, "stars");
         let opaque = make_parts(None, true, "opaque");
@@ -549,6 +554,9 @@ impl Renderer {
             celestial_add,
             celestial_alpha,
             stars: crate::celestial::StarField::default(),
+            particles: crate::particles::ParticleSystem::default(),
+            particle_pass,
+            frame_dt: 0.0,
             lgrid_texture,
             lgrid_active: false,
             lighting_budget: 24,
@@ -729,6 +737,10 @@ impl Renderer {
             });
             self.materials.insert(shading, bg);
         }
+    }
+
+    pub fn particle_count(&self) -> usize {
+        self.particles.particle_count()
     }
 
     fn compressed(&self) -> bool {
@@ -1342,6 +1354,36 @@ impl Renderer {
                 })
             })
         };
+        let cam_dir = -rot.z_axis;
+        self.particles
+            .update(&scene.effects, self.frame_dt, eye, cam_dir);
+        let (particle_vertices, particle_draws) = self.particles.draw_list(right, up, eye, cam_dir);
+        if !particle_draws.is_empty() {
+            let wanted = self.particle_pass.missing(&self.particles, &particle_draws);
+            let loaded: HashMap<String, Option<Image>> = wanted
+                .into_iter()
+                .map(|u| {
+                    let img = self.read_content(&u).and_then(|b| texture::decode(&b).ok());
+                    (u, img)
+                })
+                .collect();
+            let load = |url: &str| loaded.get(url).cloned().flatten();
+            self.particle_pass.prepare(
+                &self.device,
+                &self.queue,
+                &mut self.particles,
+                &particle_draws,
+                &load,
+            );
+        }
+        let particle_buffer = (!particle_vertices.is_empty()).then(|| {
+            self.device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("particles"),
+                    contents: bytemuck::cast_slice(&particle_vertices),
+                    usage: wgpu::BufferUsages::VERTEX,
+                })
+        });
         let sun_moon_buffer = make_buffer(&self.device, &sun_moon);
         let star_buffer = make_buffer(&self.device, &star_vertices);
 
@@ -1514,6 +1556,10 @@ impl Renderer {
             if !self.smooth.is_empty() {
                 pass.set_bind_group(0, &self.globals_bg, &[]);
                 self.smooth.draw_water(&mut pass);
+            }
+            if let Some(buf) = &particle_buffer {
+                pass.set_bind_group(0, &self.globals_bg, &[]);
+                self.particle_pass.draw(&mut pass, buf, &particle_draws);
             }
         }
         self.queue.submit([encoder.finish()]);

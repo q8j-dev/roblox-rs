@@ -95,6 +95,7 @@ pub struct DataModel {
     remote: Vec<crate::remote::RemoteCall>,
     deliveries: Vec<crate::remote::RemoteDelivery>,
     pub gui_view: crate::gui::GuiView,
+    pub particle_emits: HashMap<InstanceId, u64>,
 }
 
 impl Default for DataModel {
@@ -137,6 +138,7 @@ impl DataModel {
             remote: Vec::new(),
             deliveries: Vec::new(),
             gui_view: crate::gui::GuiView::default(),
+            particle_emits: HashMap::new(),
         };
         let root = match dm.create_internal(class) {
             Ok(id) => id,

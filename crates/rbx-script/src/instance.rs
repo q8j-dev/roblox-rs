@@ -27,6 +27,7 @@ impl Drop for LInstance {
 
 impl UserData for LInstance {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Instance");
         f.add_meta_field_with(MetaMethod::Index, |lua| {
             lua.named_registry_value::<Function>("rbx_instance_index")
         });

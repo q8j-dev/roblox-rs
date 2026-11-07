@@ -69,6 +69,10 @@ pub fn register(lua: &Lua) -> Result<()> {
 }
 
 impl UserData for LSignal {
+    fn add_fields<F: mlua::UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "RBXScriptSignal");
+    }
+
     fn add_methods<M: UserDataMethods<Self>>(m: &mut M) {
         for name in ["connect", "Connect", "connectFirst", "connectLast"] {
             m.add_method(name, |lua, this, f: Value| {
@@ -94,6 +98,7 @@ impl UserData for LSignal {
 
 impl UserData for LConnection {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "RBXScriptConnection");
         for name in ["connected", "Connected"] {
             f.add_field_method_get(name, |lua, this| {
                 Ok(with_state(lua, |s| s.conns.contains_key(&this.id)))

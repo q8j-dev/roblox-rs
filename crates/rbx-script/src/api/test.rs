@@ -394,6 +394,16 @@ fn parse_arg(b: &[u8], mut i: usize, close: u8) -> std::result::Result<usize, St
     Ok(b.len())
 }
 
+pub fn args_in_bracket(text: &str) -> Vec<String> {
+    let b = text.as_bytes();
+    let Some(start) = b.iter().position(|c| *c == b'(') else {
+        return Vec::new();
+    };
+    let mut out = Vec::new();
+    let _ = parse_bracket(b, start, &mut |s, e| out.push(text[s..e].to_string()));
+    out
+}
+
 fn parse_bracket(
     b: &[u8],
     mut i: usize,

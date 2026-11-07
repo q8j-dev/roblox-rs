@@ -54,10 +54,17 @@ pub fn invoke_callback(
     args: MultiValue,
     missing: &str,
 ) -> Result<Ret> {
+    let caller = lua.current_thread();
     let Some(func) = callback(lua, id, name) else {
+        if name == "OnInvoke" {
+            with_state(lua, |s| {
+                s.pending_invokes
+                    .push((id, name.to_string(), caller, args.into_vec()))
+            });
+            return Ok(Ret::Yield);
+        }
         return Err(rt(missing.to_string()));
     };
-    let caller = lua.current_thread();
     let thread = lua.create_thread(func)?;
     let info = current_info(lua);
     with_state(lua, |s| {
@@ -82,7 +89,7 @@ pub fn invoke_callback(
                 with_state(lua, |s| {
                     s.threads.remove(&thread_key(&thread));
                 });
-                Ok(Ret::Values(values))
+                Ok(Ret::Values(copy_args(lua, &values.into_vec())?))
             }
         }
         Err(e) => {
@@ -102,10 +109,26 @@ fn invoke(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
 pub fn set_callback(lua: &Lua, id: InstanceId, name: &str, value: Value) -> Result<()> {
     match value {
         Value::Function(f) => {
-            let key = lua.create_registry_value(f)?;
+            let key = lua.create_registry_value(f.clone())?;
             with_state(lua, |s| {
                 s.callbacks.insert((id, name.to_string()), key);
             });
+            let pending: Vec<(mlua::Thread, Vec<Value>)> = with_state(lua, |s| {
+                let mut out = Vec::new();
+                let mut i = 0;
+                while i < s.pending_invokes.len() {
+                    if s.pending_invokes[i].0 == id && s.pending_invokes[i].1 == name {
+                        let (_, _, caller, args) = s.pending_invokes.remove(i);
+                        out.push((caller, args));
+                    } else {
+                        i += 1;
+                    }
+                }
+                out
+            });
+            for (caller, args) in pending {
+                run_pending(lua, &f, caller, args)?;
+            }
             Ok(())
         }
         Value::Nil => {
@@ -116,6 +139,39 @@ pub fn set_callback(lua: &Lua, id: InstanceId, name: &str, value: Value) -> Resu
         }
         _ => Err(rt(format!("{name} must be set to a function"))),
     }
+}
+
+fn run_pending(lua: &Lua, func: &Function, caller: mlua::Thread, args: Vec<Value>) -> Result<()> {
+    let thread = lua.create_thread(func.clone())?;
+    let info = with_state(lua, |s| s.threads.get(&thread_key(&caller)).cloned())
+        .unwrap_or_else(|| current_info(lua));
+    with_state(lua, |s| {
+        s.threads.insert(thread_key(&thread), info);
+    });
+    match thread.resume::<MultiValue>(MultiValue::from_vec(args)) {
+        Ok(values) => {
+            if thread.status() == ThreadStatus::Resumable {
+                with_state(lua, |s| {
+                    s.joins.insert(thread_key(&thread), caller);
+                });
+            } else {
+                with_state(lua, |s| {
+                    s.threads.remove(&thread_key(&thread));
+                });
+                let values = copy_args(lua, &values.into_vec())?;
+                crate::runtime::make_ready_lua(lua, caller, values);
+            }
+        }
+        Err(e) => {
+            let msg = crate::runtime::format_error(&e);
+            with_state(lua, |s| {
+                s.threads.remove(&thread_key(&thread));
+                s.ready
+                    .push_back((caller, crate::runtime::Resume::Error(msg)));
+            });
+        }
+    }
+    Ok(())
 }
 
 pub fn register(r: &mut Registry) {

@@ -269,6 +269,7 @@ pub struct State {
     pub finish_hooks: HashMap<usize, u32>,
     pub joins: HashMap<usize, Thread>,
     pub callbacks: HashMap<(InstanceId, String), RegistryKey>,
+    pub pending_invokes: Vec<(InstanceId, String, Thread, Vec<Value>)>,
     pub watchdog: Arc<Mutex<Watchdog>>,
 }
 
@@ -433,6 +434,7 @@ impl ScriptRuntime {
             finish_hooks: HashMap::new(),
             joins: HashMap::new(),
             callbacks: HashMap::new(),
+            pending_invokes: Vec::new(),
             watchdog: Arc::new(Mutex::new(Watchdog::default())),
         });
         let wd = with_state(&lua, |s| s.watchdog.clone());
@@ -510,6 +512,36 @@ impl ScriptRuntime {
         resume_thread(&self.lua, &thread, MultiValue::new());
         pump(&self.lua);
         Ok(())
+    }
+
+    pub fn execute_in_new_thread(
+        &self,
+        source: &str,
+        identity: Identity,
+        args: MultiValue,
+    ) -> Result<MultiValue, String> {
+        let env = new_environment(&self.lua, None).map_err(|e| e.to_string())?;
+        let func = self
+            .lua
+            .load(source)
+            .set_name("=Script")
+            .set_environment(env)
+            .into_function()
+            .map_err(|e| format_error(&e))?;
+        let thread = self.lua.create_thread(func).map_err(|e| e.to_string())?;
+        with_state(&self.lua, |s| {
+            s.threads.insert(
+                thread_key(&thread),
+                ThreadInfo {
+                    script: None,
+                    identity,
+                },
+            );
+        });
+        let result =
+            resume_thread_result(&self.lua, &thread, args).unwrap_or_else(|| Ok(MultiValue::new()));
+        pump(&self.lua);
+        result
     }
 
     pub fn step(&self, dt: f64) {
@@ -796,8 +828,16 @@ pub fn format_error(err: &mlua::Error) -> String {
 }
 
 pub fn resume_thread(lua: &Lua, thread: &Thread, args: MultiValue) {
+    resume_thread_result(lua, thread, args);
+}
+
+pub fn resume_thread_result(
+    lua: &Lua,
+    thread: &Thread,
+    args: MultiValue,
+) -> Option<Result<MultiValue, String>> {
     if thread.status() != ThreadStatus::Resumable {
-        return;
+        return None;
     }
     let info = with_state(lua, |s| s.threads.get(&thread_key(thread)).cloned());
     if let Some(i) = &info
@@ -807,7 +847,7 @@ pub fn resume_thread(lua: &Lua, thread: &Thread, args: MultiValue) {
             s.running_scripts.get(&script).copied().unwrap_or(false)
         });
         if !alive {
-            return;
+            return None;
         }
     }
     let wd = with_state(lua, |s| s.watchdog.clone());
@@ -856,15 +896,24 @@ pub fn resume_thread(lua: &Lua, thread: &Thread, args: MultiValue) {
             crate::api::test::on_script_finished(lua, run, error_text.clone());
         }
         if let Some(caller) = join {
-            match result {
-                Ok(values) => make_ready_lua(lua, caller, values),
+            match &result {
+                Ok(values) => {
+                    let copied = crate::api::bindables::copy_args(lua, &values.clone().into_vec())
+                        .unwrap_or_else(|_| values.clone());
+                    make_ready_lua(lua, caller, copied)
+                }
                 Err(_) => {
-                    let msg = error_text.unwrap_or_default();
+                    let msg = error_text.clone().unwrap_or_default();
                     with_state(lua, |s| s.ready.push_back((caller, Resume::Error(msg))));
                 }
             }
         }
+        return Some(match result {
+            Ok(v) => Ok(v),
+            Err(_) => Err(error_text.unwrap_or_default()),
+        });
     }
+    Some(Ok(MultiValue::new()))
 }
 
 pub fn spawn_function(lua: &Lua, func: Function, args: MultiValue, info: ThreadInfo) {

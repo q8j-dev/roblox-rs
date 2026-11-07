@@ -361,7 +361,7 @@ end
         "Ray",
         "Region3",
         "Region3int16",
-        "Rect2D",
+        "Rect",
         "Faces",
         "Axes",
         "NumberRange",
@@ -405,5 +405,23 @@ end
             g.raw_set(name, wrapper.call::<Function>(f)?)?;
         }
     }
+    for lib in [
+        "math",
+        "string",
+        "table",
+        "coroutine",
+        "os",
+        "debug",
+        "utf8",
+        "bit32",
+    ] {
+        if let Value::Table(t) = g.get::<Value>(lib)? {
+            t.set_readonly(true);
+        }
+    }
+    let string_mt: Table = lua.load("return getmetatable('')").eval()?;
+    string_mt.raw_set("__metatable", "The metatable is locked")?;
+    string_mt.set_readonly(true);
+    g.set_readonly(true);
     Ok(g)
 }

@@ -34,6 +34,7 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         ("SpawnLocation", "size") => Variant::Vector3(Vec3::new(4.0, 1.2, 2.0)),
         ("Seat", "size") | ("VehicleSeat", "size") => Variant::Vector3(Vec3::new(4.0, 1.2, 2.0)),
         ("Terrain", "WaterColor") => Variant::Color3(Color3::new(0.05, 0.33, 0.36)),
+        ("Workspace", "FallenPartsDestroyHeight") => Variant::Float(-500.0),
         ("TestService", "Timeout") => Variant::Double(10.0),
         ("TestService", "IsPhysicsEnvironmentalThrottled")
         | ("TestService", "IsSleepAllowed")

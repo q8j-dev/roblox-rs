@@ -92,12 +92,17 @@ pub fn vec3_str(v: Vec3) -> String {
     format!("{}, {}, {}", float_str(v.x), float_str(v.y), float_str(v.z))
 }
 
+fn fuzzy_eq(a: f32, b: f32, eps: f32) -> bool {
+    a == b || (a - b).abs() <= (a.abs() + 1.0) * eps
+}
+
 fn fuzzy_eq_vec(a: Vec3, b: Vec3, eps: f32) -> bool {
-    (a - b).length_squared() <= eps * eps * (1.0f32).max(a.length_squared()).max(b.length_squared())
+    fuzzy_eq(a.x, b.x, eps) && fuzzy_eq(a.y, b.y, eps) && fuzzy_eq(a.z, b.z, eps)
 }
 
 impl UserData for LVector3 {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Vector3");
         for n in ["X", "x"] {
             f.add_field_method_get(n, |_, t| Ok(t.0.x));
         }
@@ -178,6 +183,7 @@ from_lua_userdata!(LVector2, "Vector2");
 
 impl UserData for LVector2 {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Vector2");
         for n in ["X", "x"] {
             f.add_field_method_get(n, |_, t| Ok(t.0.x));
         }
@@ -249,6 +255,7 @@ from_lua_userdata!(LVector3int16, "Vector3int16");
 
 impl UserData for LVector3int16 {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Vector3int16");
         for n in ["X", "x"] {
             f.add_field_method_get(n, |_, t| Ok(t.0.x as i32));
         }
@@ -306,6 +313,7 @@ from_lua_userdata!(LVector2int16, "Vector2int16");
 
 impl UserData for LVector2int16 {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Vector2int16");
         for n in ["X", "x"] {
             f.add_field_method_get(n, |_, t| Ok(t.0.x as i32));
         }
@@ -355,6 +363,7 @@ fn many_vec3(lua: &Lua, args: MultiValue, f: impl Fn(Vec3) -> Vec3) -> Result<Mu
 
 impl UserData for LCFrame {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "CFrame");
         f.add_field_method_get("p", |_, t| Ok(LVector3(t.0.translation)));
         f.add_field_method_get("lookVector", |_, t| Ok(LVector3(t.0.look_vector())));
         for n in ["X", "x"] {
@@ -481,6 +490,7 @@ pub fn color3_str(c: Color3) -> String {
 
 impl UserData for LColor3 {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Color3");
         f.add_field_method_get("r", |_, t| Ok(t.0.r));
         f.add_field_method_get("g", |_, t| Ok(t.0.g));
         f.add_field_method_get("b", |_, t| Ok(t.0.b));
@@ -507,6 +517,7 @@ from_lua_userdata!(LBrickColor, "BrickColor");
 
 impl UserData for LBrickColor {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "BrickColor");
         for n in ["number", "Number"] {
             f.add_field_method_get(n, |_, t| Ok(t.0.number() as i32));
         }
@@ -544,6 +555,7 @@ fn udim_str(u: UDim) -> String {
 
 impl UserData for LUDim {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "UDim");
         f.add_field_method_get("Scale", |_, t| Ok(t.0.scale));
         f.add_field_method_get("Offset", |_, t| Ok(t.0.offset));
     }
@@ -584,6 +596,7 @@ from_lua_userdata!(LUDim2, "UDim2");
 
 impl UserData for LUDim2 {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "UDim2");
         for n in ["X", "Width"] {
             f.add_field_method_get(n, |_, t| Ok(LUDim(t.0.x)));
         }
@@ -645,6 +658,7 @@ from_lua_userdata!(LRay, "Ray");
 
 impl UserData for LRay {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Ray");
         f.add_field_method_get("Origin", |_, t| Ok(LVector3(t.0.origin)));
         f.add_field_method_get("Direction", |_, t| Ok(LVector3(t.0.direction)));
         f.add_field_method_get("Unit", |_, t| {
@@ -686,6 +700,7 @@ from_lua_userdata!(LRegion3, "Region3");
 
 impl UserData for LRegion3 {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Region3");
         f.add_field_method_get("CFrame", |_, t| {
             Ok(LCFrame(CFrame::from_translation(t.0.center())))
         });
@@ -718,6 +733,7 @@ from_lua_userdata!(LRegion3int16, "Region3int16");
 
 impl UserData for LRegion3int16 {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Region3int16");
         f.add_field_method_get("Min", |_, t| Ok(LVector3int16(t.0.min)));
         f.add_field_method_get("Max", |_, t| Ok(LVector3int16(t.0.max)));
     }
@@ -737,10 +753,11 @@ impl UserData for LRegion3int16 {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LRect2D(pub Rect2D);
-from_lua_userdata!(LRect2D, "Rect2D");
+from_lua_userdata!(LRect2D, "Rect");
 
 impl UserData for LRect2D {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Rect");
         f.add_field_method_get("Min", |_, t| Ok(LVector2(t.0.min)));
         f.add_field_method_get("Max", |_, t| Ok(LVector2(t.0.max)));
         f.add_field_method_get("Width", |_, t| Ok(t.0.width()));
@@ -786,6 +803,7 @@ pub fn faces_str(f: Faces) -> String {
 
 impl UserData for LFaces {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Faces");
         f.add_field_method_get("Top", |_, t| Ok(t.0.has(NormalId::Top)));
         f.add_field_method_get("Bottom", |_, t| Ok(t.0.has(NormalId::Bottom)));
         f.add_field_method_get("Back", |_, t| Ok(t.0.has(NormalId::Back)));
@@ -827,6 +845,7 @@ pub fn axes_str(a: Axes) -> String {
 
 impl UserData for LAxes {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Axes");
         for n in ["X", "Right", "Left"] {
             f.add_field_method_get(n, |_, t| Ok(t.0.x()));
         }
@@ -857,6 +876,7 @@ from_lua_userdata!(LNumberRange, "NumberRange");
 
 impl UserData for LNumberRange {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "NumberRange");
         f.add_field_method_get("Min", |_, t| Ok(t.0.min));
         f.add_field_method_get("Max", |_, t| Ok(t.0.max));
     }
@@ -888,6 +908,7 @@ from_lua_userdata!(LNumberSequenceKeypoint, "NumberSequenceKeypoint");
 
 impl UserData for LNumberSequenceKeypoint {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "NumberSequenceKeypoint");
         f.add_field_method_get("Time", |_, t| Ok(t.0.time));
         f.add_field_method_get("Value", |_, t| Ok(t.0.value));
         f.add_field_method_get("Envelope", |_, t| Ok(t.0.envelope));
@@ -921,6 +942,7 @@ from_lua_userdata!(LNumberSequence, "NumberSequence");
 
 impl UserData for LNumberSequence {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "NumberSequence");
         f.add_field_method_get("Keypoints", |lua, t| {
             let tbl = lua.create_table()?;
             for (i, k) in t.0.keypoints.iter().enumerate() {
@@ -962,6 +984,7 @@ from_lua_userdata!(LColorSequenceKeypoint, "ColorSequenceKeypoint");
 
 impl UserData for LColorSequenceKeypoint {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "ColorSequenceKeypoint");
         f.add_field_method_get("Time", |_, t| Ok(t.0.time));
         f.add_field_method_get("Value", |_, t| Ok(LColor3(t.0.value)));
         f.add_field_method_get("Envelope", |_, t| Ok(t.0.envelope));
@@ -997,6 +1020,7 @@ from_lua_userdata!(LColorSequence, "ColorSequence");
 
 impl UserData for LColorSequence {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "ColorSequence");
         f.add_field_method_get("Keypoints", |lua, t| {
             let tbl = lua.create_table()?;
             for (i, k) in t.0.keypoints.iter().enumerate() {
@@ -1040,6 +1064,7 @@ from_lua_userdata!(LPhysicalProperties, "PhysicalProperties");
 
 impl UserData for LPhysicalProperties {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "PhysicalProperties");
         f.add_field_method_get("Density", |_, t| {
             Ok(t.0.custom.map(|c| c.density).unwrap_or(0.0))
         });
@@ -1110,6 +1135,7 @@ impl LEnumItem {
 
 impl UserData for LEnumItem {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "EnumItem");
         f.add_field_method_get("Name", |_, t| Ok(t.name));
         f.add_field_method_get("Value", |_, t| Ok(t.value));
         f.add_field_method_get("EnumType", |_, t| Ok(LEnum(t.enum_name)));
@@ -1133,6 +1159,10 @@ pub struct LEnum(pub &'static str);
 from_lua_userdata!(LEnum, "Enum");
 
 impl UserData for LEnum {
+    fn add_fields<F: mlua::UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Enum");
+    }
+
     fn add_methods<M: UserDataMethods<Self>>(m: &mut M) {
         m.add_method("GetEnumItems", |lua, t, ()| {
             let tbl = lua.create_table()?;
@@ -1179,6 +1209,10 @@ impl UserData for LEnum {
 pub struct LEnums;
 
 impl UserData for LEnums {
+    fn add_fields<F: mlua::UserDataFields<Self>>(f: &mut F) {
+        f.add_meta_field(mlua::MetaMethod::Type, "Enums");
+    }
+
     fn add_methods<M: UserDataMethods<Self>>(m: &mut M) {
         m.add_method("GetEnums", |lua, _, ()| {
             let tbl = lua.create_table()?;
@@ -1507,7 +1541,7 @@ pub fn register_constructors(lua: &Lua, g: &Table) -> Result<()> {
         })?,
     )?;
 
-    let rect = make("Rect2D")?;
+    let rect = make("Rect")?;
     rect.set(
         "new",
         lua.create_function(|lua, args: MultiValue| {

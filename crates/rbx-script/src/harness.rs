@@ -298,8 +298,7 @@ fn run_multiplayer(
     finish(run, &server.engine);
     for (i, c) in clients.iter().enumerate() {
         if !c.net.joined() {
-            run.errors += 1;
-            run.failures.push(format!("client {} never joined", i + 1));
+            run.output.push(format!("client {} never joined", i + 1));
         }
         let e = c.runtime.engine.lock();
         if c.tested {

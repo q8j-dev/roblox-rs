@@ -10,11 +10,12 @@ const DIRECTIONAL_DIRTY: u32 = 4;
 const SKYLIGHT_DIRTY: u32 = 4;
 const BORDER_CUTOFF: u32 = 32;
 
+const DIRTY_LOCAL: u32 = 1 << 2;
 const DIRTY_SKYLIGHT: u32 = 1 << 3;
 const DIRTY_GLOBAL: u32 = 1 << 4;
 const DIRTY_UPLOAD: u32 = 1 << 5;
 const DIRTY_OCCUPANCY: u32 = 1 << 6;
-const DIRTY_ALL: u32 = DIRTY_OCCUPANCY | DIRTY_GLOBAL | DIRTY_SKYLIGHT | DIRTY_UPLOAD;
+const DIRTY_ALL: u32 = DIRTY_OCCUPANCY | DIRTY_GLOBAL | DIRTY_SKYLIGHT | DIRTY_UPLOAD | DIRTY_LOCAL;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub enum VoxelShape {
@@ -36,9 +37,90 @@ pub struct VoxelPart {
     pub transparency: f32,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub enum LightKind {
+    Point,
+    Spot,
+    Surface,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub struct LightSource {
+    pub kind: LightKind,
+    pub position: Vec3,
+    pub color: [u8; 3],
+    pub brightness: f32,
+    pub range: f32,
+    pub direction: Vec3,
+    pub angle: f32,
+    pub axis_u: Vec3,
+    pub half_u: f32,
+    pub axis_v: Vec3,
+    pub half_v: f32,
+}
+
+fn cone_extents(c: Vec3, r: f32, a: Vec3, angle: f32) -> (Vec3, Vec3) {
+    let axes = [
+        Vec3::new(-1.0, 0.0, 0.0),
+        Vec3::new(0.0, -1.0, 0.0),
+        Vec3::new(0.0, 0.0, -1.0),
+        Vec3::new(1.0, 0.0, 0.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        Vec3::new(0.0, 0.0, 1.0),
+    ];
+    let s = (angle / 2.0).to_radians();
+    let (sins, coss) = s.sin_cos();
+    let mut e = [Vec3::ZERO; 6];
+    for (k, d) in axes.iter().enumerate() {
+        let da = d.dot(a);
+        e[k] = if da >= coss {
+            c + *d * r
+        } else if da <= -sins {
+            c
+        } else {
+            let aat_d = a * a.dot(*d);
+            c + a * (r * coss) + (*d - aat_d).normalize_or_zero() * (r * sins)
+        };
+    }
+    (
+        Vec3::new(e[0].x, e[1].y, e[2].z),
+        Vec3::new(e[3].x, e[4].y, e[5].z),
+    )
+}
+
+impl LightSource {
+    pub fn extents(&self) -> (Vec3, Vec3) {
+        match self.kind {
+            LightKind::Point => (
+                self.position - Vec3::splat(self.range),
+                self.position + Vec3::splat(self.range),
+            ),
+            LightKind::Spot => cone_extents(self.position, self.range, self.direction, self.angle),
+            LightKind::Surface => {
+                let u = self.axis_u * self.half_u;
+                let v = self.axis_v * self.half_v;
+                let mut lo = Vec3::splat(f32::MAX);
+                let mut hi = Vec3::splat(f32::MIN);
+                for c in [
+                    self.position - u - v,
+                    self.position + u - v,
+                    self.position - u + v,
+                    self.position + u + v,
+                ] {
+                    let (a, b) = cone_extents(c, self.range, self.direction, self.angle);
+                    lo = lo.min(a);
+                    hi = hi.max(b);
+                }
+                (lo, hi)
+            }
+        }
+    }
+}
+
 pub struct LightInputs<'a> {
     pub focus: Vec3,
     pub parts: &'a [VoxelPart],
+    pub lights: &'a [LightSource],
     pub terrain: &'a dyn Fn(IVec3, &mut [u8]),
     pub terrain_generation: u64,
     pub light_direction: Vec3,
@@ -281,6 +363,122 @@ pub fn light_contribution(d: Vec3, bits: i32) -> IVec3 {
     }
 }
 
+fn local_lighting<'a>(chunk: &mut Chunk, lights: impl Iterator<Item = &'a LightSource>) {
+    const SX: usize = (CHUNK_XZ + 2) as usize;
+    const SY: usize = (CHUNK_Y + 2) as usize;
+    let at = |x: usize, y: usize, z: usize| (y * SX + z) * SX + x;
+    let mut scratch = vec![[0u32; 3]; SX * SX * SY];
+    let corner = chunk.min_corner();
+    let mut any = false;
+    for l in lights {
+        any = true;
+        let position = (l.position - corner) / CELL;
+        let range = l.range / CELL;
+        let (lo, hi) = l.extents();
+        let emin = ((lo - corner) / CELL + Vec3::ONE).floor().max(Vec3::ZERO);
+        let emax = ((hi - corner) / CELL + Vec3::splat(0.99))
+            .floor()
+            .min(Vec3::new(
+                (CHUNK_XZ + 1) as f32,
+                (CHUNK_Y + 1) as f32,
+                (CHUNK_XZ + 1) as f32,
+            ));
+        let inv_sq = 1.0 / (range * range).max(1e-6);
+        let cone_cos = (l.angle / 2.0).to_radians().cos();
+        let cone_scale = if cone_cos < 1.0 {
+            1.0 / (1.0 - cone_cos)
+        } else {
+            0.0
+        };
+        let u = l.axis_u;
+        let v = l.axis_v;
+        let (hu, hv) = (l.half_u / CELL, l.half_v / CELL);
+        for y in emin.y as usize..=emax.y as usize {
+            for z in emin.z as usize..=emax.z as usize {
+                for x in emin.x as usize..=emax.x as usize {
+                    let cell = Vec3::new(x as f32 - 0.5, y as f32 - 0.5, z as f32 - 0.5);
+                    let attenuation = match l.kind {
+                        LightKind::Point => {
+                            let d = 1.0 - (position - cell).length_squared() * inv_sq;
+                            (d * l.brightness).clamp(0.0, 1.0)
+                        }
+                        LightKind::Spot => {
+                            let d = 1.0 - (position - cell).length_squared() * inv_sq;
+                            let c = (l.direction.dot((cell - position).normalize_or_zero())
+                                - cone_cos)
+                                * cone_scale;
+                            (d * c.max(0.0) * l.brightness).clamp(0.0, 1.0)
+                        }
+                        LightKind::Surface => {
+                            let pu = (cell - position).dot(u).clamp(-hu, hu);
+                            let pv = (cell - position).dot(v).clamp(-hv, hv);
+                            let projected = position + u * pu + v * pv;
+                            let d = 1.0 - (projected - cell).length_squared() * inv_sq;
+                            let c = (l.direction.dot((cell - projected).normalize_or_zero())
+                                - cone_cos)
+                                * cone_scale;
+                            (d * c.max(0.0) * l.brightness).clamp(0.0, 1.0)
+                        }
+                    };
+                    let factor = (attenuation * 65536.0 + 0.5) as u32;
+                    let s = &mut scratch[at(x, y, z)];
+                    for k in 0..3 {
+                        s[k] = (s[k] + ((l.color[k] as u32 * factor) >> 16)).min(255);
+                    }
+                }
+            }
+        }
+    }
+    if !any {
+        for l in chunk.lighting.iter_mut() {
+            l[0] = 0;
+            l[1] = 0;
+            l[2] = 0;
+        }
+        return;
+    }
+    for x in 0..SX {
+        for z in 0..SX {
+            let mut prev = scratch[at(x, 0, z)];
+            let mut cur = scratch[at(x, 1, z)];
+            for y in 1..SY - 1 {
+                let next = scratch[at(x, y + 1, z)];
+                scratch[at(x, y, z)] = [0, 1, 2].map(|k| (prev[k] + cur[k] + next[k]) / 4);
+                prev = cur;
+                cur = next;
+            }
+        }
+    }
+    for y in 0..SY {
+        for x in 0..SX {
+            let mut prev = scratch[at(x, y, 0)];
+            let mut cur = scratch[at(x, y, 1)];
+            for z in 1..SX - 1 {
+                let next = scratch[at(x, y, z + 1)];
+                scratch[at(x, y, z)] = [0, 1, 2].map(|k| (prev[k] + cur[k] + next[k]) / 4);
+                prev = cur;
+                cur = next;
+            }
+        }
+    }
+    for y in 1..SY - 1 {
+        for z in 1..SX - 1 {
+            let mut prev = scratch[at(0, y, z)];
+            let mut cur = scratch[at(1, y, z)];
+            for x in 1..SX - 1 {
+                let next = scratch[at(x + 1, y, z)];
+                let value = [0, 1, 2].map(|k| ((prev[k] + cur[k] + next[k]) / 2) as u8);
+                let l = &mut chunk.lighting[idx(x as i32 - 1, y as i32 - 1, z as i32 - 1)];
+                l[0] = value[0];
+                l[1] = value[1];
+                l[2] = value[2];
+                prev = cur;
+                cur = next;
+            }
+        }
+    }
+}
+
 const SCRATCH_X: i32 = CHUNK_XZ + 2;
 const SCRATCH_Y: i32 = CHUNK_Y + 2;
 
@@ -472,10 +670,38 @@ impl LightGrid {
                 }
             }
         }
+        let mut light_buckets: HashMap<IVec3, Vec<usize>> = HashMap::new();
+        for (i, l) in inputs.lights.iter().enumerate() {
+            let (lo, hi) = l.extents();
+            let a = Self::chunk_of(lo).max(corner);
+            let b = Self::chunk_of(hi).min(end - IVec3::ONE);
+            for y in a.y..=b.y {
+                for z in a.z..=b.z {
+                    for x in a.x..=b.x {
+                        light_buckets
+                            .entry(IVec3::new(x, y, z))
+                            .or_default()
+                            .push(i);
+                    }
+                }
+            }
+        }
         let mut terrain_scratch = vec![0u8; CELLS];
         for chunk in self.chunks.values_mut() {
             use std::hash::{Hash, Hasher};
             let mut h = std::collections::hash_map::DefaultHasher::new();
+            if let Some(list) = light_buckets.get(&chunk.index) {
+                for &i in list {
+                    let l = &inputs.lights[i];
+                    (l.kind as u8).hash(&mut h);
+                    l.position.to_array().map(f32::to_bits).hash(&mut h);
+                    l.direction.to_array().map(f32::to_bits).hash(&mut h);
+                    l.color.hash(&mut h);
+                    [l.brightness, l.range, l.angle, l.half_u, l.half_v]
+                        .map(f32::to_bits)
+                        .hash(&mut h);
+                }
+            }
             if let Some(list) = buckets.get(&chunk.index) {
                 for &i in list {
                     let p = &inputs.parts[i];
@@ -509,6 +735,7 @@ impl LightGrid {
                 index,
                 inputs,
                 buckets.get(&index).map(Vec::as_slice).unwrap_or(&[]),
+                light_buckets.get(&index).map(Vec::as_slice).unwrap_or(&[]),
                 &mut terrain_scratch,
             );
             done += 1;
@@ -532,7 +759,14 @@ impl LightGrid {
             })
     }
 
-    fn process(&mut self, index: IVec3, inputs: &LightInputs, parts: &[usize], terrain: &mut [u8]) {
+    fn process(
+        &mut self,
+        index: IVec3,
+        inputs: &LightInputs,
+        parts: &[usize],
+        lights: &[usize],
+        terrain: &mut [u8],
+    ) {
         let Some(mut chunk) = self.chunks.remove(&index) else {
             return;
         };
@@ -545,6 +779,9 @@ impl LightGrid {
             for &i in parts {
                 fill_part(&mut chunk, &inputs.parts[i]);
             }
+        }
+        if dirty & (DIRTY_OCCUPANCY | DIRTY_LOCAL) != 0 {
+            local_lighting(&mut chunk, lights.iter().map(|&i| &inputs.lights[i]));
         }
         if dirty & (DIRTY_OCCUPANCY | DIRTY_GLOBAL) != 0 {
             if self.shadows {
@@ -910,6 +1147,7 @@ mod tests {
         let inputs = LightInputs {
             focus: Vec3::ZERO,
             parts: &parts,
+            lights: &[],
             terrain: &terrain,
             terrain_generation: 0,
             light_direction: Vec3::new(0.0, -1.0, 0.0),

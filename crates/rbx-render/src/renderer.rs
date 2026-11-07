@@ -476,7 +476,7 @@ impl Renderer {
 
     fn update_lightgrid(&mut self, dm: &DataModel, scene: &Scene) {
         let l = &scene.lighting;
-        if !l.global_shadows {
+        if !l.global_shadows && scene.lights.is_empty() {
             self.lgrid_active = false;
             return;
         }
@@ -508,6 +508,7 @@ impl Renderer {
         let inputs = crate::lightgrid::LightInputs {
             focus: scene.focus,
             parts: &parts,
+            lights: &scene.lights,
             terrain: &fill,
             terrain_generation: generation,
             light_direction: l.key_direction,
@@ -516,7 +517,7 @@ impl Renderer {
                 to8(l.sky_ambient.g),
                 to8(l.sky_ambient.b),
             ],
-            shadows: true,
+            shadows: l.global_shadows,
         };
         self.lightgrid.update(&inputs, self.lighting_budget);
         for (index, data) in self.lightgrid.uploads.drain(..) {

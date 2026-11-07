@@ -41,6 +41,9 @@ fn main() {
         let root = dm.root();
         if dm.descendants(root).iter().any(|d| dm.is_a(*d, "Light")) {
             lights += 1;
+            if std::env::var("LIST").is_ok() {
+                println!("lights {}", f.display());
+            }
         }
     }
     println!("places={total} global_shadows={on} with_lights={lights}");

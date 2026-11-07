@@ -77,6 +77,7 @@ pub struct Scene {
     pub sky_faces: Option<[String; 6]>,
     pub composites: Vec<crate::character::CompositeDesc>,
     pub focus: Vec3,
+    pub lights: Vec<crate::lightgrid::LightSource>,
 }
 
 pub const SURFACE_PROPS: [&str; 6] = [
@@ -471,6 +472,91 @@ fn collect_parts(
     }
 }
 
+fn face_normal(face: u32, r: &Mat3) -> Vec3 {
+    match face {
+        0 => r.x_axis,
+        1 => r.y_axis,
+        2 => r.z_axis,
+        3 => -r.x_axis,
+        4 => -r.y_axis,
+        _ => -r.z_axis,
+    }
+}
+
+fn collect_lights(dm: &DataModel, root: InstanceId) -> Vec<crate::lightgrid::LightSource> {
+    use crate::lightgrid::{LightKind, LightSource};
+    let mut out = Vec::new();
+    for id in dm.descendants(root) {
+        let kind = match dm.class_of(id) {
+            Some("PointLight") => LightKind::Point,
+            Some("SpotLight") => LightKind::Spot,
+            Some("SurfaceLight") => LightKind::Surface,
+            _ => continue,
+        };
+        if !dm
+            .get(id, "Enabled")
+            .ok()
+            .and_then(|v| v.as_bool())
+            .unwrap_or(true)
+        {
+            continue;
+        }
+        let Some(part) = dm.parent_of(id).filter(|p| dm.is_a(*p, "BasePart")) else {
+            continue;
+        };
+        let Some(cf) = dm.get_raw(part, "CFrame").and_then(|v| v.as_cframe()) else {
+            continue;
+        };
+        let size = dm
+            .get(part, "Size")
+            .ok()
+            .and_then(|v| v.as_vec3())
+            .unwrap_or(Vec3::ONE);
+        let color = get_color3(dm, id, "Color", Color3::new(1.0, 1.0, 1.0));
+        let to8 = |c: f32| (c.clamp(0.0, 1.0) * 255.0) as u8;
+        let face = dm
+            .get(id, "Face")
+            .ok()
+            .and_then(|v| v.as_enum())
+            .unwrap_or(5);
+        let r = cf.rotation;
+        let mut light = LightSource {
+            kind,
+            position: cf.translation,
+            color: [to8(color.r), to8(color.g), to8(color.b)],
+            brightness: get_f32(dm, id, "Brightness", 1.0),
+            range: get_f32(dm, id, "Range", 8.0),
+            direction: Vec3::ZERO,
+            angle: get_f32(dm, id, "Angle", 90.0),
+            axis_u: Vec3::ZERO,
+            half_u: 0.0,
+            axis_v: Vec3::ZERO,
+            half_v: 0.0,
+        };
+        match kind {
+            LightKind::Point => light.angle = 0.0,
+            LightKind::Spot => light.direction = face_normal(face, &r),
+            LightKind::Surface => {
+                let h = size * 0.5;
+                let (axis_half, u, hu, v, hv) = match face {
+                    0 | 3 => (h.x, r.y_axis, h.y, r.z_axis, h.z),
+                    1 | 4 => (h.y, r.z_axis, h.z, r.x_axis, h.x),
+                    _ => (h.z, r.x_axis, h.x, r.y_axis, h.y),
+                };
+                let n = face_normal(face, &r);
+                light.position = cf.translation + n * axis_half;
+                light.direction = n;
+                light.axis_u = u;
+                light.half_u = hu;
+                light.axis_v = v;
+                light.half_v = hv;
+            }
+        }
+        out.push(light);
+    }
+    out
+}
+
 fn voxel_shape(
     dm: &DataModel,
     id: InstanceId,
@@ -596,8 +682,10 @@ pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
         }
         Some(out)
     });
+    let lights = ws.map(|w| collect_lights(dm, w)).unwrap_or_default();
     Scene {
         parts,
+        lights,
         focus: focus.unwrap_or(camera.cframe.translation),
         camera,
         lighting,

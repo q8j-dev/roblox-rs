@@ -3,6 +3,7 @@ mod classes;
 mod datamodel;
 mod defaults;
 mod events;
+pub mod history;
 mod layout;
 mod load;
 

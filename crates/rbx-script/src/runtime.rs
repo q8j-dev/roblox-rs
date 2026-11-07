@@ -865,7 +865,7 @@ pub fn resume_thread_result(
             let eng = engine(lua);
             let e = eng.lock();
             if e.dm.is_a(script, "BaseScript") {
-                Some(crate::scripts::should_run(&e.dm, e.local_player, script).is_some())
+                Some(e.dm.in_tree(script) && !e.dm.get_bool(script, "Disabled"))
             } else {
                 None
             }

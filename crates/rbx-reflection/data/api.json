@@ -38037,7 +38037,7 @@
      "category": "category_Behavior",
      "deprecated_by": null,
      "file": "App/v8datamodel/Workspace.cpp",
-     "flags": 15,
+     "flags": 31,
      "getter": "&Workspace::getPhysicalPropertiesMode",
      "ident": "Workspace::prop_physicalPropertiesMode",
      "kind": "enum",

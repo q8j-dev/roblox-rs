@@ -125,7 +125,71 @@ fn unbind_render_step(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret>
     Ok(Ret::Values(mlua::MultiValue::new()))
 }
 
+fn history_step(lua: &Lua, id: InstanceId, undo: bool) -> Result<Ret> {
+    let name = {
+        let e = engine(lua);
+        let mut e = e.lock();
+        if undo {
+            e.dm.history_undo()
+        } else {
+            e.dm.history_redo()
+        }
+    };
+    if let Some(n) = name {
+        let s = lua.create_string(&n)?;
+        crate::runtime::fire_lua(
+            lua,
+            id,
+            if undo { "OnUndo" } else { "OnRedo" },
+            mlua::MultiValue::from_vec(vec![Value::String(s)]),
+        );
+    }
+    Ok(Ret::Values(mlua::MultiValue::new()))
+}
+
+fn history_can(lua: &Lua, undo: bool) -> Result<Ret> {
+    let name = {
+        let e = engine(lua);
+        let e = e.lock();
+        if undo {
+            e.dm.history_can_undo()
+        } else {
+            e.dm.history_can_redo()
+        }
+    };
+    match name {
+        Some(n) => ret(lua, (true, n)),
+        None => ret(lua, false),
+    }
+}
+
 pub fn register(r: &mut Registry) {
+    r.add("ChangeHistoryService", &["SetEnabled"], |lua, _, args| {
+        let on = crate::convert::arg_bool(args.first());
+        engine(lua).lock().dm.history_set_enabled(on);
+        Ok(Ret::Values(mlua::MultiValue::new()))
+    });
+    r.add("ChangeHistoryService", &["SetWaypoint"], |lua, _, args| {
+        let name = arg_string(args.first()).unwrap_or_default();
+        engine(lua).lock().dm.history_waypoint(&name);
+        Ok(Ret::Values(mlua::MultiValue::new()))
+    });
+    r.add("ChangeHistoryService", &["ResetWaypoints"], |lua, _, _| {
+        engine(lua).lock().dm.history_reset();
+        Ok(Ret::Values(mlua::MultiValue::new()))
+    });
+    r.add("ChangeHistoryService", &["Undo"], |lua, id, _| {
+        history_step(lua, id, true)
+    });
+    r.add("ChangeHistoryService", &["Redo"], |lua, id, _| {
+        history_step(lua, id, false)
+    });
+    r.add("ChangeHistoryService", &["GetCanUndo"], |lua, _, _| {
+        history_can(lua, true)
+    });
+    r.add("ChangeHistoryService", &["GetCanRedo"], |lua, _, _| {
+        history_can(lua, false)
+    });
     r.add("RunService", &["Run"], |lua, _, _| run_state(lua, true));
     r.add("RunService", &["Pause", "Stop", "Reset"], |lua, _, _| {
         run_state(lua, false)

@@ -75,6 +75,7 @@ pub struct DataModel {
     pub local_player: Option<InstanceId>,
     world_hooks: Option<Box<dyn WorldHooks>>,
     pub(crate) terrain_data: HashMap<InstanceId, crate::classes::terrain::TerrainData>,
+    pub(crate) history: crate::history::History,
 }
 
 impl Default for DataModel {
@@ -106,6 +107,7 @@ impl DataModel {
             local_player: None,
             world_hooks: None,
             terrain_data: HashMap::new(),
+            history: Default::default(),
         };
         let root = match dm.create_internal(class) {
             Ok(id) => id,
@@ -560,11 +562,7 @@ impl DataModel {
             if let Some(o) = self.instances.get_mut(&op)
                 && let Some(pos) = o.children.iter().position(|&c| c == id)
             {
-                if o.children.len() > 20 {
-                    o.children.swap_remove(pos);
-                } else {
-                    o.children.remove(pos);
-                }
+                o.children.remove(pos);
             }
         }
         if let Some(np) = new_parent
@@ -575,6 +573,11 @@ impl DataModel {
         if let Some(i) = self.instances.get_mut(&id) {
             i.parent = new_parent;
         }
+        self.history.record(crate::history::Change::Parent {
+            id,
+            old: old_parent,
+            new: new_parent,
+        });
         if let Some(op) = old_parent {
             self.events.push(DomEvent::ChildRemoved {
                 parent: op,
@@ -809,7 +812,12 @@ impl DataModel {
             return;
         };
         if inst.name != truncated {
-            inst.name = truncated;
+            let old = std::mem::replace(&mut inst.name, truncated.clone());
+            self.history.record(crate::history::Change::Name {
+                id,
+                old,
+                new: truncated,
+            });
             self.events.push(DomEvent::PropertyChanged {
                 id,
                 property: "Name",
@@ -1026,8 +1034,21 @@ impl DataModel {
         if inst.values[slot] == value {
             return;
         }
-        inst.values[slot] = value;
         let prop: &'static str = inst.layout.slots[slot].name.as_str();
+        if self.history.recording() {
+            let old = std::mem::replace(&mut inst.values[slot], value.clone());
+            self.history.record(crate::history::Change::Property {
+                id,
+                name: prop,
+                old,
+                new: value,
+            });
+        } else {
+            inst.values[slot] = value;
+        }
+        let Some(inst) = self.instances.get(&id) else {
+            return;
+        };
         let class = inst.class;
         self.events
             .push(DomEvent::PropertyChanged { id, property: prop });

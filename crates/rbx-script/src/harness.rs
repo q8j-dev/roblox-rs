@@ -18,6 +18,7 @@ pub struct PlaceRun {
     pub game_time: f64,
     pub load_warnings: Vec<String>,
     pub players: i32,
+    pub output: Vec<String>,
 }
 
 impl PlaceRun {
@@ -109,6 +110,11 @@ pub fn run_datamodel(
     }
     let e = engine.lock();
     run.game_time = e.game_time;
+    run.output = e
+        .output
+        .iter()
+        .map(|m| format!("{:?}: {}", m.kind, m.text))
+        .collect();
     run.script_errors = e
         .output
         .iter()

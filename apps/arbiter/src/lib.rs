@@ -342,12 +342,13 @@ impl Arbiter {
         }
         for id in dead {
             let mut inner = self.inner.lock();
-            let removed = if let Some(i) = inner.ready.iter().position(|p| p.id == id) {
-                inner.ready.remove(i)
-            } else if let Some(i) = inner.active.iter().position(|p| p.id == id) {
-                Some(inner.active.remove(i))
-            } else {
-                None
+            let removed = match inner.ready.iter().position(|p| p.id == id) {
+                Some(i) => inner.ready.remove(i),
+                None => inner
+                    .active
+                    .iter()
+                    .position(|p| p.id == id)
+                    .map(|i| inner.active.remove(i)),
             };
             if let Some(mut p) = removed {
                 p.server.kill();

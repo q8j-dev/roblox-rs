@@ -11,6 +11,7 @@ use rbx_math::{CFrame, Mat3, NormalId, Vec3, normal_id_to_vector};
 use std::collections::{HashMap, HashSet, VecDeque};
 
 const PSCALE: f32 = 1.0 / 19.0;
+const GYRO_FITNESS_SENSITIVITY: f32 = 2.0;
 
 type CollisionSpec = ((InstanceId, InstanceId), usize, usize, CFrame, CFrame);
 const MAX_STEPS_PER_CALL: u32 = 240;
@@ -31,10 +32,6 @@ fn weighted(wx: f32, x: f32, wy: f32, y: f32) -> f32 {
         return (x + y) * 0.5;
     }
     (wx * x + wy * y) / den
-}
-
-fn clamp_vec(v: Vec3, m: Vec3) -> Vec3 {
-    v.clamp(-m.abs(), m.abs())
 }
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -367,12 +364,13 @@ impl PhysicsWorld {
                 continue;
             }
             let body = self.parts[pi].cframe;
-            let (v_body, w_body) = self.part_velocity(pi);
+            let (_, w_body) = self.part_velocity(pi);
             let asm = &self.assemblies[ai];
-            let mass = asm.mass;
             let ibody = asm.ibody();
             let mut force = Vec3::ZERO;
             let mut torque = Vec3::ZERO;
+            let mut solver_kind: Option<ConstraintKind> = None;
+            let mut stability = self.movers[&id].stability;
             match kind {
                 MoverKind::Position {
                     p,
@@ -380,9 +378,15 @@ impl PhysicsWorld {
                     max_force,
                     position,
                 } => {
-                    let accel =
-                        (position - body.translation) * (p * PSCALE) - v_body * (d * PSCALE);
-                    force = clamp_vec(accel * mass, max_force);
+                    let (p, d) = correct_pd_for_time_step(p, d);
+                    let com = asm.position;
+                    solver_kind = Some(ConstraintKind::LinearSpring {
+                        pivot_a: body.point_to_object_space(com),
+                        pivot_b: position + com - body.translation,
+                        max_force,
+                        p,
+                        d,
+                    });
                     if !self.movers[&id].reached
                         && (body.translation - position).length_squared() <= 0.01
                     {
@@ -390,20 +394,26 @@ impl PhysicsWorld {
                     }
                 }
                 MoverKind::Velocity {
-                    p,
                     max_force,
                     velocity,
+                    ..
                 } => {
-                    let accel = (velocity - asm.linear) * (p * PSCALE);
-                    force = clamp_vec(accel * mass, max_force);
+                    solver_kind = Some(ConstraintKind::LinearVelocity {
+                        max_force,
+                        desired: velocity,
+                    });
                 }
                 MoverKind::AngularVelocity {
-                    p,
                     max_torque,
                     angular_velocity,
+                    ..
                 } => {
-                    let accel = (angular_velocity - w_body) * (p * PSCALE);
-                    torque = clamp_vec(accel * mass, max_torque);
+                    solver_kind = Some(ConstraintKind::LegacyAngularVelocity {
+                        target: angular_velocity,
+                        max_torque,
+                        min_torque: -max_torque,
+                        use_integrated: true,
+                    });
                 }
                 MoverKind::Force { force: f } => force = f,
                 MoverKind::Thrust { force: f, location } => {
@@ -417,45 +427,35 @@ impl PhysicsWorld {
                     max_torque,
                     cframe,
                 } => {
-                    let kp = p * PSCALE;
-                    let kd = d * PSCALE;
-                    let mut added = Vec3::ZERO;
-                    let old = asm.torque;
+                    let (kp, kd) = correct_pd_for_time_step(p, d);
+                    let wb = body.vector_to_object_space(w_body);
+                    let mut tb = Vec3::ZERO;
                     if !(max_torque.x.abs() < 1e-5 && max_torque.z.abs() < 1e-5) {
                         let local_y = body.vector_to_object_space(cframe.up_vector());
-                        let dx = kp * ibody.x * local_y.z;
-                        let dz = -kp * ibody.z * local_y.x;
-                        let mut tb = body.vector_to_object_space(old + added);
-                        if (dx - tb.x).abs() < max_torque.x * ibody.x {
-                            tb.x = dx;
-                        } else {
-                            tb.x += dx;
-                        }
-                        if (dz - tb.z).abs() < max_torque.z * ibody.z {
-                            tb.z = dz;
-                        } else {
-                            tb.z += dz;
-                        }
-                        let wb = body.vector_to_object_space(w_body);
-                        tb.x -= kd * ibody.x * wb.x;
-                        tb.z -= kd * ibody.z * wb.z;
-                        added += body.vector_to_world_space(tb) - (old + added);
+                        let t = stability[0].fit_second(local_y.x);
+                        let fitness_z = (-GYRO_FITNESS_SENSITIVITY * t).exp();
+                        stability[0].add(local_y.x);
+                        let t = stability[2].fit_second(local_y.z);
+                        let fitness_x = (-GYRO_FITNESS_SENSITIVITY * t).exp();
+                        stability[2].add(local_y.z);
+                        tb.x = (kp * local_y.z - kd * wb.x) * fitness_x * ibody.x;
+                        tb.z = (-kp * local_y.x - kd * wb.z) * fitness_z * ibody.z;
                     }
                     if max_torque.y.abs() >= 1e-5 {
                         let local_zneg = body.vector_to_object_space(cframe.look_vector());
-                        let dy = -kp * ibody.y * local_zneg.x;
-                        let cur = old + added;
-                        let mut tb = body.vector_to_object_space(cur);
-                        if (dy - tb.y).abs() < max_torque.y * ibody.y {
-                            tb.y = dy;
-                        } else {
-                            tb.y += dy;
-                        }
-                        let wb = body.vector_to_object_space(w_body);
-                        tb.y -= kd * ibody.y * wb.y;
-                        added += body.vector_to_world_space(tb) - cur;
+                        let t = stability[1].fit_second(local_zneg.x);
+                        let fitness = (-GYRO_FITNESS_SENSITIVITY * t).exp();
+                        stability[1].add(local_zneg.x);
+                        tb.y = -fitness * ibody.y * (kp * local_zneg.x + kd * wb.y);
                     }
-                    torque = added;
+                    let delta = tb / ibody.max(Vec3::splat(1e-12)) * WORLD_DT;
+                    let limit = ibody * max_torque;
+                    solver_kind = Some(ConstraintKind::BodyAngularVelocity {
+                        target: delta + wb,
+                        max_torque: limit,
+                        min_torque: -limit,
+                        use_integrated: false,
+                    });
                 }
                 MoverKind::Rocket(r) => {
                     if r.active {
@@ -515,6 +515,18 @@ impl PhysicsWorld {
                             reached.push(id);
                         }
                     }
+                }
+            }
+            if let Some(m) = self.movers.get_mut(&id) {
+                m.stability = stability;
+                match (solver_kind, m.constraint.as_mut()) {
+                    (Some(k), Some(c))
+                        if std::mem::discriminant(&k) == std::mem::discriminant(&c.kind) =>
+                    {
+                        c.kind = k;
+                    }
+                    (Some(k), _) => m.constraint = Some(Constraint::new(k)),
+                    (None, _) => m.constraint = None,
                 }
             }
             let asm = &mut self.assemblies[ai];
@@ -866,6 +878,27 @@ impl PhysicsWorld {
             joint_specs.push((jid, ba, bb, self.parts[a].cframe, self.parts[b].cframe));
         }
 
+        let mut mover_specs: Vec<(InstanceId, usize, CFrame)> = Vec::new();
+        let mut mids: Vec<InstanceId> = self
+            .movers
+            .iter()
+            .filter(|(_, m)| m.constraint.is_some())
+            .map(|(k, _)| *k)
+            .collect();
+        mids.sort();
+        for mid in mids {
+            let Some(&pi) = self.movers[&mid].part.and_then(|p| self.index.get(&p)) else {
+                continue;
+            };
+            let ai = self.parts[pi].assembly;
+            let a = &self.assemblies[ai];
+            if !a.is_moving() || a.kinematic {
+                continue;
+            }
+            let ba = ensure(ai, &mut bodies, &self.assemblies);
+            mover_specs.push((mid, ba, self.parts[pi].cframe));
+        }
+
         let mut collision_specs: Vec<CollisionSpec> = Vec::new();
         let mut sorted_active = active.to_vec();
         sorted_active.sort();
@@ -1072,6 +1105,28 @@ impl PhysicsWorld {
                 });
             }
         }
+        let mover_lookup: HashMap<InstanceId, (usize, CFrame)> = mover_specs
+            .into_iter()
+            .map(|(id, ba, fa)| (id, (ba, fa)))
+            .collect();
+        let mut mlist: Vec<(&InstanceId, &mut crate::world::Mover)> = self
+            .movers
+            .iter_mut()
+            .filter(|(k, _)| mover_lookup.contains_key(*k))
+            .collect();
+        mlist.sort_by_key(|(k, _)| **k);
+        for (mid, m) in mlist {
+            let (ba, fa) = mover_lookup[mid];
+            if let Some(c) = m.constraint.as_mut() {
+                refs.push(ConstraintRef {
+                    constraint: c,
+                    body_a: ba,
+                    body_b: 0,
+                    frame_a: fa,
+                    frame_b: CFrame::IDENTITY,
+                });
+            }
+        }
         let mut col_lookup: HashMap<(InstanceId, InstanceId), (usize, usize, CFrame, CFrame)> =
             HashMap::new();
         for (key, ba, bb, fa, fb) in collision_specs {
@@ -1197,7 +1252,12 @@ impl PhysicsWorld {
 
     fn sleep_step(&mut self, _active: &[(InstanceId, InstanceId)]) {
         let neighbors = self.sleep_neighbors();
-        let external = std::mem::take(&mut self.external_wake);
+        let mut external = std::mem::take(&mut self.external_wake);
+        for p in std::mem::take(&mut self.tickled_parts) {
+            if let Some(&i) = self.index.get(&p) {
+                external.push(self.parts[i].assembly);
+            }
+        }
         let contact = std::mem::take(&mut self.recursive_wake);
         for (pending, through_awake) in [(external, true), (contact, false)] {
             if pending.is_empty() {
@@ -1327,4 +1387,23 @@ pub fn aabb_of(min: Vec3, max: Vec3) -> Aabb {
         crate::math::to_parry_vec(min),
         crate::math::to_parry_vec(max),
     )
+}
+
+fn correct_pd_for_time_step(p: f32, d: f32) -> (f32, f32) {
+    let discriminant = 4.0 * p - d * d;
+    if discriminant >= 0.0 {
+        let w = 0.5 * discriminant.sqrt();
+        let threshold = std::f32::consts::FRAC_PI_6;
+        if w * WORLD_DT > threshold {
+            let s = threshold / (w * WORLD_DT);
+            return (p * s * s, d * s);
+        }
+    } else {
+        let w = 0.5 * d;
+        if w > 0.8 / WORLD_DT {
+            let s = 0.8 / (w * WORLD_DT);
+            return (p * s * s, d * s);
+        }
+    }
+    (p, d)
 }

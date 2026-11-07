@@ -1,7 +1,7 @@
 use crate::broadphase::SpatialIndex;
 use crate::math::{rotate_about_z, safe_inverse, to_pose};
 use crate::shape::{PartShape, ShapeKind, rotate_inertia, shift_inertia};
-use crate::solver::{Constraint, ConstraintKind, Solver};
+use crate::solver::{Constraint, ConstraintKind, MovingRegression, Solver};
 use parry3d::bounding_volume::Aabb;
 use parry3d::query::{ContactManifold, ContactManifoldsWorkspace};
 use rbx_dom::{DataModel, DomEvent, EventCursor, InstanceId, Variant};
@@ -209,6 +209,8 @@ pub struct Mover {
     pub part: Option<InstanceId>,
     pub kind: MoverKind,
     pub reached: bool,
+    pub constraint: Option<Constraint>,
+    pub(crate) stability: [MovingRegression; 3],
 }
 
 #[derive(Clone, Debug, Default)]
@@ -422,6 +424,7 @@ pub struct PhysicsWorld {
     pub accoutrement_parts: HashSet<InstanceId>,
     pub recursive_wake: Vec<usize>,
     pub external_wake: Vec<usize>,
+    pub tickled_parts: Vec<InstanceId>,
     pub vehicle_seats: std::collections::BTreeSet<InstanceId>,
     pub part_joints: HashMap<InstanceId, std::collections::BTreeSet<InstanceId>>,
     pub local_character: Option<InstanceId>,
@@ -582,6 +585,7 @@ impl PhysicsWorld {
             accoutrement_parts: HashSet::new(),
             recursive_wake: Vec::new(),
             external_wake: Vec::new(),
+            tickled_parts: Vec::new(),
             vehicle_seats: Default::default(),
             part_joints: HashMap::new(),
             local_character: None,
@@ -902,6 +906,8 @@ impl PhysicsWorld {
             part,
             kind,
             reached: false,
+            constraint: None,
+            stability: [MovingRegression::default(); 3],
         });
         if entry.kind != kind {
             entry.reached = false;
@@ -910,6 +916,7 @@ impl PhysicsWorld {
         entry.kind = kind;
         if let Some(p) = part {
             self.wake_part(p);
+            self.tickled_parts.push(p);
         }
     }
 

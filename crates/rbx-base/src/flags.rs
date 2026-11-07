@@ -26,6 +26,8 @@ static DEFAULTS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
 
 const ENGINE_VALUES: &[(&str, &str)] = &[
     ("UsePGSSolver", "true"),
+    ("PGSUsesConstraintBasedBodyMovers", "true"),
+    ("PGSWakePrimitivesWithBodyMoverPropertyChanges", "true"),
     ("MaterialPropertiesEnabled", "true"),
     ("FixTouchEndedReporting", "true"),
     ("UseInGameTopBar", "true"),

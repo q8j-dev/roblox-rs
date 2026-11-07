@@ -194,7 +194,7 @@ struct VirD {
 }
 
 #[derive(Clone, Copy, Debug, Default)]
-struct MovingRegression {
+pub(crate) struct MovingRegression {
     confidence: f32,
     last_point: f32,
     last_tangent: f32,
@@ -210,11 +210,11 @@ impl MovingRegression {
         self.fit(y, self.last_point)
     }
 
-    fn fit_second(&self, y: f32) -> f32 {
+    pub(crate) fn fit_second(&self, y: f32) -> f32 {
         self.fit(y, self.last_point + self.last_tangent + self.last_curvature)
     }
 
-    fn add(&mut self, y: f32) {
+    pub(crate) fn add(&mut self, y: f32) {
         let t = y - self.last_point;
         self.last_curvature = t - self.last_tangent;
         self.last_tangent = t;

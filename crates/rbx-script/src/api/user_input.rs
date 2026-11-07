@@ -498,8 +498,68 @@ fn local_tool(dm: &DataModel) -> Option<InstanceId> {
         .find(|&c| dm.class_of(c) == Some("Tool"))
 }
 
+fn arrow_tool_click(lua: &Lua) {
+    let modifiers = {
+        let eng = engine(lua);
+        let e = eng.lock();
+        let down = |codes: [u32; 2]| codes.iter().any(|c| e.input.keys_down.contains(c));
+        (down([303, 304]), down([305, 306]), down([307, 308]))
+    };
+    let ray = {
+        let eng = engine(lua);
+        let e = eng.lock();
+        mouse_ray(&e.dm, e.input.pointer.position)
+    };
+    let Some(ray) = ray else {
+        return;
+    };
+    let hit = super::physics::with_world(lua, |w, dm| {
+        w.raycast(ray.origin, ray.direction * 2048.0, |id| {
+            !dm.get_bool(id, "Locked") && !dm.is_a(id, "Terrain")
+        })
+        .map(|h| h.part)
+    });
+    let (shift, ctrl, alt) = modifiers;
+    let Some(part) = hit else {
+        if !shift && !ctrl {
+            super::selection::set(lua, Vec::new());
+        }
+        return;
+    };
+    let target = {
+        let eng = engine(lua);
+        let e = eng.lock();
+        if alt {
+            Some(part)
+        } else {
+            super::selection::top_selectable_3d(&e.dm, part)
+        }
+    };
+    let Some(target) = target else {
+        return;
+    };
+    let mut current = super::selection::current(lua);
+    if shift || ctrl {
+        if let Some(i) = current.iter().position(|&s| s == target) {
+            current.remove(i);
+        } else {
+            current.push(target);
+        }
+        super::selection::set(lua, current);
+    } else if !current.contains(&target) {
+        super::selection::set(lua, vec![target]);
+    }
+}
+
 fn workspace_input(lua: &Lua, ev: &InputEvent) {
     if ev.input_type != MOUSE_BUTTON1 || ev.kind == InputKind::Changed {
+        return;
+    }
+    let studio_arrow = engine(lua).lock().dm.local_player.is_none();
+    if studio_arrow {
+        if ev.kind == InputKind::Began {
+            arrow_tool_click(lua);
+        }
         return;
     }
     let eng = engine(lua);
@@ -840,7 +900,146 @@ fn is_focused(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
     ret(lua, f)
 }
 
+const VIRTUAL_WIDTH: f32 = 800.0;
+const VIRTUAL_HEIGHT: f32 = 600.0;
+
+fn virtual_mouse(lua: &Lua, args: &[Value], input_type: u32, kinds: &[InputKind]) -> Result<Ret> {
+    let pos = match args.first() {
+        Some(v) => <crate::types::LVector2 as mlua::FromLua>::from_lua(v.clone(), lua)?.0,
+        None => Vec2::ZERO,
+    };
+    let camera = match args.get(1) {
+        Some(v) => Some(<LCFrame as mlua::FromLua>::from_lua(v.clone(), lua)?.0),
+        None => None,
+    };
+    let pos = pos.clamp(Vec2::splat(-1.0), Vec2::ONE);
+    let x = (VIRTUAL_WIDTH / 2.0 * (1.0 + pos.x)).trunc();
+    let y = (VIRTUAL_HEIGHT / 2.0 * (1.0 - pos.y)).trunc();
+    {
+        let eng = engine(lua);
+        let mut e = eng.lock();
+        e.dm.gui_view.screen = Vec2::new(VIRTUAL_WIDTH, VIRTUAL_HEIGHT);
+        if let Some(cf) = camera.filter(|cf| *cf != CFrame::IDENTITY)
+            && let Some(ws) = e.dm.find_service("Workspace")
+            && let Some(cam) = e.dm.get_ref(ws, "CurrentCamera")
+        {
+            e.dm.store_silent(cam, "CFrame", Variant::CFrame(cf));
+        }
+    }
+    for kind in kinds {
+        process(
+            lua,
+            InputEvent {
+                kind: *kind,
+                input_type,
+                key_code: 0,
+                position: Vec3::new(x, y, 0.0),
+                delta: Vec3::ZERO,
+                text: None,
+            },
+        );
+    }
+    none()
+}
+
+fn virtual_key(lua: &Lua, args: &[Value], kinds: &[InputKind]) -> Result<Ret> {
+    let key = crate::convert::arg_string(args.first()).unwrap_or_default();
+    let code = key
+        .chars()
+        .next()
+        .map(|c| c.to_ascii_lowercase() as u32)
+        .unwrap_or(0);
+    for kind in kinds {
+        process(
+            lua,
+            InputEvent {
+                kind: *kind,
+                input_type: KEYBOARD,
+                key_code: code,
+                position: Vec3::ZERO,
+                delta: Vec3::ZERO,
+                text: Some(key.clone()),
+            },
+        );
+    }
+    none()
+}
+
+fn vu_button1_down(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    virtual_mouse(lua, args, MOUSE_BUTTON1, &[InputKind::Began])
+}
+
+fn vu_button1_up(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    virtual_mouse(lua, args, MOUSE_BUTTON1, &[InputKind::Ended])
+}
+
+fn vu_button2_down(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    virtual_mouse(lua, args, MOUSE_BUTTON2, &[InputKind::Began])
+}
+
+fn vu_button2_up(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    virtual_mouse(lua, args, MOUSE_BUTTON2, &[InputKind::Ended])
+}
+
+fn vu_click1(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    virtual_mouse(
+        lua,
+        args,
+        MOUSE_BUTTON1,
+        &[InputKind::Began, InputKind::Ended],
+    )
+}
+
+fn vu_click2(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    virtual_mouse(
+        lua,
+        args,
+        MOUSE_BUTTON2,
+        &[InputKind::Began, InputKind::Ended],
+    )
+}
+
+fn vu_move(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    virtual_mouse(lua, args, MOUSE_MOVEMENT, &[InputKind::Changed])
+}
+
+fn vu_key_down(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    virtual_key(lua, args, &[InputKind::Began])
+}
+
+fn vu_key_up(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    virtual_key(lua, args, &[InputKind::Ended])
+}
+
+fn vu_type_key(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    virtual_key(lua, args, &[InputKind::Began, InputKind::Ended])
+}
+
+fn vu_noop(_lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    none()
+}
+
+fn vu_stop_recording(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    ret(lua, "")
+}
+
 pub fn register(r: &mut Registry) {
+    r.add("VirtualUser", &["Button1Down"], vu_button1_down);
+    r.add("VirtualUser", &["Button1Up"], vu_button1_up);
+    r.add("VirtualUser", &["Button2Down"], vu_button2_down);
+    r.add("VirtualUser", &["Button2Up"], vu_button2_up);
+    r.add("VirtualUser", &["ClickButton1"], vu_click1);
+    r.add("VirtualUser", &["ClickButton2"], vu_click2);
+    r.add("VirtualUser", &["MoveMouse"], vu_move);
+    r.add("VirtualUser", &["SetKeyDown"], vu_key_down);
+    r.add("VirtualUser", &["SetKeyUp"], vu_key_up);
+    r.add("VirtualUser", &["TypeKey"], vu_type_key);
+    r.add(
+        "VirtualUser",
+        &["CaptureController", "StartRecording"],
+        vu_noop,
+    );
+    r.add("VirtualUser", &["StopRecording"], vu_stop_recording);
     r.add("TextBox", &["CaptureFocus"], capture_focus);
     r.add("TextBox", &["ReleaseFocus"], release_focus_native);
     r.add("TextBox", &["IsFocused"], is_focused);

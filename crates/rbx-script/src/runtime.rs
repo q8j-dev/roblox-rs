@@ -97,6 +97,7 @@ pub struct Engine {
     pub audio: rbx_audio::AudioEngine,
     pub audio_state: crate::api::sound::AudioState,
     pub join_after_move: (Option<InstanceId>, Option<InstanceId>),
+    pub selection: Vec<InstanceId>,
     pub animate_fallback: bool,
 }
 
@@ -220,6 +221,7 @@ impl Engine {
             audio: rbx_audio::AudioEngine::disabled(),
             audio_state: Default::default(),
             join_after_move: (None, None),
+            selection: Vec::new(),
             animate_fallback: false,
         }
     }

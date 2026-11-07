@@ -13,6 +13,7 @@ pub mod network;
 pub mod physics;
 pub mod players;
 pub mod remote;
+pub mod selection;
 pub mod services;
 pub mod sound;
 pub mod stats;
@@ -80,6 +81,7 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     camera::register(&mut r);
     user_input::register(&mut r);
     sound::register(&mut r);
+    selection::register(&mut r);
     r
 });
 

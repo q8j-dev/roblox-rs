@@ -1,3 +1,4 @@
+pub(crate) mod custom_events;
 mod humanoid;
 mod instance;
 pub(crate) mod parts;
@@ -16,5 +17,6 @@ pub fn registry() -> HashMap<&'static str, &'static dyn Behavior> {
     humanoid::register(&mut map);
     services::register(&mut map);
     terrain::register(&mut map);
+    custom_events::register(&mut map);
     map
 }

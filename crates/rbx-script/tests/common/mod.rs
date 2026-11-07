@@ -75,6 +75,13 @@ impl Fixture {
         }
     }
 
+    pub fn instance(&self, src: &str) -> InstanceId {
+        let v = self.execute(src).unwrap_or_else(|e| panic!("{src}: {e}"));
+        let first = v.first().cloned().unwrap_or(Value::Nil);
+        rbx_script::instance_from_value(&self.rt.lua, &first)
+            .unwrap_or_else(|| panic!("{src}: not an instance"))
+    }
+
     pub fn run(&self) {
         self.rt.engine.lock().running = true;
     }

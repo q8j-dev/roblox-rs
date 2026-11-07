@@ -76,6 +76,8 @@ pub struct DataModel {
     world_hooks: Option<Box<dyn WorldHooks>>,
     pub(crate) terrain_data: HashMap<InstanceId, crate::classes::terrain::TerrainData>,
     pub(crate) history: crate::history::History,
+    pub(crate) custom: crate::classes::custom_events::CustomEvents,
+    signals: std::collections::VecDeque<(InstanceId, &'static str, Vec<Variant>, u64)>,
 }
 
 impl Default for DataModel {
@@ -108,6 +110,8 @@ impl DataModel {
             world_hooks: None,
             terrain_data: HashMap::new(),
             history: Default::default(),
+            custom: Default::default(),
+            signals: Default::default(),
         };
         let root = match dm.create_internal(class) {
             Ok(id) => id,
@@ -162,6 +166,15 @@ impl DataModel {
 
     pub fn drain_events_from(&mut self, cursor: EventCursor) -> (u64, Vec<DomEvent>) {
         self.events.drain_from(cursor)
+    }
+
+    pub fn fire_signal(&mut self, id: InstanceId, event: &'static str, args: Vec<Variant>) {
+        let seq = self.events.position();
+        self.signals.push_back((id, event, args, seq));
+    }
+
+    pub fn drain_signals(&mut self) -> Vec<(InstanceId, &'static str, Vec<Variant>, u64)> {
+        self.signals.drain(..).collect()
     }
 
     pub fn event_position(&self) -> u64 {

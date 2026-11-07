@@ -1313,6 +1313,15 @@ pub fn pump(lua: &Lua) {
             let mut e = eng.lock();
             let cursor = e.cursor;
             let dom = e.dm.drain_events_from(cursor);
+            let signals = e.dm.drain_signals();
+            for (target, event, args, seq) in signals {
+                e.fired.push_back(Fired {
+                    target,
+                    event,
+                    args,
+                    seq,
+                });
+            }
             let fired: Vec<Fired> = e.fired.drain(..).collect();
             (dom, fired)
         };

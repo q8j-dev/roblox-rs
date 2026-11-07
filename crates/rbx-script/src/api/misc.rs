@@ -76,7 +76,36 @@ fn get_fvariables(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
     ret(lua, t)
 }
 
+fn custom_set_value(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let v = crate::convert::arg_number(args.first())
+        .ok_or_else(|| rt("Argument 1 missing or nil"))? as f32;
+    engine(lua).lock().dm.custom_event_set_value(id, v);
+    crate::runtime::pump(lua);
+    none()
+}
+
+fn custom_receivers(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let ids = engine(lua).lock().dm.custom_attached_receivers(id);
+    let t = lua.create_table()?;
+    for (i, r) in ids.into_iter().enumerate() {
+        t.raw_set(i + 1, crate::instance::push_instance(lua, r)?)?;
+    }
+    ret(lua, t)
+}
+
+fn custom_current_value(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let v = engine(lua).lock().dm.custom_receiver_value(id);
+    ret(lua, v as f64)
+}
+
 pub fn register(r: &mut Registry) {
+    r.add("CustomEvent", &["SetValue"], custom_set_value);
+    r.add("CustomEvent", &["GetAttachedReceivers"], custom_receivers);
+    r.add(
+        "CustomEventReceiver",
+        &["GetCurrentValue"],
+        custom_current_value,
+    );
     r.add("Debris", &["AddItem", "addItem"], add_item);
     r.add("Debris", &["SetLegacyMaxItems"], set_legacy_max_items);
     r.add("GlobalSettings", &["GetFFlag"], get_fflag);

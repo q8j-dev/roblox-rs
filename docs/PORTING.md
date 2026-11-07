@@ -34,10 +34,10 @@ Phase 3 (simulation). Phases 1 and 2 are done: workspace, CI, reflection data, m
 | `Network/` (replicators, players, filtering) | `rbx-net`, `rbx-script/src/net*.rs` | in progress | replicator, basic and strict filters, remote events and functions, network ownership and physics replication done; stats items and streaming left |
 | `Network/raknet` | `rbx-net` (quinn, WebTransport, WebSocket) | in progress | new wire format; QUIC over quinn with pinned self-signed certificates done, WebTransport comes with the web player |
 | `Rendering/g3d`, `Rendering/RbxG3D` | `rbx-math` | in progress | |
-| `Rendering/GfxCore` (D3D9, D3D11, GL) | `rbx-render` (wgpu) | not started | |
-| `Rendering/GfxRender` | `rbx-render` | not started | freetype becomes a Rust font crate |
+| `Rendering/GfxCore` (D3D9, D3D11, GL) | `rbx-render` (wgpu) | in progress | wgpu device, pipelines, offscreen capture |
+| `Rendering/GfxRender` | `rbx-render` | in progress | part geometry, materials, lighting parameters, sky; terrain, shadows, light grid, particles, decals, meshes and GUI left; freetype becomes a Rust font crate |
 | `Rendering/GfxBase`, `Rendering/AppDraw` | `rbx-render` | not started | |
-| `Rendering/ShaderCompiler`, `shaders/` | `rbx-render` WGSL | not started | |
+| `Rendering/ShaderCompiler`, `shaders/` | `rbx-render` WGSL | in progress | default/plastic/low-quality material and sky shaders ported |
 | `ClientBase/`, `ClientShared/` | `rbx-base`, `apps/player` | not started | InfluxDB and analytics removed |
 | `WindowsClient/`, `Mac/`, `RobloxMac/` | `apps/player`, `rbx-platform` | not started | |
 | `RCCService/` | `apps/server` | in progress | SOAP operations are HTTP/JSON routes under `/v1`; jobs run in their own threads; local asset and content server |

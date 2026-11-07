@@ -846,10 +846,8 @@ fn set_desired_angle(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
     none()
 }
 
-fn experimental_solver_is_enabled(lua: &Lua, id: InstanceId, _: &[Value]) -> Result<Ret> {
-    let e = engine(lua);
-    let v = e.lock().dm.get_bool(id, "ExpSolverEnabled_Replicate");
-    ret(lua, v)
+fn experimental_solver_is_enabled(lua: &Lua, _id: InstanceId, _: &[Value]) -> Result<Ret> {
+    ret(lua, true)
 }
 
 fn zoom_to_extents(_lua: &Lua, _id: InstanceId, _: &[Value]) -> Result<Ret> {

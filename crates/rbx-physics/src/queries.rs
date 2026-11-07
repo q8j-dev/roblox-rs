@@ -75,17 +75,18 @@ impl PhysicsWorld {
             && filter(tid)
         {
             let max = best.map_or(len, |b| b.distance);
-            if let Some((t, n, m)) =
+            if let Some(h) =
                 self.terrain
                     .raycast_opts(origin, dir, max, ignore_water, cells_are_cubes)
-                && t <= max
+                && h.distance > 0.0
+                && h.distance < max
             {
                 best = Some(RayHit {
                     part: tid,
-                    position: origin + dir * t,
-                    normal: n,
-                    distance: t,
-                    material: Some(m),
+                    position: h.position,
+                    normal: h.normal,
+                    distance: h.distance,
+                    material: Some(h.material),
                 });
             }
         }

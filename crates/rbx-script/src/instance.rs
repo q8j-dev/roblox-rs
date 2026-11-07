@@ -161,7 +161,48 @@ pub fn index(lua: &Lua, id: InstanceId, key: Value) -> Result<Value> {
     if let Some(c) = child {
         return push_instance(lua, c);
     }
+    if let Some(upper) = camel_case_alias(&name)
+        && class_has_member(&eng.lock().dm, id, class, &upper)
+    {
+        camel_case_violation(lua, id, &name, &upper);
+        return index(lua, id, Value::String(lua.create_string(&upper)?));
+    }
     Err(rt(format!("{name} is not a valid member of {class}")))
+}
+
+fn camel_case_alias(name: &str) -> Option<String> {
+    let mut chars = name.chars();
+    let first = chars.next()?;
+    if !first.is_ascii_lowercase() {
+        return None;
+    }
+    Some(first.to_ascii_uppercase().to_string() + chars.as_str())
+}
+
+fn class_has_member(dm: &rbx_dom::DataModel, id: InstanceId, class: &str, name: &str) -> bool {
+    let db = database();
+    dm.property_descriptor(id, name).is_some()
+        || db.find_function(class, name).is_some()
+        || db.find_event(class, name).is_some()
+}
+
+fn camel_case_violation(lua: &Lua, id: InstanceId, name: &str, upper: &str) {
+    let script = crate::runtime::current_info(lua).script;
+    let eng = engine(lua);
+    let mut e = eng.lock();
+    e.camel_case_violations += 1;
+    if e.camel_case_violations > 100 {
+        return;
+    }
+    let class = e.dm.class_of(id).unwrap_or_default();
+    let message = match script {
+        Some(s) => format!(
+            "\"{class}.{name}\" should be \"{upper}\" in {}",
+            e.dm.full_name(s)
+        ),
+        None => format!("\"{class}.{name}\" should be \"{upper}\""),
+    };
+    e.print(crate::runtime::MessageType::Warning, message);
 }
 
 pub fn event_static(class: &str, name: &str) -> &'static str {

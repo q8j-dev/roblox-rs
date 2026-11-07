@@ -108,6 +108,8 @@ fn canonical(tree: &Tree) -> Vec<CanonicalNode> {
 
 fn load(data: &[u8], place: bool) -> Result<(DataModel, Tree), String> {
     let mut dm = DataModel::new();
+    dm.backend_processing = false;
+    dm.frontend_processing = false;
     let tree = rbx_format::read(data).map_err(|e| e.to_string())?;
     if place {
         let root = dm.root();

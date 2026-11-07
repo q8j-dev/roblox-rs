@@ -287,7 +287,41 @@ pub fn fire_events(lua: &Lua, events: Vec<(InstanceId, HumanoidEvent)>) {
     }
 }
 
+fn equip_tool(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let tool = match args.first() {
+        Some(Value::Nil) | None => return none(),
+        Some(v) => expect_instance(lua, v, "Instance")?,
+    };
+    let warning = engine(lua).lock().dm.humanoid_equip_tool(id, tool);
+    if let Some(w) = warning {
+        engine(lua).lock().print(MessageType::Warning, w);
+    }
+    none()
+}
+
+fn unequip_tools(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let warning = engine(lua).lock().dm.humanoid_unequip_tools(id).err();
+    if let Some(w) = warning {
+        engine(lua).lock().print(MessageType::Warning, w);
+    }
+    none()
+}
+
+fn tool_activate(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let activated = engine(lua).lock().dm.tool_activate(id);
+    if !activated {
+        engine(lua).lock().print(
+            MessageType::Warning,
+            "Tool:Activate() called from script when tool is not equipped. Tool will not be activated.",
+        );
+    }
+    none()
+}
+
 pub fn register(r: &mut Registry) {
+    r.add("Humanoid", &["EquipTool"], equip_tool);
+    r.add("Humanoid", &["UnequipTools"], unequip_tools);
+    r.add("Tool", &["Activate"], tool_activate);
     r.add("Humanoid", &["MoveTo", "moveTo"], move_to);
     r.add("Humanoid", &["Move"], move_);
     r.add("Humanoid", &["ChangeState"], change_state);

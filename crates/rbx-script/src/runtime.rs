@@ -58,6 +58,7 @@ pub struct Engine {
     pub test: crate::api::test::TestState,
     pub world: rbx_physics::SharedWorld,
     pub physics_analyzer_break: bool,
+    pub camel_case_violations: usize,
     pub model_in_primary: HashMap<InstanceId, rbx_math::Mat3>,
     pub ownership: HashMap<InstanceId, (Option<InstanceId>, bool)>,
     pub debris_timers: Vec<(f64, InstanceId)>,
@@ -103,6 +104,7 @@ impl Engine {
             test: Default::default(),
             world,
             physics_analyzer_break: true,
+            camel_case_violations: 0,
             model_in_primary: HashMap::new(),
             ownership: HashMap::new(),
             debris_timers: Vec::new(),
@@ -615,6 +617,16 @@ impl ScriptRuntime {
             let mut w = world.lock();
             w.step(&mut e.dm, dt)
         };
+        {
+            let mut e = self.engine.lock();
+            for (a, b) in &events.touched {
+                if e.dm.contains(*a) && e.dm.contains(*b) {
+                    e.dm.tools_on_touched(*a, *b);
+                    e.dm.tools_on_touched(*b, *a);
+                }
+            }
+            e.dm.tools_step();
+        }
         for (a, b) in events.touched {
             self.fire_touch(a, b, "Touched");
         }

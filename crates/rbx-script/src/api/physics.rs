@@ -228,14 +228,18 @@ fn is_region3_empty(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
         Some(v) => vec![expect_instance(lua, v, "Instance")?],
     };
     let found = region_common(lua, region, ignore, 1);
-    ret(lua, found.is_empty())
+    let terrain =
+        found.is_empty() && with_world(lua, |w, _| w.terrain.cells_in_box(region.min, region.max));
+    ret(lua, found.is_empty() && !terrain)
 }
 
 fn is_region3_empty_list(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
     let region = region_arg(args.first())?;
     let ignore = objects_arg(lua, args.get(1))?;
     let found = region_common(lua, region, ignore, 1);
-    ret(lua, found.is_empty())
+    let terrain =
+        found.is_empty() && with_world(lua, |w, _| w.terrain.cells_in_box(region.min, region.max));
+    ret(lua, found.is_empty() && !terrain)
 }
 
 fn get_num_awake_parts(lua: &Lua, _id: InstanceId, _: &[Value]) -> Result<Ret> {

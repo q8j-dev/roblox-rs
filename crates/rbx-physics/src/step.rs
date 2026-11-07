@@ -732,6 +732,7 @@ impl PhysicsWorld {
                 c.last_long_step = -1;
                 c.overlapping = false;
                 c.manifolds.clear();
+                c.workspace = None;
                 self.pending_touch_ended(key);
             }
         }

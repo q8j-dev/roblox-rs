@@ -77,6 +77,9 @@ pub struct DataModel {
     pub(crate) terrain_data: HashMap<InstanceId, crate::classes::terrain::TerrainData>,
     pub(crate) history: crate::history::History,
     pub(crate) custom: crate::classes::custom_events::CustomEvents,
+    pub(crate) tools: crate::classes::tool::Tools,
+    pub backend_processing: bool,
+    pub frontend_processing: bool,
     signals: std::collections::VecDeque<(InstanceId, &'static str, Vec<Variant>, u64)>,
 }
 
@@ -111,6 +114,9 @@ impl DataModel {
             terrain_data: HashMap::new(),
             history: Default::default(),
             custom: Default::default(),
+            tools: Default::default(),
+            backend_processing: true,
+            frontend_processing: true,
             signals: Default::default(),
         };
         let root = match dm.create_internal(class) {
@@ -600,12 +606,14 @@ impl DataModel {
             for b in behaviors_for(oclass) {
                 b.child_removed(self, op, id);
             }
+            self.tools_child_changed(op, id, false);
         }
         if let Some(np) = new_parent {
             let nclass = self.class_of(np).unwrap_or("Instance");
             for b in behaviors_for(nclass) {
                 b.child_added(self, np, id);
             }
+            self.tools_child_changed(np, id, true);
             if !self.contains_or_is(np, old_parent) {
                 self.signal_descendant_added(id, Some(np), old_parent);
             }

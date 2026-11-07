@@ -19,6 +19,57 @@ pub const SMOOTH_CHUNK: i32 = 1 << SMOOTH_CHUNK_LOG2;
 const LARGE_CONTACT_VOLUME: i64 = 64;
 pub const TERRAIN_FRICTION: f32 = 0.5;
 pub const TERRAIN_ELASTICITY: f32 = 0.3;
+const MC_SEARCH_RAY_MAX: f32 = 2048.0;
+const MC_RAY_ZERO_SLOPE_TOLERANCE: f32 = 0.0005;
+const MC_HUGE_VAL: f32 = 9_999_999.0;
+
+#[derive(Clone, Copy, Debug)]
+pub struct TerrainRayHit {
+    pub distance: f32,
+    pub position: Vec3,
+    pub normal: Vec3,
+    pub material: u32,
+}
+
+const BLOCK_FACES: [(usize, f32); 6] = [
+    (1, -1.0),
+    (0, 1.0),
+    (2, -1.0),
+    (0, -1.0),
+    (2, 1.0),
+    (1, 1.0),
+];
+
+fn block_cell_hit(origin: Vec3, dir: Vec3, cell: IVec3) -> Option<(Vec3, Vec3)> {
+    let lo = legacy::cell_corner(cell).to_array();
+    let o = origin.to_array();
+    let d = dir.to_array();
+    for (axis, s) in BLOCK_FACES {
+        if s * d[axis] >= 0.0 {
+            continue;
+        }
+        let plane = if s > 0.0 {
+            lo[axis] + CELL_SIZE
+        } else {
+            lo[axis]
+        };
+        if s * (o[axis] - plane) < 0.0 {
+            continue;
+        }
+        let t = (plane - o[axis]) / d[axis];
+        let mut p = [o[0] + d[0] * t, o[1] + d[1] * t, o[2] + d[2] * t];
+        p[axis] = plane;
+        let inside = (0..3)
+            .filter(|i| *i != axis)
+            .all(|i| p[i] >= lo[i] && p[i] <= lo[i] + CELL_SIZE);
+        if inside {
+            let mut n = [0.0f32; 3];
+            n[axis] = s;
+            return Some((Vec3::from_array(p), Vec3::from_array(n)));
+        }
+    }
+    None
+}
 
 static CELL_SHAPES: LazyLock<Vec<SharedShape>> = LazyLock::new(|| {
     let h = CELL_SIZE * 0.5;
@@ -94,8 +145,9 @@ struct ChunkSlice {
 
 #[derive(Clone)]
 struct SmoothMesh {
-    shape: SharedShape,
+    shape: Option<SharedShape>,
     materials: Vec<u8>,
+    water: Option<SharedShape>,
 }
 
 #[derive(Default)]
@@ -336,6 +388,7 @@ impl TerrainCollider {
             };
             let geom = mesher::generate_geometry(&b, region.begin, 0, &options);
             let mut indices = Vec::new();
+            let mut water_indices = Vec::new();
             let mut materials = Vec::new();
             for tri in geom.indices.as_chunks::<3>().0 {
                 let v = [
@@ -344,20 +397,32 @@ impl TerrainCollider {
                     &geom.vertices[tri[2] as usize],
                 ];
                 if mesher::BasicMesh::is_water(v[0], v[1], v[2]) {
+                    water_indices.push([tri[0], tri[1], tri[2]]);
                     continue;
                 }
                 indices.push([tri[0], tri[1], tri[2]]);
                 materials.push(v[0].material);
             }
-            if !indices.is_empty() {
-                let verts: Vec<_> = geom
-                    .vertices
-                    .iter()
-                    .map(|v| to_parry_vec(v.position * CELL_SIZE))
-                    .collect();
-                if let Ok(shape) = SharedShape::trimesh(verts, indices) {
-                    result = Some(SmoothMesh { shape, materials });
+            let verts: Vec<_> = geom
+                .vertices
+                .iter()
+                .map(|v| to_parry_vec(v.position * CELL_SIZE))
+                .collect();
+            let build = |idx: Vec<[u32; 3]>| {
+                if idx.is_empty() {
+                    None
+                } else {
+                    SharedShape::trimesh(verts.clone(), idx).ok()
                 }
+            };
+            let shape = build(indices);
+            let water = build(water_indices);
+            if shape.is_some() || water.is_some() {
+                result = Some(SmoothMesh {
+                    shape,
+                    materials,
+                    water,
+                });
             }
         }
         self.meshes.lock().insert(id, result.clone());
@@ -373,6 +438,39 @@ impl TerrainCollider {
         Some(conversion::material_from_voxel(
             m.materials[triangle as usize % n],
         ))
+    }
+
+    pub fn cells_in_box(&self, min: Vec3, max: Vec3) -> bool {
+        if !self.is_active() {
+            return false;
+        }
+        if let Some(g) = &self.legacy {
+            let lo = legacy::world_to_cell_floor(min);
+            let hi = legacy::world_to_cell_floor(max);
+            for id in g.non_empty_chunks_in_region(lo, hi) {
+                let a = legacy::chunk_min(id).max(lo);
+                let b = legacy::chunk_max(id).min(hi);
+                for y in a.y..=b.y {
+                    for z in a.z..=b.z {
+                        for x in a.x..=b.x {
+                            if legacy::block(g.get_cell(IVec3::new(x, y, z))) != legacy::BLOCK_EMPTY
+                            {
+                                return true;
+                            }
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+        if let Some(g) = &self.smooth {
+            let region = Region::from_extents(min, max);
+            if region.is_empty() {
+                return false;
+            }
+            return !g.read(&region, 0).is_empty();
+        }
+        false
     }
 
     pub fn water_at_cell(&self, pos: IVec3) -> bool {
@@ -391,7 +489,7 @@ impl TerrainCollider {
         dir: Vec3,
         max: f32,
         ignore_water: bool,
-    ) -> Option<(f32, Vec3, u32)> {
+    ) -> Option<TerrainRayHit> {
         self.raycast_opts(origin, dir, max, ignore_water, false)
     }
 
@@ -402,7 +500,7 @@ impl TerrainCollider {
         max: f32,
         ignore_water: bool,
         cubes: bool,
-    ) -> Option<(f32, Vec3, u32)> {
+    ) -> Option<TerrainRayHit> {
         if !self.is_active() {
             return None;
         }
@@ -422,85 +520,90 @@ impl TerrainCollider {
         max: f32,
         ignore_water: bool,
         cubes: bool,
-    ) -> Option<(f32, Vec3, u32)> {
+    ) -> Option<TerrainRayHit> {
         let g = self.legacy.as_ref()?;
-        let ray = Ray::new(to_parry_vec(origin), to_parry_vec(dir));
+        let max = max.min(MC_SEARCH_RAY_MAX);
+        let o = origin.to_array();
+        let d = dir.to_array();
+        if o.iter().chain(d.iter()).any(|v| !v.is_finite()) {
+            return None;
+        }
+        if o.iter().any(|v| v.abs() > MC_HUGE_VAL) {
+            return None;
+        }
         let mut cell = legacy::world_to_cell_floor(origin);
-        let step = IVec3::new(sign(dir.x), sign(dir.y), sign(dir.z));
-        let next_boundary = |c: i32, s: i32| (if s > 0 { c + 1 } else { c }) as f32 * CELL_SIZE;
-        let mut t_max = Vec3::new(
-            axis_t(origin.x, dir.x, next_boundary(cell.x, step.x)),
-            axis_t(origin.y, dir.y, next_boundary(cell.y, step.y)),
-            axis_t(origin.z, dir.z, next_boundary(cell.z, step.z)),
-        );
-        let t_delta = Vec3::new(
-            if dir.x != 0.0 {
-                CELL_SIZE / dir.x.abs()
+        let started_in_water = g.cell_has_water(g.get_cell(cell), cell);
+        let mut time_step = [0.0f32; 3];
+        let mut next_time = [0.0f32; 3];
+        let mut direction = [0i32; 3];
+        let corner = legacy::cell_corner(cell).to_array();
+        for i in 0..3 {
+            time_step[i] = if d[i].abs() < MC_RAY_ZERO_SLOPE_TOLERANCE {
+                MC_HUGE_VAL
             } else {
-                f32::INFINITY
-            },
-            if dir.y != 0.0 {
-                CELL_SIZE / dir.y.abs()
+                CELL_SIZE / d[i].abs()
+            };
+            if d[i] > 0.0 {
+                next_time[i] = (corner[i] + CELL_SIZE - o[i]) * time_step[i] / CELL_SIZE;
+                direction[i] = 1;
             } else {
-                f32::INFINITY
-            },
-            if dir.z != 0.0 {
-                CELL_SIZE / dir.z.abs()
-            } else {
-                f32::INFINITY
-            },
-        );
-        let mut t = 0.0f32;
-        let limit = legacy::EXTENT_RADIUS;
-        while t <= max {
-            if cell.abs().max_element() > limit {
-                break;
+                next_time[i] = (o[i] - corner[i]) * time_step[i] / CELL_SIZE;
+                direction[i] = -1;
             }
+        }
+        let ray = Ray::new(to_parry_vec(origin), to_parry_vec(dir));
+        loop {
             let c = g.get_cell(cell);
-            if !legacy::is_empty(c) {
-                if let Some(shape) =
-                    cell_shape(if cubes && legacy::block(c) != legacy::BLOCK_EMPTY {
-                        legacy::solid_cell(0, 0)
-                    } else {
-                        c
-                    })
-                {
+            let mut found = None;
+            if legacy::block(c) != legacy::BLOCK_EMPTY {
+                if cubes || legacy::block(c) == legacy::BLOCK_SOLID {
+                    found = block_cell_hit(origin, dir, cell);
+                } else if let Some(shape) = cell_shape(c) {
                     let pose = to_pose(&cell_frame(cell, c));
-                    if let Some(hit) = shape.cast_ray_and_get_normal(&pose, &ray, max, true) {
-                        return Some((
-                            hit.time_of_impact,
-                            from_parry_vec(hit.normal),
-                            conversion::material_from_cell_material(g.get_material(cell)),
-                        ));
-                    }
-                } else if !ignore_water && legacy::block(c) == legacy::BLOCK_EMPTY {
-                    let lo = legacy::cell_corner(cell);
-                    let aabb =
-                        Aabb::new(to_parry_vec(lo), to_parry_vec(lo + Vec3::splat(CELL_SIZE)));
-                    if let Some(hit) = aabb.cast_local_ray_and_get_normal(&ray, max, true) {
-                        return Some((
-                            hit.time_of_impact,
-                            from_parry_vec(hit.normal),
-                            conversion::WATER,
-                        ));
+                    if let Some(hit) = shape.cast_ray_and_get_normal(&pose, &ray, f32::MAX, true) {
+                        if hit.time_of_impact > 0.0 {
+                            found = Some((
+                                origin + dir * hit.time_of_impact,
+                                from_parry_vec(hit.normal),
+                            ));
+                        } else {
+                            let behind = origin - dir * 1e-4;
+                            if !shape.contains_point(&pose, to_parry_vec(behind)) {
+                                found = Some((origin, from_parry_vec(hit.normal)));
+                            }
+                        }
                     }
                 }
             }
-            if t_max.x < t_max.y && t_max.x < t_max.z {
-                cell.x += step.x;
-                t = t_max.x;
-                t_max.x += t_delta.x;
-            } else if t_max.y < t_max.z {
-                cell.y += step.y;
-                t = t_max.y;
-                t_max.y += t_delta.y;
+            if found.is_none() && !ignore_water && g.cell_has_water(c, cell) != started_in_water {
+                found = block_cell_hit(origin, dir, cell);
+            }
+            if let Some((position, normal)) = found {
+                let distance = dir.dot(position - origin);
+                if distance <= 0.0 {
+                    return None;
+                }
+                return Some(TerrainRayHit {
+                    distance,
+                    position,
+                    normal,
+                    material: conversion::GRASS,
+                });
+            }
+            let axis = if next_time[0] < next_time[1] {
+                if next_time[0] < next_time[2] { 0 } else { 2 }
+            } else if next_time[1] < next_time[2] {
+                1
             } else {
-                cell.z += step.z;
-                t = t_max.z;
-                t_max.z += t_delta.z;
+                2
+            };
+            let passed = next_time[axis];
+            next_time[axis] += time_step[axis];
+            cell[axis] += direction[axis];
+            if passed > max {
+                return None;
             }
         }
-        None
     }
 
     fn raycast_smooth(
@@ -509,7 +612,11 @@ impl TerrainCollider {
         dir: Vec3,
         max: f32,
         ignore_water: bool,
-    ) -> Option<(f32, Vec3, u32)> {
+    ) -> Option<TerrainRayHit> {
+        if !origin.is_finite() || !dir.is_finite() {
+            return None;
+        }
+        let max = max.min(MC_SEARCH_RAY_MAX);
         let ray = Ray::new(to_parry_vec(origin), to_parry_vec(dir));
         let end = origin + dir * max;
         let lo = origin.min(end);
@@ -546,20 +653,22 @@ impl TerrainCollider {
             v
         };
         ids.sort_by_key(|c| (c.y, c.z, c.x));
-        let mut best: Option<(f32, Vec3, u32)> = None;
+        let mut best: Option<TerrainRayHit> = None;
         for id in ids {
             let bmin =
                 (id << SMOOTH_CHUNK_LOG2).as_vec3() * CELL_SIZE - Vec3::splat(CELL_SIZE * 2.0);
             let bmax = bmin + Vec3::splat(chunk_world + CELL_SIZE * 4.0);
-            let limit = best.map_or(max, |b| b.0);
+            let limit = best.map_or(max, |b| b.distance);
             let aabb = Aabb::new(to_parry_vec(bmin), to_parry_vec(bmax));
             if aabb.cast_local_ray(&ray, limit, true).is_none() {
                 continue;
             }
-            if let Some(m) = self.mesh(id)
+            let Some(m) = self.mesh(id) else {
+                continue;
+            };
+            if let Some(shape) = &m.shape
                 && let Some(hit) =
-                    m.shape
-                        .cast_ray_and_get_normal(&Pose3::IDENTITY, &ray, limit, true)
+                    shape.cast_ray_and_get_normal(&Pose3::IDENTITY, &ray, limit, true)
             {
                 let tri = match hit.feature {
                     parry3d::shape::FeatureId::Face(f) => (f as usize) % m.materials.len().max(1),
@@ -570,45 +679,29 @@ impl TerrainCollider {
                     .get(tri)
                     .copied()
                     .unwrap_or(conversion::MATERIAL_DEFAULT);
-                best = Some((
-                    hit.time_of_impact,
-                    from_parry_vec(hit.normal),
-                    conversion::material_from_voxel(mat),
-                ));
+                best = Some(TerrainRayHit {
+                    distance: hit.time_of_impact,
+                    position: origin + dir * hit.time_of_impact,
+                    normal: from_parry_vec(hit.normal),
+                    material: conversion::material_from_voxel(mat),
+                });
             }
-        }
-        if !ignore_water {
-            let step = CELL_SIZE * 0.5;
-            let mut t = 0.0;
-            let limit = best.map_or(max, |b| b.0);
-            while t < limit {
-                let p = origin + dir * t;
-                let c = legacy::world_to_cell_floor(p);
-                if self.water_at_cell(c) {
-                    return Some((t, -dir, conversion::WATER));
-                }
-                t += step;
+            let limit = best.map_or(max, |b| b.distance);
+            if !ignore_water
+                && let Some(water) = &m.water
+                && let Some(hit) =
+                    water.cast_ray_and_get_normal(&Pose3::IDENTITY, &ray, limit, true)
+                && best.is_none_or(|b| hit.time_of_impact < b.distance)
+            {
+                best = Some(TerrainRayHit {
+                    distance: hit.time_of_impact,
+                    position: origin + dir * hit.time_of_impact,
+                    normal: from_parry_vec(hit.normal),
+                    material: conversion::WATER,
+                });
             }
         }
         best
-    }
-}
-
-fn sign(v: f32) -> i32 {
-    if v > 0.0 {
-        1
-    } else if v < 0.0 {
-        -1
-    } else {
-        0
-    }
-}
-
-fn axis_t(o: f32, d: f32, boundary: f32) -> f32 {
-    if d == 0.0 {
-        f32::INFINITY
-    } else {
-        (boundary - o) / d
     }
 }
 
@@ -706,8 +799,9 @@ impl PhysicsWorld {
                     }
                     if t.solid
                         && let Some(m) = self.terrain.mesh(t.id)
+                        && let Some(shape) = m.shape
                     {
-                        features.push((t.id, m.shape.clone(), Pose3::IDENTITY));
+                        features.push((t.id, shape, Pose3::IDENTITY));
                     }
                 }
             } else if let Some(g) = &self.terrain.legacy {
@@ -877,7 +971,7 @@ impl PhysicsWorld {
         dir: Vec3,
         max: f32,
         ignore_water: bool,
-    ) -> Option<(f32, Vec3, u32)> {
+    ) -> Option<TerrainRayHit> {
         if !self.terrain.is_active() {
             return None;
         }

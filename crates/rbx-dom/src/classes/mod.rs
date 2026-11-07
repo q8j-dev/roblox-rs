@@ -4,6 +4,7 @@ mod instance;
 pub(crate) mod parts;
 mod services;
 pub(crate) mod terrain;
+pub(crate) mod tool;
 
 use crate::behavior::Behavior;
 use std::collections::HashMap;
@@ -18,5 +19,6 @@ pub fn registry() -> HashMap<&'static str, &'static dyn Behavior> {
     services::register(&mut map);
     terrain::register(&mut map);
     custom_events::register(&mut map);
+    tool::register(&mut map);
     map
 }

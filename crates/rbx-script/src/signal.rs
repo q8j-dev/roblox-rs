@@ -39,6 +39,24 @@ pub fn connect(
         s.by_event.entry((target, event)).or_default().push(id);
         id
     });
+    if event == "Equipped" {
+        let mouse = crate::runtime::engine(lua)
+            .lock()
+            .dm
+            .tool_equipped_mouse(target);
+        if let Some(m) = mouse {
+            let func = with_state(lua, |s| s.conns.get(&id).map(|c| c.func.clone()));
+            if let Some(func) = func {
+                let arg = crate::instance::push_instance(lua, m)?;
+                crate::runtime::spawn_function(
+                    lua,
+                    func,
+                    mlua::MultiValue::from_vec(vec![arg]),
+                    info,
+                );
+            }
+        }
+    }
     Ok(LConnection { id })
 }
 

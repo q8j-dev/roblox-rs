@@ -639,6 +639,9 @@ impl PhysicsWorld {
                 if self.assemblies[aj].is_moving() && j < i {
                     continue;
                 }
+                if self.joined(self.parts[i].id, *id) {
+                    continue;
+                }
                 pairs.push((i, j));
             }
         }

@@ -389,7 +389,7 @@ impl PhysicsWorld {
         }
     }
 
-    fn joined(&self, a: InstanceId, b: InstanceId) -> bool {
+    pub(crate) fn joined(&self, a: InstanceId, b: InstanceId) -> bool {
         self.part_joints.get(&a).is_some_and(|v| {
             v.iter().any(|jid| {
                 self.joints.get(jid).is_some_and(|j| {

@@ -117,7 +117,9 @@ fn sample_far(uv: vec2<f32>, fade: f32, cutoff: f32) -> vec4<f32> {
 
 @fragment
 fn fs_main(i: VertexOut) -> @location(0) vec4<f32> {
-    let kind = i32(i.spec_reflect_kind.z + 0.5);
+    let flags = i32(i.spec_reflect_kind.z + 0.5);
+    let kind = flags % 16;
+    let receives_shadow_map = flags < 16;
     let studs = textureSample(studs_map, linear_sampler, i.uvstuds_edge2.xy);
     let fade = clamp(1.0 - i.view_depth.w * LQMAT_FADE_FACTOR, 0.0, 1.0);
     let mat_sample = sample_far(i.uv_edge1.xy, fade, CFG_FAR_DIFFUSE_CUTOFF);
@@ -143,7 +145,7 @@ fn fs_main(i: VertexOut) -> @location(0) vec4<f32> {
     let specular_power = i.normal_specpower.w;
 
     let light = lgrid_sample(i.lgrid);
-    let shadow = shadow_sample(i.shadow_pos, light.a);
+    let shadow = select(light.a, shadow_sample(i.shadow_pos, light.a), receives_shadow_map);
 
     let diffuse = (g.ambient_color.rgb + key_intensity * shadow + fill_intensity * light.a + light.rgb) * albedo.rgb;
     let half_vec = normalize(-g.lamp0_dir.xyz + normalize(i.view_depth.xyz));

@@ -35,6 +35,10 @@ struct Args {
     screenshot: Option<PathBuf>,
     #[arg(long, default_value_t = 120)]
     screenshot_frames: u32,
+    #[arg(long = "input")]
+    inputs: Vec<String>,
+    #[arg(long)]
+    dump_gui: Option<PathBuf>,
     #[arg(long, default_value = "info")]
     log: String,
 }
@@ -57,8 +61,69 @@ struct Player {
     behavior: u32,
     lock_point: Option<(f32, f32)>,
     screenshot: Option<(PathBuf, u32)>,
+    scripted: Vec<(u32, ScriptedInput)>,
+    dump_gui: Option<PathBuf>,
     frames: u32,
     done: bool,
+}
+
+#[derive(Clone, Copy, Debug)]
+enum ScriptedInput {
+    Key(u32),
+    Click(f32, f32),
+}
+
+fn parse_input(spec: &str) -> Option<(u32, ScriptedInput)> {
+    let (what, frame) = spec.rsplit_once('@')?;
+    let frame: u32 = frame.parse().ok()?;
+    let (kind, value) = what.split_once(':')?;
+    let input = match kind {
+        "key" => ScriptedInput::Key(value.parse().ok()?),
+        "click" => {
+            let (x, y) = value.split_once(',')?;
+            ScriptedInput::Click(x.parse().ok()?, y.parse().ok()?)
+        }
+        _ => return None,
+    };
+    Some((frame, input))
+}
+
+fn dump_gui(dm: &DataModel) -> String {
+    fn walk(dm: &DataModel, id: InstanceId, depth: usize, out: &mut String) {
+        let class = dm.class_of(id).unwrap_or("");
+        let mut line = format!("{}{} ({class})", "  ".repeat(depth), dm.name_of(id));
+        if dm.is_a(id, "GuiBase2d") {
+            let p = rbx_dom::gui::placement(dm, id);
+            line.push_str(&format!(
+                " pos=({:.0},{:.0}) size=({:.0},{:.0})",
+                p.position.x, p.position.y, p.size.x, p.size.y
+            ));
+            for prop in [
+                "Visible",
+                "ZIndex",
+                "BackgroundTransparency",
+                "Position",
+                "Size",
+                "Text",
+                "Image",
+                "ClipsDescendants",
+            ] {
+                if let Ok(v) = dm.get(id, prop) {
+                    line.push_str(&format!(" {prop}={v:?}"));
+                }
+            }
+        }
+        out.push_str(&line);
+        out.push('\n');
+        for &c in dm.children_of(id) {
+            walk(dm, c, depth + 1, out);
+        }
+    }
+    let mut out = String::new();
+    if let Some(core) = dm.find_service("CoreGui") {
+        walk(dm, core, 0, &mut out);
+    }
+    out
 }
 
 fn find_assets(explicit: Option<PathBuf>) -> PathBuf {
@@ -217,6 +282,29 @@ impl Player {
         self.lock_point = Some(point);
         if behavior == 1 {
             let _ = w.set_cursor_position(PhysicalPosition::new(point.0 as f64, point.1 as f64));
+        }
+    }
+
+    fn play_scripted(&mut self, input: ScriptedInput) {
+        match input {
+            ScriptedInput::Key(code) => {
+                for kind in [InputKind::Began, InputKind::Ended] {
+                    self.send(kind, user_input::KEYBOARD, code, Vec3::ZERO, Vec3::ZERO);
+                }
+            }
+            ScriptedInput::Click(x, y) => {
+                let p = Vec3::new(x, y, 0.0);
+                self.send(
+                    InputKind::Changed,
+                    user_input::MOUSE_MOVEMENT,
+                    0,
+                    p,
+                    Vec3::ZERO,
+                );
+                for kind in [InputKind::Began, InputKind::Ended] {
+                    self.send(kind, user_input::MOUSE_BUTTON1, 0, p, Vec3::ZERO);
+                }
+            }
         }
     }
 
@@ -472,10 +560,25 @@ impl App for Player {
         self.runtime.render_step(dt);
         self.render();
         self.frames += 1;
+        let due: Vec<ScriptedInput> = self
+            .scripted
+            .iter()
+            .filter(|(f, _)| *f == self.frames)
+            .map(|(_, i)| *i)
+            .collect();
+        for input in due {
+            self.play_scripted(input);
+        }
         if let Some((path, at)) = self.screenshot.clone()
             && self.frames >= at
         {
             self.take_screenshot(&path);
+            if let Some(dump) = self.dump_gui.clone() {
+                let text = dump_gui(&self.runtime.engine.lock().dm);
+                if let Err(e) = std::fs::write(&dump, text) {
+                    tracing::error!("{}: {e}", dump.display());
+                }
+            }
             self.screenshot = None;
             self.done = true;
         }
@@ -578,6 +681,8 @@ fn main() {
         behavior: 0,
         lock_point: None,
         screenshot: args.screenshot.map(|p| (p, args.screenshot_frames)),
+        scripted: args.inputs.iter().filter_map(|s| parse_input(s)).collect(),
+        dump_gui: args.dump_gui.clone(),
         frames: 0,
         done: false,
     };

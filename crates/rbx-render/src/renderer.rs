@@ -1315,7 +1315,12 @@ impl Renderer {
             let data = InstanceData {
                 rows,
                 color: part.color,
-                extra: [part.specular.0, part.specular.1, part.reflectance, kind],
+                extra: [
+                    part.specular.0,
+                    part.specular.1,
+                    part.reflectance,
+                    kind + if part.caster { 16.0 } else { 0.0 },
+                ],
             };
             let d = (part.cframe.translation - eye).length_squared();
             if part.caster && part.color[3] > 0.0 {

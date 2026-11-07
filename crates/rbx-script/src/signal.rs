@@ -21,6 +21,7 @@ pub fn connect(
     func: Function,
 ) -> Result<LConnection> {
     let info = current_info(lua);
+    let since = crate::runtime::engine(lua).lock().dm.event_position();
     let id = with_state(lua, |s| {
         let id = s.next_conn;
         s.next_conn += 1;
@@ -32,6 +33,7 @@ pub fn connect(
                 func,
                 script: info.script,
                 identity: info.identity,
+                since,
             },
         );
         s.by_event.entry((target, event)).or_default().push(id);
@@ -54,11 +56,12 @@ pub fn register(lua: &Lua) -> Result<()> {
     let native = lua.create_function(|lua, sig: mlua::AnyUserData| {
         let sig = *sig.borrow::<LSignal>()?;
         let t = lua.current_thread();
+        let since = crate::runtime::engine(lua).lock().dm.event_position();
         with_state(lua, |s| {
             s.waiters
                 .entry((sig.target, sig.event))
                 .or_default()
-                .push(t)
+                .push((t, since))
         });
         yield_sentinel(lua)
     })?;

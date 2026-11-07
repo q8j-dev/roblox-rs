@@ -158,6 +158,14 @@ impl DataModel {
         self.events.drain(cursor)
     }
 
+    pub fn drain_events_from(&mut self, cursor: EventCursor) -> (u64, Vec<DomEvent>) {
+        self.events.drain_from(cursor)
+    }
+
+    pub fn event_position(&self) -> u64 {
+        self.events.position()
+    }
+
     pub fn contains(&self, id: InstanceId) -> bool {
         self.instances.contains_key(&id)
     }

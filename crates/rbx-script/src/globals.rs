@@ -2,10 +2,10 @@ use crate::convert::arg_number;
 use crate::instance::push_instance;
 use crate::runtime::{
     MessageType, current_identity, current_info, engine, expect_instance, new_environment, pump,
-    schedule_delay, schedule_wait, with_state, yield_sentinel,
+    schedule_delay, schedule_wait, yield_sentinel,
 };
 use crate::types::{register_constructors, rt};
-use mlua::{Function, Lua, MultiValue, Result, Table, Value, Variadic};
+use mlua::{Function, Lua, MultiValue, Result, Table, Value};
 use rbx_dom::database;
 
 fn tostring_all(lua: &Lua, args: &MultiValue) -> Result<String> {
@@ -241,69 +241,11 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
     )?;
     g.set("Instance", instance)?;
 
-    let prepare = lua.create_function(|lua, m: Value| -> Result<(Value, Value)> {
-        let id = match crate::runtime::instance_from_value(lua, &m) {
-            Some(id) => id,
-            None => {
-                if let Some(n) = arg_number(Some(&m)) {
-                    return Err(rt(format!("Unable to load asset {n} as a module; asset loading is done through the content provider")));
-                }
-                return Err(rt("Attempted to call require with invalid argument(s)."));
-            }
-        };
-        let cached = with_state(lua, |s| s.modules.get(&id).map(|k| lua.registry_value::<Value>(k)));
-        if let Some(v) = cached {
-            return Ok((v?, Value::Nil));
-        }
-        let (class, source, name) = {
-            let eng = engine(lua);
-            let e = eng.lock();
-            let class = e.dm.class_of(id).unwrap_or("");
-            let src = e.dm.get(id, "Source").ok().and_then(|v| v.as_str().map(str::to_string)).unwrap_or_default();
-            (class, src, e.dm.full_name(id))
-        };
-        if class != "ModuleScript" {
-            return Err(rt("Attempted to call require with invalid argument(s)."));
-        }
-        let env = new_environment(lua, Some(id))?;
-        let f = lua
-            .load(&source)
-            .set_name(format!("={name}"))
-            .set_environment(env)
-            .into_function()
-            .map_err(|e| rt(format!("Requested module experienced an error while loading: {}", crate::runtime::format_error(&e))))?;
-        Ok((Value::Nil, Value::Function(f)))
+    let require_native = lua.create_function(|lua, m: Value| -> Result<Value> {
+        crate::runtime::require_module(lua, m)
     })?;
-    let store = lua.create_function(
-        |lua, (m, results): (Value, Variadic<Value>)| -> Result<Value> {
-            let id =
-                crate::runtime::instance_from_value(lua, &m).ok_or_else(|| rt("invalid module"))?;
-            if results.len() != 1 {
-                return Err(rt("Module code did not return exactly one value"));
-            }
-            let v = results.into_iter().next().unwrap_or(Value::Nil);
-            let key = lua.create_registry_value(v.clone())?;
-            with_state(lua, |s| {
-                s.modules.insert(id, key);
-            });
-            Ok(v)
-        },
-    )?;
-    let require: Function = lua
-        .load(
-            r#"
-local prepare, store = ...
-return function(m)
-    local cached, f = prepare(m)
-    if f == nil then
-        return cached
-    end
-    return store(m, f())
-end
-"#,
-        )
-        .set_name("=require")
-        .call((prepare, store))?;
+    let wrap: Function = lua.named_registry_value("rbx_wrap")?;
+    let require: Function = wrap.call(require_native)?;
     g.set("require", require)?;
 
     g.set(

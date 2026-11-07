@@ -160,8 +160,13 @@ pub fn stop_script(lua: &Lua, id: InstanceId) {
                     .retain(|sl| thread_key(&sl.thread) != thread_key(&t));
                 s.ready.retain(|(r, _)| thread_key(r) != thread_key(&t));
                 for waiters in s.waiters.values_mut() {
+                    waiters.retain(|(w, _)| thread_key(w) != thread_key(&t));
+                }
+                for waiters in s.module_waiters.values_mut() {
                     waiters.retain(|w| thread_key(w) != thread_key(&t));
                 }
+                s.pending_invokes
+                    .retain(|(_, _, w, _)| thread_key(w) != thread_key(&t));
                 s.child_waiters
                     .retain(|w| thread_key(&w.thread) != thread_key(&t));
             }

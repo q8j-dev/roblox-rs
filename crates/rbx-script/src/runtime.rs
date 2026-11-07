@@ -31,6 +31,7 @@ pub struct Fired {
     pub target: InstanceId,
     pub event: &'static str,
     pub args: Vec<Variant>,
+    pub seq: u64,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -197,10 +198,12 @@ impl Engine {
     }
 
     pub fn fire(&mut self, target: InstanceId, event: &'static str, args: Vec<Variant>) {
+        let seq = self.dm.event_position();
         self.fired.push_back(Fired {
             target,
             event,
             args,
+            seq,
         });
     }
 
@@ -221,6 +224,7 @@ pub struct Conn {
     pub func: Function,
     pub script: Option<InstanceId>,
     pub identity: Identity,
+    pub since: u64,
 }
 
 pub struct Sleeper {
@@ -253,13 +257,17 @@ pub struct State {
     pub conns: HashMap<u64, Conn>,
     pub by_event: HashMap<(InstanceId, &'static str), Vec<u64>>,
     pub next_conn: u64,
-    pub waiters: HashMap<(InstanceId, &'static str), Vec<Thread>>,
+    pub waiters: HashMap<(InstanceId, &'static str), Vec<(Thread, u64)>>,
+    pub dispatch_seq: Option<u64>,
     pub sleepers: Vec<Sleeper>,
     pub ready: VecDeque<(Thread, Resume)>,
     pub threads: HashMap<usize, ThreadInfo>,
     pub script_threads: HashMap<InstanceId, Vec<Thread>>,
     pub running_scripts: HashMap<InstanceId, bool>,
     pub modules: HashMap<InstanceId, RegistryKey>,
+    pub module_threads: HashMap<usize, InstanceId>,
+    pub module_waiters: HashMap<InstanceId, Vec<Thread>>,
+    pub module_errors: HashMap<InstanceId, String>,
     pub child_waiters: Vec<ChildWaiter>,
     pub depth: u32,
     pub globals: Option<RegistryKey>,
@@ -419,12 +427,16 @@ impl ScriptRuntime {
             by_event: HashMap::new(),
             next_conn: 1,
             waiters: HashMap::new(),
+            dispatch_seq: None,
             sleepers: Vec::new(),
             ready: VecDeque::new(),
             threads: HashMap::new(),
             script_threads: HashMap::new(),
             running_scripts: HashMap::new(),
             modules: HashMap::new(),
+            module_threads: HashMap::new(),
+            module_waiters: HashMap::new(),
+            module_errors: HashMap::new(),
             child_waiters: Vec::new(),
             depth: 0,
             globals: None,
@@ -849,6 +861,19 @@ pub fn resume_thread_result(
         if !alive {
             return None;
         }
+        let verdict = {
+            let eng = engine(lua);
+            let e = eng.lock();
+            if e.dm.is_a(script, "BaseScript") {
+                Some(crate::scripts::should_run(&e.dm, e.local_player, script).is_some())
+            } else {
+                None
+            }
+        };
+        if verdict == Some(false) {
+            crate::scripts::stop_script(lua, script);
+            return None;
+        }
     }
     let wd = with_state(lua, |s| s.watchdog.clone());
     let previous_identity = {
@@ -888,10 +913,21 @@ pub fn resume_thread_result(
         error_text = Some(text);
     }
     if thread.status() != ThreadStatus::Resumable {
-        let (hook, join) = with_state(lua, |s| {
+        let (hook, join, module) = with_state(lua, |s| {
             s.threads.remove(&key);
-            (s.finish_hooks.remove(&key), s.joins.remove(&key))
+            (
+                s.finish_hooks.remove(&key),
+                s.joins.remove(&key),
+                s.module_threads.remove(&key),
+            )
         });
+        if let Some(module) = module {
+            let outcome = match &result {
+                Ok(values) => Ok(values.clone()),
+                Err(_) => Err(error_text.clone().unwrap_or_default()),
+            };
+            module_finished(lua, module, outcome);
+        }
         if let Some(run) = hook {
             crate::api::test::on_script_finished(lua, run, error_text.clone());
         }
@@ -914,6 +950,141 @@ pub fn resume_thread_result(
         });
     }
     Some(Ok(MultiValue::new()))
+}
+
+fn module_finished(lua: &Lua, module: InstanceId, outcome: Result<MultiValue, String>) {
+    let result = match outcome {
+        Ok(values) if values.len() == 1 => {
+            let v = values.into_iter().next().unwrap_or(Value::Nil);
+            match lua.create_registry_value(v.clone()) {
+                Ok(key) => {
+                    with_state(lua, |s| {
+                        s.modules.insert(module, key);
+                    });
+                    Ok(v)
+                }
+                Err(e) => Err(e.to_string()),
+            }
+        }
+        Ok(_) => Err("Module code did not return exactly one value".to_string()),
+        Err(_) => Err("Requested module experienced an error while loading".to_string()),
+    };
+    let waiters = with_state(lua, |s| {
+        if let Err(e) = &result {
+            s.running_scripts.insert(module, false);
+            s.module_errors.insert(module, e.clone());
+        }
+        s.module_waiters.remove(&module).unwrap_or_default()
+    });
+    for w in waiters {
+        match &result {
+            Ok(v) => make_ready_lua(lua, w, MultiValue::from_vec(vec![v.clone()])),
+            Err(e) => with_state(lua, |s| s.ready.push_back((w, Resume::Error(e.clone())))),
+        }
+    }
+}
+
+pub fn require_module(lua: &Lua, m: Value) -> mlua::Result<Value> {
+    let id = match instance_from_value(lua, &m) {
+        Some(id) => id,
+        None => {
+            if let Value::Number(n) = m {
+                return Err(rt(format!(
+                    "Unable to load asset {n} as a module; asset loading is done through the content provider"
+                )));
+            }
+            if let Value::Integer(n) = m {
+                return Err(rt(format!(
+                    "Unable to load asset {n} as a module; asset loading is done through the content provider"
+                )));
+            }
+            return Err(rt("Attempted to call require with invalid argument(s)."));
+        }
+    };
+    if let Some(v) = with_state(lua, |s| {
+        s.modules.get(&id).map(|k| lua.registry_value::<Value>(k))
+    }) {
+        return v;
+    }
+    let caller = lua.current_thread();
+    let loading = with_state(lua, |s| s.module_waiters.contains_key(&id));
+    if loading {
+        with_state(lua, |s| {
+            s.module_waiters.entry(id).or_default().push(caller)
+        });
+        return yield_sentinel(lua);
+    }
+    if let Some(e) = with_state(lua, |s| s.module_errors.get(&id).cloned()) {
+        return Err(rt(e));
+    }
+    let (class, source, name) = {
+        let eng = engine(lua);
+        let e = eng.lock();
+        let class = e.dm.class_of(id).unwrap_or("");
+        let src =
+            e.dm.get(id, "Source")
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_string))
+                .unwrap_or_default();
+        (class, src, e.dm.full_name(id))
+    };
+    if class != "ModuleScript" {
+        return Err(rt("Attempted to call require with invalid argument(s)."));
+    }
+    let env = new_environment(lua, Some(id))?;
+    let func = match lua
+        .load(&source)
+        .set_name(format!("={name}"))
+        .set_environment(env)
+        .into_function()
+    {
+        Ok(f) => f,
+        Err(e) => {
+            let text = format_error(&e);
+            engine(lua).lock().print(MessageType::Error, text);
+            with_state(lua, |s| {
+                s.running_scripts.insert(id, false);
+                s.module_errors.insert(
+                    id,
+                    "Requested module experienced an error while loading".to_string(),
+                );
+            });
+            return Err(rt("Requested module experienced an error while loading"));
+        }
+    };
+    let identity = current_info(lua).identity;
+    let thread = lua.create_thread(func)?;
+    let key = thread_key(&thread);
+    with_state(lua, |s| {
+        s.threads.insert(
+            key,
+            ThreadInfo {
+                script: Some(id),
+                identity,
+            },
+        );
+        s.module_threads.insert(key, id);
+        s.module_waiters.insert(id, Vec::new());
+        s.running_scripts.insert(id, true);
+        s.script_threads.entry(id).or_default().push(thread.clone());
+    });
+    match resume_thread_result(lua, &thread, MultiValue::new()) {
+        Some(Ok(_)) if thread.status() == ThreadStatus::Resumable => {
+            with_state(lua, |s| {
+                s.module_waiters.entry(id).or_default().push(caller)
+            });
+            yield_sentinel(lua)
+        }
+        _ => match with_state(lua, |s| {
+            s.modules.get(&id).map(|k| lua.registry_value::<Value>(k))
+        }) {
+            Some(v) => v,
+            None => Err(rt(with_state(lua, |s| s.module_errors.get(&id).cloned())
+                .unwrap_or_else(|| {
+                    "Requested module experienced an error while loading".to_string()
+                }))),
+        },
+    }
 }
 
 pub fn spawn_function(lua: &Lua, func: Function, args: MultiValue, info: ThreadInfo) {
@@ -1060,7 +1231,8 @@ fn event_arg_values(lua: &Lua, class: &str, event: &str, args: &[Variant]) -> Mu
 }
 
 pub fn fire_lua(lua: &Lua, target: InstanceId, event: &'static str, args: MultiValue) {
-    let (handlers, waiters) = with_state(lua, |s| {
+    let (handlers, waiters, seq) = with_state(lua, |s| {
+        let seq = s.dispatch_seq;
         let ids = s
             .by_event
             .get(&(target, event))
@@ -1069,6 +1241,7 @@ pub fn fire_lua(lua: &Lua, target: InstanceId, event: &'static str, args: MultiV
         let handlers: Vec<(Function, ThreadInfo)> = ids
             .iter()
             .filter_map(|id| s.conns.get(id))
+            .filter(|c| seq.is_none_or(|q| c.since <= q))
             .map(|c| {
                 (
                     c.func.clone(),
@@ -1079,10 +1252,19 @@ pub fn fire_lua(lua: &Lua, target: InstanceId, event: &'static str, args: MultiV
                 )
             })
             .collect();
-        let waiters = s.waiters.remove(&(target, event)).unwrap_or_default();
-        (handlers, waiters)
+        let all = s.waiters.remove(&(target, event)).unwrap_or_default();
+        let (ready, later): (Vec<_>, Vec<_>) = all
+            .into_iter()
+            .partition(|(_, since)| seq.is_none_or(|q| *since <= q));
+        if !later.is_empty() {
+            s.waiters.insert((target, event), later);
+        }
+        let waiters: Vec<Thread> = ready.into_iter().map(|(t, _)| t).collect();
+        s.dispatch_seq = None;
+        (handlers, waiters, seq)
     });
     if handlers.is_empty() && waiters.is_empty() {
+        with_state(lua, |s| s.dispatch_seq = seq);
         return;
     }
     let depth = with_state(lua, |s| {
@@ -1090,7 +1272,10 @@ pub fn fire_lua(lua: &Lua, target: InstanceId, event: &'static str, args: MultiV
         s.depth
     });
     if depth > 64 {
-        with_state(lua, |s| s.depth -= 1);
+        with_state(lua, |s| {
+            s.depth -= 1;
+            s.dispatch_seq = seq;
+        });
         engine(lua).lock().print(
             MessageType::Error,
             "Maximum event re-entrancy depth exceeded",
@@ -1115,7 +1300,10 @@ pub fn fire_lua(lua: &Lua, target: InstanceId, event: &'static str, args: MultiV
             resume_thread(lua, &t, args.clone());
         }
     }
-    with_state(lua, |s| s.depth -= 1);
+    with_state(lua, |s| {
+        s.depth -= 1;
+        s.dispatch_seq = seq;
+    });
 }
 
 pub fn pump(lua: &Lua) {
@@ -1124,20 +1312,25 @@ pub fn pump(lua: &Lua) {
         let (dom, fired) = {
             let mut e = eng.lock();
             let cursor = e.cursor;
-            let dom = e.dm.drain_events(cursor);
+            let dom = e.dm.drain_events_from(cursor);
             let fired: Vec<Fired> = e.fired.drain(..).collect();
             (dom, fired)
         };
+        let (start, dom) = dom;
         if dom.is_empty() && fired.is_empty() {
             return;
         }
-        for ev in dom {
-            dispatch_dom_event(lua, &ev);
+        for (i, ev) in dom.iter().enumerate() {
+            with_state(lua, |s| s.dispatch_seq = Some(start + i as u64));
+            dispatch_dom_event(lua, ev);
+            with_state(lua, |s| s.dispatch_seq = None);
         }
         for f in fired {
             let class = eng.lock().dm.class_of(f.target).unwrap_or("Instance");
             let args = event_arg_values(lua, class, f.event, &f.args);
+            with_state(lua, |s| s.dispatch_seq = Some(f.seq));
             fire_lua(lua, f.target, f.event, args);
+            with_state(lua, |s| s.dispatch_seq = None);
         }
     }
 }

@@ -71,6 +71,18 @@ impl EventLog {
         self.compact();
     }
 
+    pub fn position(&self) -> u64 {
+        self.base + self.events.len() as u64
+    }
+
+    pub fn drain_from(&mut self, cursor: EventCursor) -> (u64, Vec<DomEvent>) {
+        let start = match self.cursors.get(cursor.0).copied() {
+            Some(Some(pos)) => pos,
+            _ => self.position(),
+        };
+        (start, self.drain(cursor))
+    }
+
     pub fn drain(&mut self, cursor: EventCursor) -> Vec<DomEvent> {
         let Some(Some(pos)) = self.cursors.get(cursor.0).copied() else {
             return Vec::new();

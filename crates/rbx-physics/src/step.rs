@@ -341,6 +341,7 @@ impl PhysicsWorld {
         }
         self.humanoid_forces();
         self.buoyancy_forces();
+        self.vehicle_seat_forces(dm);
         let mut ids: Vec<InstanceId> = self.movers.keys().copied().collect();
         ids.sort();
         let mut wake = Vec::new();

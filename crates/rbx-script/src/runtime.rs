@@ -624,6 +624,10 @@ impl ScriptRuntime {
                     e.dm.tools_on_touched(*a, *b);
                     e.dm.tools_on_touched(*b, *a);
                 }
+                if e.dm.contains(*a) && e.dm.contains(*b) {
+                    e.dm.seats_on_touched(*a, *b);
+                    e.dm.seats_on_touched(*b, *a);
+                }
             }
             e.dm.tools_step();
         }

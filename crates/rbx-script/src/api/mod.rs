@@ -89,6 +89,9 @@ pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Resul
     if class == "AnimationTrack" {
         return animation::get_track_property(lua, id, name);
     }
+    if class == "VehicleSeat" && name == "AreHingesDetected" {
+        return physics::hinges_detected(lua, id).map(Some);
+    }
     Ok(None)
 }
 

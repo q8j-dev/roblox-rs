@@ -9,6 +9,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+rbx-base = { version = "0.1.0", path = "../rbx-base" }
 rbx-format = { version = "0.1.0", path = "../rbx-format" }
 rbx-math = { version = "0.1.0", path = "../rbx-math" }
 rbx-reflection = { version = "0.1.0", path = "../rbx-reflection" }

@@ -258,6 +258,9 @@ pub fn fire_events(lua: &Lua, events: Vec<(InstanceId, HumanoidEvent)>) {
         if !alive {
             continue;
         }
+        if let HumanoidEvent::Seated(false, seat) = ev {
+            engine(lua).lock().dm.humanoid_done_sitting(id, seat);
+        }
         let (name, args): (&'static str, Vec<Value>) = match ev {
             HumanoidEvent::StateChanged(a, b) => match (state_value(lua, a), state_value(lua, b)) {
                 (Ok(x), Ok(y)) => ("StateChanged", vec![x, y]),

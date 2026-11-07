@@ -614,6 +614,7 @@ dependencies = [
 name = "rbx-dom"
 version = "0.1.0"
 dependencies = [
+ "rbx-base",
  "rbx-format",
  "rbx-math",
  "rbx-reflection",

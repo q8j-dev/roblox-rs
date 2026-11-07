@@ -247,6 +247,12 @@ impl DataModel {
         }
         if current < EQUIPPED && value >= EQUIPPED {
             let mouse = self.create_internal("Mouse").ok();
+            if let Some(m) = mouse {
+                self.retain(m);
+            }
+            if let Some(old) = self.tool_entry(tool).mouse {
+                self.release(old);
+            }
             let e = self.tool_entry(tool);
             e.mouse = mouse;
             e.equipped_mouse = mouse;
@@ -598,8 +604,9 @@ impl DataModel {
                 .entries
                 .get(&tool)
                 .is_some_and(|e| e.state == NOTHING && e.weld.is_none())
+                && let Some(m) = self.tools.entries.remove(&tool).and_then(|e| e.mouse)
             {
-                self.tools.entries.remove(&tool);
+                self.release(m);
             }
             return;
         }
@@ -751,7 +758,9 @@ impl Behavior for ToolBehavior {
         if dm.tools.entries.contains_key(&id) {
             dm.tool_set_desired(id, NOTHING);
         }
-        dm.tools.entries.remove(&id);
+        if let Some(m) = dm.tools.entries.remove(&id).and_then(|e| e.mouse) {
+            dm.release(m);
+        }
         dm.tools.timers.retain(|(_, t, _)| *t != id);
     }
 }

@@ -2415,7 +2415,11 @@ impl PhysicsWorld {
             match w {
                 DmWrite::Set(id, name, v) => {
                     if dm.contains(id) && dm.get(id, name).ok().as_ref() != Some(&v) {
-                        dm.set_unchecked(id, name, v);
+                        if name == "SeatPart" {
+                            let _ = dm.set(id, name, v);
+                        } else {
+                            dm.set_unchecked(id, name, v);
+                        }
                     }
                 }
                 DmWrite::Silent(id, name, v) => {

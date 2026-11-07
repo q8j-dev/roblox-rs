@@ -2,6 +2,7 @@ pub(crate) mod custom_events;
 mod humanoid;
 mod instance;
 pub(crate) mod parts;
+pub(crate) mod seat;
 mod services;
 pub(crate) mod terrain;
 pub(crate) mod tool;
@@ -20,5 +21,6 @@ pub fn registry() -> HashMap<&'static str, &'static dyn Behavior> {
     terrain::register(&mut map);
     custom_events::register(&mut map);
     tool::register(&mut map);
+    seat::register(&mut map);
     map
 }

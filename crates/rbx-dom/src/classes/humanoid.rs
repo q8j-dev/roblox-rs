@@ -7,7 +7,7 @@ pub struct HumanoidBehavior;
 
 impl Behavior for HumanoidBehavior {
     fn computed(&self) -> &'static [&'static str] {
-        &["MoveDirection", "Torso", "LeftLeg", "RightLeg"]
+        &["MoveDirection", "Torso", "LeftLeg", "RightLeg", "SeatPart"]
     }
 
     fn get(&self, dm: &DataModel, id: InstanceId, prop: &str) -> Option<Variant> {
@@ -20,6 +20,7 @@ impl Behavior for HumanoidBehavior {
             ))),
             "LeftLeg" => Some(Variant::Ref(appendage(dm, id, &["Left Leg", "LeftLeg"]))),
             "RightLeg" => Some(Variant::Ref(appendage(dm, id, &["Right Leg", "RightLeg"]))),
+            "SeatPart" => Some(Variant::Ref(dm.humanoid_seat_part(id))),
             _ => None,
         }
     }
@@ -28,6 +29,14 @@ impl Behavior for HumanoidBehavior {
         let f = || value.as_f32();
         match prop {
             "Torso" | "LeftLeg" | "RightLeg" => SetOutcome::Handled,
+            "SeatPart" => {
+                let seat = match value {
+                    Variant::Ref(r) => *r,
+                    _ => None,
+                };
+                dm.set_humanoid_seat_part(id, seat);
+                SetOutcome::Handled
+            }
             "Health" => {
                 let Some(v) = f() else {
                     return SetOutcome::Unhandled;

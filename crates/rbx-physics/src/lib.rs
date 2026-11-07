@@ -12,6 +12,7 @@ pub mod shape;
 pub mod solver;
 pub mod step;
 pub mod terrain;
+pub mod vehicle_seat;
 pub mod world;
 
 pub use hooks::{SharedWorld, WorldHooksImpl, shared_world};

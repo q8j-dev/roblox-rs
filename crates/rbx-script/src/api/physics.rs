@@ -104,6 +104,11 @@ fn with_world<R>(lua: &Lua, f: impl FnOnce(&mut PhysicsWorld, &mut DataModel) ->
     f(&mut w, &mut e.dm)
 }
 
+pub fn hinges_detected(lua: &Lua, id: InstanceId) -> Result<Value> {
+    let n = with_world(lua, |w, _| w.vehicle_seat_hinges(id).len());
+    Ok(Value::Integer(n as i64))
+}
+
 fn material_value(lua: &Lua, m: u32) -> Result<Value> {
     variant_to_lua(
         lua,

@@ -378,6 +378,7 @@ pub struct PhysicsWorld {
     pub humanoid_events: Vec<(InstanceId, crate::humanoid::HumanoidEvent)>,
     pub dm_writes: Vec<crate::humanoid::DmWrite>,
     pub accoutrement_parts: HashSet<InstanceId>,
+    pub vehicle_seats: std::collections::BTreeSet<InstanceId>,
     pub part_joints: HashMap<InstanceId, std::collections::BTreeSet<InstanceId>>,
     pub local_character: Option<InstanceId>,
     cursor: Option<EventCursor>,
@@ -515,6 +516,7 @@ impl PhysicsWorld {
             humanoid_events: Vec::new(),
             dm_writes: Vec::new(),
             accoutrement_parts: HashSet::new(),
+            vehicle_seats: Default::default(),
             part_joints: HashMap::new(),
             local_character: None,
             cursor: None,
@@ -950,6 +952,9 @@ impl PhysicsWorld {
             }
         }
         self.topology_dirty = true;
+        if dm.class_of(id) == Some("VehicleSeat") {
+            self.vehicle_seats.insert(id);
+        }
     }
 
     pub fn remove_part(&mut self, id: InstanceId) {
@@ -957,6 +962,7 @@ impl PhysicsWorld {
             return;
         };
         self.spatial.remove(id);
+        self.vehicle_seats.remove(&id);
         self.parts.swap_remove(i);
         if i < self.parts.len() {
             let moved = self.parts[i].id;

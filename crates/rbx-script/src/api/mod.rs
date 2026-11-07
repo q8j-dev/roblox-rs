@@ -8,6 +8,7 @@ pub mod physics;
 pub mod players;
 pub mod remote;
 pub mod services;
+pub mod stats;
 pub mod terrain;
 pub mod test;
 
@@ -60,6 +61,7 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     terrain::register(&mut r);
     remote::register(&mut r);
     network::register(&mut r);
+    stats::register(&mut r);
     r
 });
 

@@ -196,7 +196,7 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
         let id = {
             let eng = engine(lua);
             let mut e = eng.lock();
-            e.dm.get_service("Stats").map_err(|e| rt(e.to_string()))?
+            crate::api::stats::ensure_tree(&mut e).ok_or_else(|| rt("Stats is not available"))?
         };
         push_instance(lua, id)
     })?;

@@ -10,8 +10,15 @@ pub trait Connection: Send {
     fn is_closed(&self) -> bool;
     fn close(&mut self);
 
-    fn send(&mut self, msg: &Message) {
-        self.send_bytes(msg.channel(), encode(msg));
+    fn describe(&self) -> String {
+        String::new()
+    }
+
+    fn send(&mut self, msg: &Message) -> usize {
+        let bytes = encode(msg);
+        let n = bytes.len();
+        self.send_bytes(msg.channel(), bytes);
+        n
     }
 
     fn recv(&mut self) -> Option<Result<Message, WireError>> {

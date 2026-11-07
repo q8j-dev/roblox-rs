@@ -1,11 +1,90 @@
 use crate::net_physics::{ClientPhysics, ServerPhysics};
-use crate::runtime::{MessageType, RunMode, ScriptRuntime};
+use crate::runtime::{MessageType, NetPeerStats, RunMode, ScriptRuntime};
 use rbx_dom::InstanceId;
-use rbx_net::{ClientReplicator, ClientState, Connection, PeerId, ServerReplicator};
+use rbx_net::{
+    Channel, ClientReplicator, ClientState, Connection, Message, PeerId, ServerReplicator,
+};
 use std::collections::HashSet;
+
+#[derive(Default, Clone, Copy)]
+struct Counters {
+    sent_physics: u64,
+    sent_data: u64,
+    received_physics: u64,
+    received_data: u64,
+    sent_bytes: u64,
+    received_bytes: u64,
+}
+
+impl Counters {
+    fn count_sent(&mut self, msg: &Message, bytes: usize) {
+        if msg.channel() == Channel::Unreliable {
+            self.sent_physics += 1;
+        } else {
+            self.sent_data += 1;
+        }
+        self.sent_bytes += bytes as u64;
+    }
+
+    fn count_received(&mut self, msg: &Message) {
+        if msg.channel() == Channel::Unreliable {
+            self.received_physics += 1;
+        } else {
+            self.received_data += 1;
+        }
+    }
+}
+
+#[derive(Default)]
+struct NetMeter {
+    counters: std::collections::HashMap<PeerId, Counters>,
+    window_start: f64,
+    rates: Vec<(PeerId, NetPeerStats)>,
+}
+
+impl NetMeter {
+    fn update(&mut self, now: f64, names: &[(PeerId, String)]) -> Option<Vec<NetPeerStats>> {
+        let elapsed = now - self.window_start;
+        if elapsed < 0.5 {
+            return None;
+        }
+        self.window_start = now;
+        let mut out = Vec::new();
+        for (peer, name) in names {
+            let c = self.counters.remove(peer).unwrap_or_default();
+            let rate = |n: u64| n as f64 / elapsed;
+            let fresh = NetPeerStats {
+                name: name.clone(),
+                sent_physics: rate(c.sent_physics),
+                sent_data: rate(c.sent_data),
+                received_physics: rate(c.received_physics),
+                received_data: rate(c.received_data),
+                sent_kbps: rate(c.sent_bytes) / 1024.0,
+                received_kbps: rate(c.received_bytes) / 1024.0,
+            };
+            let smoothed = match self.rates.iter().find(|(p, _)| p == peer) {
+                Some((_, old)) => NetPeerStats {
+                    name: name.clone(),
+                    sent_physics: (old.sent_physics + fresh.sent_physics) * 0.5,
+                    sent_data: (old.sent_data + fresh.sent_data) * 0.5,
+                    received_physics: (old.received_physics + fresh.received_physics) * 0.5,
+                    received_data: (old.received_data + fresh.received_data) * 0.5,
+                    sent_kbps: (old.sent_kbps + fresh.sent_kbps) * 0.5,
+                    received_kbps: (old.received_kbps + fresh.received_kbps) * 0.5,
+                },
+                None => fresh,
+            };
+            out.push((*peer, smoothed));
+        }
+        self.counters.clear();
+        self.rates = out;
+        Some(self.rates.iter().map(|(_, s)| s.clone()).collect())
+    }
+}
 
 pub struct NetServer {
     pub rep: ServerReplicator,
+    meter: NetMeter,
     conns: Vec<(PeerId, Box<dyn Connection>)>,
     installed: HashSet<InstanceId>,
     physics: ServerPhysics,
@@ -20,6 +99,7 @@ impl NetServer {
         let rep = ServerReplicator::new(&mut e.dm);
         NetServer {
             rep,
+            meter: NetMeter::default(),
             conns: Vec::new(),
             installed: HashSet::new(),
             physics: ServerPhysics::default(),
@@ -54,6 +134,11 @@ impl NetServer {
             while let Some(msg) = conn.recv() {
                 match msg {
                     Ok(msg) => {
+                        self.meter
+                            .counters
+                            .entry(*peer)
+                            .or_default()
+                            .count_received(&msg);
                         let mut e = runtime.engine.lock();
                         self.rep.receive(&mut e.dm, *peer, msg);
                     }
@@ -108,8 +193,25 @@ impl NetServer {
         }
         for (to, msg) in self.rep.take_outgoing() {
             if let Some((_, c)) = self.conns.iter_mut().find(|(p, _)| *p == to) {
-                c.send(&msg);
+                let n = c.send(&msg);
+                self.meter
+                    .counters
+                    .entry(to)
+                    .or_default()
+                    .count_sent(&msg, n);
             }
+        }
+        let names: Vec<(PeerId, String)> = self
+            .conns
+            .iter()
+            .map(|(p, c)| {
+                let d = c.describe();
+                (*p, if d.is_empty() { format!("peer {p}") } else { d })
+            })
+            .collect();
+        let now = runtime.engine.lock().game_time;
+        if let Some(stats) = self.meter.update(now, &names) {
+            runtime.engine.lock().net_stats = stats;
         }
     }
 

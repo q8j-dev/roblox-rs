@@ -85,6 +85,21 @@ pub struct Engine {
     pub render_bindings: Vec<(String, i32, mlua::RegistryKey)>,
     pub network_requests: Vec<NetworkRequest>,
     pub client_count: usize,
+    pub net_stats: Vec<NetPeerStats>,
+    pub stats_sources: HashMap<InstanceId, crate::api::stats::StatSource>,
+    pub fps: f64,
+    pub jobs_stats_window: f64,
+}
+
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct NetPeerStats {
+    pub name: String,
+    pub sent_physics: f64,
+    pub sent_data: f64,
+    pub received_physics: f64,
+    pub received_data: f64,
+    pub sent_kbps: f64,
+    pub received_kbps: f64,
 }
 
 #[derive(Clone, Debug, PartialEq)]
@@ -184,6 +199,10 @@ impl Engine {
             render_bindings: Vec::new(),
             network_requests: Vec::new(),
             client_count: 0,
+            net_stats: Vec::new(),
+            stats_sources: HashMap::new(),
+            fps: 0.0,
+            jobs_stats_window: 5.0,
         }
     }
 
@@ -664,6 +683,14 @@ impl ScriptRuntime {
             let eng = self.engine.clone();
             let mut e = eng.lock();
             e.game_time += dt;
+            if dt > 0.0 {
+                let rate = 1.0 / dt;
+                e.fps = if e.fps == 0.0 {
+                    rate
+                } else {
+                    e.fps * 0.9 + rate * 0.1
+                };
+            }
             e.clock_carry += e.frame_clock_peak;
             e.frame_clock_peak = 0.0;
             e.frame_started = std::time::Instant::now();
@@ -710,6 +737,7 @@ impl ScriptRuntime {
             }
         }
         crate::api::test::on_timeout(&self.lua);
+        crate::api::stats::sync_network(&mut self.engine.lock());
         self.collect();
     }
 

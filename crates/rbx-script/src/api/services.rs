@@ -71,6 +71,9 @@ fn get_service(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
             }
         }
     };
+    if class == "Stats" {
+        crate::api::stats::ensure_tree(&mut eng.lock());
+    }
     match found {
         Some(c) => ret(lua, push_instance(lua, c)?),
         None => ret(lua, Value::Nil),

@@ -338,6 +338,10 @@ impl QuicConnection {
 }
 
 impl Connection for QuicConnection {
+    fn describe(&self) -> String {
+        self.conn.remote_address().to_string()
+    }
+
     fn send_bytes(&mut self, channel: Channel, bytes: Vec<u8>) {
         if self.closed.load(Ordering::Acquire) {
             return;

@@ -31302,7 +31302,28 @@
    "creatable": false,
    "events": [],
    "flags": [],
-   "functions": [],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/Stats.cpp",
+     "ident": "func_value",
+     "kind": "BoundFuncDesc",
+     "name": "GetValue",
+     "params": [],
+     "return": "double",
+     "security": "Plugin"
+    },
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/Stats.cpp",
+     "ident": "func_values",
+     "kind": "BoundFuncDesc",
+     "name": "GetValueString",
+     "params": [],
+     "return": "string",
+     "security": "Plugin"
+    }
+   ],
    "name": "StatsItem",
    "properties": [],
    "security": null,

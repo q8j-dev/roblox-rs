@@ -596,7 +596,7 @@ impl Mesh {
                 Vec4::splat(NO_OUTLINES),
             );
         }
-        for tri in file.indices.chunks_exact(3) {
+        for tri in file.indices.as_chunks::<3>().0 {
             mesh.indices.extend_from_slice(&[tri[0], tri[1], tri[2]]);
         }
         mesh.min = file.min * scale;

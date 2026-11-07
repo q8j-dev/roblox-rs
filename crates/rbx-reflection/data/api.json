@@ -39848,6 +39848,86 @@
    "cpp": "HUMAN::StateType",
    "items": [
     {
+     "cpp": "RBX::HUMAN::FALLING_DWN",
+     "name": "FallingDown",
+     "value": 0
+    },
+    {
+     "cpp": "RBX::HUMAN::RUNNING",
+     "name": "Running",
+     "value": 8
+    },
+    {
+     "cpp": "RBX::HUMAN::RUNNING_NO_PHYS",
+     "name": "RunningNoPhysics",
+     "value": 10
+    },
+    {
+     "cpp": "RBX::HUMAN::CLIMBING",
+     "name": "Climbing",
+     "value": 12
+    },
+    {
+     "cpp": "RBX::HUMAN::STRAFING_NO_PHYS",
+     "name": "StrafingNoPhysics",
+     "value": 11
+    },
+    {
+     "cpp": "RBX::HUMAN::RAGDOLL",
+     "name": "Ragdoll",
+     "value": 1
+    },
+    {
+     "cpp": "RBX::HUMAN::GETTING_UP",
+     "name": "GettingUp",
+     "value": 2
+    },
+    {
+     "cpp": "RBX::HUMAN::JUMPING",
+     "name": "Jumping",
+     "value": 3
+    },
+    {
+     "cpp": "RBX::HUMAN::LANDED",
+     "name": "Landed",
+     "value": 7
+    },
+    {
+     "cpp": "RBX::HUMAN::FLYING",
+     "name": "Flying",
+     "value": 6
+    },
+    {
+     "cpp": "RBX::HUMAN::FREE_FALL",
+     "name": "Freefall",
+     "value": 5
+    },
+    {
+     "cpp": "RBX::HUMAN::SEATED",
+     "name": "Seated",
+     "value": 13
+    },
+    {
+     "cpp": "RBX::HUMAN::PLATFORM_STANDING",
+     "name": "PlatformStanding",
+     "value": 14
+    },
+    {
+     "cpp": "RBX::HUMAN::DEAD",
+     "name": "Dead",
+     "value": 15
+    },
+    {
+     "cpp": "RBX::HUMAN::SWIMMING",
+     "name": "Swimming",
+     "value": 4
+    },
+    {
+     "cpp": "RBX::HUMAN::PHYSICS",
+     "name": "Physics",
+     "value": 16
+    },
+    {
      "cpp": "RBX::HUMAN::xx",
      "name": "None",
      "value": 18

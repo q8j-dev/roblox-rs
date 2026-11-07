@@ -93,6 +93,7 @@ pub struct Engine {
     pub base_url: String,
     pub gui: crate::api::gui::GuiState,
     pub input: crate::api::input::InputState,
+    pub camera: crate::api::camera::CameraState,
     pub animate_fallback: bool,
 }
 
@@ -212,6 +213,7 @@ impl Engine {
             base_url: crate::api::http::DEFAULT_BASE_URL.to_string(),
             gui: Default::default(),
             input: Default::default(),
+            camera: Default::default(),
             animate_fallback: false,
         }
     }
@@ -761,6 +763,39 @@ impl ScriptRuntime {
         result
     }
 
+    pub fn input(&self, event: crate::api::user_input::InputEvent) {
+        crate::api::user_input::process(&self.lua, event);
+    }
+
+    pub fn render_step(&self, dt: f64) {
+        crate::api::user_input::render_step(&self.lua, dt);
+    }
+
+    pub fn window_focus(&self, focused: bool) {
+        let uis = self.engine.lock().dm.find_service("UserInputService");
+        if let Some(uis) = uis {
+            fire_lua(
+                &self.lua,
+                uis,
+                if focused {
+                    "WindowFocused"
+                } else {
+                    "WindowFocusReleased"
+                },
+                MultiValue::new(),
+            );
+            pump(&self.lua);
+        }
+    }
+
+    pub fn mouse_behavior(&self) -> u32 {
+        let e = self.engine.lock();
+        e.dm.find_service("UserInputService")
+            .and_then(|u| e.dm.get(u, "MouseBehavior").ok())
+            .and_then(|v| v.as_enum())
+            .unwrap_or(0)
+    }
+
     pub fn step(&self, dt: f64) {
         let running = {
             let eng = self.engine.clone();
@@ -780,6 +815,11 @@ impl ScriptRuntime {
             let t = e.game_time;
             if let Some(ws) = e.dm.find_service("Workspace") {
                 e.dm.store_silent(ws, "DistributedGameTime", Variant::Double(t));
+            }
+            let frontend = e.dm.find_service("NetworkServer").is_none();
+            if frontend && e.running {
+                crate::api::players::ensure_player_scripts(&mut e);
+                crate::api::players::ensure_camera_subject(&mut e);
             }
             e.running
         };

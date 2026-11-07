@@ -94,7 +94,10 @@ fn objects_table(lua: &Lua, ids: &[InstanceId]) -> Result<mlua::Table> {
     Ok(t)
 }
 
-fn with_world<R>(lua: &Lua, f: impl FnOnce(&mut PhysicsWorld, &mut DataModel) -> R) -> R {
+pub(crate) fn with_world<R>(
+    lua: &Lua,
+    f: impl FnOnce(&mut PhysicsWorld, &mut DataModel) -> R,
+) -> R {
     let eng = engine(lua);
     let mut e = eng.lock();
     let world = e.world.clone();

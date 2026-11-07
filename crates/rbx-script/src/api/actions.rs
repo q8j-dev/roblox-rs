@@ -10,6 +10,7 @@ use rbx_reflection::ValueType;
 pub enum ActionInput {
     KeyCode(u32),
     InputType(u32),
+    PlayerAction(u32),
     Character(String),
 }
 
@@ -98,6 +99,7 @@ fn parse_inputs(lua: &Lua, args: &[Value]) -> Vec<ActionInput> {
             match item.enum_name {
                 "KeyCode" => out.push(ActionInput::KeyCode(item.value)),
                 "UserInputType" => out.push(ActionInput::InputType(item.value)),
+                "PlayerActions" => out.push(ActionInput::PlayerAction(item.value)),
                 _ => {}
             }
         } else if let Value::String(s) = v {
@@ -118,6 +120,11 @@ fn input_value(lua: &Lua, input: &ActionInput) -> Result<Value> {
             lua,
             &Variant::Enum(*t),
             Some(&ValueType::Enum("UserInputType".into())),
+        ),
+        ActionInput::PlayerAction(a) => variant_to_lua(
+            lua,
+            &Variant::Enum(*a),
+            Some(&ValueType::Enum("PlayerActions".into())),
         ),
         ActionInput::Character(c) => Ok(Value::String(lua.create_string(c)?)),
     }
@@ -380,33 +387,66 @@ fn ignore(_lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
     none()
 }
 
+fn player_action_matches(action: u32, key: u32) -> bool {
+    matches!(
+        (action, key),
+        (0, 119) | (0, 273) | (1, 115) | (1, 274) | (2, 97) | (3, 100) | (4, 32)
+    )
+}
+
+fn binding_matches(inputs: &[ActionInput], event: &ActionInput, input_type: u32) -> Option<bool> {
+    let key = match event {
+        ActionInput::KeyCode(k) => Some(*k),
+        _ => None,
+    };
+    for i in inputs {
+        match (i, key) {
+            (ActionInput::KeyCode(k), Some(code)) if *k == code => return Some(true),
+            (ActionInput::Character(c), Some(code)) => {
+                let mut chars = c.chars();
+                if let (Some(ch), None) = (chars.next(), chars.next())
+                    && ch as u32 == code
+                {
+                    return Some(true);
+                }
+            }
+            (ActionInput::PlayerAction(a), Some(code)) if player_action_matches(*a, code) => {
+                return Some(false);
+            }
+            (ActionInput::InputType(t), _) if *t == input_type => return Some(true),
+            _ => {}
+        }
+    }
+    None
+}
+
 pub fn dispatch(
     lua: &Lua,
     input: &ActionInput,
-    character: Option<&str>,
+    input_type: u32,
     state: u32,
     object: InstanceId,
+    core: bool,
+    menu_open: bool,
 ) -> bool {
     let target = with_state(lua, |s| {
         s.actions
             .actions
             .iter()
             .rev()
-            .find(|a| {
-                a.inputs.iter().any(|i| {
-                    i == input
-                        || matches!((i, character), (ActionInput::Character(c), Some(ch)) if c.eq_ignore_ascii_case(ch))
+            .filter(|a| a.core == core)
+            .find_map(|a| {
+                binding_matches(&a.inputs, input, input_type).and_then(|sink| {
+                    lua.registry_value::<Function>(&a.func)
+                        .ok()
+                        .map(|f| (a.name.clone(), f, sink))
                 })
             })
-            .and_then(|a| {
-                lua.registry_value::<Function>(&a.func)
-                    .ok()
-                    .map(|f| (a.name.clone(), f))
-            })
     });
-    let Some((name, func)) = target else {
+    let Some((name, func, sink)) = target else {
         return false;
     };
+    let state = if menu_open { 3 } else { state };
     let Ok(state_value) = variant_to_lua(
         lua,
         &Variant::Enum(state),
@@ -426,10 +466,14 @@ pub fn dispatch(
         MultiValue::from_vec(vec![Value::String(name_value), state_value, obj]),
         crate::runtime::ThreadInfo {
             script: None,
-            identity: crate::security::Identity::RobloxGameScript,
+            identity: if core {
+                crate::security::Identity::RobloxGameScript
+            } else {
+                crate::security::Identity::GameScript
+            },
         },
     );
-    true
+    sink
 }
 
 fn get_topbar_transparency(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {

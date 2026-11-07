@@ -115,6 +115,92 @@ fn create_player_gui(e: &mut Engine, player: InstanceId) {
     }
 }
 
+pub fn ensure_default_player_scripts(e: &mut Engine) -> Option<InstanceId> {
+    let starter = e.dm.get_service("StarterPlayer").ok()?;
+    let scripts = match e
+        .dm
+        .find_first_child_of_class(starter, "StarterPlayerScripts")
+    {
+        Some(s) => s,
+        None => {
+            let s = e.dm.create("StarterPlayerScripts").ok()?;
+            let _ = e.dm.set_parent(s, Some(starter));
+            s
+        }
+    };
+    for (name, file) in [
+        ("ControlScript", "fonts/characterControlScript.rbxmx"),
+        ("CameraScript", "fonts/characterCameraScript.rbxmx"),
+    ] {
+        if e.dm.find_first_child(scripts, name, false).is_some() {
+            continue;
+        }
+        for root in load_content_model(e, file) {
+            let _ = e.dm.set(root, "Archivable", Variant::Bool(false));
+            let _ = e.dm.set_parent(root, Some(scripts));
+        }
+    }
+    Some(scripts)
+}
+
+pub fn ensure_player_scripts(e: &mut Engine) -> bool {
+    let Some(player) = e.dm.local_player.filter(|p| e.dm.contains(*p)) else {
+        return false;
+    };
+    if e.dm
+        .find_first_child_of_class(player, "PlayerScripts")
+        .is_some()
+    {
+        return false;
+    }
+    let Ok(ps) = e.dm.create("PlayerScripts") else {
+        return false;
+    };
+    if let Some(scripts) = ensure_default_player_scripts(e) {
+        for c in e.dm.children_of(scripts).to_vec() {
+            let archivable = e.dm.get_bool(c, "Archivable");
+            let _ = e.dm.set(c, "Archivable", Variant::Bool(true));
+            if let Ok(Some(copy)) = e.dm.clone_instance(c) {
+                let _ = e.dm.set_parent(copy, Some(ps));
+            }
+            let _ = e.dm.set(c, "Archivable", Variant::Bool(archivable));
+        }
+    }
+    let _ = e.dm.set_parent(ps, Some(player));
+    true
+}
+
+pub fn ensure_camera_subject(e: &mut Engine) {
+    let Some(player) = e.dm.local_player else {
+        return;
+    };
+    let Some(character) =
+        e.dm.get_ref(player, "Character")
+            .filter(|c| e.dm.contains(*c))
+    else {
+        return;
+    };
+    let Some(humanoid) = e.dm.find_first_child_of_class(character, "Humanoid") else {
+        return;
+    };
+    let Some(ws) = e.dm.find_service("Workspace") else {
+        return;
+    };
+    let Some(cam) =
+        e.dm.get_ref(ws, "CurrentCamera")
+            .or_else(|| e.dm.find_first_child_of_class(ws, "Camera"))
+    else {
+        return;
+    };
+    let subject =
+        e.dm.get_ref(cam, "CameraSubject")
+            .filter(|s| e.dm.contains(*s) && e.dm.in_tree(*s));
+    if subject.is_none() {
+        let _ = e.dm.set(cam, "CameraSubject", Variant::Ref(Some(humanoid)));
+        let _ = e.dm.set(cam, "CameraType", Variant::Enum(5));
+    }
+}
+
 fn copy_children(dm: &mut DataModel, from: InstanceId, to: InstanceId) {
     for c in dm.children_of(from).to_vec() {
         if let Ok(Some(copy)) = dm.clone_instance(c) {

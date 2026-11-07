@@ -1,10 +1,12 @@
 use clap::Parser;
 use parking_lot::Mutex;
 use rbx_dom::{DataModel, InstanceId, Variant};
-use rbx_math::{CFrame, Vec3};
-use rbx_platform::winit::window::Window;
+use rbx_math::Vec3;
+use rbx_platform::winit::dpi::PhysicalPosition;
+use rbx_platform::winit::window::{CursorGrabMode, Window};
 use rbx_platform::{App, Input};
 use rbx_render::{Renderer, wgpu};
+use rbx_script::api::user_input::{self, InputEvent, InputKind};
 use rbx_script::net::NetClient;
 use rbx_script::{Engine, ScriptRuntime};
 use std::collections::HashSet;
@@ -33,31 +35,8 @@ struct Args {
     screenshot: Option<PathBuf>,
     #[arg(long, default_value_t = 120)]
     screenshot_frames: u32,
-    #[arg(long, default_value_t = 0.6)]
-    yaw: f32,
-    #[arg(long, default_value_t = 16.0)]
-    distance: f32,
     #[arg(long, default_value = "info")]
     log: String,
-}
-
-struct OrbitCamera {
-    yaw: f32,
-    pitch: f32,
-    distance: f32,
-    focus: Vec3,
-}
-
-impl OrbitCamera {
-    fn cframe(&self) -> CFrame {
-        let dir = Vec3::new(
-            self.yaw.sin() * self.pitch.cos(),
-            self.pitch.sin(),
-            self.yaw.cos() * self.pitch.cos(),
-        );
-        let eye = self.focus + dir * self.distance;
-        CFrame::look_at(eye, self.focus, Vec3::Y)
-    }
 }
 
 struct Gpu {
@@ -73,9 +52,10 @@ struct Player {
     gpu: Option<Gpu>,
     assets: PathBuf,
     accumulator: f64,
-    camera: OrbitCamera,
     keys: HashSet<u32>,
-    rotating: bool,
+    cursor: (f32, f32),
+    behavior: u32,
+    lock_point: Option<(f32, f32)>,
     screenshot: Option<(PathBuf, u32)>,
     frames: u32,
     done: bool,
@@ -136,54 +116,6 @@ fn spawn_local_player(
 }
 
 impl Player {
-    fn character_head(&self) -> Option<Vec3> {
-        let e = self.runtime.engine.lock();
-        let player = e.dm.local_player?;
-        let ch = e.dm.get_ref(player, "Character")?;
-        let head =
-            e.dm.find_first_child(ch, "Head", false)
-                .or_else(|| e.dm.find_first_child(ch, "Torso", false))?;
-        e.dm.get_raw(head, "CFrame")
-            .and_then(|v| v.as_cframe())
-            .map(|c| c.translation)
-    }
-
-    fn humanoid(&self) -> Option<InstanceId> {
-        let e = self.runtime.engine.lock();
-        let player = e.dm.local_player?;
-        let ch = e.dm.get_ref(player, "Character")?;
-        e.dm.find_first_child_of_class(ch, "Humanoid")
-    }
-
-    fn drive_character(&mut self) {
-        let Some(h) = self.humanoid() else {
-            return;
-        };
-        let mut forward = 0.0f32;
-        let mut right = 0.0f32;
-        for (code, f, r) in [
-            (119, 1.0, 0.0),
-            (115, -1.0, 0.0),
-            (97, 0.0, -1.0),
-            (100, 0.0, 1.0),
-            (273, 1.0, 0.0),
-            (274, -1.0, 0.0),
-        ] {
-            if self.keys.contains(&code) {
-                forward += f;
-                right += r;
-            }
-        }
-        let look = Vec3::new(-self.camera.yaw.sin(), 0.0, -self.camera.yaw.cos());
-        let side = Vec3::new(-look.z, 0.0, look.x);
-        let dir = (look * forward + side * right).normalize_or_zero();
-        let mut e = self.runtime.engine.lock();
-        let _ = e.dm.set(h, "WalkDirection", Variant::Vector3(dir));
-        if self.keys.contains(&32) {
-            let _ = e.dm.set(h, "Jump", Variant::Bool(true));
-        }
-    }
-
     fn gui_scale(&self) -> f32 {
         self.window
             .as_ref()
@@ -211,7 +143,6 @@ impl Player {
     }
 
     fn step(&mut self) {
-        self.drive_character();
         if let Some(net) = &mut self.net {
             net.tick(&self.runtime);
         }
@@ -221,11 +152,7 @@ impl Player {
         }
     }
 
-    fn update_camera(&mut self) {
-        if let Some(head) = self.character_head() {
-            self.camera.focus = head;
-        }
-        let cf = self.camera.cframe();
+    fn ensure_camera(&mut self) {
         let mut e = self.runtime.engine.lock();
         let Some(ws) = e.dm.find_service("Workspace") else {
             return;
@@ -233,23 +160,77 @@ impl Player {
         let cam =
             e.dm.get_ref(ws, "CurrentCamera")
                 .or_else(|| e.dm.find_first_child_of_class(ws, "Camera"));
-        let cam = match cam {
-            Some(c) => c,
-            None => match e.dm.create("Camera") {
-                Ok(c) => {
-                    let _ = e.dm.set_parent(c, Some(ws));
-                    let _ = e.dm.set(ws, "CurrentCamera", Variant::Ref(Some(c)));
-                    c
-                }
-                Err(_) => return,
-            },
+        if cam.is_none()
+            && let Ok(c) = e.dm.create("Camera")
+        {
+            let _ = e.dm.set_parent(c, Some(ws));
+            let _ = e.dm.set(ws, "CurrentCamera", Variant::Ref(Some(c)));
+        }
+    }
+
+    fn logical(&self, x: f32, y: f32) -> Vec3 {
+        let s = self.gui_scale();
+        Vec3::new(x / s, y / s, 0.0)
+    }
+
+    fn send(&self, kind: InputKind, input_type: u32, key_code: u32, position: Vec3, delta: Vec3) {
+        self.runtime.input(InputEvent {
+            kind,
+            input_type,
+            key_code,
+            position,
+            delta,
+            text: None,
+        });
+    }
+
+    fn pointer(&self) -> Vec3 {
+        let (x, y) = self.lock_point.unwrap_or(self.cursor);
+        self.logical(x, y)
+    }
+
+    fn apply_mouse_behavior(&mut self) {
+        let behavior = self.runtime.mouse_behavior();
+        if behavior == self.behavior {
+            return;
+        }
+        self.behavior = behavior;
+        let Some(w) = self.window.clone() else {
+            return;
         };
-        e.dm.store_silent(cam, "CFrame", Variant::CFrame(cf));
-        e.dm.store_silent(
-            cam,
-            "Focus",
-            Variant::CFrame(CFrame::from_translation(self.camera.focus)),
-        );
+        if behavior == 0 {
+            let _ = w.set_cursor_grab(CursorGrabMode::None);
+            w.set_cursor_visible(true);
+            self.lock_point = None;
+            return;
+        }
+        if w.set_cursor_grab(CursorGrabMode::Locked).is_err() {
+            let _ = w.set_cursor_grab(CursorGrabMode::Confined);
+        }
+        w.set_cursor_visible(behavior != 1);
+        let point = if behavior == 1 {
+            let size = w.inner_size();
+            (size.width as f32 / 2.0, size.height as f32 / 2.0)
+        } else {
+            self.cursor
+        };
+        self.lock_point = Some(point);
+        if behavior == 1 {
+            let _ = w.set_cursor_position(PhysicalPosition::new(point.0 as f64, point.1 as f64));
+        }
+    }
+
+    fn release_keys(&mut self) {
+        let keys: Vec<u32> = self.keys.drain().collect();
+        for k in keys {
+            self.send(
+                InputKind::Ended,
+                user_input::KEYBOARD,
+                k,
+                Vec3::ZERO,
+                Vec3::ZERO,
+            );
+        }
     }
 
     fn render(&mut self) {
@@ -373,23 +354,93 @@ impl App for Player {
 
     fn input(&mut self, input: Input) {
         match input {
-            Input::Key { code, pressed, .. } => {
-                if pressed {
+            Input::Key {
+                code,
+                pressed,
+                text,
+            } => {
+                let kind = if pressed {
                     self.keys.insert(code);
+                    InputKind::Began
                 } else {
                     self.keys.remove(&code);
-                }
+                    InputKind::Ended
+                };
+                self.runtime.input(InputEvent {
+                    kind,
+                    input_type: user_input::KEYBOARD,
+                    key_code: code,
+                    position: Vec3::ZERO,
+                    delta: Vec3::ZERO,
+                    text: if pressed { text } else { None },
+                });
             }
             Input::MouseButton {
-                button: 2, pressed, ..
-            } => self.rotating = pressed,
-            Input::MouseDelta { dx, dy } if self.rotating => {
-                self.camera.yaw -= dx * 0.008;
-                self.camera.pitch = (self.camera.pitch + dy * 0.008).clamp(-1.4, 1.4);
+                button, pressed, ..
+            } => {
+                let input_type = match button {
+                    1 => user_input::MOUSE_BUTTON1,
+                    2 => user_input::MOUSE_BUTTON2,
+                    3 => user_input::MOUSE_BUTTON3,
+                    _ => return,
+                };
+                let kind = if pressed {
+                    InputKind::Began
+                } else {
+                    InputKind::Ended
+                };
+                self.send(kind, input_type, 0, self.pointer(), Vec3::ZERO);
+            }
+            Input::MouseMove { x, y } => {
+                if let Some(point) = self.lock_point {
+                    if let Some(w) = &self.window
+                        && (x, y) != point
+                    {
+                        let _ = w.set_cursor_position(PhysicalPosition::new(
+                            point.0 as f64,
+                            point.1 as f64,
+                        ));
+                    }
+                    return;
+                }
+                let before = self.logical(self.cursor.0, self.cursor.1);
+                self.cursor = (x, y);
+                let now = self.logical(x, y);
+                self.send(
+                    InputKind::Changed,
+                    user_input::MOUSE_MOVEMENT,
+                    0,
+                    now,
+                    now - before,
+                );
+            }
+            Input::MouseDelta { dx, dy } => {
+                if self.lock_point.is_some() {
+                    self.send(
+                        InputKind::Changed,
+                        user_input::MOUSE_MOVEMENT,
+                        0,
+                        self.pointer(),
+                        Vec3::new(dx, dy, 0.0),
+                    );
+                }
             }
             Input::Wheel { delta } => {
-                self.camera.distance =
-                    (self.camera.distance * (1.0 - delta * 0.1)).clamp(0.5, 400.0);
+                let mut p = self.pointer();
+                p.z = delta;
+                self.send(
+                    InputKind::Changed,
+                    user_input::MOUSE_WHEEL,
+                    0,
+                    p,
+                    Vec3::ZERO,
+                );
+            }
+            Input::Focus(focused) => {
+                if !focused {
+                    self.release_keys();
+                }
+                self.runtime.window_focus(focused);
             }
             Input::Resized { width, height } => {
                 if let Some(gpu) = &mut self.gpu
@@ -401,7 +452,6 @@ impl App for Player {
                     gpu.surface.configure(&gpu.renderer.device, &gpu.config);
                 }
             }
-            _ => {}
         }
     }
 
@@ -417,7 +467,9 @@ impl App for Player {
             self.accumulator -= STEP;
             steps += 1;
         }
-        self.update_camera();
+        self.apply_mouse_behavior();
+        self.ensure_camera();
+        self.runtime.render_step(dt);
         self.render();
         self.frames += 1;
         if let Some((path, at)) = self.screenshot.clone()
@@ -521,14 +573,10 @@ fn main() {
         gpu: None,
         assets,
         accumulator: 0.0,
-        camera: OrbitCamera {
-            yaw: args.yaw,
-            pitch: 0.35,
-            distance: args.distance,
-            focus: Vec3::ZERO,
-        },
         keys: HashSet::new(),
-        rotating: false,
+        cursor: (0.0, 0.0),
+        behavior: 0,
+        lock_point: None,
         screenshot: args.screenshot.map(|p| (p, args.screenshot_frames)),
         frames: 0,
         done: false,

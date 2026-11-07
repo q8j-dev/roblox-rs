@@ -12,6 +12,7 @@ pub struct InputState {
     pub last_input_type: Option<u32>,
     pub focused_text_box: Option<InstanceId>,
     pub tutorials: BTreeSet<String>,
+    pub pointer: super::user_input::PointerState,
 }
 
 pub fn register(r: &mut Registry) {

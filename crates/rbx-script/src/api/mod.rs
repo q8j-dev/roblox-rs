@@ -1,6 +1,7 @@
 pub mod actions;
 pub mod animation;
 pub mod bindables;
+pub mod camera;
 pub mod core;
 pub mod gui;
 pub mod http;
@@ -17,6 +18,7 @@ pub mod stats;
 pub mod terrain;
 pub mod test;
 pub mod tween;
+pub mod user_input;
 
 use crate::types::rt;
 use mlua::{IntoLuaMulti, Lua, MultiValue, Result, Value};
@@ -74,6 +76,8 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     input::register(&mut r);
     actions::register(&mut r);
     tween::register(&mut r);
+    camera::register(&mut r);
+    user_input::register(&mut r);
     r
 });
 
@@ -123,6 +127,9 @@ pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Resul
             Some(&rbx_reflection::ValueType::Enum("ChatMode".into())),
         )?;
         return Ok(Some(v));
+    }
+    if matches!(class, "Mouse" | "PlayerMouse") {
+        return user_input::get_mouse_property(lua, id, name);
     }
     if matches!(
         name,

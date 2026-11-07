@@ -26,7 +26,7 @@ fn collect(dir: &Path, out: &mut Vec<PathBuf>) {
         } else if let Some(ext) = path.extension().and_then(|e| e.to_str())
             && matches!(
                 ext.to_ascii_lowercase().as_str(),
-                "rbxl" | "rbxm" | "rbxlx" | "rbxmx"
+                "rbxl" | "rbxm" | "rbxlx" | "rbxmx" | "clienttest"
             )
         {
             out.push(path);
@@ -62,7 +62,7 @@ fn is_place(path: &Path) -> bool {
             .and_then(|e| e.to_str())
             .map(|e| e.to_ascii_lowercase())
             .as_deref(),
-        Some("rbxl" | "rbxlx")
+        Some("rbxl" | "rbxlx" | "clienttest")
     )
 }
 

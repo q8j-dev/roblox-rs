@@ -47,7 +47,7 @@ Phase 3 (simulation). Phases 1 and 2 are done: workspace, CI, reflection data, m
 | `PlatformContent/` | `assets/platform-content` | in progress | moved; scripts not yet updated | |
 | `BuiltInPlugins/` | `assets/plugins/builtin` | in progress | moved; scripts not yet updated | |
 | `StudioPlugins/` | `assets/plugins/studio` | in progress | moved; scripts not yet updated | |
-| `RobloxTest/`, `App.UnitTest/`, `Base.UnitTest/`, `RCCService.Test/`, `RCCService.Thumb.Test/` | `tests/` | in progress | place files moved to `tests/places`; Lua and physics tests not yet | |
+| `RobloxTest/`, `App.UnitTest/`, `Base.UnitTest/`, `RCCService.Test/`, `RCCService.Thumb.Test/` | `tests/` | in progress | places and `.clienttest` files in `tests/places`; App.UnitTest Lua suites ported to `crates/rbx-script/tests` (LuaDebugger waits for Studio, network suites for phase 4) | |
 | `fmod/` | `rbx-audio` (Kira) | not started | |
 | `Win/` (video capture, DirectShow) | `apps/player` | not started | |
 

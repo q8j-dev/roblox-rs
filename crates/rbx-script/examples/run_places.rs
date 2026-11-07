@@ -93,7 +93,8 @@ fn report(name: &str, r: &Result<PlaceRun, String>) -> (String, usize) {
                 );
             }
             let mut line = format!(
-                "FAIL {name} players={} completed={} tests={} errors={} failures={:?}",
+                "FAIL {name}{} players={} completed={} tests={} errors={} failures={:?}",
+                if run.timed_out { " (wall-clock limit)" } else { "" },
                 run.players,
                 run.completed,
                 run.tests,

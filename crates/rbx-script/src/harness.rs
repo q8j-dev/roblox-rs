@@ -21,6 +21,7 @@ pub struct PlaceRun {
     pub load_warnings: Vec<String>,
     pub players: i32,
     pub output: Vec<String>,
+    pub timed_out: bool,
 }
 
 impl PlaceRun {
@@ -36,6 +37,7 @@ impl PlaceRun {
 pub const FRAME: f64 = 1.0 / 60.0;
 pub const EMPTY_TEST_SECONDS: f64 = 5.0;
 pub const SCRIPT_TIMEOUT: f64 = 10.0;
+pub const WALL_LIMIT: std::time::Duration = std::time::Duration::from_secs(60);
 
 fn load_file(path: &Path) -> Result<(DataModel, Vec<String>), String> {
     let data = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
@@ -156,8 +158,13 @@ pub fn run_datamodel(
         crate::api::test::start(&runtime.lua, Identity::LocalGui).map_err(|e| e.to_string())?;
         runtime.pump();
         let max_frames = ((test_timeout(&engine) + 2.0) / FRAME).ceil() as usize;
+        let started = std::time::Instant::now();
         for _ in 0..max_frames {
             if engine.lock().test.done {
+                break;
+            }
+            if started.elapsed() > WALL_LIMIT {
+                run.timed_out = true;
                 break;
             }
             runtime.step(FRAME);
@@ -170,7 +177,12 @@ pub fn run_datamodel(
         run.failures = e.test.failures.clone();
     } else {
         let frames = (EMPTY_TEST_SECONDS / FRAME).ceil() as usize;
+        let started = std::time::Instant::now();
         for _ in 0..frames {
+            if started.elapsed() > WALL_LIMIT {
+                run.timed_out = true;
+                break;
+            }
             runtime.step(FRAME);
         }
         run.completed = true;
@@ -254,8 +266,13 @@ fn run_multiplayer(
         .and_then(|v| v.parse().ok())
         .unwrap_or(300)
         .max(1);
+    let started = std::time::Instant::now();
     for frame in 0..max_frames {
         if server.engine.lock().test.done {
+            break;
+        }
+        if started.elapsed() > WALL_LIMIT {
+            run.timed_out = true;
             break;
         }
         if frame % trace_every == 0 {

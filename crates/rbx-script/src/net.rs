@@ -1,3 +1,4 @@
+use crate::net_physics::{ClientPhysics, ServerPhysics};
 use crate::runtime::{MessageType, RunMode, ScriptRuntime};
 use rbx_dom::InstanceId;
 use rbx_net::{ClientReplicator, ClientState, Connection, PeerId, ServerReplicator};
@@ -7,6 +8,7 @@ pub struct NetServer {
     pub rep: ServerReplicator,
     conns: Vec<(PeerId, Box<dyn Connection>)>,
     installed: HashSet<InstanceId>,
+    physics: ServerPhysics,
 }
 
 impl NetServer {
@@ -20,6 +22,7 @@ impl NetServer {
             rep,
             conns: Vec::new(),
             installed: HashSet::new(),
+            physics: ServerPhysics::default(),
         }
     }
 
@@ -31,6 +34,18 @@ impl NetServer {
 
     pub fn peer_count(&self) -> usize {
         self.conns.len()
+    }
+
+    pub fn close_all(&mut self, runtime: &ScriptRuntime) {
+        let peers: Vec<PeerId> = self.conns.iter().map(|(p, _)| *p).collect();
+        for peer in peers {
+            let mut e = runtime.engine.lock();
+            self.rep.disconnect(&mut e.dm, peer);
+        }
+        for (_, c) in &mut self.conns {
+            c.close();
+        }
+        self.conns.clear();
     }
 
     pub fn tick(&mut self, runtime: &ScriptRuntime) {
@@ -79,11 +94,17 @@ impl NetServer {
                 conn.close();
             }
         }
+        {
+            let mut e = runtime.engine.lock();
+            self.physics.apply_incoming(&mut e, &mut self.rep);
+        }
         runtime.pump();
         self.install_players(runtime);
+        runtime.engine.lock().client_count = self.conns.len();
         {
             let mut e = runtime.engine.lock();
             self.rep.flush(&mut e.dm);
+            self.physics.tick(&mut e, &mut self.rep);
         }
         for (to, msg) in self.rep.take_outgoing() {
             if let Some((_, c)) = self.conns.iter_mut().find(|(p, _)| *p == to) {
@@ -124,6 +145,7 @@ impl NetServer {
 pub struct NetClient {
     pub rep: ClientReplicator,
     conn: Box<dyn Connection>,
+    physics: ClientPhysics,
 }
 
 impl NetClient {
@@ -133,7 +155,11 @@ impl NetClient {
         let _ = e.dm.get_service("NetworkClient");
         e.dm.backend_processing = false;
         let rep = ClientReplicator::new(&mut e.dm);
-        NetClient { rep, conn }
+        NetClient {
+            rep,
+            conn,
+            physics: ClientPhysics::default(),
+        }
     }
 
     pub fn joined(&self) -> bool {
@@ -165,13 +191,64 @@ impl NetClient {
                 }
             }
         }
+        {
+            let mut e = runtime.engine.lock();
+            self.physics.apply_incoming(&mut e, &mut self.rep);
+        }
         runtime.pump();
         {
             let mut e = runtime.engine.lock();
             self.rep.flush(&mut e.dm);
+            self.physics.tick(&mut e, &mut self.rep);
         }
         for msg in self.rep.take_outgoing() {
             self.conn.send(&msg);
         }
+    }
+}
+
+pub struct ClientSession {
+    pub runtime: ScriptRuntime,
+    pub net: NetClient,
+}
+
+impl ClientSession {
+    pub fn new(
+        dm: rbx_dom::DataModel,
+        conn: Box<dyn Connection>,
+        player_name: &str,
+        user_id: i32,
+    ) -> Result<ClientSession, String> {
+        let mut engine = crate::runtime::Engine::new(dm);
+        engine.running = true;
+        let runtime = ScriptRuntime::new(std::sync::Arc::new(parking_lot::Mutex::new(engine)))
+            .map_err(|e| e.to_string())?;
+        let net = NetClient::connect(&runtime, conn);
+        let players = runtime
+            .engine
+            .lock()
+            .dm
+            .get_service("Players")
+            .map_err(|e| e.to_string())?;
+        crate::api::players::make_local_player(
+            &runtime.lua,
+            players,
+            user_id,
+            false,
+            Some(player_name),
+        )
+        .map_err(|e| e.to_string())?;
+        runtime.scan_scripts();
+        Ok(ClientSession { runtime, net })
+    }
+
+    pub fn step(&mut self, dt: f64) {
+        self.net.tick(&self.runtime);
+        self.runtime.step(dt);
+        self.net.tick(&self.runtime);
+    }
+
+    pub fn joined(&self) -> bool {
+        self.net.joined()
     }
 }

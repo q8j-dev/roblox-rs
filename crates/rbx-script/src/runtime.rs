@@ -83,6 +83,23 @@ pub struct Engine {
     pub kfs_cache: HashMap<String, Option<InstanceId>>,
     pub active_kfs: HashMap<String, InstanceId>,
     pub render_bindings: Vec<(String, i32, mlua::RegistryKey)>,
+    pub network_requests: Vec<NetworkRequest>,
+    pub client_count: usize,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub enum NetworkRequest {
+    StartServer {
+        port: u16,
+    },
+    StopServer,
+    Connect {
+        user_id: i64,
+        server: String,
+        port: u16,
+        ticket: String,
+    },
+    Disconnect,
 }
 
 pub trait EngineHook: Send {
@@ -165,6 +182,8 @@ impl Engine {
             kfs_cache: HashMap::new(),
             active_kfs: HashMap::new(),
             render_bindings: Vec::new(),
+            network_requests: Vec::new(),
+            client_count: 0,
         }
     }
 
@@ -585,11 +604,21 @@ impl ScriptRuntime {
         identity: Identity,
         args: MultiValue,
     ) -> Result<MultiValue, String> {
+        self.execute_named(source, "Script", identity, args)
+    }
+
+    pub fn execute_named(
+        &self,
+        source: &str,
+        name: &str,
+        identity: Identity,
+        args: MultiValue,
+    ) -> Result<MultiValue, String> {
         let env = new_environment(&self.lua, None).map_err(|e| e.to_string())?;
         let func = self
             .lua
             .load(source)
-            .set_name("=Script")
+            .set_name(format!("={name}"))
             .set_environment(env)
             .into_function()
             .map_err(|e| format_error(&e))?;

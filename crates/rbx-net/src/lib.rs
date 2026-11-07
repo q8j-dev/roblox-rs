@@ -1,6 +1,8 @@
 mod client;
 mod core;
 mod filter;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod quic;
 pub mod scope;
 mod server;
 mod transport;

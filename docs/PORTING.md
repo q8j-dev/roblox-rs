@@ -31,8 +31,8 @@ Phase 3 (simulation). Phases 1 and 2 are done: workspace, CI, reflection data, m
 | `App/util` | `rbx-base`, `rbx-dom` | not started | |
 | `App/security` | `rbx-script` | not started | keep script identity levels only |
 | `CSG/` (sgCore) | `rbx-csg` | not started | |
-| `Network/` (replicators, players, filtering) | `rbx-net` | not started | |
-| `Network/raknet` | `rbx-net` (quinn, WebTransport, WebSocket) | not started | new wire format |
+| `Network/` (replicators, players, filtering) | `rbx-net`, `rbx-script/src/net*.rs` | in progress | replicator, basic and strict filters, remote events and functions, network ownership and physics replication done; stats items and streaming left |
+| `Network/raknet` | `rbx-net` (quinn, WebTransport, WebSocket) | in progress | new wire format; QUIC over quinn with pinned self-signed certificates done, WebTransport comes with the web player |
 | `Rendering/g3d`, `Rendering/RbxG3D` | `rbx-math` | in progress | |
 | `Rendering/GfxCore` (D3D9, D3D11, GL) | `rbx-render` (wgpu) | not started | |
 | `Rendering/GfxRender` | `rbx-render` | not started | freetype becomes a Rust font crate |
@@ -40,7 +40,7 @@ Phase 3 (simulation). Phases 1 and 2 are done: workspace, CI, reflection data, m
 | `Rendering/ShaderCompiler`, `shaders/` | `rbx-render` WGSL | not started | |
 | `ClientBase/`, `ClientShared/` | `rbx-base`, `apps/player` | not started | InfluxDB and analytics removed |
 | `WindowsClient/`, `Mac/`, `RobloxMac/` | `apps/player`, `rbx-platform` | not started | |
-| `RCCService/` | `apps/server` | not started | SOAP becomes an HTTP/JSON API |
+| `RCCService/` | `apps/server` | in progress | SOAP operations are HTTP/JSON routes under `/v1`; jobs run in their own threads; local asset and content server |
 | `Roblox.RccServiceArbiter/` | `apps/arbiter` | not started | |
 | `RobloxStudio/` | `apps/studio`, `rbx-studio-ui` | not started | |
 | `content/` | `assets/content` | in progress | moved; scripts not yet updated | |

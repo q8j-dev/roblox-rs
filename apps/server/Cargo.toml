@@ -9,3 +9,18 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+axum = "0.8.9"
+clap = { version = "4.6.7", features = ["derive", "env"] }
+mlua = { version = "0.12.2", features = ["luau", "send", "vendored"] }
+parking_lot = "0.13.0"
+rbx-base = { version = "0.1.0", path = "../../crates/rbx-base" }
+rbx-dom = { version = "0.1.0", path = "../../crates/rbx-dom" }
+rbx-net = { version = "0.1.0", path = "../../crates/rbx-net" }
+rbx-script = { version = "0.1.0", path = "../../crates/rbx-script" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+tokio = { version = "1.54.1", features = ["rt-multi-thread", "macros", "net", "sync", "signal", "time"] }
+tracing = "0.1.44"
+
+[dev-dependencies]
+ureq = "3.5.1"

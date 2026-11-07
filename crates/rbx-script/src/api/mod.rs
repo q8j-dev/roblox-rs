@@ -3,6 +3,7 @@ pub mod bindables;
 pub mod humanoid;
 pub mod instance;
 pub mod misc;
+pub mod network;
 pub mod physics;
 pub mod players;
 pub mod remote;
@@ -58,6 +59,7 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     animation::register(&mut r);
     terrain::register(&mut r);
     remote::register(&mut r);
+    network::register(&mut r);
     r
 });
 

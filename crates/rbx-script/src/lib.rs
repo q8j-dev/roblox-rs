@@ -8,6 +8,7 @@ mod instance;
 mod libraries;
 mod materials;
 pub mod net;
+mod net_physics;
 mod runtime;
 mod scripts;
 pub mod security;
@@ -16,9 +17,10 @@ pub mod types;
 
 pub use convert::{lua_to_variant, variant_to_lua};
 pub use instance::push_instance;
+pub use mlua;
 pub use runtime::{
-    Engine, EngineHook, Fired, MessageType, OutputMessage, RunMode, ScriptRuntime, Shared, engine,
-    fire_lua, instance_from_value,
+    Engine, EngineHook, Fired, MessageType, NetworkRequest, OutputMessage, RunMode, ScriptRuntime,
+    Shared, engine, fire_lua, instance_from_value,
 };
 pub use scripts::should_run;
 pub use security::Identity;

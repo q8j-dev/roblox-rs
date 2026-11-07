@@ -1,0 +1,17 @@
+[package]
+name = "integration"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+rbx-dom = { version = "0.1.0", path = "../../crates/rbx-dom" }
+rbx-net = { version = "0.1.0", path = "../../crates/rbx-net" }
+rbx-script = { version = "0.1.0", path = "../../crates/rbx-script" }
+serde_json = "1.0.154"
+server = { version = "0.1.0", path = "../../apps/server" }
+ureq = { version = "3.5.1", features = ["json"] }

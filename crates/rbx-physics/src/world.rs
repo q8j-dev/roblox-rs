@@ -378,6 +378,16 @@ pub struct StepEvents {
     pub humanoid: Vec<(InstanceId, crate::humanoid::HumanoidEvent)>,
 }
 
+#[derive(Clone, Debug)]
+pub struct NetworkRoot {
+    pub id: InstanceId,
+    pub sleeping: bool,
+    pub cframe: CFrame,
+    pub velocity: Vec3,
+    pub rot_velocity: Vec3,
+    pub parts: Vec<InstanceId>,
+}
+
 pub struct PhysicsWorld {
     pub parts: Vec<Part>,
     pub index: HashMap<InstanceId, usize>,
@@ -1260,6 +1270,48 @@ impl PhysicsWorld {
         }
         asm.sleeping = false;
         asm.history.wake();
+    }
+
+    pub fn apply_network_state(
+        &mut self,
+        dm: &mut DataModel,
+        id: InstanceId,
+        cframe: CFrame,
+        linear: Vec3,
+        angular: Vec3,
+    ) {
+        let Some(&i) = self.index.get(&id) else {
+            return;
+        };
+        if self.parts[i].anchored {
+            return;
+        }
+        dm.store_silent(id, "CFrame", Variant::CFrame(cframe));
+        dm.store_silent(id, "Velocity", Variant::Vector3(linear));
+        dm.store_silent(id, "RotVelocity", Variant::Vector3(angular));
+        self.move_part_external(i, cframe);
+        self.set_part_velocity(i, false, angular);
+        self.set_part_velocity(i, true, linear);
+    }
+
+    pub fn network_roots(&self) -> Vec<NetworkRoot> {
+        let mut out = Vec::new();
+        for a in &self.assemblies {
+            if a.anchored || a.parts.is_empty() || a.root >= self.parts.len() {
+                continue;
+            }
+            let root = &self.parts[a.root];
+            let pos = root.cframe.translation;
+            out.push(NetworkRoot {
+                id: root.id,
+                sleeping: a.sleeping,
+                cframe: root.cframe,
+                velocity: a.velocity_at(pos),
+                rot_velocity: a.angular,
+                parts: a.parts.iter().map(|&p| self.parts[p].id).collect(),
+            });
+        }
+        out
     }
 
     pub fn active_joint(&self, j: &Joint) -> Option<(usize, usize)> {

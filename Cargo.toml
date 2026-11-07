@@ -1,7 +1,13 @@
 [workspace]
 resolver = "3"
-members = ["crates/*", "apps/*", "xtask"]
-default-members = ["crates/*", "apps/server", "apps/arbiter", "xtask"]
+members = ["crates/*", "apps/*", "tests/integration", "xtask"]
+default-members = [
+    "crates/*",
+    "apps/server",
+    "apps/arbiter",
+    "tests/integration",
+    "xtask",
+]
 
 [workspace.package]
 version = "0.1.0"

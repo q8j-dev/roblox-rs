@@ -1,8 +1,9 @@
 use crate::core::{Core, NIL, View};
-use crate::wire::{Message, NetId, NewInstance, PROTOCOL_VERSION, PeerId};
+use crate::wire::{Message, NetId, NewInstance, PROTOCOL_VERSION, PeerId, PhysicsState};
 use rbx_dom::{
     DataModel, DomEvent, EventCursor, InstanceId, RemoteDelivery, RemoteKind, RemoteTarget, Variant,
 };
+use std::collections::HashSet;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ClientState {
@@ -20,6 +21,8 @@ pub struct ClientReplicator {
     pub peer: Option<PeerId>,
     pub filtering: bool,
     outbox: Vec<Message>,
+    physics_in: Vec<PhysicsState>,
+    owned: HashSet<InstanceId>,
 }
 
 impl ClientReplicator {
@@ -34,7 +37,21 @@ impl ClientReplicator {
             outbox: vec![Message::Hello {
                 protocol: PROTOCOL_VERSION,
             }],
+            physics_in: Vec::new(),
+            owned: HashSet::new(),
         }
+    }
+
+    pub fn send(&mut self, msg: Message) {
+        self.outbox.push(msg);
+    }
+
+    pub fn take_physics(&mut self) -> Vec<PhysicsState> {
+        std::mem::take(&mut self.physics_in)
+    }
+
+    pub fn owned(&self) -> &HashSet<InstanceId> {
+        &self.owned
     }
 
     pub fn take_outgoing(&mut self) -> Vec<Message> {
@@ -116,6 +133,23 @@ impl ClientReplicator {
     pub fn receive(&mut self, dm: &mut DataModel, msg: Message) {
         if matches!(self.state, ClientState::Rejected(_)) {
             return;
+        }
+        match msg {
+            Message::Physics(states) => {
+                self.physics_in.extend(states);
+                return;
+            }
+            Message::Ownership { id, owner } => {
+                if let Some(local) = self.core.ids.local(dm, id) {
+                    if Some(owner) == self.peer {
+                        self.owned.insert(local);
+                    } else {
+                        self.owned.remove(&local);
+                    }
+                }
+                return;
+            }
+            _ => {}
         }
         self.flush(dm);
         match msg {

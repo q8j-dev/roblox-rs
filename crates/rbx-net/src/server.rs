@@ -1,7 +1,9 @@
 use crate::core::{Core, NIL, View};
 use crate::filter::{Filter, Verdict};
 use crate::scope::CONTAINERS;
-use crate::wire::{Message, NetId, NewInstance, PROTOCOL_VERSION, PeerId, SERVER_PEER};
+use crate::wire::{
+    Message, NetId, NewInstance, PROTOCOL_VERSION, PeerId, PhysicsState, SERVER_PEER,
+};
 use rbx_dom::{
     DataModel, DomEvent, EventCursor, InstanceId, RemoteDelivery, RemoteKind, RemoteTarget,
     RemoteValue, Variant, database,
@@ -29,6 +31,7 @@ pub struct ServerReplicator {
     peers: BTreeMap<PeerId, Peer>,
     next_peer: PeerId,
     outbox: Vec<(PeerId, Message)>,
+    physics_in: Vec<(PeerId, Vec<PhysicsState>)>,
 }
 
 impl ServerReplicator {
@@ -41,6 +44,7 @@ impl ServerReplicator {
             peers: BTreeMap::new(),
             next_peer: 1,
             outbox: Vec::new(),
+            physics_in: Vec::new(),
         }
     }
 
@@ -93,6 +97,18 @@ impl ServerReplicator {
             }
         }
         out
+    }
+
+    pub fn send(&mut self, peer: PeerId, msg: Message) {
+        self.outbox.push((peer, msg));
+    }
+
+    pub fn knows(&self, peer: PeerId, id: InstanceId) -> bool {
+        self.peers.get(&peer).is_some_and(|p| p.view.knows(id))
+    }
+
+    pub fn take_physics(&mut self) -> Vec<(PeerId, Vec<PhysicsState>)> {
+        std::mem::take(&mut self.physics_in)
     }
 
     pub fn take_outgoing(&mut self) -> Vec<(PeerId, Message)> {
@@ -246,9 +262,16 @@ impl ServerReplicator {
             }
             return;
         }
-        if let Message::Ping { nonce } = msg {
-            self.outbox.push((peer, Message::Pong { nonce }));
-            return;
+        match msg {
+            Message::Ping { nonce } => {
+                self.outbox.push((peer, Message::Pong { nonce }));
+                return;
+            }
+            Message::Physics(states) => {
+                self.physics_in.push((peer, states));
+                return;
+            }
+            _ => {}
         }
         self.flush(dm);
         let strict = Self::filtering(dm);

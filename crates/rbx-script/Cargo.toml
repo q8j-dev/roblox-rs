@@ -1,0 +1,11 @@
+[package]
+name = "rbx-script"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+
+[dependencies]

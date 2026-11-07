@@ -87,6 +87,7 @@ pub struct Renderer {
     pub asset_dirs: Vec<PathBuf>,
     terrain_meshes: Vec<GpuMesh>,
     terrain_generation: Option<u64>,
+    smooth: crate::smooth::SmoothTerrain,
     sky_bg: Option<(Vec<String>, wgpu::BindGroup)>,
     meshes: HashMap<MeshKey, GpuMesh>,
     depth: Option<(wgpu::Texture, wgpu::TextureView, u32, u32)>,
@@ -95,7 +96,7 @@ pub struct Renderer {
     white: wgpu::TextureView,
 }
 
-fn read_texture(path: &Path) -> Option<Image> {
+pub(crate) fn read_texture(path: &Path) -> Option<Image> {
     let bytes = std::fs::read(path).ok()?;
     match texture::decode(&bytes) {
         Ok(img) => Some(img),
@@ -308,6 +309,8 @@ impl Renderer {
             multiview_mask: None,
             cache: None,
         });
+        let smooth =
+            crate::smooth::SmoothTerrain::new(&device, &globals_layout, format, DEPTH_FORMAT);
         let white = Image::solid([255, 255, 255, 255])
             .upload(&device, &queue, "white", false)
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -330,6 +333,7 @@ impl Renderer {
             asset_dirs: Vec::new(),
             terrain_meshes: Vec::new(),
             terrain_generation: None,
+            smooth,
             sky_bg: None,
             meshes: HashMap::new(),
             depth: None,
@@ -689,12 +693,50 @@ impl Renderer {
     }
 
     fn update_terrain(&mut self, dm: &DataModel) {
-        let grid = dm
-            .workspace_terrain()
-            .and_then(|t| dm.terrain(t))
-            .and_then(|t| t.legacy.as_ref())
+        let Some(t) = dm.workspace_terrain() else {
+            self.terrain_meshes.clear();
+            self.terrain_generation = None;
+            self.smooth.clear();
+            self.smooth.set_legacy_water(&self.device, Vec::new());
+            return;
+        };
+        let color = dm
+            .get(t, "WaterColor")
+            .ok()
+            .and_then(|v| v.as_color3())
+            .unwrap_or(rbx_math::Color3::new(0.05, 0.33, 0.36));
+        let transparency = dm
+            .get(t, "WaterTransparency")
+            .ok()
+            .and_then(|v| v.as_f32())
+            .unwrap_or(0.3);
+        self.smooth.prepare(
+            &self.device,
+            &self.queue,
+            [
+                color.r,
+                color.g,
+                color.b,
+                1.0 - transparency.clamp(0.0, 1.0),
+            ],
+            &self.platform_dir,
+            &self.white,
+        );
+        let data = dm.terrain(t);
+        match data
+            .and_then(|d| d.smooth.as_ref())
+            .filter(|g| g.is_allocated())
+        {
+            Some(grid) => self.smooth.update(&self.device, grid),
+            None => self.smooth.clear(),
+        }
+        let grid = data
+            .and_then(|d| d.legacy.as_ref())
             .filter(|g| g.non_empty_cell_count() > 0);
         let Some(grid) = grid else {
+            if self.terrain_generation.is_some() {
+                self.smooth.set_legacy_water(&self.device, Vec::new());
+            }
             self.terrain_meshes.clear();
             self.terrain_generation = None;
             return;
@@ -705,7 +747,12 @@ impl Renderer {
         }
         self.terrain_generation = Some(generation);
         self.terrain_meshes.clear();
+        let mut water = Vec::new();
         for chunk in grid.non_empty_chunks() {
+            let w = crate::terrain::legacy_water(grid, chunk);
+            if !w.water.is_empty() {
+                water.push(w);
+            }
             let mesh = crate::terrain::legacy_chunk(grid, chunk);
             if mesh.indices.is_empty() {
                 continue;
@@ -730,6 +777,7 @@ impl Renderer {
                 count: mesh.indices.len() as u32,
             });
         }
+        self.smooth.set_legacy_water(&self.device, water);
         if !self.terrain_meshes.is_empty() {
             self.material_group(Shading::Terrain);
         }
@@ -951,6 +999,9 @@ impl Renderer {
                     pass.draw_indexed(0..mesh.count, 0, 0..1);
                 }
             }
+            if !self.smooth.is_empty() {
+                self.smooth.draw_solid(&mut pass);
+            }
             if let Some((_, sky)) = &self.sky_bg {
                 pass.set_pipeline(&self.sky);
                 pass.set_bind_group(1, sky, &[]);
@@ -970,6 +1021,10 @@ impl Renderer {
                     let index = transparent_start + i as u32;
                     pass.draw_indexed(0..mesh.count, 0, index..index + 1);
                 }
+            }
+            if !self.smooth.is_empty() {
+                pass.set_bind_group(0, &self.globals_bg, &[]);
+                self.smooth.draw_water(&mut pass);
             }
         }
         self.queue.submit([encoder.finish()]);

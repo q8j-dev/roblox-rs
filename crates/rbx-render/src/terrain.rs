@@ -261,3 +261,78 @@ pub fn legacy_chunk(grid: &LegacyGrid, chunk: IVec3) -> Mesh {
     }
     mesh
 }
+
+pub fn legacy_water(grid: &LegacyGrid, chunk: IVec3) -> crate::smooth::SmoothMesh {
+    let mut mesh = crate::smooth::SmoothMesh::default();
+    let lo = legacy::chunk_min(chunk);
+    let hi = legacy::chunk_max(chunk);
+    let has_water = |p: IVec3| {
+        legacy::block(grid.get_water_cell(p)) == legacy::BLOCK_EMPTY
+            && !legacy::is_empty(grid.get_water_cell(p))
+    };
+    for y in lo.y..=hi.y {
+        for z in lo.z..=hi.z {
+            for x in lo.x..=hi.x {
+                let pos = IVec3::new(x, y, z);
+                if !has_water(pos) {
+                    continue;
+                }
+                let center = legacy::cell_center(pos);
+                for (a, offset) in OFFSETS.iter().enumerate() {
+                    let n = pos + *offset;
+                    if has_water(n) {
+                        continue;
+                    }
+                    let neighbor = grid.get_cell(n);
+                    if legacy::block(neighbor) < legacy::BLOCK_EMPTY
+                        && legacy::oriented_face(neighbor, FACES[OPPOSITE[a]]) == legacy::SKIP_NONE
+                    {
+                        continue;
+                    }
+                    let normal = offset.as_vec3();
+                    let (u, v) = if normal.y.abs() > 0.5 {
+                        (Vec3::X, Vec3::Z * normal.y)
+                    } else {
+                        (Vec3::Y.cross(normal), Vec3::Y)
+                    };
+                    let face = center + normal * (CELL * 0.5);
+                    let base = mesh.vertices.len() as u32;
+                    for (cu, cv) in [(-1.0, -1.0), (1.0, -1.0), (1.0, 1.0), (-1.0, 1.0)] {
+                        let p = face + (u * cu + v * cv) * (CELL * 0.5);
+                        mesh.vertices.push(crate::smooth::SmoothVertex {
+                            pos: p.to_array(),
+                            normal: normal.to_array(),
+                            weights: [1.0, 0.0, 0.0],
+                            ..Default::default()
+                        });
+                    }
+                    let (p0, p1, p2) = (
+                        Vec3::from_array(mesh.vertices[base as usize].pos),
+                        Vec3::from_array(mesh.vertices[base as usize + 1].pos),
+                        Vec3::from_array(mesh.vertices[base as usize + 2].pos),
+                    );
+                    if (p1 - p0).cross(p2 - p0).dot(normal) >= 0.0 {
+                        mesh.water.extend_from_slice(&[
+                            base,
+                            base + 1,
+                            base + 2,
+                            base,
+                            base + 2,
+                            base + 3,
+                        ]);
+                    } else {
+                        mesh.water.extend_from_slice(&[
+                            base,
+                            base + 2,
+                            base + 1,
+                            base,
+                            base + 3,
+                            base + 2,
+                        ]);
+                    }
+                }
+            }
+        }
+    }
+    mesh
+}

@@ -53,6 +53,7 @@ pub fn run_datamodel(
 ) -> Result<PlaceRun, String> {
     let mut engine = Engine::new(dm);
     engine.content_root = content_root.map(Path::to_path_buf);
+    engine.process_after_load();
     let engine = Arc::new(Mutex::new(engine));
     let runtime = ScriptRuntime::new(engine.clone()).map_err(|e| e.to_string())?;
     crate::runtime::set_script_timeout(&runtime.lua, SCRIPT_TIMEOUT);

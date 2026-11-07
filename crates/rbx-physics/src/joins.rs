@@ -14,6 +14,7 @@ const ROTATE: u32 = 6;
 const ROTATE_V: u32 = 7;
 const ROTATE_P: u32 = 8;
 const NO_JOIN: u32 = 9;
+const SMOOTH_NO_OUTLINES: u32 = 10;
 
 const JOINT_MAX_UNALIGNED: f32 = 0.05;
 const JOINT_OVERLAP_MIN: f32 = 0.35;
@@ -398,6 +399,26 @@ impl PhysicsWorld {
                 })
             })
         })
+    }
+
+    pub fn join_all(&mut self, dm: &mut DataModel) -> usize {
+        self.sync(dm);
+        let ids: Vec<InstanceId> = self
+            .parts
+            .iter()
+            .filter(|p| {
+                p.surfaces
+                    .iter()
+                    .any(|s| !matches!(*s, SMOOTH | SMOOTH_NO_OUTLINES))
+            })
+            .map(|p| p.id)
+            .collect();
+        let mut created = 0;
+        for id in ids {
+            created += self.join(dm, id).len();
+        }
+        self.rebuild_assemblies();
+        created
     }
 
     pub fn join(&mut self, dm: &mut DataModel, id: InstanceId) -> Vec<InstanceId> {

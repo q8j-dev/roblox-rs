@@ -84,6 +84,11 @@ pub trait EngineHook: Send {
 }
 
 impl Engine {
+    pub fn process_after_load(&mut self) {
+        let world = self.world.clone();
+        world.lock().join_all(&mut self.dm);
+    }
+
     pub fn new(mut dm: DataModel) -> Engine {
         let cursor = dm.subscribe();
         let world = rbx_physics::shared_world();

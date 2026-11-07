@@ -20,6 +20,8 @@ struct Globals {
     shadow_matrix0: vec4<f32>,
     shadow_matrix1: vec4<f32>,
     shadow_matrix2: vec4<f32>,
+    sky_color: vec4<f32>,
+    sky_color2: vec4<f32>,
 };
 
 @group(0) @binding(0) var<uniform> g: Globals;
@@ -211,7 +213,10 @@ fn fs_sky(i: SkyOut) -> @location(0) vec4<f32> {
         }
     }
     let c = textureSampleLevel(sky_faces, linear_sampler, uv * 0.5 + 0.5, layer, 0.0);
-    return vec4<f32>(c.rgb, 1.0);
+    let m = max(a.x, max(a.y, a.z));
+    let wy = g.camera_position.y + d.y / m * 2700.0;
+    let tint = mix(g.sky_color2, g.sky_color, wy / 1700.0);
+    return vec4<f32>(c.rgb * tint.rgb, 1.0);
 }
 
 struct ShadowOut {
@@ -233,4 +238,31 @@ fn vs_shadow(v: VertexIn) -> ShadowOut {
 @fragment
 fn fs_shadow(i: ShadowOut) -> @location(0) vec4<f32> {
     return vec4<f32>(i.depth, 1.0, 0.0, 0.0);
+}
+
+struct CelestialIn {
+    @location(0) position: vec3<f32>,
+    @location(1) uv: vec2<f32>,
+    @location(2) color: vec4<f32>,
+};
+
+struct CelestialOut {
+    @builtin(position) position: vec4<f32>,
+    @location(0) uv: vec2<f32>,
+    @location(1) color: vec4<f32>,
+};
+
+@vertex
+fn vs_celestial(v: CelestialIn) -> CelestialOut {
+    let h = g.view_projection * vec4<f32>(v.position, 1.0);
+    var o: CelestialOut;
+    o.position = vec4<f32>(h.xy, h.w, h.w);
+    o.uv = v.uv;
+    o.color = v.color;
+    return o;
+}
+
+@fragment
+fn fs_celestial(i: CelestialOut) -> @location(0) vec4<f32> {
+    return textureSample(diffuse_map, linear_sampler, i.uv) * i.color;
 }

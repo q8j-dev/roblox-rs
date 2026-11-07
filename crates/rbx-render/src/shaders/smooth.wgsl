@@ -20,6 +20,8 @@ struct Globals {
     shadow_matrix0: vec4<f32>,
     shadow_matrix1: vec4<f32>,
     shadow_matrix2: vec4<f32>,
+    sky_color: vec4<f32>,
+    sky_color2: vec4<f32>,
 };
 
 struct TerrainParams {

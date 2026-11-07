@@ -36,6 +36,8 @@ pub struct Globals {
     pub lgrid_center: [f32; 4],
     pub lgrid_radius: [f32; 4],
     pub shadow_matrix: [[f32; 4]; 3],
+    pub sky_color: [f32; 4],
+    pub sky_color2: [f32; 4],
 }
 
 #[repr(C)]
@@ -100,6 +102,9 @@ pub struct Renderer {
     shadow: crate::shadow::ShadowMap,
     shadow_pipeline: wgpu::RenderPipeline,
     shadow_globals_bg: wgpu::BindGroup,
+    celestial_add: wgpu::RenderPipeline,
+    celestial_alpha: wgpu::RenderPipeline,
+    stars: crate::celestial::StarField,
     lgrid_texture: wgpu::Texture,
     lgrid_active: bool,
     pub lighting_budget: usize,
@@ -422,6 +427,58 @@ impl Renderer {
             multiview_mask: None,
             cache: None,
         });
+        let celestial_buffers = [Some(wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<crate::celestial::CelestialVertex>() as u64,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &crate::celestial::CelestialVertex::ATTRIBUTES,
+        })];
+        let make_celestial = |blend: wgpu::BlendState, label: &str| {
+            device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+                label: Some(label),
+                layout: Some(&part_layout),
+                vertex: wgpu::VertexState {
+                    module: &shader,
+                    entry_point: Some("vs_celestial"),
+                    compilation_options: Default::default(),
+                    buffers: &celestial_buffers,
+                },
+                fragment: Some(wgpu::FragmentState {
+                    module: &shader,
+                    entry_point: Some("fs_celestial"),
+                    compilation_options: Default::default(),
+                    targets: &[Some(wgpu::ColorTargetState {
+                        format,
+                        blend: Some(blend),
+                        write_mask: wgpu::ColorWrites::ALL,
+                    })],
+                }),
+                primitive: wgpu::PrimitiveState::default(),
+                depth_stencil: Some(wgpu::DepthStencilState {
+                    format: DEPTH_FORMAT,
+                    depth_write_enabled: Some(false),
+                    depth_compare: Some(wgpu::CompareFunction::LessEqual),
+                    stencil: Default::default(),
+                    bias: Default::default(),
+                }),
+                multisample: Default::default(),
+                multiview_mask: None,
+                cache: None,
+            })
+        };
+        let additive = wgpu::BlendState {
+            color: wgpu::BlendComponent {
+                src_factor: wgpu::BlendFactor::One,
+                dst_factor: wgpu::BlendFactor::One,
+                operation: wgpu::BlendOperation::Add,
+            },
+            alpha: wgpu::BlendComponent {
+                src_factor: wgpu::BlendFactor::Zero,
+                dst_factor: wgpu::BlendFactor::One,
+                operation: wgpu::BlendOperation::Add,
+            },
+        };
+        let celestial_add = make_celestial(additive, "sun and moon");
+        let celestial_alpha = make_celestial(wgpu::BlendState::ALPHA_BLENDING, "stars");
         let opaque = make_parts(None, true, "opaque");
         let transparent = make_parts(Some(wgpu::BlendState::ALPHA_BLENDING), false, "transparent");
         let sky = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -489,6 +546,9 @@ impl Renderer {
             shadow,
             shadow_pipeline,
             shadow_globals_bg,
+            celestial_add,
+            celestial_alpha,
+            stars: crate::celestial::StarField::default(),
             lgrid_texture,
             lgrid_active: false,
             lighting_budget: 24,
@@ -1160,6 +1220,8 @@ impl Renderer {
             lgrid_center: [0.0; 4],
             lgrid_radius: [-1.0, -1.0, -1.0, 0.0],
             shadow_matrix: crate::shadow::shadow_matrix(scene.focus, l.key_direction),
+            sky_color: [l.sky_color.r, l.sky_color.g, l.sky_color.b, 1.0],
+            sky_color2: [l.sky_color2.r, l.sky_color2.g, l.sky_color2.b, 1.0],
         };
         let mut globals = globals;
         if self.lgrid_active {
@@ -1233,6 +1295,55 @@ impl Renderer {
             self.material_group(s);
         }
         self.sky_group(scene.sky_faces.as_ref());
+        let cel = &scene.celestial;
+        let mut sun_moon: Vec<crate::celestial::CelestialVertex> = Vec::new();
+        let mut star_vertices: Vec<crate::celestial::CelestialVertex> = Vec::new();
+        let sun_shading = self.image(&cel.sun_texture);
+        let moon_shading = self.image(&cel.moon_texture);
+        self.material_group(sun_shading);
+        self.material_group(moon_shading);
+        self.material_group(Shading::SmoothPlastic);
+        let right = rot.x_axis;
+        let up = rot.y_axis;
+        let mut moon_start = 0u32;
+        if cel.shown {
+            let sun_color = 0.8 * ((l.sun_position.y + 0.1) * 10.0).clamp(0.0, 1.0);
+            let size = cel.sun_size * 23.809_525;
+            for _ in 0..3 {
+                crate::celestial::quad(
+                    eye + l.sun_position * crate::celestial::SKY_SIZE,
+                    right * size,
+                    up * size,
+                    [sun_color, sun_color, sun_color, 1.0],
+                    &mut sun_moon,
+                );
+            }
+            moon_start = sun_moon.len() as u32;
+            let moon_color = (1.0 - l.sky_color.g + 0.1).min(1.0);
+            let size = cel.moon_size * 23.809_525;
+            crate::celestial::quad(
+                eye + l.moon_position * crate::celestial::SKY_SIZE,
+                right * size,
+                up * size,
+                [moon_color, moon_color, moon_color, 1.0],
+                &mut sun_moon,
+            );
+        }
+        self.stars.update(cel.stars, cel.shown, l.moon_naive.y);
+        let world_per_pixel = 2.0 * tan_y * 2500.0 / height as f32;
+        self.stars
+            .vertices(eye, right, up, world_per_pixel, &mut star_vertices);
+        let make_buffer = |device: &wgpu::Device, v: &[crate::celestial::CelestialVertex]| {
+            (!v.is_empty()).then(|| {
+                device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("celestial"),
+                    contents: bytemuck::cast_slice(v),
+                    usage: wgpu::BufferUsages::VERTEX,
+                })
+            })
+        };
+        let sun_moon_buffer = make_buffer(&self.device, &sun_moon);
+        let star_buffer = make_buffer(&self.device, &star_vertices);
 
         let mut batches: Vec<(Shading, MeshKey, u32, u32)> = Vec::new();
         let mut instances: Vec<InstanceData> = Vec::new();
@@ -1370,6 +1481,20 @@ impl Renderer {
                 pass.set_pipeline(&self.sky);
                 pass.set_bind_group(1, sky, &[]);
                 pass.draw(0..3, 0..1);
+            }
+            if let Some(buf) = &sun_moon_buffer {
+                pass.set_pipeline(&self.celestial_add);
+                pass.set_vertex_buffer(0, buf.slice(..));
+                pass.set_bind_group(1, &self.materials[&sun_shading], &[]);
+                pass.draw(0..moon_start, 0..1);
+                pass.set_bind_group(1, &self.materials[&moon_shading], &[]);
+                pass.draw(moon_start..sun_moon.len() as u32, 0..1);
+            }
+            if let Some(buf) = &star_buffer {
+                pass.set_pipeline(&self.celestial_alpha);
+                pass.set_vertex_buffer(0, buf.slice(..));
+                pass.set_bind_group(1, &self.materials[&Shading::SmoothPlastic], &[]);
+                pass.draw(0..star_vertices.len() as u32, 0..1);
             }
             if let Some(buf) = &instance_buffer
                 && !transparent.is_empty()

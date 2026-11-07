@@ -1,3 +1,4 @@
+pub mod celestial;
 pub mod character;
 pub mod composite;
 pub mod filemesh;

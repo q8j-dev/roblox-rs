@@ -23,6 +23,7 @@ pub struct SkyParameters {
     pub sky_ambient2: Color3,
     pub true_sun: Vec3,
     pub true_moon: Vec3,
+    pub moon_naive: Vec3,
     pub moon_phase: f32,
 }
 
@@ -232,6 +233,7 @@ impl SkyParameters {
             sky_ambient2,
             true_sun,
             true_moon,
+            moon_naive: Vec3::new((source_angle + pi).sin(), -(source_angle + pi).cos(), 0.0),
             moon_phase,
         }
     }
@@ -251,6 +253,11 @@ pub struct SceneLighting {
     pub shadow_intensity: f32,
     pub global_shadows: bool,
     pub sky_ambient: Color3,
+    pub sky_color: Color3,
+    pub sky_color2: Color3,
+    pub sun_position: Vec3,
+    pub moon_position: Vec3,
+    pub moon_naive: Vec3,
 }
 
 pub struct LightingInputs {
@@ -317,6 +324,11 @@ impl SceneLighting {
             outlines: i.outlines,
             shadow_intensity: shadow_fade * RENDER_SHADOW_INTENSITY,
             global_shadows: i.global_shadows,
+            sky_color: sky.sky_ambient,
+            sky_color2: sky.sky_ambient2,
+            sun_position: sky.true_sun,
+            moon_position: sky.true_moon,
+            moon_naive: sky.moon_naive,
             sky_ambient: Color3::new(
                 (i.outdoor_ambient.r - i.ambient.r).max(0.0),
                 (i.outdoor_ambient.g - i.ambient.g).max(0.0),

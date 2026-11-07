@@ -71,8 +71,19 @@ impl Default for Camera {
     }
 }
 
+#[derive(Clone, Debug)]
+pub struct Celestial {
+    pub shown: bool,
+    pub stars: u32,
+    pub sun_texture: String,
+    pub moon_texture: String,
+    pub sun_size: f32,
+    pub moon_size: f32,
+}
+
 pub struct Scene {
     pub parts: Vec<PartDraw>,
+    pub celestial: Celestial,
     pub camera: Camera,
     pub lighting: SceneLighting,
     pub sky_faces: Option<[String; 6]>,
@@ -692,8 +703,41 @@ pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
         Some(out)
     });
     let lights = ws.map(|w| collect_lights(dm, w)).unwrap_or_default();
+    let sky = dm
+        .find_service("Lighting")
+        .and_then(|l| dm.find_first_child_of_class(l, "Sky"));
+    let celestial = match sky {
+        Some(sky) => Celestial {
+            shown: dm
+                .get(sky, "CelestialBodiesShown")
+                .ok()
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true),
+            stars: dm
+                .get(sky, "StarCount")
+                .ok()
+                .and_then(|v| v.as_f32())
+                .unwrap_or(3000.0)
+                .max(0.0) as u32,
+            sun_texture: content_prop(dm, sky, "SunTextureId")
+                .unwrap_or_else(|| "rbxasset://sky/sun.jpg".into()),
+            moon_texture: content_prop(dm, sky, "MoonTextureId")
+                .unwrap_or_else(|| "rbxasset://sky/moon.jpg".into()),
+            sun_size: get_f32(dm, sky, "SunAngularSize", 21.0),
+            moon_size: get_f32(dm, sky, "MoonAngularSize", 11.0),
+        },
+        None => Celestial {
+            shown: true,
+            stars: 3000,
+            sun_texture: "rbxasset://sky/sun.jpg".into(),
+            moon_texture: "rbxasset://sky/moon.jpg".into(),
+            sun_size: 21.0,
+            moon_size: 11.0,
+        },
+    };
     Scene {
         parts,
+        celestial,
         lights,
         focus: focus.unwrap_or(camera.cframe.translation),
         camera,

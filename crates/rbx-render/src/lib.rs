@@ -31,3 +31,27 @@ pub fn create_instance() -> wgpu::Instance {
     desc.backends = platform_backends();
     wgpu::Instance::new(desc.with_env())
 }
+
+pub fn native_features(adapter: &wgpu::Adapter) -> wgpu::Features {
+    if cfg!(target_arch = "wasm32") {
+        return wgpu::Features::empty();
+    }
+    adapter.features() & wgpu::Features::TEXTURE_COMPRESSION_BC
+}
+
+pub fn device_descriptor(adapter: &wgpu::Adapter) -> wgpu::DeviceDescriptor<'static> {
+    let info = adapter.get_info();
+    tracing::info!(
+        "graphics: {:?} on {} ({:?}), features {:?}",
+        info.backend,
+        info.name,
+        info.device_type,
+        native_features(adapter)
+    );
+    wgpu::DeviceDescriptor {
+        label: Some("rbx-render"),
+        required_features: native_features(adapter),
+        required_limits: wgpu::Limits::default().using_resolution(adapter.limits()),
+        ..Default::default()
+    }
+}

@@ -310,8 +310,8 @@ impl GuiRenderer {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         target: &wgpu::TextureView,
-        width: u32,
-        height: u32,
+        (width, height): (u32, u32),
+        scale: f32,
         items: &[GuiItem],
         load: &dyn Fn(&str) -> Option<Vec<u8>>,
     ) {
@@ -323,10 +323,10 @@ impl GuiRenderer {
         let full = [0, 0, width, height];
         for item in items {
             let clip = item.clip.map(|c| {
-                let x0 = c.x0.max(0.0).min(width as f32) as u32;
-                let y0 = c.y0.max(0.0).min(height as f32) as u32;
-                let x1 = c.x1.max(0.0).min(width as f32) as u32;
-                let y1 = c.y1.max(0.0).min(height as f32) as u32;
+                let x0 = (c.x0 * scale).round().max(0.0).min(width as f32) as u32;
+                let y0 = (c.y0 * scale).round().max(0.0).min(height as f32) as u32;
+                let x1 = (c.x1 * scale).round().max(0.0).min(width as f32) as u32;
+                let y1 = (c.y1 * scale).round().max(0.0).min(height as f32) as u32;
                 [x0, y0, x1.saturating_sub(x0), y1.saturating_sub(y0)]
             });
             if clip.is_some_and(|c| c[2] == 0 || c[3] == 0) {
@@ -513,8 +513,12 @@ impl GuiRenderer {
                 GuiCmd::Text(cmd) => {
                     let draw = text_quads(cmd);
                     for q in &draw.quads {
-                        let Some([x, y, w, h]) = self.atlas.place(queue, cmd.font, q.ch, q.size)
-                        else {
+                        let Some([x, y, w, h]) = self.atlas.place(
+                            queue,
+                            cmd.font,
+                            q.ch,
+                            ((q.size as f32) * scale).round().max(1.0) as u32,
+                        ) else {
                             continue;
                         };
                         let base = if q.stroke {
@@ -524,9 +528,15 @@ impl GuiRenderer {
                         };
                         let color = [base[0], base[1], base[2], base[3] * draw.alpha];
                         let a = ATLAS_SIZE as f32;
+                        let inset = rbx_text::FONT_PADDING * (1.0 - 1.0 / scale.max(1.0));
                         quads.push((
                             TextureKey::Glyphs,
-                            Rect::xywh(q.x, q.y, q.w, q.h),
+                            Rect::xywh(
+                                q.x + inset,
+                                q.y + inset,
+                                q.w - inset * 2.0,
+                                q.h - inset * 2.0,
+                            ),
                             [
                                 x as f32 / a,
                                 y as f32 / a,
@@ -586,7 +596,7 @@ impl GuiRenderer {
         queue.write_buffer(
             &self.screen,
             0,
-            bytemuck::cast_slice(&[width as f32, height as f32, 0.0, 0.0]),
+            bytemuck::cast_slice(&[width as f32 / scale, height as f32 / scale, 0.0, 0.0]),
         );
         let buffer = device.create_buffer_init(&wgpu::util::BufferInitDescriptor {
             label: Some("gui vertices"),

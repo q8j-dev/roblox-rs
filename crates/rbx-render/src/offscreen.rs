@@ -34,13 +34,8 @@ pub fn create_device() -> Result<(wgpu::Device, wgpu::Queue), OffscreenError> {
     let adapter = request(false)
         .or_else(|_| request(true))
         .map_err(|e| OffscreenError::Adapter(e.to_string()))?;
-    pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
-        label: Some("rbx-render"),
-        required_features: wgpu::Features::empty(),
-        required_limits: wgpu::Limits::default(),
-        ..Default::default()
-    }))
-    .map_err(|e| OffscreenError::Device(e.to_string()))
+    pollster::block_on(adapter.request_device(&crate::device_descriptor(&adapter)))
+        .map_err(|e| OffscreenError::Device(e.to_string()))
 }
 
 impl Offscreen {

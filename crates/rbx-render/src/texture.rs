@@ -1,10 +1,51 @@
 use ddsfile::{D3DFormat, Dds, DxgiFormat};
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum PixelFormat {
+    #[default]
+    Rgba8,
+    Bc1,
+    Bc2,
+    Bc3,
+}
+
+impl PixelFormat {
+    fn block_bytes(self) -> u32 {
+        match self {
+            PixelFormat::Rgba8 => 4,
+            PixelFormat::Bc1 => 8,
+            PixelFormat::Bc2 | PixelFormat::Bc3 => 16,
+        }
+    }
+
+    fn block_dim(self) -> u32 {
+        match self {
+            PixelFormat::Rgba8 => 1,
+            _ => 4,
+        }
+    }
+
+    fn wgpu(self, srgb: bool) -> wgpu::TextureFormat {
+        use wgpu::TextureFormat as F;
+        match (self, srgb) {
+            (PixelFormat::Rgba8, false) => F::Rgba8Unorm,
+            (PixelFormat::Rgba8, true) => F::Rgba8UnormSrgb,
+            (PixelFormat::Bc1, false) => F::Bc1RgbaUnorm,
+            (PixelFormat::Bc1, true) => F::Bc1RgbaUnormSrgb,
+            (PixelFormat::Bc2, false) => F::Bc2RgbaUnorm,
+            (PixelFormat::Bc2, true) => F::Bc2RgbaUnormSrgb,
+            (PixelFormat::Bc3, false) => F::Bc3RgbaUnorm,
+            (PixelFormat::Bc3, true) => F::Bc3RgbaUnormSrgb,
+        }
+    }
+}
+
 #[derive(Clone, Debug)]
 pub struct Image {
     pub width: u32,
     pub height: u32,
     pub levels: Vec<Vec<u8>>,
+    pub format: PixelFormat,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -101,6 +142,7 @@ pub fn decode_dds(bytes: &[u8]) -> Result<Vec<Image>, TextureError> {
             width,
             height,
             levels: Vec::new(),
+            format: PixelFormat::Rgba8,
         };
         if faces == 6 {
             let face_size: usize = (0..levels)
@@ -138,6 +180,58 @@ pub fn decode_dds(bytes: &[u8]) -> Result<Vec<Image>, TextureError> {
     Ok(images)
 }
 
+fn decode_dds_compressed(bytes: &[u8]) -> Option<Image> {
+    let dds = Dds::read(&mut std::io::Cursor::new(bytes)).ok()?;
+    let (format, kind) = match (dds.get_d3d_format(), dds.get_dxgi_format()) {
+        (Some(D3DFormat::DXT1), _) | (_, Some(DxgiFormat::BC1_UNorm)) => {
+            (PixelFormat::Bc1, Block::Bc1)
+        }
+        (Some(D3DFormat::DXT2 | D3DFormat::DXT3), _) | (_, Some(DxgiFormat::BC2_UNorm)) => {
+            (PixelFormat::Bc2, Block::Bc2)
+        }
+        (Some(D3DFormat::DXT4 | D3DFormat::DXT5), _) | (_, Some(DxgiFormat::BC3_UNorm)) => {
+            (PixelFormat::Bc3, Block::Bc3)
+        }
+        _ => return None,
+    };
+    let width = dds.get_width();
+    let height = dds.get_height();
+    if dds.header.caps2.contains(ddsfile::Caps2::CUBEMAP)
+        || dds.get_num_array_layers() > 1
+        || width % 4 != 0
+        || height % 4 != 0
+    {
+        return None;
+    }
+    let data = dds.get_data(0).unwrap_or(&dds.data);
+    let mut offset = 0usize;
+    let mut levels = Vec::new();
+    for l in 0..dds.get_num_mipmap_levels().max(1) {
+        let size = kind.size((width >> l).max(1), (height >> l).max(1));
+        if offset + size > data.len() {
+            break;
+        }
+        levels.push(data[offset..offset + size].to_vec());
+        offset += size;
+    }
+    (!levels.is_empty()).then_some(Image {
+        width,
+        height,
+        levels,
+        format,
+    })
+}
+
+pub fn decode_for_gpu(bytes: &[u8], compressed: bool) -> Result<Image, TextureError> {
+    if compressed
+        && bytes.starts_with(b"DDS ")
+        && let Some(img) = decode_dds_compressed(bytes)
+    {
+        return Ok(img);
+    }
+    decode(bytes)
+}
+
 pub fn decode(bytes: &[u8]) -> Result<Image, TextureError> {
     if bytes.starts_with(b"DDS ") {
         return decode_dds(bytes)?
@@ -151,6 +245,7 @@ pub fn decode(bytes: &[u8]) -> Result<Image, TextureError> {
         width,
         height,
         levels: vec![img.into_raw()],
+        format: PixelFormat::Rgba8,
     }
     .with_mips())
 }
@@ -161,11 +256,12 @@ impl Image {
             width: 1,
             height: 1,
             levels: vec![rgba.to_vec()],
+            format: PixelFormat::Rgba8,
         }
     }
 
     pub fn with_mips(mut self) -> Image {
-        if self.levels.len() > 1 {
+        if self.levels.len() > 1 || self.format != PixelFormat::Rgba8 {
             return self;
         }
         let (mut w, mut h) = (self.width, self.height);
@@ -205,11 +301,8 @@ impl Image {
         label: &str,
         srgb: bool,
     ) -> wgpu::Texture {
-        let format = if srgb {
-            wgpu::TextureFormat::Rgba8UnormSrgb
-        } else {
-            wgpu::TextureFormat::Rgba8Unorm
-        };
+        let format = self.format.wgpu(srgb);
+        let dim = self.format.block_dim();
         let texture = device.create_texture(&wgpu::TextureDescriptor {
             label: Some(label),
             size: wgpu::Extent3d {
@@ -225,8 +318,8 @@ impl Image {
             view_formats: &[],
         });
         for (level, data) in self.levels.iter().enumerate() {
-            let w = (self.width >> level).max(1);
-            let h = (self.height >> level).max(1);
+            let w = (self.width >> level).max(1).div_ceil(dim) * dim;
+            let h = (self.height >> level).max(1).div_ceil(dim) * dim;
             queue.write_texture(
                 wgpu::TexelCopyTextureInfo {
                     texture: &texture,
@@ -237,8 +330,8 @@ impl Image {
                 data,
                 wgpu::TexelCopyBufferLayout {
                     offset: 0,
-                    bytes_per_row: Some(w * 4),
-                    rows_per_image: Some(h),
+                    bytes_per_row: Some(w / dim * self.format.block_bytes()),
+                    rows_per_image: Some(h / dim),
                 },
                 wgpu::Extent3d {
                     width: w,

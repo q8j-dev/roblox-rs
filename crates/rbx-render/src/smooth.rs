@@ -519,7 +519,13 @@ impl SmoothTerrain {
             return;
         }
         let load = |name: &str| {
-            crate::renderer::read_texture(&platform_dir.join("terrain").join(name)).map(|img| {
+            crate::renderer::read_texture_gpu(
+                &platform_dir.join("terrain").join(name),
+                device
+                    .features()
+                    .contains(wgpu::Features::TEXTURE_COMPRESSION_BC),
+            )
+            .map(|img| {
                 img.upload(device, queue, name, false)
                     .create_view(&wgpu::TextureViewDescriptor::default())
             })

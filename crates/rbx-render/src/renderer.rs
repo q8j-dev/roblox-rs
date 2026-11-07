@@ -85,6 +85,7 @@ pub struct Renderer {
     image_index: HashMap<String, u32>,
     file_meshes: HashMap<String, Option<crate::filemesh::FileMesh>>,
     pub asset_dirs: Vec<PathBuf>,
+    pub gui_scale: f32,
     terrain_meshes: Vec<GpuMesh>,
     terrain_generation: Option<u64>,
     smooth: crate::smooth::SmoothTerrain,
@@ -98,8 +99,12 @@ pub struct Renderer {
 }
 
 pub(crate) fn read_texture(path: &Path) -> Option<Image> {
+    read_texture_gpu(path, false)
+}
+
+pub(crate) fn read_texture_gpu(path: &Path, compressed: bool) -> Option<Image> {
     let bytes = std::fs::read(path).ok()?;
-    match texture::decode(&bytes) {
+    match texture::decode_for_gpu(&bytes, compressed) {
         Ok(img) => Some(img),
         Err(e) => {
             tracing::warn!("{}: {e}", path.display());
@@ -194,7 +199,10 @@ impl Renderer {
                 count: None,
             }],
         });
-        let studs = read_texture(&platform_dir.join("textures").join("studs.dds"))
+        let compressed = device
+            .features()
+            .contains(wgpu::Features::TEXTURE_COMPRESSION_BC);
+        let studs = read_texture_gpu(&platform_dir.join("textures").join("studs.dds"), compressed)
             .unwrap_or_else(|| Image::solid([128, 128, 128, 255]));
         let studs_view = studs
             .upload(&device, &queue, "studs", false)
@@ -333,6 +341,7 @@ impl Renderer {
             image_index: HashMap::new(),
             file_meshes: HashMap::new(),
             asset_dirs: Vec::new(),
+            gui_scale: 1.0,
             terrain_meshes: Vec::new(),
             terrain_generation: None,
             smooth,
@@ -351,24 +360,26 @@ impl Renderer {
             let view = match shading {
                 Shading::Textured(m) => scene::material_folder(m)
                     .and_then(|f| {
-                        read_texture(
+                        read_texture_gpu(
                             &self
                                 .platform_dir
                                 .join("textures")
                                 .join(f)
                                 .join("diffuse.dds"),
+                            self.compressed(),
                         )
                     })
                     .map(|img| {
                         img.upload(&self.device, &self.queue, "material", false)
                             .create_view(&wgpu::TextureViewDescriptor::default())
                     }),
-                Shading::Terrain => read_texture(
+                Shading::Terrain => read_texture_gpu(
                     &self
                         .platform_dir
                         .join("textures")
                         .join("terrain")
                         .join("diffuse.dds"),
+                    self.compressed(),
                 )
                 .map(|img| {
                     img.upload(&self.device, &self.queue, "terrain", false)
@@ -378,7 +389,7 @@ impl Renderer {
                     .image_names
                     .get(i as usize)
                     .and_then(|u| self.read_content(u))
-                    .and_then(|b| texture::decode(&b).ok())
+                    .and_then(|b| texture::decode_for_gpu(&b, self.compressed()).ok())
                     .map(|img| {
                         img.upload(&self.device, &self.queue, "image", false)
                             .create_view(&wgpu::TextureViewDescriptor::default())
@@ -397,6 +408,12 @@ impl Renderer {
             self.materials.insert(shading, bg);
         }
         &self.materials[&shading]
+    }
+
+    fn compressed(&self) -> bool {
+        self.device
+            .features()
+            .contains(wgpu::Features::TEXTURE_COMPRESSION_BC)
     }
 
     fn image(&mut self, url: &str) -> Shading {
@@ -700,8 +717,8 @@ impl Renderer {
                 &self.device,
                 &self.queue,
                 target,
-                width.max(1),
-                height.max(1),
+                (width.max(1), height.max(1)),
+                self.gui_scale,
                 &items,
                 &load,
             );
@@ -1064,6 +1081,7 @@ fn resize(img: &Image, size: u32) -> Image {
         width: size,
         height: size,
         levels: vec![out],
+        format: crate::texture::PixelFormat::Rgba8,
     }
 }
 

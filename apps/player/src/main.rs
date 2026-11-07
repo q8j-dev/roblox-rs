@@ -183,6 +183,32 @@ impl Player {
         }
     }
 
+    fn gui_scale(&self) -> f32 {
+        self.window
+            .as_ref()
+            .map(|w| w.scale_factor() as f32)
+            .unwrap_or(1.0)
+            .max(0.5)
+    }
+
+    fn update_gui_view(&mut self) {
+        let Some(gpu) = &mut self.gpu else {
+            return;
+        };
+        let scale = self
+            .window
+            .as_ref()
+            .map(|w| w.scale_factor() as f32)
+            .unwrap_or(1.0)
+            .max(0.5);
+        gpu.renderer.gui_scale = scale;
+        let screen = rbx_math::Vec2::new(
+            gpu.config.width as f32 / scale,
+            gpu.config.height as f32 / scale,
+        );
+        self.runtime.engine.lock().dm.gui_view.screen = screen;
+    }
+
     fn step(&mut self) {
         self.drive_character();
         if let Some(net) = &mut self.net {
@@ -261,6 +287,7 @@ impl Player {
             &assets.join("platform-content").join("pc"),
         ) {
             Ok(mut off) => {
+                off.renderer.gui_scale = self.gui_scale();
                 let e = self.runtime.engine.lock();
                 if let Err(err) = off.save_png(&e.dm, path) {
                     tracing::error!("screenshot failed: {err}");
@@ -299,15 +326,16 @@ impl App for Player {
                     return;
                 }
             };
-        let (device, queue) =
-            match pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor::default())) {
-                Ok(d) => d,
-                Err(e) => {
-                    tracing::error!("no graphics device: {e}");
-                    self.done = true;
-                    return;
-                }
-            };
+        let (device, queue) = match pollster::block_on(
+            adapter.request_device(&rbx_render::device_descriptor(&adapter)),
+        ) {
+            Ok(d) => d,
+            Err(e) => {
+                tracing::error!("no graphics device: {e}");
+                self.done = true;
+                return;
+            }
+        };
         let caps = surface.get_capabilities(&adapter);
         let format = caps
             .formats
@@ -377,6 +405,7 @@ impl App for Player {
     }
 
     fn frame(&mut self, dt: f64) {
+        self.update_gui_view();
         self.accumulator += dt.min(0.25);
         let mut steps = 0;
         while self.accumulator >= STEP && steps < 4 {

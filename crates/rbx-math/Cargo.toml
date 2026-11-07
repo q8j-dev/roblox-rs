@@ -9,3 +9,6 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+bytemuck = { version = "1.25.2", features = ["derive"] }
+glam = { version = "0.34.2", features = ["bytemuck", "serde"] }
+serde = { version = "1.0.229", features = ["derive"] }

@@ -1,14 +1,21 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+mod brick_color;
+mod brick_color_table;
+mod cframe;
+mod color;
+mod sequence;
+mod types;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub use brick_color::BrickColor;
+pub use brick_color_table::BrickColorInfo;
+pub use cframe::{CFrame, NormalId, normal_id_to_vector, vector_to_normal_id};
+pub use color::{Color3, Color3uint8};
+pub use glam::{IVec3, Mat3, Quat, Vec2, Vec3, Vec4};
+pub use sequence::{
+    ColorSequence, ColorSequenceKeypoint, NumberRange, NumberSequence, NumberSequenceKeypoint,
+};
+pub use types::{
+    Axes, CustomPhysicalProperties, Faces, PhysicalProperties, Ray, Rect2D, Region3, Region3int16,
+    UDim, UDim2, Vector2int16, Vector3int16, Vector3int32,
+};
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub const EPSILON: f32 = 1e-5;

@@ -1,2 +1,17 @@
-# Auto detect text files and perform LF normalization
 * text=auto
+*.rbxl binary
+*.rbxm binary
+*.rbxlx text eol=lf
+*.rbxmx text eol=lf
+*.png binary
+*.jpg binary
+*.dds binary
+*.pvr binary
+*.ktx binary
+*.ttf binary
+*.otf binary
+*.mp3 binary
+*.ogg binary
+*.wav binary
+*.mesh binary
+*.wasm binary

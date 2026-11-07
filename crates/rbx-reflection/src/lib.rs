@@ -1,14 +1,9 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+mod database;
+mod variant;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use database::{
+    ClassDescriptor, ClassFunctionality, EnumDescriptor, EnumItem, EventDescriptor,
+    FunctionDescriptor, FunctionKind, ParamDescriptor, PropertyDescriptor, ReflectionDatabase,
+    Security, ValueType, database,
+};
+pub use variant::{InstanceId, Variant, VariantType};

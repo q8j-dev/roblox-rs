@@ -9,3 +9,6 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+rbx-math = { version = "0.1.0", path = "../rbx-math" }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"

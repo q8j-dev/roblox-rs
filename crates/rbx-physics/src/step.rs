@@ -8,7 +8,7 @@ use parry3d::bounding_volume::{Aabb, BoundingVolume};
 use parry3d::query::{DefaultQueryDispatcher, PersistentQueryDispatcher};
 use rbx_dom::{DataModel, InstanceId};
 use rbx_math::{CFrame, Mat3, NormalId, Vec3, normal_id_to_vector};
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap, HashSet, VecDeque};
 
 const PSCALE: f32 = 1.0 / 19.0;
 
@@ -35,6 +35,13 @@ fn weighted(wx: f32, x: f32, wy: f32, y: f32) -> f32 {
 
 fn clamp_vec(v: Vec3, m: Vec3) -> Vec3 {
     v.clamp(-m.abs(), m.abs())
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum SleepVerdict {
+    Awake,
+    Checking,
+    Deep,
 }
 
 fn different_5_percent(a: Vec3, b: Vec3) -> bool {
@@ -522,10 +529,8 @@ impl PhysicsWorld {
                 .or_insert((Vec3::ZERO, Vec3::ZERO));
             if different_5_percent(force, entry.0) || different_5_percent(torque, entry.1) {
                 *entry = (force, torque);
-                let asm = &mut self.assemblies[ai];
-                if asm.sleeping {
-                    asm.wake_from_sleep();
-                }
+                self.assemblies[ai].history.wake();
+                self.external_wake.push(ai);
             }
         }
         for id in reached {
@@ -654,6 +659,7 @@ impl PhysicsWorld {
         let mut active = Vec::new();
         let mut touched = Vec::new();
         let mut wake = Vec::new();
+        let mut recursive = Vec::new();
         for (i, j) in pairs {
             let (i, j) = if self.parts[i].id < self.parts[j].id {
                 (i, j)
@@ -692,14 +698,27 @@ impl PhysicsWorld {
                     .manifolds
                     .iter()
                     .any(|m| m.points.iter().any(|c| c.dist <= 0.0));
+            let was_overlapping = pair.overlapping;
             pair.overlapping = overlapping;
+            if was_overlapping && !overlapping {
+                wake.push(pa.assembly);
+                wake.push(pb.assembly);
+            }
             if overlapping {
                 if pair.last_long_step < 0 {
                     touched.push(key);
                     let ai = pa.assembly;
                     let bi = pb.assembly;
-                    wake.push(ai);
-                    wake.push(bi);
+                    let high = [ai, bi]
+                        .iter()
+                        .any(|&a| self.assemblies.get(a).is_some_and(|x| x.high_velocity()));
+                    if high {
+                        recursive.push(ai);
+                        recursive.push(bi);
+                    } else {
+                        wake.push(ai);
+                        wake.push(bi);
+                    }
                 }
                 pair.last_long_step = long_step;
                 if pa.can_collide && pb.can_collide {
@@ -720,6 +739,7 @@ impl PhysicsWorld {
                 asm.wake_from_sleep();
             }
         }
+        self.recursive_wake.extend(recursive);
         let stale: Vec<(InstanceId, InstanceId)> = self
             .contacts
             .iter()
@@ -1120,16 +1140,104 @@ impl PhysicsWorld {
         }
     }
 
-    fn sleep_step(&mut self, active: &[(InstanceId, InstanceId)]) {
-        let mut neighbors: HashMap<usize, Vec<usize>> = HashMap::new();
-        for key in active {
+    fn sleep_neighbors(&self) -> Vec<Vec<usize>> {
+        let n = self.assemblies.len();
+        let mut neighbors: Vec<Vec<usize>> = vec![Vec::new(); n];
+        let mut link = |a: usize, b: usize| {
+            if a == b
+                || a >= n
+                || b >= n
+                || self.assemblies[a].anchored
+                || self.assemblies[b].anchored
+            {
+                return;
+            }
+            if !neighbors[a].contains(&b) {
+                neighbors[a].push(b);
+                neighbors[b].push(a);
+            }
+        };
+        for (key, pair) in &self.contacts {
+            if !pair.overlapping {
+                continue;
+            }
             let (Some(&i), Some(&j)) = (self.index.get(&key.0), self.index.get(&key.1)) else {
                 continue;
             };
-            let a = self.parts[i].assembly;
-            let b = self.parts[j].assembly;
-            neighbors.entry(a).or_default().push(b);
-            neighbors.entry(b).or_default().push(a);
+            if self.parts[i].can_collide && self.parts[j].can_collide {
+                link(self.parts[i].assembly, self.parts[j].assembly);
+            }
+        }
+        for j in self.joints.values() {
+            if let Some((a, b)) = self.active_joint(j) {
+                link(self.parts[a].assembly, self.parts[b].assembly);
+            }
+        }
+        neighbors
+    }
+
+    fn state_from_neighbors(&self, ai: usize, neighbors: &[Vec<usize>]) -> SleepVerdict {
+        let mut all_sleeping = true;
+        for &n in &neighbors[ai] {
+            let o = &self.assemblies[n];
+            if o.is_moving() {
+                all_sleeping = false;
+                if o.history_prevents_sleep() {
+                    return SleepVerdict::Awake;
+                }
+            }
+        }
+        if all_sleeping {
+            SleepVerdict::Deep
+        } else {
+            SleepVerdict::Checking
+        }
+    }
+
+    fn sleep_step(&mut self, _active: &[(InstanceId, InstanceId)]) {
+        let neighbors = self.sleep_neighbors();
+        let external = std::mem::take(&mut self.external_wake);
+        let contact = std::mem::take(&mut self.recursive_wake);
+        for (pending, through_awake) in [(external, true), (contact, false)] {
+            if pending.is_empty() {
+                continue;
+            }
+            let mut depth: HashMap<usize, usize> = HashMap::new();
+            let mut queue: VecDeque<usize> = VecDeque::new();
+            for a in pending {
+                if a < self.assemblies.len()
+                    && !self.assemblies[a].anchored
+                    && !depth.contains_key(&a)
+                {
+                    depth.insert(a, 0);
+                    queue.push_back(a);
+                }
+            }
+            while let Some(a) = queue.pop_front() {
+                let d = depth[&a];
+                self.assemblies[a].wake_from_sleep();
+                if d < 8 {
+                    for &o in &neighbors[a] {
+                        let push = through_awake || self.assemblies[o].sleeping;
+                        if push && !depth.contains_key(&o) {
+                            depth.insert(o, d + 1);
+                            queue.push_back(o);
+                        }
+                    }
+                }
+            }
+        }
+        let woke: Vec<usize> = (0..self.assemblies.len())
+            .filter(|&a| self.assemblies[a].woke)
+            .collect();
+        for a in woke {
+            self.assemblies[a].woke = false;
+            for &o in &neighbors[a] {
+                let other = &mut self.assemblies[o];
+                if other.sleeping && !other.sleep_checking {
+                    other.sleep_checking = true;
+                }
+            }
         }
         let mut candidates = Vec::new();
         for (ai, a) in self.assemblies.iter_mut().enumerate() {
@@ -1145,20 +1253,35 @@ impl PhysicsWorld {
                 candidates.push(ai);
             }
         }
-        let mut to_sleep = Vec::new();
+        let mut changes = Vec::new();
         for ai in candidates {
-            let blocked = neighbors.get(&ai).is_some_and(|ns| {
-                ns.iter().any(|&n| {
-                    let o = &self.assemblies[n];
-                    o.is_moving() && o.history_prevents_sleep()
-                })
-            });
-            if !blocked {
-                to_sleep.push(ai);
+            match self.state_from_neighbors(ai, &neighbors) {
+                SleepVerdict::Awake => {}
+                SleepVerdict::Deep => changes.push((ai, false)),
+                SleepVerdict::Checking => changes.push((ai, true)),
             }
         }
-        for ai in to_sleep {
-            self.assemblies[ai].fall_asleep();
+        for (ai, checking) in changes {
+            self.assemblies[ai].fall_asleep(checking);
+        }
+        if self.step_count.is_multiple_of(4) {
+            let checking: Vec<usize> = (0..self.assemblies.len())
+                .filter(|&a| {
+                    let x = &self.assemblies[a];
+                    x.sleeping && x.sleep_checking && !x.anchored
+                })
+                .collect();
+            let mut verdicts = Vec::new();
+            for ai in checking {
+                verdicts.push((ai, self.state_from_neighbors(ai, &neighbors)));
+            }
+            for (ai, v) in verdicts {
+                match v {
+                    SleepVerdict::Awake => self.assemblies[ai].wake_from_sleep(),
+                    SleepVerdict::Deep => self.assemblies[ai].sleep_checking = false,
+                    SleepVerdict::Checking => {}
+                }
+            }
         }
     }
 

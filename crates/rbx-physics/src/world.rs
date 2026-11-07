@@ -290,6 +290,8 @@ pub struct Assembly {
     pub angular: Vec3,
     pub uid: u64,
     pub sleeping: bool,
+    pub sleep_checking: bool,
+    pub woke: bool,
     pub history: SleepHistory,
     pub tree: Vec<TreeEdge>,
     pub force: Vec3,
@@ -303,16 +305,24 @@ impl Assembly {
     pub(crate) fn wake_from_sleep(&mut self) {
         if self.sleeping {
             self.sleeping = false;
+            self.sleep_checking = false;
+            self.woke = true;
             self.linear = Vec3::ZERO;
             self.angular = Vec3::ZERO;
         }
         self.history.wake();
     }
 
-    pub(crate) fn fall_asleep(&mut self) {
+    pub(crate) fn fall_asleep(&mut self, checking: bool) {
         self.sleeping = true;
+        self.sleep_checking = checking;
         self.linear = Vec3::ZERO;
         self.angular = Vec3::ZERO;
+    }
+
+    pub(crate) fn high_velocity(&self) -> bool {
+        let over = |v: Vec3| v.abs().max_element() > 1.0;
+        over(self.linear) || over(self.angular * self.radius)
     }
 
     pub fn root_cframe(&self) -> CFrame {
@@ -393,6 +403,8 @@ pub struct PhysicsWorld {
     pub humanoid_events: Vec<(InstanceId, crate::humanoid::HumanoidEvent)>,
     pub dm_writes: Vec<crate::humanoid::DmWrite>,
     pub accoutrement_parts: HashSet<InstanceId>,
+    pub recursive_wake: Vec<usize>,
+    pub external_wake: Vec<usize>,
     pub vehicle_seats: std::collections::BTreeSet<InstanceId>,
     pub part_joints: HashMap<InstanceId, std::collections::BTreeSet<InstanceId>>,
     pub local_character: Option<InstanceId>,
@@ -551,6 +563,8 @@ impl PhysicsWorld {
             humanoid_events: Vec::new(),
             dm_writes: Vec::new(),
             accoutrement_parts: HashSet::new(),
+            recursive_wake: Vec::new(),
+            external_wake: Vec::new(),
             vehicle_seats: Default::default(),
             part_joints: HashMap::new(),
             local_character: None,
@@ -1361,6 +1375,8 @@ impl PhysicsWorld {
                 angular: Vec3::ZERO,
                 uid: self.parts[root].id.raw(),
                 sleeping: false,
+                sleep_checking: false,
+                woke: false,
                 history: SleepHistory::new(),
                 tree,
                 force: Vec3::ZERO,

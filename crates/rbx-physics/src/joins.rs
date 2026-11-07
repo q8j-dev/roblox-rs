@@ -365,11 +365,15 @@ pub fn can_join(p0: &Part, p1: &Part) -> Option<JointSpec> {
 impl PhysicsWorld {
     pub fn joints_of(&self, id: InstanceId) -> Vec<InstanceId> {
         let mut out: Vec<InstanceId> = self
-            .joints
-            .values()
-            .filter(|j| j.in_world && (j.part0 == Some(id) || j.part1 == Some(id)))
-            .map(|j| j.id)
-            .collect();
+            .part_joints
+            .get(&id)
+            .map(|v| {
+                v.iter()
+                    .copied()
+                    .filter(|j| self.joints.get(j).is_some_and(|jj| jj.in_world))
+                    .collect()
+            })
+            .unwrap_or_default();
         out.sort();
         out
     }
@@ -380,16 +384,20 @@ impl PhysicsWorld {
             if dm.contains(j) {
                 let _ = dm.destroy(j);
             }
-            self.joints.remove(&j);
+            self.remove_joint_record(j);
             self.topology_dirty = true;
         }
     }
 
     fn joined(&self, a: InstanceId, b: InstanceId) -> bool {
-        self.joints.values().any(|j| {
-            j.in_world
-                && ((j.part0 == Some(a) && j.part1 == Some(b))
-                    || (j.part0 == Some(b) && j.part1 == Some(a)))
+        self.part_joints.get(&a).is_some_and(|v| {
+            v.iter().any(|jid| {
+                self.joints.get(jid).is_some_and(|j| {
+                    j.in_world
+                        && ((j.part0 == Some(a) && j.part1 == Some(b))
+                            || (j.part0 == Some(b) && j.part1 == Some(a)))
+                })
+            })
         })
     }
 
@@ -412,25 +420,14 @@ impl PhysicsWorld {
         let aabb = p.shape.collider.compute_aabb(&pose);
         let lo = crate::math::from_parry_vec(aabb.mins) - Vec3::splat(JOINT_MAX_UNALIGNED);
         let hi = crate::math::from_parry_vec(aabb.maxs) + Vec3::splat(JOINT_MAX_UNALIGNED);
-        let mut candidates: Vec<usize> = (0..self.parts.len())
-            .filter(|&j| {
-                if j == pi {
-                    return false;
-                }
-                let o = &self.parts[j];
-                let oa = o
-                    .shape
-                    .collider
-                    .compute_aabb(&to_pose(&(o.cframe * o.shape.local)));
-                let omin = crate::math::from_parry_vec(oa.mins);
-                let omax = crate::math::from_parry_vec(oa.maxs);
-                omin.x <= hi.x
-                    && omax.x >= lo.x
-                    && omin.y <= hi.y
-                    && omax.y >= lo.y
-                    && omin.z <= hi.z
-                    && omax.z >= lo.z
-            })
+        let query = parry3d::bounding_volume::Aabb::new(
+            crate::math::to_parry_vec(lo),
+            crate::math::to_parry_vec(hi),
+        );
+        let mut candidates: Vec<usize> = self
+            .candidates(&query)
+            .into_iter()
+            .filter(|&j| j != pi)
             .collect();
         candidates.sort_by_key(|&j| self.parts[j].id);
         let Some(js) = self
@@ -485,10 +482,11 @@ impl PhysicsWorld {
             if aabb.mins.y < MAX_DRAG_DEPTH {
                 return true;
             }
-            for (j, o) in self.parts.iter().enumerate() {
+            for j in self.candidates(&aabb) {
                 if members.contains(&j) {
                     continue;
                 }
+                let o = &self.parts[j];
                 let opose = to_pose(&(o.cframe * o.shape.local));
                 let oa = o.shape.collider.compute_aabb(&opose);
                 if oa.mins.x > aabb.maxs.x
@@ -570,12 +568,13 @@ impl PhysicsWorld {
             let mut cf = self.parts[pi].cframe;
             cf.translation += delta;
             self.parts[pi].cframe = cf;
+            self.spatial_dirty.push(self.parts[pi].id);
             let id = self.parts[pi].id;
             dm.set_unchecked(id, "CFrame", Variant::CFrame(cf));
             dm.notify_changed(id, "Position");
         }
         self.topology_dirty = true;
-        self.grid_dirty = true;
+        self.flush_spatial();
     }
 
     pub fn safe_move(&mut self, dm: &mut DataModel, id: InstanceId) {
@@ -604,7 +603,7 @@ impl PhysicsWorld {
                     if dm.contains(j) {
                         let _ = dm.destroy(j);
                     }
-                    self.joints.remove(&j);
+                    self.remove_joint_record(j);
                     self.topology_dirty = true;
                 }
             }

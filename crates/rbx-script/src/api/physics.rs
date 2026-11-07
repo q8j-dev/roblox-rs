@@ -112,16 +112,29 @@ fn material_value(lua: &Lua, m: u32) -> Result<Value> {
     )
 }
 
-fn ray_common(lua: &Lua, ray: rbx_math::Ray, ignore_roots: Vec<InstanceId>) -> Result<Ret> {
+fn ray_common(
+    lua: &Lua,
+    ray: rbx_math::Ray,
+    ignore_roots: Vec<InstanceId>,
+    cubes: bool,
+    ignore_water: bool,
+) -> Result<Ret> {
     let hit = with_world(lua, |w, dm| {
         let ignore = ignore_set(dm, &ignore_roots);
-        let hit = w.raycast(ray.origin, ray.direction, |id| !ignore.contains(&id));
+        let hit = w.raycast_ex(
+            ray.origin,
+            ray.direction,
+            |id| !ignore.contains(&id),
+            ignore_water,
+            cubes,
+        );
         hit.map(|h| {
-            let mat = dm
-                .get(h.part, "Material")
-                .ok()
-                .and_then(|v| v.as_enum())
-                .unwrap_or(256);
+            let mat = h.material.unwrap_or_else(|| {
+                dm.get(h.part, "Material")
+                    .ok()
+                    .and_then(|v| v.as_enum())
+                    .unwrap_or(256)
+            });
             (h, mat)
         })
     });
@@ -147,19 +160,23 @@ fn ray_common(lua: &Lua, ray: rbx_math::Ray, ignore_roots: Vec<InstanceId>) -> R
     }
 }
 
+fn truthy(v: Option<&Value>) -> bool {
+    !matches!(v, None | Some(Value::Nil) | Some(Value::Boolean(false)))
+}
+
 fn find_part_on_ray(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
     let ray = ray_arg(args.first())?;
     let ignore = match args.get(1) {
         Some(Value::Nil) | None => Vec::new(),
         Some(v) => vec![expect_instance(lua, v, "Instance")?],
     };
-    ray_common(lua, ray, ignore)
+    ray_common(lua, ray, ignore, truthy(args.get(2)), truthy(args.get(3)))
 }
 
 fn find_part_on_ray_list(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
     let ray = ray_arg(args.first())?;
     let ignore = objects_arg(lua, args.get(1))?;
-    ray_common(lua, ray, ignore)
+    ray_common(lua, ray, ignore, truthy(args.get(2)), truthy(args.get(3)))
 }
 
 fn region_common(

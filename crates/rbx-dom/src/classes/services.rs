@@ -132,7 +132,44 @@ impl Behavior for DataModelBehavior {
     }
 }
 
+pub struct PlayersBehavior;
+
+impl Behavior for PlayersBehavior {
+    fn computed(&self) -> &'static [&'static str] {
+        &["LocalPlayer", "localPlayer", "NumPlayers", "numPlayers"]
+    }
+
+    fn get(&self, dm: &DataModel, id: InstanceId, prop: &str) -> Option<Variant> {
+        match prop {
+            "LocalPlayer" | "localPlayer" => Some(Variant::Ref(
+                dm.local_player.filter(|p| dm.parent_of(*p) == Some(id)),
+            )),
+            "NumPlayers" | "numPlayers" => Some(Variant::Int(
+                dm.children_of(id)
+                    .iter()
+                    .filter(|c| dm.class_of(**c) == Some("Player"))
+                    .count() as i32,
+            )),
+            _ => None,
+        }
+    }
+
+    fn ancestry_changed(
+        &self,
+        dm: &mut DataModel,
+        id: InstanceId,
+        child: InstanceId,
+        _old: Option<InstanceId>,
+        new_parent: Option<InstanceId>,
+    ) {
+        if id == child && new_parent == Some(dm.root()) {
+            dm.lock_parent(id, true);
+        }
+    }
+}
+
 pub fn register(map: &mut HashMap<&'static str, &'static dyn Behavior>) {
+    map.insert("Players", &PlayersBehavior);
     map.insert("DataModel", &DataModelBehavior);
     for &class in SERVICE_CLASSES {
         map.entry(class).or_insert(&ServiceBehavior);

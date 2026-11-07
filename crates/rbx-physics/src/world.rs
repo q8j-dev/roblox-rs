@@ -1,4 +1,4 @@
-use crate::broadphase::Grid;
+use crate::broadphase::SpatialIndex;
 use crate::math::{rotate_about_z, safe_inverse, to_pose};
 use crate::shape::{PartShape, ShapeKind, rotate_inertia, shift_inertia};
 use crate::solver::{Constraint, ConstraintKind, Solver};
@@ -34,6 +34,7 @@ pub struct Part {
     pub elasticity_weight: f32,
     pub legacy_friction: f32,
     pub legacy_elasticity: f32,
+    pub material: u32,
     pub surfaces: [u32; 6],
     pub surface_inputs: [(u32, f32, f32); 6],
     pub velocity: Vec3,
@@ -359,6 +360,8 @@ pub struct PhysicsWorld {
     pub movers: HashMap<InstanceId, Mover>,
     pub assemblies: Vec<Assembly>,
     pub contacts: HashMap<(InstanceId, InstanceId), ContactPair>,
+    pub terrain: crate::terrain::TerrainCollider,
+    pub water_viscosity: f32,
     pub solver: Solver,
     pub mode: PhysicalMode,
     pub fallen_parts_destroy_height: f32,
@@ -368,13 +371,14 @@ pub struct PhysicsWorld {
     pub accumulator: f64,
     pub time: f64,
     pub topology_dirty: bool,
-    pub grid: Grid,
-    pub grid_dirty: bool,
+    pub spatial: SpatialIndex,
+    pub spatial_dirty: Vec<InstanceId>,
     pub mover_wake: HashMap<InstanceId, (Vec3, Vec3)>,
     pub humanoids: HashMap<InstanceId, crate::humanoid::HumanoidSim>,
     pub humanoid_events: Vec<(InstanceId, crate::humanoid::HumanoidEvent)>,
     pub dm_writes: Vec<crate::humanoid::DmWrite>,
     pub accoutrement_parts: HashSet<InstanceId>,
+    pub part_joints: HashMap<InstanceId, Vec<InstanceId>>,
     pub local_character: Option<InstanceId>,
     cursor: Option<EventCursor>,
     pending_events: StepEvents,
@@ -492,6 +496,8 @@ impl PhysicsWorld {
             movers: HashMap::new(),
             assemblies: Vec::new(),
             contacts: HashMap::new(),
+            terrain: Default::default(),
+            water_viscosity: 0.02,
             solver: Solver::default(),
             mode: PhysicalMode::New,
             fallen_parts_destroy_height: -500.0,
@@ -501,13 +507,14 @@ impl PhysicsWorld {
             accumulator: 0.0,
             time: 0.0,
             topology_dirty: true,
-            grid: Grid::new(16.0),
-            grid_dirty: true,
+            spatial: SpatialIndex::new(16.0),
+            spatial_dirty: Vec::new(),
             mover_wake: HashMap::new(),
             humanoids: HashMap::new(),
             humanoid_events: Vec::new(),
             dm_writes: Vec::new(),
             accoutrement_parts: HashSet::new(),
+            part_joints: HashMap::new(),
             local_character: None,
             cursor: None,
             pending_events: StepEvents::default(),
@@ -572,6 +579,7 @@ impl PhysicsWorld {
     }
 
     pub fn sync(&mut self, dm: &mut DataModel) {
+        self.terrain.sync(dm);
         let Some(cursor) = self.cursor else {
             return;
         };
@@ -610,12 +618,13 @@ impl PhysicsWorld {
         for (id, prop) in props {
             self.property_changed(dm, id, prop);
         }
+        self.flush_spatial();
     }
 
     pub fn reconsider(&mut self, dm: &DataModel, id: InstanceId) {
         if !dm.contains(id) {
             self.remove_part(id);
-            if self.joints.remove(&id).is_some() {
+            if self.remove_joint_record(id) {
                 self.topology_dirty = true;
             }
             self.movers.remove(&id);
@@ -715,6 +724,7 @@ impl PhysicsWorld {
             || entry.c1 != c1
             || entry.in_world != in_world
             || entry.kind != kind;
+        let old_parts = [entry.part0, entry.part1];
         if changed {
             entry.constraints.clear();
         }
@@ -738,7 +748,34 @@ impl PhysicsWorld {
         }
         if changed {
             self.topology_dirty = true;
+            for p in old_parts.into_iter().flatten() {
+                if let Some(v) = self.part_joints.get_mut(&p) {
+                    v.retain(|j| *j != id);
+                }
+            }
+            for p in [part0, part1].into_iter().flatten() {
+                let v = self.part_joints.entry(p).or_default();
+                if !v.contains(&id) {
+                    v.push(id);
+                }
+            }
         }
+    }
+
+    pub fn remove_joint_record(&mut self, id: InstanceId) -> bool {
+        let Some(j) = self.joints.remove(&id) else {
+            return false;
+        };
+        for p in [j.part0, j.part1].into_iter().flatten() {
+            if let Some(v) = self.part_joints.get_mut(&p) {
+                v.retain(|x| *x != id);
+                if v.is_empty() {
+                    self.part_joints.remove(&p);
+                }
+            }
+        }
+        self.topology_dirty = true;
+        true
     }
 
     pub fn upsert_mover(&mut self, dm: &DataModel, id: InstanceId) {
@@ -856,6 +893,7 @@ impl PhysicsWorld {
         Part {
             id,
             sort_size: sort_size(size, size_multiplier(dm, id)),
+            material,
             shape,
             cframe,
             anchored: dm.get_bool(id, "Anchored"),
@@ -888,6 +926,7 @@ impl PhysicsWorld {
 
     pub fn upsert_part(&mut self, dm: &DataModel, id: InstanceId) {
         let mut part = self.read_part(dm, id);
+        self.spatial.update(id, part.aabb);
         match self.index.get(&id) {
             Some(&i) => {
                 let old = &self.parts[i];
@@ -901,13 +940,13 @@ impl PhysicsWorld {
             }
         }
         self.topology_dirty = true;
-        self.grid_dirty = true;
     }
 
     pub fn remove_part(&mut self, id: InstanceId) {
         let Some(i) = self.index.remove(&id) else {
             return;
         };
+        self.spatial.remove(id);
         self.parts.swap_remove(i);
         if i < self.parts.len() {
             let moved = self.parts[i].id;
@@ -915,7 +954,6 @@ impl PhysicsWorld {
         }
         self.contacts.retain(|k, _| k.0 != id && k.1 != id);
         self.topology_dirty = true;
-        self.grid_dirty = true;
     }
 
     fn property_changed(&mut self, dm: &DataModel, id: InstanceId, prop: &'static str) {
@@ -1061,12 +1099,34 @@ impl PhysicsWorld {
         if let Some(asm) = self.assemblies.get_mut(a)
             && !asm.anchored
         {
-            if asm.sleeping {
-                self.grid_dirty = true;
-            }
             asm.sleeping = false;
             asm.history.wake();
         }
+    }
+
+    pub fn apply_motor_pose(
+        &mut self,
+        id: InstanceId,
+        offset: Vec3,
+        axis_angle: Vec3,
+        weight: f32,
+        mask_weight: f32,
+    ) {
+        let Some(j) = self.joints.get_mut(&id) else {
+            return;
+        };
+        match j.kind {
+            JointKind::Motor | JointKind::VelocityMotor => {
+                j.pose_angle = axis_angle.z * weight;
+            }
+            JointKind::Motor6D => {
+                j.pose_offset = offset * weight;
+                j.pose_axis_angle = axis_angle * weight;
+            }
+            _ => return,
+        }
+        j.pose_mask_weight = mask_weight;
+        j.pose_freshness = 32;
     }
 
     fn wake_joint(&mut self, id: InstanceId) {
@@ -1082,12 +1142,12 @@ impl PhysicsWorld {
         let a = self.parts[i].assembly;
         if self.topology_dirty || a >= self.assemblies.len() {
             self.parts[i].cframe = cf;
+            self.spatial_dirty.push(self.parts[i].id);
             self.parts[i].moved = true;
-            self.grid_dirty = true;
             return;
         }
         let offset = self.parts[i].offset;
-        let root_cf = cf * offset.inverse();
+        let root_cf = (cf * offset.inverse()).orthonormalized();
         let asm = &mut self.assemblies[a];
         asm.orientation = root_cf.rotation;
         asm.position = root_cf * asm.com_local;
@@ -1101,6 +1161,7 @@ impl PhysicsWorld {
                 root_cf * self.parts[p].offset
             };
             self.parts[p].cframe = pcf;
+            self.spatial_dirty.push(self.parts[p].id);
             self.parts[p].moved = p != i;
             let id = self.parts[p].id;
             self.solver.clear_body_cache(id.raw());
@@ -1112,7 +1173,6 @@ impl PhysicsWorld {
             }
         }
         self.assemblies[a].moved = true;
-        self.grid_dirty = true;
     }
 
     fn set_part_velocity(&mut self, i: usize, linear: bool, v: Vec3) {
@@ -1139,7 +1199,6 @@ impl PhysicsWorld {
         }
         asm.sleeping = false;
         asm.history.wake();
-        self.grid_dirty = true;
     }
 
     pub fn active_joint(&self, j: &Joint) -> Option<(usize, usize)> {
@@ -1156,7 +1215,6 @@ impl PhysicsWorld {
             return;
         }
         self.topology_dirty = false;
-        self.grid_dirty = true;
         let n = self.parts.len();
         let mut old_vel: Vec<(Vec3, Vec3, bool)> = vec![(Vec3::ZERO, Vec3::ZERO, false); n];
         for (i, p) in self.parts.iter().enumerate() {
@@ -1292,6 +1350,7 @@ impl PhysicsWorld {
             };
             self.parts[a].assembly != self.parts[b].assembly
         });
+        self.flush_spatial();
     }
 
     fn snap_tree(&mut self, a: usize) {
@@ -1305,6 +1364,7 @@ impl PhysicsWorld {
                 let cf = self.parts[e.parent].cframe * rel;
                 if cf != self.parts[e.child].cframe {
                     self.parts[e.child].cframe = cf;
+                    self.spatial_dirty.push(self.parts[e.child].id);
                     self.parts[e.child].moved = true;
                 }
             }
@@ -1313,7 +1373,7 @@ impl PhysicsWorld {
 
     pub fn compute_mass_properties(&mut self, a: usize) {
         let root = self.assemblies[a].root;
-        let root_cf = self.parts[root].cframe;
+        let root_cf = self.parts[root].cframe.orthonormalized();
         let inv_root = root_cf.inverse();
         let members = self.assemblies[a].parts.clone();
         let mut mass = 0.0f32;
@@ -1321,7 +1381,7 @@ impl PhysicsWorld {
         let mut radius = 0.0f32;
         for &p in &members {
             let part = &mut self.parts[p];
-            part.offset = inv_root * part.cframe;
+            part.offset = (inv_root * part.cframe).orthonormalized();
             let m = part.mass;
             mass += m;
             weighted += (part.offset * part.shape.com) * m;
@@ -1355,12 +1415,14 @@ impl PhysicsWorld {
         let tree = self.assemblies[a].tree.clone();
         let root = self.assemblies[a].root;
         self.parts[root].cframe = root_cf;
+        self.spatial_dirty.push(self.parts[root].id);
         for e in &tree {
             let Some(j) = self.joints.get(&e.joint) else {
                 continue;
             };
             let rel = j.child_in_parent(e.parent_is_part0);
             self.parts[e.child].cframe = self.parts[e.parent].cframe * rel;
+            self.spatial_dirty.push(self.parts[e.child].id);
         }
         let v = self.assemblies[a].linear;
         let w = self.assemblies[a].angular;
@@ -1380,7 +1442,31 @@ impl PhysicsWorld {
         for p in members {
             let cf = root_cf * self.parts[p].offset;
             self.parts[p].cframe = cf;
+            self.spatial_dirty.push(self.parts[p].id);
             self.parts[p].moved = true;
+        }
+    }
+
+    pub fn candidates(&self, aabb: &parry3d::bounding_volume::Aabb) -> Vec<usize> {
+        let mut ids = Vec::new();
+        self.spatial.query(aabb, &mut ids);
+        ids.iter()
+            .filter_map(|id| self.index.get(id).copied())
+            .collect()
+    }
+
+    pub fn flush_spatial(&mut self) {
+        let dirty = std::mem::take(&mut self.spatial_dirty);
+        for id in dirty {
+            if let Some(&i) = self.index.get(&id) {
+                let p = &mut self.parts[i];
+                p.aabb = p
+                    .shape
+                    .collider
+                    .compute_aabb(&to_pose(&(p.cframe * p.shape.local)));
+                let aabb = p.aabb;
+                self.spatial.update(id, aabb);
+            }
         }
     }
 

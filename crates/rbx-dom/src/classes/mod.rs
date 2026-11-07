@@ -2,6 +2,7 @@ mod humanoid;
 mod instance;
 pub(crate) mod parts;
 mod services;
+pub(crate) mod terrain;
 
 use crate::behavior::Behavior;
 use std::collections::HashMap;
@@ -14,5 +15,6 @@ pub fn registry() -> HashMap<&'static str, &'static dyn Behavior> {
     parts::register(&mut map);
     humanoid::register(&mut map);
     services::register(&mut map);
+    terrain::register(&mut map);
     map
 }

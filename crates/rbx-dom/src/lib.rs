@@ -8,6 +8,7 @@ mod load;
 
 pub use behavior::{Behavior, SetOutcome, behaviors_for};
 pub use classes::parts::{clamp_size, min_size};
+pub use classes::terrain::TerrainData;
 pub use classes::{SERVICE_CLASSES, is_service_class};
 pub use datamodel::{DataModel, DomError, Instance, WorldHooks, coerce_to};
 pub use defaults::default_value;
@@ -15,3 +16,4 @@ pub use events::{DomEvent, EventCursor};
 pub use layout::{ClassLayout, layout_for};
 pub use load::{LoadOptions, SaveOptions};
 pub use rbx_reflection::{InstanceId, Variant, VariantType, database};
+pub use rbx_terrain;

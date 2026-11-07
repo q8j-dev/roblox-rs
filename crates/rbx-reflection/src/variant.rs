@@ -293,9 +293,10 @@ impl Variant {
             }
             (Variant::ProtectedString(s), VariantType::String) => Variant::String(s),
             (Variant::Content(s), VariantType::String) => Variant::String(s),
-            (Variant::BinaryString(b), VariantType::String) => {
-                Variant::String(String::from_utf8_lossy(&b).into_owned())
-            }
+            (Variant::BinaryString(b), VariantType::String) => match String::from_utf8(b) {
+                Ok(s) => Variant::String(s),
+                Err(e) => Variant::BinaryString(e.into_bytes()),
+            },
             (Variant::Nil, VariantType::Ref) => Variant::Ref(None),
             (Variant::BrickColor(b), VariantType::Int) => Variant::Int(b.number() as i32),
             (Variant::Color3(c), VariantType::BrickColor) => {

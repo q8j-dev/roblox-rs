@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 
 pub mod broadphase;
+pub mod buoyancy;
 pub mod hooks;
 pub mod humanoid;
 pub mod joins;
@@ -9,6 +10,7 @@ pub mod queries;
 pub mod shape;
 pub mod solver;
 pub mod step;
+pub mod terrain;
 pub mod world;
 
 pub use hooks::{SharedWorld, WorldHooksImpl, shared_world};

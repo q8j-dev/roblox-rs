@@ -15,6 +15,7 @@ pub struct Element {
     pub tag: String,
     pub attributes: Vec<(String, String)>,
     pub text: Option<String>,
+    pub raw: Option<Vec<u8>>,
     pub children: Vec<Element>,
 }
 
@@ -184,6 +185,10 @@ impl<'a> Parser<'a> {
     }
 
     fn read_text(&mut self, decode: bool) -> String {
+        bytes_to_string(self.read_text_raw(decode))
+    }
+
+    fn read_text_raw(&mut self, decode: bool) -> Vec<u8> {
         if self.data[self.pos..].starts_with(b"<![CDATA[") {
             let start = self.pos + 9;
             let end = self.data[start..]
@@ -201,7 +206,7 @@ impl<'a> Parser<'a> {
                 }
                 self.pos += 1;
             }
-            return bytes_to_string(content.to_vec());
+            return content.to_vec();
         }
         self.skip_ws();
         let start = self.pos;
@@ -213,9 +218,9 @@ impl<'a> Parser<'a> {
         }
         let raw = &self.data[start..self.pos];
         if decode && raw.contains(&b'&') {
-            bytes_to_string(decode_entities(raw))
+            decode_entities(raw)
         } else {
-            bytes_to_string(raw.to_vec())
+            raw.to_vec()
         }
     }
 
@@ -345,7 +350,14 @@ impl<'a> Parser<'a> {
                     }
                 }
             } else if !self_closing {
-                element.text = Some(self.read_text(true));
+                match String::from_utf8(self.read_text_raw(true)) {
+                    Ok(t) => element.text = Some(t),
+                    Err(e) => {
+                        let bytes = e.into_bytes();
+                        element.text = Some(String::from_utf8_lossy(&bytes).into_owned());
+                        element.raw = Some(bytes);
+                    }
+                }
             }
             if self_closing {
                 match stack.last_mut() {
@@ -398,7 +410,10 @@ fn property_value(e: &Element) -> Option<Pending> {
     }
     let t = e.text();
     let v = match e.tag.as_str() {
-        "string" => Variant::String(t.to_string()),
+        "string" => match &e.raw {
+            Some(raw) => Variant::BinaryString(raw.clone()),
+            None => Variant::String(t.to_string()),
+        },
         "ProtectedString" => Variant::ProtectedString(t.to_string()),
         "Content" => Variant::Content(e.text.clone()?),
         "bool" => Variant::Bool(parse_bool(t)?),

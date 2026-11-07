@@ -1,4 +1,3 @@
-use crate::broadphase::sweep_pairs;
 use crate::math::to_pose;
 use crate::solver::{BodyState, Constraint, ConstraintKind, ConstraintRef, SolverBody, WORLD_DT};
 use crate::world::{
@@ -16,7 +15,7 @@ const PSCALE: f32 = 1.0 / 19.0;
 type CollisionSpec = ((InstanceId, InstanceId), usize, usize, CFrame, CFrame);
 const MAX_STEPS_PER_CALL: u32 = 240;
 
-fn legacy_friction(c0: f32, c1: f32) -> f32 {
+pub(crate) fn legacy_friction(c0: f32, c1: f32) -> f32 {
     let c0 = c0.clamp(0.0, 2.0);
     let c1 = c1.clamp(0.0, 2.0);
     if (c0 <= 1.0 && c1 <= 1.0) || (c0 >= 1.0 && c1 >= 1.0) {
@@ -158,6 +157,7 @@ impl PhysicsWorld {
         if self.topology_dirty {
             self.rebuild_assemblies();
         }
+        self.terrain.sync(dm);
         self.step_count += 1;
         self.time += WORLD_DT as f64;
         if self
@@ -178,9 +178,11 @@ impl PhysicsWorld {
         self.step_joints();
         let pairs = self.find_pairs();
         let active = self.narrowphase(pairs);
-        self.solve_step(&active);
+        let terrain_active = self.terrain_narrowphase();
+        self.solve_step(&active, &terrain_active);
         self.sleep_step(&active);
         self.fallen_check();
+        self.flush_spatial();
     }
 
     fn apply_dirty_angles(&mut self) {
@@ -316,16 +318,13 @@ impl PhysicsWorld {
                 self.update_assembly_offsets(a);
             }
             if !self.assemblies[a].anchored {
-                if self.assemblies[a].sleeping {
-                    self.grid_dirty = true;
-                }
                 self.assemblies[a].sleeping = false;
                 self.assemblies[a].history.wake();
             }
         }
     }
 
-    fn part_velocity(&self, i: usize) -> (Vec3, Vec3) {
+    pub(crate) fn part_velocity(&self, i: usize) -> (Vec3, Vec3) {
         let p = &self.parts[i];
         let a = &self.assemblies[p.assembly];
         if a.anchored {
@@ -341,6 +340,7 @@ impl PhysicsWorld {
             a.torque = Vec3::ZERO;
         }
         self.humanoid_forces();
+        self.buoyancy_forces();
         let mut ids: Vec<InstanceId> = self.movers.keys().copied().collect();
         ids.sort();
         let mut wake = Vec::new();
@@ -525,7 +525,6 @@ impl PhysicsWorld {
                 if asm.sleeping {
                     asm.sleeping = false;
                     asm.history.wake();
-                    self.grid_dirty = true;
                 }
             }
         }
@@ -608,45 +607,40 @@ impl PhysicsWorld {
     }
 
     fn find_pairs(&mut self) -> Vec<(usize, usize)> {
-        let n = self.parts.len();
-        let mut aabbs = Vec::with_capacity(n);
         let mut moving = Vec::new();
         for (i, p) in self.parts.iter_mut().enumerate() {
-            let a = &self.assemblies[p.assembly];
-            if a.is_moving() || self.grid_dirty {
+            if self.assemblies[p.assembly].is_moving() {
                 p.aabb = p
                     .shape
                     .collider
                     .compute_aabb(&to_pose(&(p.cframe * p.shape.local)))
                     .loosened(0.01);
-            }
-            aabbs.push(p.aabb);
-            if a.is_moving() {
-                moving.push((i, p.aabb));
+                self.spatial.update(p.id, p.aabb);
+                moving.push(i);
             }
         }
-        if self.grid_dirty {
-            self.grid.clear();
-            for (i, p) in self.parts.iter().enumerate() {
-                if !self.assemblies[p.assembly].is_moving() {
-                    self.grid.insert(i, &aabbs[i]);
-                }
-            }
-            self.grid_dirty = false;
-        }
+        self.flush_spatial();
         let mut pairs = Vec::new();
-        sweep_pairs(&moving, &mut pairs);
         let mut found = Vec::new();
-        for &(i, aabb) in &moving {
+        for &i in &moving {
             found.clear();
-            self.grid.query(&aabb, &aabbs, &mut found);
-            for &j in &found {
-                if !self.assemblies[self.parts[j].assembly].is_moving() {
-                    pairs.push((i, j));
+            let aabb = self.parts[i].aabb;
+            self.spatial.query(&aabb, &mut found);
+            let ai = self.parts[i].assembly;
+            for id in &found {
+                let Some(&j) = self.index.get(id) else {
+                    continue;
+                };
+                let aj = self.parts[j].assembly;
+                if aj == ai {
+                    continue;
                 }
+                if self.assemblies[aj].is_moving() && j < i {
+                    continue;
+                }
+                pairs.push((i, j));
             }
         }
-        pairs.retain(|&(i, j)| self.parts[i].assembly != self.parts[j].assembly);
         pairs
     }
 
@@ -722,7 +716,6 @@ impl PhysicsWorld {
             {
                 asm.sleeping = false;
                 asm.history.wake();
-                self.grid_dirty = true;
             }
         }
         let stale: Vec<(InstanceId, InstanceId)> = self
@@ -760,7 +753,11 @@ impl PhysicsWorld {
         self.events_mut().touch_ended.push(key);
     }
 
-    fn solve_step(&mut self, active: &[(InstanceId, InstanceId)]) {
+    fn solve_step(
+        &mut self,
+        active: &[(InstanceId, InstanceId)],
+        terrain_active: &[(InstanceId, rbx_math::IVec3)],
+    ) {
         let mut bodies = vec![SolverBody::ground()];
         let mut map: HashMap<usize, usize> = HashMap::new();
         for (ai, a) in self.assemblies.iter().enumerate() {
@@ -924,6 +921,103 @@ impl PhysicsWorld {
             collision_specs.push((key, ba, bb, pa.cframe, pb.cframe));
         }
 
+        let mut terrain_specs: Vec<((InstanceId, rbx_math::IVec3), usize, CFrame)> = Vec::new();
+        for &key in terrain_active {
+            let Some(&i) = self.index.get(&key.0) else {
+                continue;
+            };
+            let pa = &self.parts[i];
+            let pose_a = pa.cframe * pa.shape.local;
+            let ba = ensure(pa.assembly, &mut bodies, &self.assemblies);
+            let smooth = self.terrain.smooth.is_some();
+            let base = self.terrain_params(
+                i,
+                if smooth {
+                    None
+                } else {
+                    Some(rbx_dom::rbx_terrain::conversion::PLASTIC)
+                },
+            );
+            let Some(pair) = self.terrain.contacts.get_mut(&key) else {
+                continue;
+            };
+            let mut points = Vec::new();
+            for m in &pair.manifolds {
+                let n = pose_a.rotation * crate::math::from_parry_vec(m.local_n1);
+                if n.length_squared() < 0.8 {
+                    continue;
+                }
+                let n = n.normalize();
+                for c in &m.points {
+                    if c.dist <= 0.0 {
+                        let p = pose_a * crate::math::from_parry_vec(c.local_p1);
+                        points.push((n, p, c.dist, m.subshape2));
+                    }
+                }
+            }
+            if points.is_empty() {
+                continue;
+            }
+            let materials: Vec<Option<u32>> = points
+                .iter()
+                .map(|(_, _, _, sub)| {
+                    if smooth {
+                        self.terrain.triangle_material(key.1, *sub)
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+            let Some(pair) = self.terrain.contacts.get_mut(&key) else {
+                continue;
+            };
+            pair.collisions.truncate(points.len());
+            while pair.collisions.len() < points.len() {
+                pair.collisions
+                    .push(Constraint::new(ConstraintKind::collision()));
+            }
+            let mode = self.mode;
+            let part_props = (
+                pa.friction_weight,
+                pa.friction,
+                pa.elasticity_weight,
+                pa.elasticity,
+            );
+            for ((c, (n, p, d, _)), mat) in pair.collisions.iter_mut().zip(points).zip(materials) {
+                let (fr, re) = match (mode, mat) {
+                    (PhysicalMode::New, Some(m)) => {
+                        let t = rbx_math::materials::material_physics(m);
+                        (
+                            weighted(part_props.0, part_props.1, t.friction_weight, t.friction),
+                            weighted(
+                                part_props.2,
+                                part_props.3,
+                                t.elasticity_weight,
+                                t.elasticity,
+                            ),
+                        )
+                    }
+                    _ => (base.friction, base.restitution),
+                };
+                if let ConstraintKind::Collision {
+                    normal,
+                    point_a,
+                    depth,
+                    friction,
+                    restitution,
+                    ..
+                } = &mut c.kind
+                {
+                    *normal = n;
+                    *point_a = p;
+                    *depth = d;
+                    *friction = fr;
+                    *restitution = re;
+                }
+            }
+            terrain_specs.push((key, ba, pa.cframe));
+        }
+
         if map.is_empty() {
             return;
         }
@@ -973,6 +1067,29 @@ impl PhysicsWorld {
                     body_b: bb,
                     frame_a: fa,
                     frame_b: fb,
+                });
+            }
+        }
+        let mut tlookup: HashMap<(InstanceId, rbx_math::IVec3), (usize, CFrame)> = HashMap::new();
+        for (key, ba, fa) in terrain_specs {
+            tlookup.insert(key, (ba, fa));
+        }
+        let mut tlist: Vec<(&(InstanceId, rbx_math::IVec3), &mut ContactPair)> = self
+            .terrain
+            .contacts
+            .iter_mut()
+            .filter(|(k, _)| tlookup.contains_key(*k))
+            .collect();
+        tlist.sort_by_key(|(k, _)| (k.0, k.1.x, k.1.y, k.1.z));
+        for (key, pair) in tlist {
+            let (ba, fa) = tlookup[key];
+            for c in pair.collisions.iter_mut() {
+                refs.push(ConstraintRef {
+                    constraint: c,
+                    body_a: ba,
+                    body_b: 0,
+                    frame_a: fa,
+                    frame_b: CFrame::IDENTITY,
                 });
             }
         }
@@ -1036,9 +1153,6 @@ impl PhysicsWorld {
             if !blocked {
                 to_sleep.push(ai);
             }
-        }
-        if !to_sleep.is_empty() {
-            self.grid_dirty = true;
         }
         for ai in to_sleep {
             self.assemblies[ai].sleeping = true;

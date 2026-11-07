@@ -72,7 +72,9 @@ pub struct DataModel {
     pub events: EventLog,
     services: HashMap<&'static str, InstanceId>,
     pub game_time: f64,
+    pub local_player: Option<InstanceId>,
     world_hooks: Option<Box<dyn WorldHooks>>,
+    pub(crate) terrain_data: HashMap<InstanceId, crate::classes::terrain::TerrainData>,
 }
 
 impl Default for DataModel {
@@ -101,7 +103,9 @@ impl DataModel {
             events: EventLog::default(),
             services: HashMap::new(),
             game_time: 0.0,
+            local_player: None,
             world_hooks: None,
+            terrain_data: HashMap::new(),
         };
         let root = match dm.create_internal(class) {
             Ok(id) => id,

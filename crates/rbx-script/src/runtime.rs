@@ -62,6 +62,17 @@ pub struct Engine {
     pub debris_timers: Vec<(f64, InstanceId)>,
     pub debris_queue: Vec<InstanceId>,
     pub debris_legacy_max_items: bool,
+    pub pending_explosions: Vec<InstanceId>,
+    pub exploded: std::collections::HashSet<InstanceId>,
+    pub unparent_timers: Vec<(f64, InstanceId)>,
+    pub gui_copied: std::collections::HashSet<InstanceId>,
+    pub mice: HashMap<InstanceId, InstanceId>,
+    pub player_data: HashMap<(InstanceId, String), Variant>,
+    pub registered_content: HashMap<String, Vec<u8>>,
+    pub tracks: HashMap<InstanceId, crate::api::animation::TrackState>,
+    pub active_tracks: HashMap<InstanceId, Vec<InstanceId>>,
+    pub kfs_cache: HashMap<String, Option<InstanceId>>,
+    pub active_kfs: HashMap<String, InstanceId>,
 }
 
 pub trait EngineHook: Send {
@@ -95,6 +106,17 @@ impl Engine {
             debris_timers: Vec::new(),
             debris_queue: Vec::new(),
             debris_legacy_max_items: false,
+            pending_explosions: Vec::new(),
+            exploded: std::collections::HashSet::new(),
+            unparent_timers: Vec::new(),
+            gui_copied: std::collections::HashSet::new(),
+            mice: HashMap::new(),
+            player_data: HashMap::new(),
+            registered_content: HashMap::new(),
+            tracks: HashMap::new(),
+            active_tracks: HashMap::new(),
+            kfs_cache: HashMap::new(),
+            active_kfs: HashMap::new(),
         }
     }
 
@@ -514,6 +536,9 @@ impl ScriptRuntime {
                 );
                 pump(&self.lua);
             }
+            self.step_explosions();
+            crate::api::animation::step(&self.lua);
+            pump(&self.lua);
             self.step_physics(dt);
         }
         self.step_debris();
@@ -566,7 +591,87 @@ impl ScriptRuntime {
         pump(&self.lua);
     }
 
+    fn step_explosions(&self) {
+        let pending: Vec<InstanceId> = std::mem::take(&mut self.engine.lock().pending_explosions);
+        for id in pending {
+            let result = {
+                let eng = self.engine.clone();
+                let mut guard = eng.lock();
+                let e = &mut *guard;
+                let Some(ws) = e.dm.find_service("Workspace") else {
+                    continue;
+                };
+                if !e.dm.contains(id) || !e.dm.is_descendant_of(id, ws) || !e.exploded.insert(id) {
+                    continue;
+                }
+                let f =
+                    |n: &str, d: f32| e.dm.get(id, n).ok().and_then(|v| v.as_f32()).unwrap_or(d);
+                let radius = f("BlastRadius", 4.0);
+                let pressure = f("BlastPressure", 500000.0);
+                let percent = f("DestroyJointRadiusPercent", 1.0);
+                let position =
+                    e.dm.get(id, "Position")
+                        .ok()
+                        .and_then(|v| v.as_vec3())
+                        .unwrap_or_default();
+                let world = e.world.clone();
+                let mut w = world.lock();
+                let r = w.explosion(
+                    &mut e.dm,
+                    position,
+                    radius,
+                    pressure,
+                    percent,
+                    |dm, part| {
+                        dm.parent_of(part).is_some_and(|c| {
+                            dm.find_first_child_of_class(c, "ForceField").is_some()
+                        })
+                    },
+                );
+                drop(w);
+                let mut life = 3.0f64;
+                if radius >= 1.0 {
+                    life -= 1.0 / radius as f64;
+                }
+                let t = e.game_time + life;
+                e.unparent_timers.push((t, id));
+                r
+            };
+            if has_listeners(&self.lua, id, "Hit") {
+                for (part, dist) in result.hits {
+                    if let Ok(v) = push_instance(&self.lua, part) {
+                        fire_lua(
+                            &self.lua,
+                            id,
+                            "Hit",
+                            MultiValue::from_vec(vec![v, Value::Number(dist as f64)]),
+                        );
+                    }
+                }
+            }
+            pump(&self.lua);
+        }
+    }
+
     fn step_debris(&self) {
+        {
+            let eng = self.engine.clone();
+            let mut guard = eng.lock();
+            let e = &mut *guard;
+            let now = e.game_time;
+            let due: Vec<InstanceId> = e
+                .unparent_timers
+                .iter()
+                .filter(|(t, _)| *t <= now)
+                .map(|(_, id)| *id)
+                .collect();
+            e.unparent_timers.retain(|(t, _)| *t > now);
+            for id in due {
+                if e.dm.contains(id) {
+                    let _ = e.dm.set_parent(id, None);
+                }
+            }
+        }
         {
             let eng = self.engine.clone();
             let mut guard = eng.lock();
@@ -1061,6 +1166,20 @@ fn dispatch_dom_event(lua: &Lua, ev: &DomEvent) {
         }
         DomEvent::ChildAdded { parent, child } => {
             crate::scripts::on_child_added(lua, *parent, *child);
+            {
+                let eng = engine(lua);
+                let is_player = {
+                    let e = eng.lock();
+                    e.dm.class_of(*parent) == Some("Players")
+                        && e.dm.class_of(*child) == Some("Player")
+                };
+                if is_player
+                    && has_listeners(lua, *parent, "PlayerAdded")
+                    && let Ok(v) = push_instance(lua, *child)
+                {
+                    fire_lua(lua, *parent, "PlayerAdded", MultiValue::from_vec(vec![v]));
+                }
+            }
             for name in ["ChildAdded", "childAdded"] {
                 if has_listeners(lua, *parent, name)
                     && let Ok(v) = push_instance(lua, *child)
@@ -1070,6 +1189,25 @@ fn dispatch_dom_event(lua: &Lua, ev: &DomEvent) {
             }
         }
         DomEvent::ChildRemoved { parent, child } => {
+            {
+                let eng = engine(lua);
+                let is_player = {
+                    let e = eng.lock();
+                    e.dm.class_of(*parent) == Some("Players")
+                        && e.dm.class_of(*child) == Some("Player")
+                };
+                if is_player
+                    && has_listeners(lua, *parent, "PlayerRemoving")
+                    && let Ok(v) = push_instance(lua, *child)
+                {
+                    fire_lua(
+                        lua,
+                        *parent,
+                        "PlayerRemoving",
+                        MultiValue::from_vec(vec![v]),
+                    );
+                }
+            }
             if has_listeners(lua, *parent, "ChildRemoved")
                 && let Ok(v) = push_instance(lua, *child)
             {
@@ -1108,6 +1246,13 @@ fn dispatch_dom_event(lua: &Lua, ev: &DomEvent) {
         }
         DomEvent::AncestryChanged { id, child, parent } => {
             crate::scripts::on_ancestry_changed(lua, *id);
+            {
+                let eng = engine(lua);
+                let mut e = eng.lock();
+                if e.dm.class_of(*id) == Some("Explosion") && !e.exploded.contains(id) {
+                    e.pending_explosions.push(*id);
+                }
+            }
             if has_listeners(lua, *id, "AncestryChanged") {
                 let c = push_instance(lua, *child).unwrap_or(Value::Nil);
                 let p = match parent {

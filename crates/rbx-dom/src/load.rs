@@ -288,6 +288,10 @@ impl DataModel {
             if !p.serialized() {
                 continue;
             }
+            if let Some(v) = self.terrain_serialized(id, p.name.as_str()) {
+                out.push((p.name.clone(), v));
+                continue;
+            }
             let v = match &inst.values[slot] {
                 Variant::Ref(Some(r)) => Variant::Ref(map.get(r).map(|&i| Tree::id_of(i))),
                 v => v.clone(),

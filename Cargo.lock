@@ -559,6 +559,7 @@ dependencies = [
  "rbx-format",
  "rbx-math",
  "rbx-reflection",
+ "rbx-terrain",
  "serde_json",
  "thiserror",
  "tracing",
@@ -636,6 +637,15 @@ dependencies = [
 [[package]]
 name = "rbx-studio-ui"
 version = "0.1.0"
+
+[[package]]
+name = "rbx-terrain"
+version = "0.1.0"
+dependencies = [
+ "rbx-math",
+ "serde_json",
+ "thiserror",
+]
 
 [[package]]
 name = "redox_syscall"

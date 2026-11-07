@@ -1,125 +1,238 @@
 use parry3d::bounding_volume::{Aabb, BoundingVolume};
-use std::collections::HashMap;
+use rbx_dom::InstanceId;
+use rbx_math::Vec3;
+use std::collections::{HashMap, HashSet};
 
-const MAX_CELLS_PER_AXIS: i64 = 48;
+const MAX_CELLS_PER_AXIS: i64 = 32;
 
-pub struct Grid {
-    cell: f32,
-    cells: HashMap<(i32, i32, i32), Vec<usize>>,
-    large: Vec<usize>,
-    stamp: Vec<u32>,
-    epoch: u32,
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Placement {
+    Cells([i32; 3], [i32; 3]),
+    Large,
 }
 
-impl Grid {
-    pub fn new(cell: f32) -> Grid {
-        Grid {
+struct Entry {
+    aabb: Aabb,
+    placement: Placement,
+}
+
+pub struct SpatialIndex {
+    cell: f32,
+    cells: HashMap<(i32, i32, i32), Vec<InstanceId>>,
+    large: HashSet<InstanceId>,
+    entries: HashMap<InstanceId, Entry>,
+}
+
+impl SpatialIndex {
+    pub fn new(cell: f32) -> SpatialIndex {
+        SpatialIndex {
             cell,
             cells: HashMap::new(),
-            large: Vec::new(),
-            stamp: Vec::new(),
-            epoch: 0,
+            large: HashSet::new(),
+            entries: HashMap::new(),
         }
     }
 
-    fn range(&self, aabb: &Aabb) -> Option<([i32; 3], [i32; 3])> {
+    pub fn len(&self) -> usize {
+        self.entries.len()
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.entries.is_empty()
+    }
+
+    fn placement(&self, aabb: &Aabb) -> Placement {
         let mut lo = [0i32; 3];
         let mut hi = [0i32; 3];
         for k in 0..3 {
             let a = aabb.mins[k];
             let b = aabb.maxs[k];
             if !a.is_finite() || !b.is_finite() {
-                return None;
+                return Placement::Large;
             }
             let l = (a / self.cell).floor() as i64;
             let h = (b / self.cell).floor() as i64;
             if h - l > MAX_CELLS_PER_AXIS {
-                return None;
+                return Placement::Large;
             }
-            lo[k] = l.clamp(i32::MIN as i64, i32::MAX as i64) as i32;
-            hi[k] = h.clamp(i32::MIN as i64, i32::MAX as i64) as i32;
+            lo[k] = l.clamp(i32::MIN as i64 + 1, i32::MAX as i64 - 1) as i32;
+            hi[k] = h.clamp(i32::MIN as i64 + 1, i32::MAX as i64 - 1) as i32;
         }
-        Some((lo, hi))
+        Placement::Cells(lo, hi)
     }
 
-    pub fn clear(&mut self) {
-        self.cells.clear();
-        self.large.clear();
-    }
-
-    pub fn insert(&mut self, idx: usize, aabb: &Aabb) {
-        if idx >= self.stamp.len() {
-            self.stamp.resize(idx + 1, 0);
-        }
-        match self.range(aabb) {
-            Some((lo, hi)) => {
+    fn unplace(&mut self, id: InstanceId, p: Placement) {
+        match p {
+            Placement::Large => {
+                self.large.remove(&id);
+            }
+            Placement::Cells(lo, hi) => {
                 for x in lo[0]..=hi[0] {
                     for y in lo[1]..=hi[1] {
                         for z in lo[2]..=hi[2] {
-                            self.cells.entry((x, y, z)).or_default().push(idx);
-                        }
-                    }
-                }
-            }
-            None => self.large.push(idx),
-        }
-    }
-
-    pub fn query(&mut self, aabb: &Aabb, aabbs: &[Aabb], out: &mut Vec<usize>) {
-        self.epoch = self.epoch.wrapping_add(1);
-        if self.epoch == 0 {
-            self.stamp.fill(0);
-            self.epoch = 1;
-        }
-        let epoch = self.epoch;
-        let mut consider = |i: usize, stamp: &mut Vec<u32>| {
-            if i < stamp.len() && stamp[i] != epoch {
-                stamp[i] = epoch;
-                if i < aabbs.len() && aabbs[i].intersects(aabb) {
-                    out.push(i);
-                }
-            }
-        };
-        for &i in &self.large {
-            consider(i, &mut self.stamp);
-        }
-        match self.range(aabb) {
-            Some((lo, hi)) => {
-                for x in lo[0]..=hi[0] {
-                    for y in lo[1]..=hi[1] {
-                        for z in lo[2]..=hi[2] {
-                            if let Some(list) = self.cells.get(&(x, y, z)) {
-                                for &i in list {
-                                    consider(i, &mut self.stamp);
+                            if let Some(v) = self.cells.get_mut(&(x, y, z)) {
+                                if let Some(i) = v.iter().position(|e| *e == id) {
+                                    v.swap_remove(i);
+                                }
+                                if v.is_empty() {
+                                    self.cells.remove(&(x, y, z));
                                 }
                             }
                         }
                     }
                 }
             }
-            None => {
-                let all: Vec<usize> = self.cells.values().flatten().copied().collect();
-                for i in all {
-                    consider(i, &mut self.stamp);
+        }
+    }
+
+    fn place(&mut self, id: InstanceId, p: Placement) {
+        match p {
+            Placement::Large => {
+                self.large.insert(id);
+            }
+            Placement::Cells(lo, hi) => {
+                for x in lo[0]..=hi[0] {
+                    for y in lo[1]..=hi[1] {
+                        for z in lo[2]..=hi[2] {
+                            self.cells.entry((x, y, z)).or_default().push(id);
+                        }
+                    }
                 }
             }
         }
     }
-}
 
-pub fn sweep_pairs(items: &[(usize, Aabb)], out: &mut Vec<(usize, usize)>) {
-    let mut order: Vec<usize> = (0..items.len()).collect();
-    order.sort_by(|&a, &b| items[a].1.mins.x.total_cmp(&items[b].1.mins.x));
-    for (k, &i) in order.iter().enumerate() {
-        let (ia, aa) = &items[i];
-        for &j in &order[k + 1..] {
-            let (ib, ab) = &items[j];
-            if ab.mins.x > aa.maxs.x {
+    pub fn update(&mut self, id: InstanceId, aabb: Aabb) {
+        let p = self.placement(&aabb);
+        match self.entries.get_mut(&id) {
+            Some(e) => {
+                e.aabb = aabb;
+                if e.placement != p {
+                    let old = e.placement;
+                    e.placement = p;
+                    self.unplace(id, old);
+                    self.place(id, p);
+                }
+            }
+            None => {
+                self.entries.insert(id, Entry { aabb, placement: p });
+                self.place(id, p);
+            }
+        }
+    }
+
+    pub fn remove(&mut self, id: InstanceId) {
+        if let Some(e) = self.entries.remove(&id) {
+            self.unplace(id, e.placement);
+        }
+    }
+
+    pub fn aabb(&self, id: InstanceId) -> Option<Aabb> {
+        self.entries.get(&id).map(|e| e.aabb)
+    }
+
+    pub fn query(&self, aabb: &Aabb, out: &mut Vec<InstanceId>) {
+        let mut seen: HashSet<InstanceId> = HashSet::new();
+        let mut push = |id: InstanceId, out: &mut Vec<InstanceId>| {
+            if seen.insert(id)
+                && let Some(e) = self.entries.get(&id)
+                && e.aabb.intersects(aabb)
+            {
+                out.push(id);
+            }
+        };
+        for &id in &self.large {
+            push(id, out);
+        }
+        match self.placement(aabb) {
+            Placement::Cells(lo, hi) => {
+                for x in lo[0]..=hi[0] {
+                    for y in lo[1]..=hi[1] {
+                        for z in lo[2]..=hi[2] {
+                            if let Some(v) = self.cells.get(&(x, y, z)) {
+                                for &id in v {
+                                    push(id, out);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            Placement::Large => {
+                let ids: Vec<InstanceId> = self.entries.keys().copied().collect();
+                for id in ids {
+                    push(id, out);
+                }
+            }
+        }
+    }
+
+    pub fn query_ray(&self, origin: Vec3, dir: Vec3, max: f32, out: &mut Vec<InstanceId>) {
+        let mut seen: HashSet<InstanceId> = HashSet::new();
+        for &id in &self.large {
+            if seen.insert(id) {
+                out.push(id);
+            }
+        }
+        if !origin.is_finite() || !dir.is_finite() || !max.is_finite() {
+            return;
+        }
+        let inv = |d: f32| {
+            if d.abs() < 1e-12 {
+                f32::INFINITY
+            } else {
+                1.0 / d
+            }
+        };
+        let mut cell = [
+            (origin.x / self.cell).floor() as i64,
+            (origin.y / self.cell).floor() as i64,
+            (origin.z / self.cell).floor() as i64,
+        ];
+        let step = [
+            dir.x.signum() as i64,
+            dir.y.signum() as i64,
+            dir.z.signum() as i64,
+        ];
+        let mut t_max = [0.0f32; 3];
+        let mut t_delta = [0.0f32; 3];
+        for k in 0..3 {
+            let d = dir[k];
+            let id = inv(d);
+            t_delta[k] = (self.cell * id).abs();
+            let boundary = if d > 0.0 {
+                (cell[k] + 1) as f32 * self.cell
+            } else {
+                cell[k] as f32 * self.cell
+            };
+            t_max[k] = if d.abs() < 1e-12 {
+                f32::INFINITY
+            } else {
+                (boundary - origin[k]) * id
+            };
+        }
+        let max_steps = 4096;
+        for _ in 0..max_steps {
+            let key = (cell[0] as i32, cell[1] as i32, cell[2] as i32);
+            if let Some(v) = self.cells.get(&key) {
+                for &id in v {
+                    if seen.insert(id) {
+                        out.push(id);
+                    }
+                }
+            }
+            let k = if t_max[0] < t_max[1] {
+                if t_max[0] < t_max[2] { 0 } else { 2 }
+            } else if t_max[1] < t_max[2] {
+                1
+            } else {
+                2
+            };
+            if t_max[k] > max {
                 break;
             }
-            if aa.intersects(ab) {
-                out.push((*ia, *ib));
-            }
+            cell[k] += step[k];
+            t_max[k] += t_delta[k];
         }
     }
 }

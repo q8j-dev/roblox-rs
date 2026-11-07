@@ -1,9 +1,12 @@
+pub mod animation;
 pub mod bindables;
 pub mod humanoid;
 pub mod instance;
 pub mod misc;
 pub mod physics;
+pub mod players;
 pub mod services;
+pub mod terrain;
 pub mod test;
 
 use crate::types::rt;
@@ -50,6 +53,9 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     physics::register(&mut r);
     misc::register(&mut r);
     humanoid::register(&mut r);
+    players::register(&mut r);
+    animation::register(&mut r);
+    terrain::register(&mut r);
     r
 });
 
@@ -79,21 +85,22 @@ pub fn call(lua: &Lua, id: InstanceId, class: &str, name: &str, args: MultiValue
     )))
 }
 
-pub fn get_property(
-    _lua: &Lua,
-    _id: InstanceId,
-    _class: &str,
-    _name: &str,
-) -> Result<Option<Value>> {
+pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Result<Option<Value>> {
+    if class == "AnimationTrack" {
+        return animation::get_track_property(lua, id, name);
+    }
     Ok(None)
 }
 
 pub fn set_property(
-    _lua: &Lua,
-    _id: InstanceId,
-    _class: &str,
-    _name: &str,
-    _value: &Variant,
+    lua: &Lua,
+    id: InstanceId,
+    class: &str,
+    name: &str,
+    value: &Variant,
 ) -> Result<bool> {
+    if class == "AnimationTrack" {
+        return animation::set_track_property(lua, id, name, value);
+    }
     Ok(false)
 }

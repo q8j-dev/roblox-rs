@@ -943,11 +943,14 @@ impl PhysicsWorld {
         let (Some(head), Some(torso)) = (app.head, app.torso) else {
             return false;
         };
-        self.joints.values().any(|j| {
-            j.in_world
-                && ((j.part0 == Some(head) && j.part1 == Some(torso))
-                    || (j.part0 == Some(torso) && j.part1 == Some(head)))
-                && self.active_joint(j).is_some()
+        self.part_joints.get(&head).is_some_and(|v| {
+            v.iter().any(|jid| {
+                self.joints.get(jid).is_some_and(|j| {
+                    ((j.part0 == Some(head) && j.part1 == Some(torso))
+                        || (j.part0 == Some(torso) && j.part1 == Some(head)))
+                        && self.active_joint(j).is_some()
+                })
+            })
         })
     }
 
@@ -1235,8 +1238,14 @@ impl PhysicsWorld {
         e: HEvent,
     ) -> bool {
         match e {
-            HEvent::HasBuoyancy => false,
-            HEvent::NoBuoyancy => true,
+            HEvent::HasBuoyancy => h
+                .app
+                .torso
+                .is_some_and(|t| self.terrain.buoyant.contains(&t)),
+            HEvent::NoBuoyancy => !h
+                .app
+                .torso
+                .is_some_and(|t| self.terrain.buoyant.contains(&t)),
             HEvent::NoHealth => props.health <= 0.0,
             HEvent::NoNeck => !self.has_neck(&h.app),
             HEvent::JumpCmd => {
@@ -1605,7 +1614,6 @@ impl PhysicsWorld {
         {
             self.assemblies[a].kinematic = on;
             self.assemblies[a].sleeping = false;
-            self.grid_dirty = true;
         }
     }
 
@@ -1778,9 +1786,6 @@ impl PhysicsWorld {
             if let Some(a) = h.app.torso_slow().and_then(|t| self.assembly_index(t)) {
                 let asm = &mut self.assemblies[a];
                 if !asm.anchored {
-                    if asm.sleeping {
-                        self.grid_dirty = true;
-                    }
                     asm.sleeping = false;
                 }
             }
@@ -2432,7 +2437,7 @@ impl PhysicsWorld {
                             if dm.contains(j) {
                                 let _ = dm.destroy(j);
                             }
-                            self.joints.remove(&j);
+                            self.remove_joint_record(j);
                             self.topology_dirty = true;
                         }
                     }

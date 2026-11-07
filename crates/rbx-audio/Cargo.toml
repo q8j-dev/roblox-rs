@@ -9,3 +9,5 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+kira = "0.12"
+tracing = "0.1.44"

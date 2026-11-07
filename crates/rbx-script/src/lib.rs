@@ -5,6 +5,7 @@ pub mod format;
 mod globals;
 pub mod harness;
 mod instance;
+pub mod legacy_content;
 mod libraries;
 mod materials;
 pub mod net;

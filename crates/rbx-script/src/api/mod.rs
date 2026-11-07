@@ -14,6 +14,7 @@ pub mod physics;
 pub mod players;
 pub mod remote;
 pub mod services;
+pub mod sound;
 pub mod stats;
 pub mod terrain;
 pub mod test;
@@ -78,6 +79,7 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     tween::register(&mut r);
     camera::register(&mut r);
     user_input::register(&mut r);
+    sound::register(&mut r);
     r
 });
 
@@ -128,6 +130,14 @@ pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Resul
         )?;
         return Ok(Some(v));
     }
+    if class == "Sound"
+        && matches!(
+            name,
+            "IsPlaying" | "isPlaying" | "IsPaused" | "TimeLength" | "TimePosition"
+        )
+    {
+        return sound::get_sound_property(lua, id, name);
+    }
     if class == "UserInputService" && matches!(name, "KeyboardEnabled" | "MouseEnabled") {
         let desktop = !cfg!(any(target_os = "ios", target_os = "android"));
         return Ok(Some(Value::Boolean(desktop)));
@@ -158,6 +168,12 @@ pub fn set_property(
 ) -> Result<bool> {
     if class == "AnimationTrack" {
         return animation::set_track_property(lua, id, name, value);
+    }
+    if class == "Sound" && name == "TimePosition" {
+        if let Some(v) = value.as_f64() {
+            sound::set_time_position(lua, id, v);
+        }
+        return Ok(true);
     }
     Ok(false)
 }

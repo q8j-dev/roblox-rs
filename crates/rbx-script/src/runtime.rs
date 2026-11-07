@@ -94,6 +94,8 @@ pub struct Engine {
     pub gui: crate::api::gui::GuiState,
     pub input: crate::api::input::InputState,
     pub camera: crate::api::camera::CameraState,
+    pub audio: rbx_audio::AudioEngine,
+    pub audio_state: crate::api::sound::AudioState,
     pub animate_fallback: bool,
 }
 
@@ -214,6 +216,8 @@ impl Engine {
             gui: Default::default(),
             input: Default::default(),
             camera: Default::default(),
+            audio: rbx_audio::AudioEngine::disabled(),
+            audio_state: Default::default(),
             animate_fallback: false,
         }
     }
@@ -845,6 +849,7 @@ impl ScriptRuntime {
             pump(&self.lua);
             self.step_physics(dt);
         }
+        crate::api::sound::step(&self.lua, dt);
         self.step_debris();
         crate::api::http::poll(&self.lua);
         resume_sleepers(&self.lua);
@@ -1779,6 +1784,9 @@ fn dispatch_dom_event_inner(lua: &Lua, ev: &DomEvent) {
     match ev {
         DomEvent::PropertyChanged { id, property } => {
             crate::scripts::on_property_changed(lua, *id, property);
+            if *property == "PlayCount" && engine(lua).lock().dm.class_of(*id) == Some("Sound") {
+                crate::api::sound::on_play_count_changed(lua, *id);
+            }
             let eng = engine(lua);
             let class = eng.lock().dm.class_of(*id);
             let Some(class) = class else { return };
@@ -1924,6 +1932,9 @@ fn dispatch_dom_event_inner(lua: &Lua, ev: &DomEvent) {
         }
         DomEvent::AncestryChanged { id, child, parent } => {
             crate::scripts::on_ancestry_changed(lua, *id);
+            if engine(lua).lock().dm.class_of(*id) == Some("Sound") {
+                crate::api::sound::on_ancestry_changed(lua, *id);
+            }
             {
                 let eng = engine(lua);
                 let mut e = eng.lock();

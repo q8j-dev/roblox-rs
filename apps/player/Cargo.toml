@@ -9,6 +9,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+rbx-audio = { path = "../../crates/rbx-audio" }
 clap = { version = "4.6.7", features = ["derive"] }
 parking_lot = "0.13.0"
 pollster = "1.0.1"

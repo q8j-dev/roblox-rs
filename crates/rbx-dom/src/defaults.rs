@@ -177,6 +177,7 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         }
         ("RocketPropulsion", "MaxTorque") => Variant::Vector3(Vec3::new(4e5, 4e5, 0.0)),
         ("RocketPropulsion", "TargetOffset") => Variant::Vector3(Vec3::ZERO),
+        ("Sound", "Volume") => Variant::Float(0.5),
         ("BoxHandleAdornment", "Size") => Variant::Vector3(Vec3::ONE),
         ("ConeHandleAdornment", "Radius") => Variant::Float(0.5),
         ("CylinderHandleAdornment" | "SphereHandleAdornment", "Radius") => Variant::Float(1.0),

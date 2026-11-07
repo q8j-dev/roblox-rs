@@ -73,6 +73,7 @@ pub struct Engine {
     pub active_tracks: HashMap<InstanceId, Vec<InstanceId>>,
     pub kfs_cache: HashMap<String, Option<InstanceId>>,
     pub active_kfs: HashMap<String, InstanceId>,
+    pub render_bindings: Vec<(String, i32, mlua::RegistryKey)>,
 }
 
 pub trait EngineHook: Send {
@@ -117,6 +118,7 @@ impl Engine {
             active_tracks: HashMap::new(),
             kfs_cache: HashMap::new(),
             active_kfs: HashMap::new(),
+            render_bindings: Vec::new(),
         }
     }
 
@@ -809,18 +811,21 @@ pub fn resume_thread(lua: &Lua, thread: &Thread, args: MultiValue) {
         }
     }
     let wd = with_state(lua, |s| s.watchdog.clone());
-    {
+    let previous_identity = {
         let mut w = wd.lock();
         if w.depth == 0 {
             w.start = Some(Stopwatch::new());
-            w.identity = info.as_ref().map_or(Identity::GameScript, |i| i.identity);
         }
+        let prev = w.identity;
+        w.identity = info.as_ref().map_or(Identity::GameScript, |i| i.identity);
         w.depth += 1;
-    }
+        prev
+    };
     let result = thread.resume::<MultiValue>(args);
     {
         let mut w = wd.lock();
         w.depth = w.depth.saturating_sub(1);
+        w.identity = previous_identity;
         if w.depth == 0 {
             w.start = None;
         }

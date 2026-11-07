@@ -364,7 +364,7 @@ pub fn can_join(p0: &Part, p1: &Part) -> Option<JointSpec> {
 
 impl PhysicsWorld {
     pub fn joints_of(&self, id: InstanceId) -> Vec<InstanceId> {
-        let mut out: Vec<InstanceId> = self
+        let out: Vec<InstanceId> = self
             .part_joints
             .get(&id)
             .map(|v| {
@@ -374,7 +374,6 @@ impl PhysicsWorld {
                     .collect()
             })
             .unwrap_or_default();
-        out.sort();
         out
     }
 

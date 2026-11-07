@@ -1,4 +1,3 @@
-use crate::instance::push_instance;
 use crate::runtime::{
     MessageType, ThreadInfo, engine, make_ready, new_environment, resume_thread, thread_key,
     with_state,
@@ -245,7 +244,6 @@ fn resolve_child_waiters(lua: &Lua, parent: InstanceId, child: InstanceId) {
     for t in ready {
         make_ready(lua, t, vec![Variant::Ref(Some(child))]);
     }
-    let _ = push_instance(lua, child);
 }
 
 pub fn on_child_added(lua: &Lua, parent: InstanceId, child: InstanceId) {

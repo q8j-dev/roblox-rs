@@ -2,6 +2,7 @@
 
 pub mod broadphase;
 pub mod buoyancy;
+pub mod csg;
 pub mod hooks;
 pub mod humanoid;
 pub mod joins;

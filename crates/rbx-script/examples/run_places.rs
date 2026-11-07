@@ -1,4 +1,5 @@
 use rbx_script::harness::{PlaceRun, run_place_file};
+use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::sync::atomic::{AtomicUsize, Ordering};
@@ -33,7 +34,7 @@ fn main() {
     collect(&root, &mut files);
     files.sort();
     files.retain(|f| f.to_string_lossy().contains(&filter));
-    let results: Mutex<Vec<(PathBuf, Result<PlaceRun, String>)>> = Mutex::new(Vec::new());
+    let counts: Mutex<[usize; 4]> = Mutex::new([0; 4]);
     let next = AtomicUsize::new(0);
     let threads = std::thread::available_parallelism().map_or(4, |n| n.get());
     std::thread::scope(|s| {
@@ -54,60 +55,57 @@ fn main() {
                         .and_then(|h| h.join().map_err(|_| "panicked".to_string()))
                         .and_then(|r| r);
                     eprintln!("{:6.1}s {}", started.elapsed().as_secs_f64(), f.display());
-                    if let Ok(mut v) = results.lock() {
-                        v.push((f.clone(), r));
+                    let name = f.strip_prefix(&root).unwrap_or(f).display().to_string();
+                    let (line, slot) = report(&name, &r);
+                    if let Ok(mut c) = counts.lock() {
+                        c[slot] += 1;
+                        let mut out = std::io::stdout().lock();
+                        let _ = writeln!(out, "{line}");
+                        let _ = out.flush();
                     }
                 }
             });
         }
     });
-    let mut results = results.into_inner().unwrap_or_default();
-    results.sort_by(|a, b| a.0.cmp(&b.0));
-    let mut pass_tests = 0;
-    let mut total_tests = 0;
-    let mut pass_empty = 0;
-    let mut total_empty = 0;
-    for (path, r) in &results {
-        let name = path
-            .strip_prefix(&root)
-            .unwrap_or(path)
-            .display()
-            .to_string();
-        match r {
-            Ok(run) => {
-                if run.has_tests {
-                    total_tests += 1;
-                } else {
-                    total_empty += 1;
-                }
-                if run.passed() {
-                    if run.has_tests {
-                        pass_tests += 1;
-                    } else {
-                        pass_empty += 1;
-                    }
-                    println!("PASS {name} tests={} warns={}", run.tests, run.warns);
-                } else {
-                    println!(
-                        "FAIL {name} players={} completed={} tests={} errors={} failures={:?}",
-                        run.players,
-                        run.completed,
-                        run.tests,
-                        run.errors,
-                        run.failures.iter().take(3).collect::<Vec<_>>()
-                    );
-                    for e in run.script_errors.iter().take(4) {
-                        println!("     | {}", e.lines().next().unwrap_or(""));
-                    }
-                }
-            }
-            Err(e) => {
-                total_tests += 1;
-                println!("ERR  {name} {e}");
-            }
-        }
-    }
+    let c = counts.into_inner().unwrap_or_default();
     println!(
-        "test places: {pass_tests}/{total_tests} passed; places without tests: {pass_empty}/{total_empty} ran"
+        "test places: {}/{} passed; places without tests: {}/{} ran",
+        c[0],
+        c[0] + c[1],
+        c[2],
+        c[2] + c[3]
     );
+}
+
+fn report(name: &str, r: &Result<PlaceRun, String>) -> (String, usize) {
+    match r {
+        Ok(run) => {
+            let slot = match (run.has_tests, run.passed()) {
+                (true, true) => 0,
+                (true, false) => 1,
+                (false, true) => 2,
+                (false, false) => 3,
+            };
+            if run.passed() {
+                return (
+                    format!("PASS {name} tests={} warns={}", run.tests, run.warns),
+                    slot,
+                );
+            }
+            let mut line = format!(
+                "FAIL {name} players={} completed={} tests={} errors={} failures={:?}",
+                run.players,
+                run.completed,
+                run.tests,
+                run.errors,
+                run.failures.iter().take(3).collect::<Vec<_>>()
+            );
+            for e in run.script_errors.iter().take(4) {
+                line.push_str("\n     | ");
+                line.push_str(e.lines().next().unwrap_or(""));
+            }
+            (line, slot)
+        }
+        Err(e) => (format!("ERR  {name} {e}"), 1),
+    }
 }

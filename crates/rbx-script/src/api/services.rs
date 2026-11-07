@@ -83,7 +83,68 @@ fn set_timeout(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
     super::none()
 }
 
+fn run_state(lua: &Lua, running: bool) -> Result<Ret> {
+    engine(lua).lock().running = running;
+    Ok(Ret::Values(mlua::MultiValue::new()))
+}
+
+fn mode_flags(lua: &Lua) -> (bool, bool) {
+    let e = engine(lua);
+    let e = e.lock();
+    let server = e.dm.find_service("NetworkServer").is_some();
+    let client = e.dm.find_service("NetworkClient").is_some();
+    match e.mode {
+        crate::runtime::RunMode::Server => (true, false),
+        crate::runtime::RunMode::Client => (false, true),
+        crate::runtime::RunMode::Standalone => (server || !client, client || !server),
+    }
+}
+
+fn bind_render_step(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let name = arg_string(args.first()).ok_or_else(|| rt("Argument 1 missing or nil"))?;
+    let priority = crate::convert::arg_number(args.get(1))
+        .ok_or_else(|| rt("Argument 2 missing or nil"))? as i32;
+    let f = match args.get(2) {
+        Some(Value::Function(f)) => f.clone(),
+        _ => return Err(rt("Argument 3 missing or nil")),
+    };
+    let key = lua.create_registry_value(f)?;
+    let e = engine(lua);
+    let mut e = e.lock();
+    e.render_bindings.retain(|b| b.0 != name);
+    e.render_bindings.push((name, priority, key));
+    e.render_bindings.sort_by_key(|b| b.1);
+    Ok(Ret::Values(mlua::MultiValue::new()))
+}
+
+fn unbind_render_step(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let name = arg_string(args.first()).ok_or_else(|| rt("Argument 1 missing or nil"))?;
+    let e = engine(lua);
+    let mut e = e.lock();
+    e.render_bindings.retain(|b| b.0 != name);
+    Ok(Ret::Values(mlua::MultiValue::new()))
+}
+
 pub fn register(r: &mut Registry) {
+    r.add("RunService", &["Run"], |lua, _, _| run_state(lua, true));
+    r.add("RunService", &["Pause", "Stop", "Reset"], |lua, _, _| {
+        run_state(lua, false)
+    });
+    r.add("RunService", &["IsRunning"], |lua, _, _| {
+        let running = engine(lua).lock().running;
+        ret(lua, running)
+    });
+    r.add("RunService", &["IsServer"], |lua, _, _| {
+        ret(lua, mode_flags(lua).0)
+    });
+    r.add("RunService", &["IsClient"], |lua, _, _| {
+        ret(lua, mode_flags(lua).1)
+    });
+    r.add("RunService", &["IsStudio", "IsRunMode"], |lua, _, _| {
+        ret(lua, false)
+    });
+    r.add("RunService", &["BindToRenderStep"], bind_render_step);
+    r.add("RunService", &["UnbindFromRenderStep"], unbind_render_step);
     r.add("ScriptContext", &["SetTimeout"], set_timeout);
     r.add(
         "ServiceProvider",

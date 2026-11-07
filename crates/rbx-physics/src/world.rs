@@ -378,7 +378,7 @@ pub struct PhysicsWorld {
     pub humanoid_events: Vec<(InstanceId, crate::humanoid::HumanoidEvent)>,
     pub dm_writes: Vec<crate::humanoid::DmWrite>,
     pub accoutrement_parts: HashSet<InstanceId>,
-    pub part_joints: HashMap<InstanceId, Vec<InstanceId>>,
+    pub part_joints: HashMap<InstanceId, std::collections::BTreeSet<InstanceId>>,
     pub local_character: Option<InstanceId>,
     cursor: Option<EventCursor>,
     pending_events: StepEvents,
@@ -446,6 +446,7 @@ pub fn shape_kind_of(dm: &DataModel, id: InstanceId) -> ShapeKind {
     match dm.class_of(id).unwrap_or("") {
         "WedgePart" => ShapeKind::Wedge,
         "CornerWedgePart" => ShapeKind::CornerWedge,
+        _ if dm.is_a(id, "PartOperation") => ShapeKind::Compound,
         _ => {
             if dm.is_a(id, "Part") {
                 match get_enum(dm, id, "shape") {
@@ -748,16 +749,21 @@ impl PhysicsWorld {
         }
         if changed {
             self.topology_dirty = true;
+            let new_parts = [part0, part1];
             for p in old_parts.into_iter().flatten() {
-                if let Some(v) = self.part_joints.get_mut(&p) {
-                    v.retain(|j| *j != id);
+                if !new_parts.contains(&Some(p))
+                    && let Some(v) = self.part_joints.get_mut(&p)
+                {
+                    v.remove(&id);
                 }
             }
-            for p in [part0, part1].into_iter().flatten() {
-                let v = self.part_joints.entry(p).or_default();
-                if !v.contains(&id) {
-                    v.push(id);
+            let mut added: Option<InstanceId> = None;
+            for p in new_parts.into_iter().flatten() {
+                if old_parts.contains(&Some(p)) || added == Some(p) {
+                    continue;
                 }
+                self.part_joints.entry(p).or_default().insert(id);
+                added = Some(p);
             }
         }
     }
@@ -768,7 +774,7 @@ impl PhysicsWorld {
         };
         for p in [j.part0, j.part1].into_iter().flatten() {
             if let Some(v) = self.part_joints.get_mut(&p) {
-                v.retain(|x| *x != id);
+                v.remove(&id);
                 if v.is_empty() {
                     self.part_joints.remove(&p);
                 }
@@ -845,7 +851,11 @@ impl PhysicsWorld {
     fn read_part(&self, dm: &DataModel, id: InstanceId) -> Part {
         let kind = shape_kind_of(dm, id);
         let size = part_size(dm, id);
-        let shape = PartShape::new(kind, size);
+        let shape = if kind == ShapeKind::Compound {
+            crate::csg::union_shape(dm, id, size)
+        } else {
+            PartShape::new(kind, size)
+        };
         let material = get_enum(dm, id, "Material");
         let mp = material_physics(material);
         let custom = dm

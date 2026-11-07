@@ -34,6 +34,17 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         ("SpawnLocation", "size") => Variant::Vector3(Vec3::new(4.0, 1.2, 2.0)),
         ("Seat", "size") | ("VehicleSeat", "size") => Variant::Vector3(Vec3::new(4.0, 1.2, 2.0)),
         ("Terrain", "WaterColor") => Variant::Color3(Color3::new(0.05, 0.33, 0.36)),
+        ("TestService", "Timeout") => Variant::Double(10.0),
+        ("TestService", "IsPhysicsEnvironmentalThrottled")
+        | ("TestService", "IsSleepAllowed")
+        | ("TestService", "Is30FpsThrottleEnabled")
+        | ("TestService", "AutoRuns") => Variant::Bool(true),
+        ("TestService", "PhysicsSendRate") => Variant::Float(20.0),
+        ("FunctionalTest", "Timeout") => Variant::Double(60.0),
+        ("FunctionalTest", "Description") => Variant::String("?".into()),
+        ("FunctionalTest", "AllowSleep")
+        | ("FunctionalTest", "PhysicsEnvironmentalThrottle")
+        | ("FunctionalTest", "Is30FpsThrottleEnabled") => Variant::Bool(true),
         ("Camera", "CFrame") | ("Camera", "CoordinateFrame") => Variant::CFrame(CFrame::look_at(
             Vec3::new(0.0, 20.0, 20.0),
             Vec3::ZERO,

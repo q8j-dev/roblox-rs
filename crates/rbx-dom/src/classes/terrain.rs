@@ -51,10 +51,35 @@ impl DataModel {
 
     pub fn workspace_terrain(&self) -> Option<InstanceId> {
         let ws = self.find_service("Workspace")?;
-        self.children_of(ws)
-            .iter()
+        self.terrain_data
+            .keys()
             .copied()
-            .find(|c| self.class_of(*c) == Some("Terrain"))
+            .filter(|t| self.parent_of(*t) == Some(ws) && self.class_of(*t) == Some("Terrain"))
+            .min()
+    }
+
+    pub fn ensure_terrain(&mut self) -> Option<InstanceId> {
+        if let Some(t) = self.workspace_terrain() {
+            return Some(t);
+        }
+        let ws = self.find_service("Workspace")?;
+        let t = self.create("Terrain").ok()?;
+        let size = self
+            .get_raw(t, "size")
+            .and_then(|v| v.as_vec3())
+            .unwrap_or(rbx_math::Vec3::new(2044.0, 252.0, 2044.0));
+        self.set_unchecked(
+            t,
+            "CFrame",
+            Variant::CFrame(rbx_math::CFrame::from_translation(rbx_math::Vec3::new(
+                -2.0,
+                size.y / 2.0,
+                -2.0,
+            ))),
+        );
+        self.set_parent(t, Some(ws)).ok()?;
+        self.lock_parent(t, true);
+        Some(t)
     }
 
     pub fn terrain_ids(&self) -> impl Iterator<Item = InstanceId> + '_ {

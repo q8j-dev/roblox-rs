@@ -40,6 +40,7 @@ pub fn run_place_file(path: &Path, content_root: Option<&Path>) -> Result<PlaceR
     let load_warnings = dm
         .load_place(&data)
         .map_err(|e| format!("{}: {e}", path.display()))?;
+    dm.ensure_terrain();
     run_datamodel(dm, path, content_root, load_warnings)
 }
 

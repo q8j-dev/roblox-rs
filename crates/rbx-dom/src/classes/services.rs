@@ -168,8 +168,37 @@ impl Behavior for PlayersBehavior {
     }
 }
 
+pub struct WorkspaceBehavior;
+
+impl Behavior for WorkspaceBehavior {
+    fn computed(&self) -> &'static [&'static str] {
+        &["Terrain"]
+    }
+
+    fn get(&self, dm: &DataModel, _id: InstanceId, prop: &str) -> Option<Variant> {
+        match prop {
+            "Terrain" => Some(Variant::Ref(dm.workspace_terrain())),
+            _ => None,
+        }
+    }
+
+    fn ancestry_changed(
+        &self,
+        dm: &mut DataModel,
+        id: InstanceId,
+        child: InstanceId,
+        _old: Option<InstanceId>,
+        new_parent: Option<InstanceId>,
+    ) {
+        if id == child && new_parent == Some(dm.root()) {
+            dm.lock_parent(id, true);
+        }
+    }
+}
+
 pub fn register(map: &mut HashMap<&'static str, &'static dyn Behavior>) {
     map.insert("Players", &PlayersBehavior);
+    map.insert("Workspace", &WorkspaceBehavior);
     map.insert("DataModel", &DataModelBehavior);
     for &class in SERVICE_CLASSES {
         map.entry(class).or_insert(&ServiceBehavior);

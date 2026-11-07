@@ -644,7 +644,8 @@ impl PhysicsWorld {
     }
 
     pub fn sync(&mut self, dm: &mut DataModel) {
-        self.terrain.sync(dm);
+        let terrain_changes = self.terrain.sync(dm);
+        self.wake_terrain_changes(&terrain_changes);
         let Some(cursor) = self.cursor else {
             return;
         };
@@ -1172,6 +1173,18 @@ impl PhysicsWorld {
         }
     }
 
+    pub fn wake_terrain_changes(&mut self, boxes: &[parry3d::bounding_volume::Aabb]) {
+        if boxes.is_empty() {
+            return;
+        }
+        self.flush_spatial();
+        for b in boxes {
+            for i in self.candidates(b) {
+                self.wake_index(i);
+            }
+        }
+    }
+
     fn wake_index(&mut self, i: usize) {
         let a = self.parts[i].assembly;
         if let Some(asm) = self.assemblies.get_mut(a)
@@ -1641,6 +1654,35 @@ impl PhysicsWorld {
             self.parts[p].moved = true;
         }
         asm.moved = true;
+    }
+
+    pub fn joint_frames_changed(&mut self, dm: &mut DataModel, id: InstanceId) {
+        self.sync(dm);
+        let Some(j) = self.joints.get(&id) else {
+            return;
+        };
+        if !j.kind.is_rigid() {
+            return;
+        }
+        let parts = [j.part0, j.part1];
+        self.rebuild_assemblies();
+        let mut done = Vec::new();
+        for p in parts.into_iter().flatten() {
+            let Some(&i) = self.index.get(&p) else {
+                continue;
+            };
+            let a = self.parts[i].assembly;
+            if a >= self.assemblies.len() || done.contains(&a) {
+                continue;
+            }
+            done.push(a);
+            self.sync_part_frames(a);
+            let members = self.assemblies[a].parts.clone();
+            for m in members {
+                let part = &self.parts[m];
+                dm.store_silent(part.id, "CFrame", Variant::CFrame(part.cframe));
+            }
+        }
     }
 
     pub fn sync_part_frames(&mut self, a: usize) {

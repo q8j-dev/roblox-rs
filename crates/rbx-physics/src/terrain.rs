@@ -180,14 +180,19 @@ impl TerrainCollider {
                 || self.smooth.as_ref().is_some_and(|g| g.is_allocated()))
     }
 
-    pub fn sync(&mut self, dm: &DataModel) {
+    pub fn sync(&mut self, dm: &DataModel) -> Vec<Aabb> {
+        let mut changed = Vec::new();
         let id = dm.workspace_terrain();
         let data = id.and_then(|i| dm.terrain(i));
         let Some(data) = data.filter(|d| d.is_initialized()) else {
             if self.id.is_some() || self.legacy.is_some() || self.smooth.is_some() {
                 *self = TerrainCollider::default();
+                changed.push(Aabb::new(
+                    parry3d::math::Vector::splat(-1e9),
+                    parry3d::math::Vector::splat(1e9),
+                ));
             }
-            return;
+            return changed;
         };
         let full = self.id != id
             || self.legacy.is_some() != data.legacy.is_some()
@@ -195,11 +200,11 @@ impl TerrainCollider {
         let log = match (&data.legacy, &data.smooth) {
             (Some(g), _) => &g.changes,
             (_, Some(g)) => &g.changes,
-            _ => return,
+            _ => return changed,
         };
         let generation = log.generation();
         if !full && self.generation == Some(generation) {
-            return;
+            return changed;
         }
         let changes = if full {
             Changes::Everything
@@ -233,6 +238,10 @@ impl TerrainCollider {
                 self.smooth = data.smooth.clone();
                 let mut dirty = HashSet::new();
                 for (min, max) in entries {
+                    changed.push(Aabb::new(
+                        to_parry_vec(min.as_vec3() * CELL_SIZE - Vec3::ONE),
+                        to_parry_vec((max + IVec3::ONE).as_vec3() * CELL_SIZE + Vec3::ONE),
+                    ));
                     let r = Region::new(min, max + IVec3::ONE).expand(1);
                     for c in r.chunk_ids(SMOOTH_CHUNK_LOG2 as u32) {
                         dirty.insert(c);
@@ -254,6 +263,7 @@ impl TerrainCollider {
             }
         }
         self.generation = Some(generation);
+        changed
     }
 
     fn update_partition(&mut self, id: IVec3) {

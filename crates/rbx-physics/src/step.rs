@@ -164,7 +164,8 @@ impl PhysicsWorld {
         if self.topology_dirty {
             self.rebuild_assemblies();
         }
-        self.terrain.sync(dm);
+        let terrain_changes = self.terrain.sync(dm);
+        self.wake_terrain_changes(&terrain_changes);
         self.step_count += 1;
         self.time += WORLD_DT as f64;
         if self

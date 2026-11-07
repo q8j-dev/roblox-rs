@@ -27,6 +27,12 @@ impl WorldHooks for WorldHooksImpl {
         }
     }
 
+    fn joint_changed(&mut self, dm: &mut DataModel, id: InstanceId) {
+        if let Some(mut w) = self.world.try_lock() {
+            w.joint_frames_changed(dm, id);
+        }
+    }
+
     fn join(&mut self, dm: &mut DataModel, id: InstanceId) {
         if let Some(mut w) = self.world.try_lock() {
             w.join(dm, id);

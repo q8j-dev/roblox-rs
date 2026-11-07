@@ -63,6 +63,7 @@ pub trait WorldHooks: Send {
         None
     }
     fn pv_changed_from_reflection(&mut self, dm: &mut DataModel, id: InstanceId) {}
+    fn joint_changed(&mut self, dm: &mut DataModel, id: InstanceId) {}
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1115,6 +1116,9 @@ impl DataModel {
             .push(DomEvent::PropertyChanged { id, property: prop });
         for b in behaviors_for(class) {
             b.changed(self, id, prop);
+        }
+        if matches!(prop, "C0" | "C1") && crate::database().is_a(class, "JointInstance") {
+            self.with_world_hooks(|h, dm| h.joint_changed(dm, id));
         }
     }
 

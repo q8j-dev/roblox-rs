@@ -422,8 +422,8 @@ fn local_lighting<'a>(chunk: &mut Chunk, lights: impl Iterator<Item = &'a LightS
                     };
                     let factor = (attenuation * 65536.0 + 0.5) as u32;
                     let s = &mut scratch[at(x, y, z)];
-                    for k in 0..3 {
-                        s[k] = (s[k] + ((l.color[k] as u32 * factor) >> 16)).min(255);
+                    for (v, c) in s.iter_mut().zip(l.color) {
+                        *v = (*v + ((c as u32 * factor) >> 16)).min(255);
                     }
                 }
             }

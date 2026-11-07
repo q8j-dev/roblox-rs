@@ -98,7 +98,49 @@ fn custom_current_value(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Re
     ret(lua, v as f64)
 }
 
+fn lighting_get_minutes(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let m = engine(lua).lock().dm.lighting_minutes_after_midnight(id);
+    ret(lua, m)
+}
+
+fn lighting_set_minutes(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let m = arg_number(args.first()).ok_or_else(|| rt("Argument 1 missing or nil"))?;
+    engine(lua)
+        .lock()
+        .dm
+        .lighting_set_minutes_after_midnight(id, m);
+    none()
+}
+
+fn lighting_sun(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let v = engine(lua).lock().dm.lighting_sun_direction(id);
+    ret(lua, crate::types::LVector3(v))
+}
+
+fn lighting_moon(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let v = engine(lua).lock().dm.lighting_moon_direction(id);
+    ret(lua, crate::types::LVector3(v))
+}
+
+fn lighting_moon_phase(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let v = engine(lua).lock().dm.lighting_moon_phase(id);
+    ret(lua, v as f64)
+}
+
 pub fn register(r: &mut Registry) {
+    r.add(
+        "Lighting",
+        &["GetMinutesAfterMidnight", "getMinutesAfterMidnight"],
+        lighting_get_minutes,
+    );
+    r.add(
+        "Lighting",
+        &["SetMinutesAfterMidnight", "setMinutesAfterMidnight"],
+        lighting_set_minutes,
+    );
+    r.add("Lighting", &["GetSunDirection"], lighting_sun);
+    r.add("Lighting", &["GetMoonDirection"], lighting_moon);
+    r.add("Lighting", &["GetMoonPhase"], lighting_moon_phase);
     r.add("CustomEvent", &["SetValue"], custom_set_value);
     r.add("CustomEvent", &["GetAttachedReceivers"], custom_receivers);
     r.add(

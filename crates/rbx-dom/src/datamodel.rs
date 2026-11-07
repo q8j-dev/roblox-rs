@@ -65,6 +65,14 @@ pub trait WorldHooks: Send {
     fn pv_changed_from_reflection(&mut self, dm: &mut DataModel, id: InstanceId) {}
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum MessageLevel {
+    Output,
+    Info,
+    Warning,
+    Error,
+}
+
 pub struct DataModel {
     instances: HashMap<InstanceId, Instance>,
     next_id: u64,
@@ -80,6 +88,7 @@ pub struct DataModel {
     pub(crate) tools: crate::classes::tool::Tools,
     pub(crate) seats: crate::classes::seat::Seats,
     pub backend_processing: bool,
+    messages: Vec<(MessageLevel, String)>,
     pub frontend_processing: bool,
     signals: std::collections::VecDeque<(InstanceId, &'static str, Vec<Variant>, u64)>,
 }
@@ -118,6 +127,7 @@ impl DataModel {
             tools: Default::default(),
             seats: Default::default(),
             backend_processing: true,
+            messages: Vec::new(),
             frontend_processing: true,
             signals: Default::default(),
         };
@@ -179,6 +189,14 @@ impl DataModel {
     pub fn fire_signal(&mut self, id: InstanceId, event: &'static str, args: Vec<Variant>) {
         let seq = self.events.position();
         self.signals.push_back((id, event, args, seq));
+    }
+
+    pub fn standard_out(&mut self, level: MessageLevel, text: impl Into<String>) {
+        self.messages.push((level, text.into()));
+    }
+
+    pub fn drain_messages(&mut self) -> Vec<(MessageLevel, String)> {
+        std::mem::take(&mut self.messages)
     }
 
     pub fn drain_signals(&mut self) -> Vec<(InstanceId, &'static str, Vec<Variant>, u64)> {

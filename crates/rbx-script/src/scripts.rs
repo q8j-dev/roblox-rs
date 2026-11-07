@@ -139,20 +139,28 @@ pub fn stop_script(lua: &Lua, id: InstanceId) {
     if !was {
         return;
     }
-    with_state(lua, |s| {
+    let removed_conns = with_state(lua, |s| {
         let conn_ids: Vec<u64> = s
             .conns
             .iter()
             .filter(|(_, c)| c.script == Some(id))
             .map(|(k, _)| *k)
             .collect();
+        let mut removed = Vec::new();
         for cid in conn_ids {
-            if let Some(c) = s.conns.remove(&cid)
-                && let Some(list) = s.by_event.get_mut(&(c.target, c.event))
-            {
-                list.retain(|x| *x != cid);
+            if let Some(c) = s.conns.remove(&cid) {
+                if let Some(list) = s.by_event.get_mut(&(c.target, c.event)) {
+                    list.retain(|x| *x != cid);
+                }
+                removed.push((c.target, c.event));
             }
         }
+        removed
+    });
+    for (target, event) in removed_conns {
+        crate::signal::touch_slots_changed(lua, target, event, -1);
+    }
+    with_state(lua, |s| {
         if let Some(threads) = s.script_threads.remove(&id) {
             for t in threads {
                 s.threads.remove(&thread_key(&t));

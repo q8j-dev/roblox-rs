@@ -151,13 +151,7 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
 
     g.set(
         "tick",
-        lua.create_function(|_, ()| {
-            let now = std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .map(|d| d.as_secs_f64())
-                .unwrap_or(0.0);
-            Ok(now)
-        })?,
+        lua.create_function(|lua, ()| Ok(engine(lua).lock().tick()))?,
     )?;
     g.set(
         "time",

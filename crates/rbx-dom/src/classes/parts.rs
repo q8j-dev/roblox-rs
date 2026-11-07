@@ -136,6 +136,66 @@ impl Behavior for BasePartBehavior {
                 dm.with_world_hooks(|h, dm| h.join(dm, id));
                 SetOutcome::Handled
             }
+            "FormFactor" | "formFactor" if dm.is_a(id, "FormFactorPart") => {
+                let Some(mut ff) = value.as_enum() else {
+                    return SetOutcome::Unhandled;
+                };
+                if !has_three_dimensional_size(dm, id) {
+                    ff = 0;
+                }
+                dm.standard_out(
+                    crate::datamodel::MessageLevel::Warning,
+                    "FormFactor is deprecated. You should no longer use this property.",
+                );
+                if form_factor(dm, id) != ff {
+                    dm.with_world_hooks(|h, dm| h.destroy_joints(dm, id));
+                    set_form_factor_xml(dm, id, ff);
+                    if ff != 3 {
+                        let mut ui = size_xml(dm, id);
+                        ui.y = ui.y.round().max(1.0);
+                        let rbx = ui_to_xml(dm, id, ui);
+                        set_size_xml(dm, id, rbx);
+                        dm.with_world_hooks(|h, dm| h.safe_move(dm, id));
+                    }
+                    dm.with_world_hooks(|h, dm| h.join(dm, id));
+                }
+                SetOutcome::Handled
+            }
+            "formFactorRaw" if dm.is_a(id, "FormFactorPart") => {
+                let Some(ff) = value.as_enum() else {
+                    return SetOutcome::Unhandled;
+                };
+                set_form_factor_xml(dm, id, ff);
+                SetOutcome::Handled
+            }
+            "Shape" if dm.class_of(id) == Some("Part") => {
+                let Some(shape) = value.as_enum() else {
+                    return SetOutcome::Unhandled;
+                };
+                let current = dm
+                    .get_raw(id, "shape")
+                    .and_then(|v| v.as_enum())
+                    .unwrap_or(1);
+                if current != shape {
+                    dm.with_world_hooks(|h, dm| h.destroy_joints(dm, id));
+                    set_shape_xml(dm, id, shape);
+                    if !has_three_dimensional_size(dm, id) {
+                        let ui = size_xml(dm, id);
+                        let rbx = ui_to_xml(dm, id, ui);
+                        set_size_xml(dm, id, rbx);
+                        dm.with_world_hooks(|h, dm| h.safe_move(dm, id));
+                    }
+                    dm.with_world_hooks(|h, dm| h.join(dm, id));
+                }
+                SetOutcome::Handled
+            }
+            "shape" if dm.class_of(id) == Some("Part") => {
+                let Some(shape) = value.as_enum() else {
+                    return SetOutcome::Unhandled;
+                };
+                set_shape_xml(dm, id, shape);
+                SetOutcome::Handled
+            }
             "size" | "siz" => {
                 let Some(s) = value.as_vec3() else {
                     return SetOutcome::Unhandled;
@@ -206,6 +266,59 @@ fn set_size_xml(dm: &mut DataModel, id: InstanceId, size: Vec3) {
     }
 }
 
+fn form_factor(dm: &DataModel, id: InstanceId) -> u32 {
+    dm.get_raw(id, "formFactorRaw")
+        .and_then(|v| v.as_enum())
+        .unwrap_or(1)
+}
+
+fn size_xml(dm: &DataModel, id: InstanceId) -> Vec3 {
+    dm.get_raw(id, "size")
+        .and_then(|v| v.as_vec3())
+        .unwrap_or(Vec3::new(4.0, 1.2, 2.0))
+}
+
+fn set_form_factor_xml(dm: &mut DataModel, id: InstanceId, ff: u32) {
+    if form_factor(dm, id) != ff {
+        dm.set_unchecked(id, "formFactorRaw", Variant::Enum(ff));
+        dm.notify_changed(id, "FormFactor");
+    }
+}
+
+fn set_shape_xml(dm: &mut DataModel, id: InstanceId, shape: u32) {
+    let current = dm
+        .get_raw(id, "shape")
+        .and_then(|v| v.as_enum())
+        .unwrap_or(1);
+    if current == shape {
+        return;
+    }
+    dm.set_unchecked(id, "shape", Variant::Enum(shape));
+    dm.notify_changed(id, "Shape");
+    if !has_three_dimensional_size(dm, id) {
+        set_form_factor_xml(dm, id, 0);
+    }
+}
+
+fn ui_to_xml(dm: &DataModel, id: InstanceId, ui: Vec3) -> Vec3 {
+    if !dm.is_a(id, "FormFactorPart") {
+        return ui.max(min_size(dm, id));
+    }
+    let round = |v: Vec3| Vec3::new(v.x.round(), v.y.round(), v.z.round());
+    match form_factor(dm, id) {
+        1 => {
+            let g = round(ui.max(Vec3::ONE));
+            Vec3::new(g.x, g.y * 1.2, g.z)
+        }
+        2 => {
+            let g = round(ui.max(Vec3::ONE));
+            Vec3::new(g.x, g.y * 0.4, g.z)
+        }
+        0 => round(ui.max(Vec3::ONE)),
+        _ => ui.max(min_size(dm, id)),
+    }
+}
+
 pub fn min_size(dm: &DataModel, id: InstanceId) -> Vec3 {
     let class = dm.class_of(id).unwrap_or("");
     if dm.is_a(id, "FormFactorPart") {
@@ -259,6 +372,15 @@ pub fn clamp_size(dm: &DataModel, id: InstanceId, ui: Vec3) -> Vec3 {
     s
 }
 
+pub struct PartBehavior;
+
+impl Behavior for PartBehavior {
+    fn aliases(&self) -> &'static [(&'static str, &'static str)] {
+        &[("shap", "shape")]
+    }
+}
+
 pub fn register(map: &mut HashMap<&'static str, &'static dyn Behavior>) {
     map.insert("BasePart", &BasePartBehavior);
+    map.insert("Part", &PartBehavior);
 }

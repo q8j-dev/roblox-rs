@@ -39,6 +39,7 @@ pub fn connect(
         s.by_event.entry((target, event)).or_default().push(id);
         id
     });
+    touch_slots_changed(lua, target, event, 1);
     if event == "Equipped" {
         let mouse = crate::runtime::engine(lua)
             .lock()
@@ -61,13 +62,62 @@ pub fn connect(
 }
 
 pub fn disconnect(lua: &Lua, id: u64) {
-    with_state(lua, |s| {
-        if let Some(c) = s.conns.remove(&id)
-            && let Some(list) = s.by_event.get_mut(&(c.target, c.event))
-        {
+    let removed = with_state(lua, |s| {
+        let c = s.conns.remove(&id)?;
+        if let Some(list) = s.by_event.get_mut(&(c.target, c.event)) {
             list.retain(|x| *x != id);
         }
+        Some((c.target, c.event))
     });
+    if let Some((target, event)) = removed {
+        touch_slots_changed(lua, target, event, -1);
+    }
+}
+
+pub fn touch_slots_changed(lua: &Lua, target: InstanceId, event: &'static str, delta: i64) {
+    if event != "Touched" && event != "TouchEnded" {
+        return;
+    }
+    let (before, after, transmitter) = with_state(lua, |s| {
+        let entry = s.touch_slots.entry(target).or_insert((0, None));
+        let before = entry.0;
+        entry.0 = (before as i64 + delta).max(0) as usize;
+        (before, entry.0, entry.1)
+    });
+    let eng = crate::runtime::engine(lua);
+    if before == 0 && after > 0 {
+        let created = {
+            let mut e = eng.lock();
+            if e.dm.contains(target) && e.dm.is_a(target, "BasePart") {
+                match e.dm.create("TouchTransmitter") {
+                    Ok(tt) => {
+                        e.dm.set_name(tt, "TouchInterest");
+                        if e.dm.set_parent(tt, Some(target)).is_ok() {
+                            Some(tt)
+                        } else {
+                            None
+                        }
+                    }
+                    Err(_) => None,
+                }
+            } else {
+                None
+            }
+        };
+        with_state(lua, |s| {
+            if let Some(entry) = s.touch_slots.get_mut(&target) {
+                entry.1 = created;
+            }
+        });
+    } else if before > 0 && after == 0 {
+        with_state(lua, |s| s.touch_slots.remove(&target));
+        if let Some(tt) = transmitter {
+            let mut e = eng.lock();
+            if e.dm.contains(tt) && e.dm.parent_of(tt) == Some(target) {
+                let _ = e.dm.set_parent(tt, None);
+            }
+        }
+    }
 }
 
 pub fn register(lua: &Lua) -> Result<()> {

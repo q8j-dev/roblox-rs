@@ -51,6 +51,9 @@ pub struct Engine {
     pub local_player: Option<InstanceId>,
     pub clock: Stopwatch,
     pub game_time: f64,
+    pub virtual_clock: Option<f64>,
+    pub frame_started: std::time::Instant,
+    pub last_tick: f64,
     pub running: bool,
     pub load_string_enabled: bool,
     pub hooks: Vec<Box<dyn EngineHook>>,
@@ -84,6 +87,19 @@ pub trait EngineHook: Send {
 }
 
 impl Engine {
+    pub fn tick(&mut self) -> f64 {
+        let value = match self.virtual_clock {
+            Some(base) => base + self.game_time + self.frame_started.elapsed().as_secs_f64(),
+            None => std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .map(|d| d.as_secs_f64())
+                .unwrap_or(0.0),
+        };
+        let value = value.max(self.last_tick);
+        self.last_tick = value;
+        value
+    }
+
     pub fn process_after_load(&mut self) {
         let world = self.world.clone();
         world.lock().join_all(&mut self.dm);
@@ -102,6 +118,9 @@ impl Engine {
             local_player: None,
             clock: Stopwatch::new(),
             game_time: 0.0,
+            virtual_clock: None,
+            frame_started: std::time::Instant::now(),
+            last_tick: 0.0,
             running: false,
             load_string_enabled: false,
             hooks: Vec::new(),
@@ -264,6 +283,7 @@ pub struct State {
     pub conns: HashMap<u64, Conn>,
     pub by_event: HashMap<(InstanceId, &'static str), Vec<u64>>,
     pub next_conn: u64,
+    pub touch_slots: HashMap<InstanceId, (usize, Option<InstanceId>)>,
     pub waiters: HashMap<(InstanceId, &'static str), Vec<(Thread, u64)>>,
     pub dispatch_seq: Option<u64>,
     pub sleepers: Vec<Sleeper>,
@@ -433,6 +453,7 @@ impl ScriptRuntime {
             conns: HashMap::new(),
             by_event: HashMap::new(),
             next_conn: 1,
+            touch_slots: HashMap::new(),
             waiters: HashMap::new(),
             dispatch_seq: None,
             sleepers: Vec::new(),
@@ -568,6 +589,7 @@ impl ScriptRuntime {
             let eng = self.engine.clone();
             let mut e = eng.lock();
             e.game_time += dt;
+            e.frame_started = std::time::Instant::now();
             let t = e.game_time;
             if let Some(ws) = e.dm.find_service("Workspace") {
                 e.dm.store_silent(ws, "DistributedGameTime", Variant::Double(t));
@@ -1334,6 +1356,15 @@ pub fn pump(lua: &Lua) {
             let mut e = eng.lock();
             let cursor = e.cursor;
             let dom = e.dm.drain_events_from(cursor);
+            for (level, text) in e.dm.drain_messages() {
+                let kind = match level {
+                    rbx_dom::MessageLevel::Output => MessageType::Output,
+                    rbx_dom::MessageLevel::Info => MessageType::Info,
+                    rbx_dom::MessageLevel::Warning => MessageType::Warning,
+                    rbx_dom::MessageLevel::Error => MessageType::Error,
+                };
+                e.print(kind, text);
+            }
             let signals = e.dm.drain_signals();
             for (target, event, args, seq) in signals {
                 e.fired.push_back(Fired {
@@ -1547,6 +1578,7 @@ fn dispatch_dom_event(lua: &Lua, ev: &DomEvent) {
         DomEvent::Destroyed { id } => {
             crate::scripts::on_destroyed(lua, *id);
             with_state(lua, |s| {
+                s.touch_slots.remove(id);
                 let keys: Vec<(InstanceId, &'static str)> = s
                     .by_event
                     .keys()

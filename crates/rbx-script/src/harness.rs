@@ -54,6 +54,12 @@ pub fn run_datamodel(
     let mut engine = Engine::new(dm);
     engine.content_root = content_root.map(Path::to_path_buf);
     engine.process_after_load();
+    engine.virtual_clock = Some(
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_secs_f64())
+            .unwrap_or(0.0),
+    );
     let engine = Arc::new(Mutex::new(engine));
     let runtime = ScriptRuntime::new(engine.clone()).map_err(|e| e.to_string())?;
     crate::runtime::set_script_timeout(&runtime.lua, SCRIPT_TIMEOUT);

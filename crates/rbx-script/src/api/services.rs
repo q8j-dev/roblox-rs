@@ -19,6 +19,22 @@ pub fn settings_root(lua: &Lua, class: &str) -> Result<InstanceId> {
         let mut e = eng.lock();
         let id = e.dm.create_internal(class).map_err(|e| rt(e.to_string()))?;
         e.dm.retain(id);
+        if class == "GlobalSettings" {
+            for (item, name) in [
+                ("LuaSettings", "Lua"),
+                ("PhysicsSettings", "Physics"),
+                ("RenderSettings", "Rendering"),
+                ("NetworkSettings", "Network"),
+                ("DebugSettings", "Diagnostics"),
+                ("GameSettings", "Game Options"),
+                ("TaskScheduler", "Task Scheduler"),
+            ] {
+                if let Ok(child) = e.dm.create_internal(item) {
+                    e.dm.set_name(child, name);
+                    let _ = e.dm.set_parent(child, Some(id));
+                }
+            }
+        }
         id
     };
     lua.set_named_registry_value(&key, id.raw() as f64)?;

@@ -24,6 +24,16 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         ("BasePart", "TopSurface") => Variant::Enum(3),
         ("BasePart", "BottomSurface") => Variant::Enum(4),
         ("BasePart", "CanCollide") => Variant::Bool(true),
+        (
+            "BasePart",
+            "TopParamA" | "BottomParamA" | "LeftParamA" | "RightParamA" | "FrontParamA"
+            | "BackParamA",
+        ) => Variant::Float(-0.5),
+        (
+            "BasePart",
+            "TopParamB" | "BottomParamB" | "LeftParamB" | "RightParamB" | "FrontParamB"
+            | "BackParamB",
+        ) => Variant::Float(0.5),
         ("BasePart", "Anchored") => Variant::Bool(false),
         ("BasePart", "Elasticity_") => Variant::Float(0.5),
         ("FormFactorPart", "formFactorRaw") | ("FormFactorPart", "FormFactor") => Variant::Enum(1),
@@ -35,6 +45,9 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         ("Seat", "size") | ("VehicleSeat", "size") => Variant::Vector3(Vec3::new(4.0, 1.2, 2.0)),
         ("Terrain", "WaterColor") => Variant::Color3(Color3::new(0.05, 0.33, 0.36)),
         ("Workspace", "FallenPartsDestroyHeight") => Variant::Float(-500.0),
+        ("Lighting", "TimeOfDay") => Variant::String("14:00:00".into()),
+        ("Lighting", "ClockTime") => Variant::Float(14.0),
+        ("Lighting", "GeographicLatitude") => Variant::Float(41.7333),
         ("TestService", "Timeout") => Variant::Double(10.0),
         ("TestService", "IsPhysicsEnvironmentalThrottled")
         | ("TestService", "IsSleepAllowed")

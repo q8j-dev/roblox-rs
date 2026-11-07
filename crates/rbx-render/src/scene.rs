@@ -41,6 +41,7 @@ pub struct PartDraw {
     pub decals: Vec<DecalDraw>,
     pub voxel: Option<crate::lightgrid::VoxelShape>,
     pub voxel_transparency: f32,
+    pub caster: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -411,6 +412,13 @@ fn collect_parts(
             .children_of(id)
             .iter()
             .any(|c| dm.is_a(*c, "DataModelMesh"));
+        let caster = dm.parent_of(id).is_some_and(|p| {
+            dm.find_first_child_of_class(p, "Humanoid").is_some()
+                || (dm.is_a(p, "Accoutrement")
+                    && dm
+                        .parent_of(p)
+                        .is_some_and(|g| dm.find_first_child_of_class(g, "Humanoid").is_some()))
+        });
         if let Some(model) = dm.parent_of(id) {
             let entry = characters.entry(model).or_insert_with(|| {
                 crate::character::identify(dm, model).map(|ch| {
@@ -468,6 +476,7 @@ fn collect_parts(
             decals,
             voxel,
             voxel_transparency,
+            caster,
         });
     }
 }

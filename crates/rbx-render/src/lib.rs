@@ -10,6 +10,7 @@ pub mod lighting;
 pub mod offscreen;
 pub mod renderer;
 pub mod scene;
+pub mod shadow;
 pub mod smooth;
 pub mod terrain;
 pub mod texture;

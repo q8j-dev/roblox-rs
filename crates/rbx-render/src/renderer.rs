@@ -35,6 +35,7 @@ pub struct Globals {
     pub lgrid_offset: [f32; 4],
     pub lgrid_center: [f32; 4],
     pub lgrid_radius: [f32; 4],
+    pub shadow_matrix: [[f32; 4]; 3],
 }
 
 #[repr(C)]
@@ -96,6 +97,9 @@ pub struct Renderer {
     gui: Option<crate::gui_pass::GuiRenderer>,
     compositor: crate::composite::Compositor,
     lightgrid: crate::lightgrid::LightGrid,
+    shadow: crate::shadow::ShadowMap,
+    shadow_pipeline: wgpu::RenderPipeline,
+    shadow_globals_bg: wgpu::BindGroup,
     lgrid_texture: wgpu::Texture,
     lgrid_active: bool,
     pub lighting_budget: usize,
@@ -196,7 +200,31 @@ impl Renderer {
                     ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
                     count: None,
                 },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 5,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D2,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 6,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
+                },
             ],
+        });
+        let shadow_mask = read_texture(&content_dir.join("textures").join("shadowmask.png"));
+        let shadow = crate::shadow::ShadowMap::new(&device, &queue, shadow_mask);
+        let shadow_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("shadow map"),
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            ..Default::default()
         });
         let lgrid_size = crate::lightgrid::LightGrid::texture_size();
         let lgrid_texture = device.create_texture(&wgpu::TextureDescriptor {
@@ -257,32 +285,47 @@ impl Renderer {
         let studs_view = studs
             .upload(&device, &queue, "studs", false)
             .create_view(&wgpu::TextureViewDescriptor::default());
-        let globals_bg = device.create_bind_group(&wgpu::BindGroupDescriptor {
-            label: Some("globals"),
-            layout: &globals_layout,
-            entries: &[
-                wgpu::BindGroupEntry {
-                    binding: 0,
-                    resource: globals.as_entire_binding(),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 1,
-                    resource: wgpu::BindingResource::Sampler(&sampler),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 2,
-                    resource: wgpu::BindingResource::TextureView(&studs_view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 3,
-                    resource: wgpu::BindingResource::TextureView(&lgrid_view),
-                },
-                wgpu::BindGroupEntry {
-                    binding: 4,
-                    resource: wgpu::BindingResource::Sampler(&lgrid_sampler),
-                },
-            ],
-        });
+        let shadow_placeholder = Image::solid([255, 0, 0, 0])
+            .upload(&device, &queue, "shadow placeholder", false)
+            .create_view(&wgpu::TextureViewDescriptor::default());
+        let make_globals = |shadow_view: &wgpu::TextureView, label: &str| {
+            device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some(label),
+                layout: &globals_layout,
+                entries: &[
+                    wgpu::BindGroupEntry {
+                        binding: 0,
+                        resource: globals.as_entire_binding(),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 1,
+                        resource: wgpu::BindingResource::Sampler(&sampler),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 2,
+                        resource: wgpu::BindingResource::TextureView(&studs_view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 3,
+                        resource: wgpu::BindingResource::TextureView(&lgrid_view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 4,
+                        resource: wgpu::BindingResource::Sampler(&lgrid_sampler),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 5,
+                        resource: wgpu::BindingResource::TextureView(shadow_view),
+                    },
+                    wgpu::BindGroupEntry {
+                        binding: 6,
+                        resource: wgpu::BindingResource::Sampler(&shadow_sampler),
+                    },
+                ],
+            })
+        };
+        let globals_bg = make_globals(shadow.view(), "globals");
+        let shadow_globals_bg = make_globals(&shadow_placeholder, "shadow globals");
         let part_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: Some("parts"),
             bind_group_layouts: &[Some(&globals_layout), Some(&material_layout)],
@@ -343,6 +386,42 @@ impl Renderer {
                 cache: None,
             })
         };
+        let shadow_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            label: Some("shadow casters"),
+            bind_group_layouts: &[Some(&globals_layout)],
+            immediate_size: 0,
+        });
+        let shadow_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            label: Some("shadow casters"),
+            layout: Some(&shadow_layout),
+            vertex: wgpu::VertexState {
+                module: &shader,
+                entry_point: Some("vs_shadow"),
+                compilation_options: Default::default(),
+                buffers: &buffers,
+            },
+            fragment: Some(wgpu::FragmentState {
+                module: &shader,
+                entry_point: Some("fs_shadow"),
+                compilation_options: Default::default(),
+                targets: &[Some(wgpu::ColorTargetState {
+                    format: wgpu::TextureFormat::Rgba8Unorm,
+                    blend: None,
+                    write_mask: wgpu::ColorWrites::ALL,
+                })],
+            }),
+            primitive: wgpu::PrimitiveState::default(),
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: DEPTH_FORMAT,
+                depth_write_enabled: Some(true),
+                depth_compare: Some(wgpu::CompareFunction::LessEqual),
+                stencil: Default::default(),
+                bias: Default::default(),
+            }),
+            multisample: Default::default(),
+            multiview_mask: None,
+            cache: None,
+        });
         let opaque = make_parts(None, true, "opaque");
         let transparent = make_parts(Some(wgpu::BlendState::ALPHA_BLENDING), false, "transparent");
         let sky = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
@@ -407,6 +486,9 @@ impl Renderer {
             gui,
             compositor,
             lightgrid: crate::lightgrid::LightGrid::new(),
+            shadow,
+            shadow_pipeline,
+            shadow_globals_bg,
             lgrid_texture,
             lgrid_active: false,
             lighting_budget: 24,
@@ -1077,6 +1159,7 @@ impl Renderer {
             lgrid_offset: [0.0; 4],
             lgrid_center: [0.0; 4],
             lgrid_radius: [-1.0, -1.0, -1.0, 0.0],
+            shadow_matrix: crate::shadow::shadow_matrix(scene.focus, l.key_direction),
         };
         let mut globals = globals;
         if self.lgrid_active {
@@ -1093,6 +1176,7 @@ impl Renderer {
             .write_buffer(&self.globals, 0, bytemuck::bytes_of(&globals));
 
         let mut opaque: HashMap<(Shading, MeshKey), Vec<InstanceData>> = HashMap::new();
+        let mut casters: HashMap<MeshKey, Vec<InstanceData>> = HashMap::new();
         let mut transparent: Vec<(f32, Shading, MeshKey, InstanceData)> = Vec::new();
         self.update_composites(&scene.composites);
         for part in &scene.parts {
@@ -1115,6 +1199,9 @@ impl Renderer {
                 extra: [part.specular.0, part.specular.1, part.reflectance, kind],
             };
             let d = (part.cframe.translation - eye).length_squared();
+            if part.caster && part.color[3] > 0.0 {
+                casters.entry(key).or_default().push(data);
+            }
             if part.color[3] < 1.0 {
                 transparent.push((d, shading, key, data));
             } else {
@@ -1171,6 +1258,39 @@ impl Renderer {
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("frame"),
             });
+        {
+            let mut caster_instances: Vec<InstanceData> = Vec::new();
+            let mut caster_batches: Vec<(MeshKey, u32, u32)> = Vec::new();
+            for (key, list) in &casters {
+                caster_batches.push((*key, caster_instances.len() as u32, list.len() as u32));
+                caster_instances.extend_from_slice(list);
+            }
+            let caster_buffer = (!caster_instances.is_empty()).then(|| {
+                self.device
+                    .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                        label: Some("shadow casters"),
+                        contents: bytemuck::cast_slice(&caster_instances),
+                        usage: wgpu::BufferUsages::VERTEX,
+                    })
+            });
+            {
+                let mut pass = self.shadow.begin(&mut encoder);
+                if let Some(buf) = &caster_buffer {
+                    pass.set_pipeline(&self.shadow_pipeline);
+                    pass.set_bind_group(0, &self.shadow_globals_bg, &[]);
+                    pass.set_vertex_buffer(1, buf.slice(..));
+                    for (key, start, count) in &caster_batches {
+                        let mesh = &self.meshes[key];
+                        pass.set_vertex_buffer(0, mesh.vertices.slice(..));
+                        pass.set_index_buffer(mesh.indices.slice(..), wgpu::IndexFormat::Uint32);
+                        pass.draw_indexed(0..mesh.count, 0, *start..start + count);
+                    }
+                }
+            }
+            if caster_buffer.is_some() {
+                self.shadow.blur(&mut encoder);
+            }
+        }
         {
             let clear = l.clear_color;
             let depth_view = match &self.depth {

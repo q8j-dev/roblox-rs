@@ -17,6 +17,9 @@ struct Globals {
     lgrid_offset: vec4<f32>,
     lgrid_center: vec4<f32>,
     lgrid_radius: vec4<f32>,
+    shadow_matrix0: vec4<f32>,
+    shadow_matrix1: vec4<f32>,
+    shadow_matrix2: vec4<f32>,
 };
 
 struct TerrainParams {
@@ -28,6 +31,19 @@ struct TerrainParams {
 @group(0) @binding(1) var linear_sampler: sampler;
 @group(0) @binding(3) var lgrid_texture: texture_3d<f32>;
 @group(0) @binding(4) var lgrid_sampler: sampler;
+@group(0) @binding(5) var shadow_map: texture_2d<f32>;
+@group(0) @binding(6) var shadow_sampler: sampler;
+
+fn shadow_prepare(world: vec3<f32>) -> vec3<f32> {
+    let c = vec4<f32>(world, 1.0);
+    return vec3<f32>(dot(g.shadow_matrix0, c), dot(g.shadow_matrix1, c), dot(g.shadow_matrix2, c));
+}
+
+fn shadow_sample(lpos: vec3<f32>, light_shadow: f32) -> f32 {
+    let sm = textureSampleLevel(shadow_map, shadow_sampler, lpos.xy, 0.0).rg;
+    let sm_shadow = step(sm.x, lpos.z) * clamp(9.0 - 20.0 * abs(lpos.z - 0.5), 0.0, 1.0);
+    return (1.0 - sm_shadow * sm.y * g.outline_brightness_shadow.w) * light_shadow;
+}
 
 fn lgrid_prepare(world: vec3<f32>, normal: vec3<f32>) -> vec3<f32> {
     return (world + normal * 6.0) * g.lgrid_scale.xyz + g.lgrid_offset.xyz;
@@ -62,6 +78,7 @@ struct VertexOut {
     @location(5) view_depth: vec4<f32>,
     @location(6) fog: f32,
     @location(7) lgrid: vec3<f32>,
+    @location(8) shadow_pos: vec3<f32>,
 };
 
 @vertex
@@ -77,6 +94,7 @@ fn vs_main(v: VertexIn) -> VertexOut {
     o.view_depth = vec4<f32>(g.camera_position.xyz - v.position, hpos.w);
     o.fog = (g.fog_params.z - hpos.w) * g.fog_params.w;
     o.lgrid = lgrid_prepare(v.position, normalize(v.normal));
+    o.shadow_pos = shadow_prepare(v.position);
     return o;
 }
 
@@ -93,7 +111,7 @@ fn sample_blend(t: texture_2d<f32>, i: VertexOut) -> vec4<f32> {
 @fragment
 fn fs_main(i: VertexOut) -> @location(0) vec4<f32> {
     let light = lgrid_sample(i.lgrid);
-    let shadow = light.a;
+    let shadow = shadow_sample(i.shadow_pos, light.a);
     let albedo = sample_blend(albedo_map, i);
     let p = sample_blend(specular_map, i);
     let fade = clamp(1.0 - i.view_depth.w * g.fade_distance_glow.y, 0.0, 1.0);

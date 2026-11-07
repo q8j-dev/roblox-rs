@@ -17,12 +17,28 @@ struct Globals {
     lgrid_offset: vec4<f32>,
     lgrid_center: vec4<f32>,
     lgrid_radius: vec4<f32>,
+    shadow_matrix0: vec4<f32>,
+    shadow_matrix1: vec4<f32>,
+    shadow_matrix2: vec4<f32>,
 };
 
 @group(0) @binding(0) var<uniform> g: Globals;
 @group(0) @binding(1) var linear_sampler: sampler;
 @group(0) @binding(3) var lgrid_texture: texture_3d<f32>;
 @group(0) @binding(4) var lgrid_sampler: sampler;
+@group(0) @binding(5) var shadow_map: texture_2d<f32>;
+@group(0) @binding(6) var shadow_sampler: sampler;
+
+fn shadow_prepare(world: vec3<f32>) -> vec3<f32> {
+    let c = vec4<f32>(world, 1.0);
+    return vec3<f32>(dot(g.shadow_matrix0, c), dot(g.shadow_matrix1, c), dot(g.shadow_matrix2, c));
+}
+
+fn shadow_sample(lpos: vec3<f32>, light_shadow: f32) -> f32 {
+    let sm = textureSampleLevel(shadow_map, shadow_sampler, lpos.xy, 0.0).rg;
+    let sm_shadow = step(sm.x, lpos.z) * clamp(9.0 - 20.0 * abs(lpos.z - 0.5), 0.0, 1.0);
+    return (1.0 - sm_shadow * sm.y * g.outline_brightness_shadow.w) * light_shadow;
+}
 
 fn lgrid_prepare(world: vec3<f32>, normal: vec3<f32>) -> vec3<f32> {
     return (world + normal * 6.0) * g.lgrid_scale.xyz + g.lgrid_offset.xyz;
@@ -64,6 +80,7 @@ struct VertexOut {
     @location(5) normal_specpower: vec4<f32>,
     @location(6) spec_reflect_kind: vec4<f32>,
     @location(7) lgrid: vec3<f32>,
+    @location(8) shadow_pos: vec3<f32>,
 };
 
 @vertex
@@ -83,6 +100,7 @@ fn vs_main(v: VertexIn) -> VertexOut {
     o.normal_specpower = vec4<f32>(normal, v.extra.y);
     o.spec_reflect_kind = vec4<f32>(v.extra.x, v.extra.z, v.extra.w, 0.0);
     o.lgrid = lgrid_prepare(world, normal);
+    o.shadow_pos = shadow_prepare(world);
     return o;
 }
 
@@ -120,7 +138,7 @@ fn fs_main(i: VertexOut) -> @location(0) vec4<f32> {
     let specular_power = i.normal_specpower.w;
 
     let light = lgrid_sample(i.lgrid);
-    let shadow = light.a;
+    let shadow = shadow_sample(i.shadow_pos, light.a);
 
     let diffuse = (g.ambient_color.rgb + diffuse_intensity * shadow + light.rgb) * albedo.rgb;
     let half_vec = normalize(-g.lamp0_dir.xyz + normalize(i.view_depth.xyz));
@@ -194,4 +212,25 @@ fn fs_sky(i: SkyOut) -> @location(0) vec4<f32> {
     }
     let c = textureSampleLevel(sky_faces, linear_sampler, uv * 0.5 + 0.5, layer, 0.0);
     return vec4<f32>(c.rgb, 1.0);
+}
+
+struct ShadowOut {
+    @builtin(position) position: vec4<f32>,
+    @location(0) depth: f32,
+};
+
+@vertex
+fn vs_shadow(v: VertexIn) -> ShadowOut {
+    let p = vec4<f32>(v.position, 1.0);
+    let world = vec3<f32>(dot(v.row0, p), dot(v.row1, p), dot(v.row2, p));
+    let l = shadow_prepare(world);
+    var o: ShadowOut;
+    o.position = vec4<f32>(l.x * 2.0 - 1.0, 1.0 - l.y * 2.0, l.z, 1.0);
+    o.depth = l.z;
+    return o;
+}
+
+@fragment
+fn fs_shadow(i: ShadowOut) -> @location(0) vec4<f32> {
+    return vec4<f32>(i.depth, 1.0, 0.0, 0.0);
 }

@@ -147,23 +147,31 @@ impl CFrame {
 
     pub fn to_euler_xyz(&self) -> (f32, f32, f32) {
         let r = self.rows();
-        let (r00, r01, r02, r11, r12, r21, r22) = (r[0], r[1], r[2], r[4], r[5], r[7], r[8]);
-        let y = r02.clamp(-1.0, 1.0).asin();
-        if r02.abs() < 0.999_999 {
-            ((-r12).atan2(r22), y, (-r01).atan2(r00))
+        let (r00, r01, r02, r10, r11, r12, r22) = (r[0], r[1], r[2], r[3], r[4], r[5], r[8]);
+        if r02 < 1.0 {
+            if r02 > -1.0 {
+                ((-r12).atan2(r22), r02.asin(), (-r01).atan2(r00))
+            } else {
+                (-(r10.atan2(r11)), -std::f32::consts::FRAC_PI_2, 0.0)
+            }
         } else {
-            (r21.atan2(r11), y, 0.0)
+            (r10.atan2(r11), std::f32::consts::FRAC_PI_2, 0.0)
         }
     }
 
     pub fn look_at(eye: Vec3, target: Vec3, up: Vec3) -> CFrame {
-        let look = (target - eye).normalize_or(Vec3::NEG_Z);
-        let mut up_v = up;
-        if look.cross(up_v).length_squared() < 1e-8 {
-            up_v = if look.y.abs() < 0.9 { Vec3::Y } else { Vec3::X };
+        let mut up = g3d_direction(up);
+        let look = g3d_direction(target - eye);
+        if look.dot(up).abs() > 0.99 {
+            up = Vec3::X;
+            if look.dot(up).abs() > 0.99 {
+                up = Vec3::Y;
+            }
         }
+        up -= look * look.dot(up);
+        up = g3d_direction(up);
         let z = -look;
-        let x = up_v.cross(z).normalize();
+        let x = g3d_direction(-z.cross(up));
         let y = z.cross(x);
         CFrame {
             rotation: Mat3::from_cols(x, y, z),
@@ -265,6 +273,11 @@ impl Mul<Vec3> for CFrame {
     fn mul(self, rhs: Vec3) -> Vec3 {
         self.point_to_world_space(rhs)
     }
+}
+
+pub fn g3d_direction(v: Vec3) -> Vec3 {
+    let inv = 1.0 / v.length_squared().sqrt();
+    v * inv
 }
 
 pub fn is_axis_aligned(m: &Mat3) -> bool {

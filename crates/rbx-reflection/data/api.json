@@ -1621,7 +1621,7 @@
      "params": [
       {
        "name": "part",
-       "type": "Unknown:shared_ptr<Instance>),rbx::signal<void(shared_ptr<Instance>)>,rbx::signal<void(shared_ptr<Instance>)>* (PartInstance::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -1636,7 +1636,7 @@
      "params": [
       {
        "name": "systemAddress",
-       "type": "Unknown:RBX::SystemAddress),rbx::remote_signal<void(RBX::SystemAddress)>,rbx::remote_signal<void(RBX::SystemAddress)>* (PartInstance::*)(bool"
+       "type": "SystemAddress"
       }
      ],
      "remote_flags": [
@@ -1651,12 +1651,7 @@
      "ident": "event_OutfitChanged",
      "kind": "EventDesc",
      "name": "OutfitChanged",
-     "params": [
-      {
-       "name": "arg0",
-       "type": "Unknown:),rbx::signal<void()>,rbx::signal<void()>* (PartInstance::*)(bool"
-      }
-     ],
+     "params": [],
      "remote_flags": [],
      "security": "None"
     },
@@ -1688,7 +1683,7 @@
      "params": [
       {
        "name": "otherPart",
-       "type": "Unknown:shared_ptr<Instance>),rbx::signal<void(shared_ptr<Instance>)>,rbx::signal<void(shared_ptr<Instance>)>* (PartInstance::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -1703,7 +1698,7 @@
      "params": [
       {
        "name": "otherPart",
-       "type": "Unknown:shared_ptr<Instance>),PartInstance::TouchedSignal,PartInstance::TouchedSignal* (PartInstance::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -1718,7 +1713,7 @@
      "params": [
       {
        "name": "otherPart",
-       "type": "Unknown:shared_ptr<Instance>),PartInstance::TouchedSignal,PartInstance::TouchedSignal* (PartInstance::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -1733,7 +1728,7 @@
      "params": [
       {
        "name": "otherPart",
-       "type": "Unknown:shared_ptr<Instance>),PartInstance::TouchedSignal,PartInstance::TouchedSignal* (PartInstance::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -1858,7 +1853,7 @@
       {
        "default": null,
        "name": "normalId",
-       "type": "Unknown:NormalId"
+       "type": "Enum:NormalId"
       },
       {
        "default": null,
@@ -1925,7 +1920,7 @@
       {
        "default": null,
        "name": "normalId",
-       "type": "Unknown:NormalId"
+       "type": "Enum:NormalId"
       },
       {
        "default": null,
@@ -12041,7 +12036,7 @@
      "params": [
       {
        "name": "face",
-       "type": "Unknown:NormalId"
+       "type": "Enum:NormalId"
       }
      ],
      "remote_flags": [
@@ -12059,7 +12054,7 @@
      "params": [
       {
        "name": "face",
-       "type": "Unknown:NormalId"
+       "type": "Enum:NormalId"
       }
      ],
      "remote_flags": [
@@ -12077,7 +12072,7 @@
      "params": [
       {
        "name": "face",
-       "type": "Unknown:NormalId"
+       "type": "Enum:NormalId"
       },
       {
        "name": "distance",
@@ -12099,7 +12094,7 @@
      "params": [
       {
        "name": "face",
-       "type": "Unknown:NormalId"
+       "type": "Enum:NormalId"
       }
      ],
      "remote_flags": [
@@ -12117,7 +12112,7 @@
      "params": [
       {
        "name": "face",
-       "type": "Unknown:NormalId"
+       "type": "Enum:NormalId"
       }
      ],
      "remote_flags": [
@@ -12360,6 +12355,21 @@
       "REPLICATE_ONLY",
       "CLIENT_SERVER"
      ],
+     "security": "None"
+    },
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/Hopper.cpp",
+     "ident": "desc_Selected",
+     "kind": "EventDesc",
+     "name": "Selected",
+     "params": [
+      {
+       "name": "mouse",
+       "type": "Instance:Instance"
+      }
+     ],
+     "remote_flags": [],
      "security": "None"
     }
    ],
@@ -14768,7 +14778,7 @@
      "params": [
       {
        "name": "child",
-       "type": "Unknown:shared_ptr<Instance>),rbx::signal<void(shared_ptr<Instance>)>,rbx::signal<void(shared_ptr<Instance>)>* (Instance::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -14783,7 +14793,7 @@
      "params": [
       {
        "name": "child",
-       "type": "Unknown:shared_ptr<Instance>),rbx::signal<void(shared_ptr<Instance>)>,rbx::signal<void(shared_ptr<Instance>)>* (Instance::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -14798,7 +14808,7 @@
      "params": [
       {
        "name": "descendant",
-       "type": "Unknown:shared_ptr<Instance>),rbx::signal<void(shared_ptr<Instance>)>,rbx::signal<void(shared_ptr<Instance>)>* (Instance::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -14813,7 +14823,7 @@
      "params": [
       {
        "name": "descendant",
-       "type": "Unknown:shared_ptr<Instance>),rbx::signal<void(shared_ptr<Instance>)>,rbx::signal<void(shared_ptr<Instance>)>* (Instance::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -14828,7 +14838,7 @@
      "params": [
       {
        "name": "child",
-       "type": "Unknown:shared_ptr<Instance>),rbx::signal<void(shared_ptr<Instance>)>,rbx::signal<void(shared_ptr<Instance>)>* (Instance::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -19104,7 +19114,7 @@
        "type": "Function"
       }
      ],
-     "return": "Unknown:rbx::signals::connection",
+     "return": "Connection",
      "security": "None"
     }
    ],
@@ -19936,7 +19946,7 @@
      "name": "Status",
      "read_only": true,
      "security": "None",
-     "type": "Enum:Path::PathStatus"
+     "type": "Enum:PathStatus"
     }
    ],
    "security": null,
@@ -25052,15 +25062,7 @@
      "params": [
       {
        "name": "arguments",
-       "type": "Unknown:shared_ptr< Reflection::Tuple>),LatchedSignal<rbx::remote_signal"
-      },
-      {
-       "name": "arg1",
-       "type": "Unknown:void(shared_ptr< Reflection::Tuple>)>,LatchedSignal<rbx::remote_signal"
-      },
-      {
-       "name": "arg2",
-       "type": "Unknown:void(shared_ptr< Reflection::Tuple>)>* (RemoteEvent::*)(bool"
+       "type": "Tuple"
       }
      ],
      "remote_flags": [
@@ -25082,15 +25084,7 @@
       },
       {
        "name": "arguments",
-       "type": "Unknown:shared_ptr< Reflection::Tuple>),LatchedSignal<rbx::remote_signal"
-      },
-      {
-       "name": "arg2",
-       "type": "Unknown:void(shared_ptr<Instance>, shared_ptr< Reflection::Tuple>)>,LatchedSignal<rbx::remote_signal"
-      },
-      {
-       "name": "arg3",
-       "type": "Unknown:void(shared_ptr<Instance>, shared_ptr< Reflection::Tuple>)>* (RemoteEvent::*)(bool"
+       "type": "Tuple"
       }
      ],
      "remote_flags": [
@@ -25523,7 +25517,7 @@
      "name": "AASamples",
      "read_only": false,
      "security": "None",
-     "type": "Enum:CRenderSettingsItem::AASamples"
+     "type": "Enum:AASamples"
     },
     {
      "category": "Quality",
@@ -25536,7 +25530,7 @@
      "name": "Antialiasing",
      "read_only": false,
      "security": "None",
-     "type": "Enum:CRenderSettingsItem::AntialiasingMode"
+     "type": "Enum:Antialiasing"
     },
     {
      "category": "Debug",
@@ -25575,7 +25569,7 @@
      "name": "EditQualityLevel",
      "read_only": false,
      "security": "None",
-     "type": "Enum:CRenderSettingsItem::QualityLevel"
+     "type": "Enum:QualityLevel"
     },
     {
      "category": "Debug",
@@ -25614,7 +25608,7 @@
      "name": "FrameRateManager",
      "read_only": false,
      "security": "None",
-     "type": "Enum:CRenderSettingsItem::FrameRateManagerMode"
+     "type": "Enum:FramerateManagerMode"
     },
     {
      "category": "General",
@@ -25627,7 +25621,7 @@
      "name": "GraphicsMode",
      "read_only": false,
      "security": "None",
-     "type": "Enum:CRenderSettingsItem::GraphicsMode"
+     "type": "Enum:GraphicsMode"
     },
     {
      "category": "Debug",
@@ -25666,7 +25660,7 @@
      "name": "QualityLevel",
      "read_only": false,
      "security": "None",
-     "type": "Enum:CRenderSettingsItem::QualityLevel"
+     "type": "Enum:QualityLevel"
     },
     {
      "category": "Debug",
@@ -25692,7 +25686,7 @@
      "name": "Resolution",
      "read_only": false,
      "security": "None",
-     "type": "Enum:CRenderSettingsItem::ResolutionPreset"
+     "type": "Enum:Resolution"
     },
     {
      "category": "Debug",
@@ -26167,7 +26161,7 @@
      "params": [
       {
        "name": "step",
-       "type": "Unknown:double),rbx::signal<void(double)>,rbx::signal<void(double)>* (RunService::*)(bool"
+       "type": "double"
       }
      ],
      "remote_flags": [],
@@ -26590,7 +26584,7 @@
       {
        "default": null,
        "name": "name",
-       "type": "Unknown:std::string name"
+       "type": "string"
       }
      ],
      "return": "void",
@@ -26606,7 +26600,7 @@
       {
        "default": null,
        "name": "name",
-       "type": "Unknown:std::string name"
+       "type": "string"
       },
       {
        "default": null,
@@ -29103,7 +29097,7 @@
       {
        "default": null,
        "name": "sound",
-       "type": "Unknown:SoundType"
+       "type": "Enum:SoundType"
       }
      ],
      "return": "void",
@@ -30683,7 +30677,7 @@
      "name": "Concurrency",
      "read_only": false,
      "security": "None",
-     "type": "Enum:DataModelArbiter::ConcurrencyModel"
+     "type": "Enum:ConcurrencyModel"
     },
     {
      "category": "Diagnostics",
@@ -31555,17 +31549,17 @@
       {
        "default": null,
        "name": "material",
-       "type": "Unknown:CellMaterial"
+       "type": "Enum:CellMaterial"
       },
       {
        "default": null,
        "name": "block",
-       "type": "Unknown:CellBlock"
+       "type": "Enum:CellBlock"
       },
       {
        "default": null,
        "name": "orientation",
-       "type": "Unknown:CellOrientation"
+       "type": "Enum:CellOrientation"
       }
      ],
      "return": "void",
@@ -31586,17 +31580,17 @@
       {
        "default": null,
        "name": "material",
-       "type": "Unknown:CellMaterial"
+       "type": "Enum:CellMaterial"
       },
       {
        "default": null,
        "name": "block",
-       "type": "Unknown:CellBlock"
+       "type": "Enum:CellBlock"
       },
       {
        "default": null,
        "name": "orientation",
-       "type": "Unknown:CellOrientation"
+       "type": "Enum:CellOrientation"
       }
      ],
      "return": "void",
@@ -31627,12 +31621,12 @@
       {
        "default": null,
        "name": "force",
-       "type": "Unknown:WaterCellForce"
+       "type": "Enum:WaterForce"
       },
       {
        "default": null,
        "name": "direction",
-       "type": "Unknown:WaterCellDirection"
+       "type": "Enum:WaterDirection"
       }
      ],
      "return": "void",
@@ -33308,6 +33302,21 @@
     {
      "deprecated_by": null,
      "file": "App/v8datamodel/Tool.cpp",
+     "ident": "event_Equipped",
+     "kind": "EventDesc",
+     "name": "Equipped",
+     "params": [
+      {
+       "name": "mouse",
+       "type": "Instance:Instance"
+      }
+     ],
+     "remote_flags": [],
+     "security": "None"
+    },
+    {
+     "deprecated_by": null,
+     "file": "App/v8datamodel/Tool.cpp",
      "ident": "event_Unequipped",
      "kind": "EventDesc",
      "name": "Unequipped",
@@ -34051,7 +34060,7 @@
      "params": [
       {
        "name": "acceleration",
-       "type": "Unknown:shared_ptr<Instance>),rbx::signal<void(shared_ptr<Instance>)>,rbx::signal<void(shared_ptr<Instance>)>* (UserInputService::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -34066,7 +34075,7 @@
      "params": [
       {
        "name": "gravity",
-       "type": "Unknown:shared_ptr<Instance>),rbx::signal<void(shared_ptr<Instance>)>,rbx::signal<void(shared_ptr<Instance>)>* (UserInputService::*)(bool"
+       "type": "Instance:Instance"
       }
      ],
      "remote_flags": [],
@@ -34085,7 +34094,7 @@
       },
       {
        "name": "cframe",
-       "type": "Unknown:CoordinateFrame),rbx::signal<void(shared_ptr<Instance>, CoordinateFrame)>,rbx::signal<void(shared_ptr<Instance>, CoordinateFrame)>* (UserInputService::*)(bool"
+       "type": "CFrame"
       }
      ],
      "remote_flags": [],
@@ -34134,7 +34143,7 @@
       },
       {
        "name": "gameProcessedEvent",
-       "type": "Unknown:bool),rbx::signal<void(shared_ptr<Instance>, bool)>,rbx::signal<void(shared_ptr<Instance>, bool)>* (UserInputService::*)(bool"
+       "type": "bool"
       }
      ],
      "remote_flags": [],
@@ -34153,7 +34162,7 @@
       },
       {
        "name": "gameProcessedEvent",
-       "type": "Unknown:bool),rbx::signal<void(shared_ptr<Instance>, bool)>,rbx::signal<void(shared_ptr<Instance>, bool)>* (UserInputService::*)(bool"
+       "type": "bool"
       }
      ],
      "remote_flags": [],
@@ -34172,7 +34181,7 @@
       },
       {
        "name": "gameProcessedEvent",
-       "type": "Unknown:bool),rbx::signal<void(shared_ptr<Instance>, bool)>,rbx::signal<void(shared_ptr<Instance>, bool)>* (UserInputService::*)(bool"
+       "type": "bool"
       }
      ],
      "remote_flags": [],
@@ -34246,7 +34255,7 @@
       },
       {
        "name": "gameProcessedEvent",
-       "type": "Unknown:bool),rbx::signal<void(shared_ptr<Instance>, bool)>,rbx::signal<void(shared_ptr<Instance>, bool)>* (UserInputService::*)(bool"
+       "type": "bool"
       }
      ],
      "remote_flags": [],
@@ -34288,7 +34297,7 @@
       },
       {
        "name": "gameProcessedEvent",
-       "type": "Unknown:bool),rbx::signal<void(shared_ptr<Instance>, bool)>,rbx::signal<void(shared_ptr<Instance>, bool)>* (UserInputService::*)(bool"
+       "type": "bool"
       }
      ],
      "remote_flags": [],
@@ -34400,7 +34409,7 @@
       },
       {
        "name": "gameProcessedEvent",
-       "type": "Unknown:bool),rbx::signal<void(shared_ptr<Instance>, bool)>,rbx::signal<void(shared_ptr<Instance>, bool)>* (UserInputService::*)(bool"
+       "type": "bool"
       }
      ],
      "remote_flags": [],
@@ -34461,7 +34470,7 @@
       },
       {
        "name": "value",
-       "type": "Unknown:CoordinateFrame value"
+       "type": "CFrame"
       }
      ],
      "remote_flags": [],
@@ -36152,6 +36161,28 @@
  ],
  "enums": [
   {
+   "cpp": "CRenderSettings::AASamples",
+   "items": [
+    {
+     "cpp": "CRenderSettings::NONE",
+     "name": "None",
+     "value": 1
+    },
+    {
+     "cpp": "CRenderSettings::AA4",
+     "name": "4",
+     "value": 4
+    },
+    {
+     "cpp": "CRenderSettings::AA8",
+     "name": "8",
+     "value": 8
+    }
+   ],
+   "legacy": [],
+   "name": "AASamples"
+  },
+  {
    "cpp": "AssetService::AccessType",
    "items": [
     {
@@ -36236,6 +36267,28 @@
    ],
    "legacy": [],
    "name": "AnimationPriority"
+  },
+  {
+   "cpp": "CRenderSettings::AntialiasingMode",
+   "items": [
+    {
+     "cpp": "CRenderSettings::AntialiasingAuto",
+     "name": "Automatic",
+     "value": 0
+    },
+    {
+     "cpp": "CRenderSettings::AntialiasingOff",
+     "name": "Off",
+     "value": 2
+    },
+    {
+     "cpp": "CRenderSettings::AntialiasingOn",
+     "name": "On",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "Antialiasing"
   },
   {
    "cpp": "RBX::Vector3::Axis",
@@ -36459,6 +36512,162 @@
    "name": "CameraType"
   },
   {
+   "cpp": "CellBlock",
+   "items": [
+    {
+     "cpp": "CELL_BLOCK_Solid",
+     "name": "Solid",
+     "value": 0
+    },
+    {
+     "cpp": "CELL_BLOCK_VerticalWedge",
+     "name": "VerticalWedge",
+     "value": 1
+    },
+    {
+     "cpp": "CELL_BLOCK_CornerWedge",
+     "name": "CornerWedge",
+     "value": 2
+    },
+    {
+     "cpp": "CELL_BLOCK_InverseCornerWedge",
+     "name": "InverseCornerWedge",
+     "value": 3
+    },
+    {
+     "cpp": "CELL_BLOCK_HorizontalWedge",
+     "name": "HorizontalWedge",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "CellBlock"
+  },
+  {
+   "cpp": "CellMaterial",
+   "items": [
+    {
+     "cpp": "CELL_MATERIAL_Deprecated_Empty",
+     "name": "Empty",
+     "value": 0
+    },
+    {
+     "cpp": "CELL_MATERIAL_Grass",
+     "name": "Grass",
+     "value": 1
+    },
+    {
+     "cpp": "CELL_MATERIAL_Sand",
+     "name": "Sand",
+     "value": 2
+    },
+    {
+     "cpp": "CELL_MATERIAL_Brick",
+     "name": "Brick",
+     "value": 3
+    },
+    {
+     "cpp": "CELL_MATERIAL_Granite",
+     "name": "Granite",
+     "value": 4
+    },
+    {
+     "cpp": "CELL_MATERIAL_Asphalt",
+     "name": "Asphalt",
+     "value": 5
+    },
+    {
+     "cpp": "CELL_MATERIAL_Iron",
+     "name": "Iron",
+     "value": 6
+    },
+    {
+     "cpp": "CELL_MATERIAL_Aluminum",
+     "name": "Aluminum",
+     "value": 7
+    },
+    {
+     "cpp": "CELL_MATERIAL_Gold",
+     "name": "Gold",
+     "value": 8
+    },
+    {
+     "cpp": "CELL_MATERIAL_Wood_Plank",
+     "name": "WoodPlank",
+     "value": 9
+    },
+    {
+     "cpp": "CELL_MATERIAL_Wood_Log",
+     "name": "WoodLog",
+     "value": 10
+    },
+    {
+     "cpp": "CELL_MATERIAL_Gravel",
+     "name": "Gravel",
+     "value": 11
+    },
+    {
+     "cpp": "CELL_MATERIAL_Cinder_Block",
+     "name": "CinderBlock",
+     "value": 12
+    },
+    {
+     "cpp": "CELL_MATERIAL_Stone_Block",
+     "name": "MossyStone",
+     "value": 13
+    },
+    {
+     "cpp": "CELL_MATERIAL_Cement",
+     "name": "Cement",
+     "value": 14
+    },
+    {
+     "cpp": "CELL_MATERIAL_Red_Plastic",
+     "name": "RedPlastic",
+     "value": 15
+    },
+    {
+     "cpp": "CELL_MATERIAL_Blue_Plastic",
+     "name": "BluePlastic",
+     "value": 16
+    },
+    {
+     "cpp": "CELL_MATERIAL_Water",
+     "name": "Water",
+     "value": 17
+    }
+   ],
+   "legacy": [],
+   "name": "CellMaterial"
+  },
+  {
+   "cpp": "CellOrientation",
+   "items": [
+    {
+     "cpp": "CELL_ORIENTATION_NegZ",
+     "name": "NegZ",
+     "value": 0
+    },
+    {
+     "cpp": "CELL_ORIENTATION_X",
+     "name": "X",
+     "value": 1
+    },
+    {
+     "cpp": "CELL_ORIENTATION_Z",
+     "name": "Z",
+     "value": 2
+    },
+    {
+     "cpp": "CELL_ORIENTATION_NegX",
+     "name": "NegX",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "CellOrientation"
+  },
+  {
    "cpp": "GuiService::CenterDialogType",
    "items": [
     {
@@ -36611,6 +36820,33 @@
    ],
    "legacy": [],
    "name": "ComputerMovementMode"
+  },
+  {
+   "cpp": "DataModelArbiter::ConcurrencyModel",
+   "items": [
+    {
+     "cpp": "DataModelArbiter::Serial",
+     "name": "Serial",
+     "value": 0
+    },
+    {
+     "cpp": "DataModelArbiter::Safe",
+     "name": "Safe",
+     "value": 1
+    },
+    {
+     "cpp": "DataModelArbiter::Logical",
+     "name": "Logical",
+     "value": 2
+    },
+    {
+     "cpp": "DataModelArbiter::Empirical",
+     "name": "Empirical",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "ConcurrencyModel"
   },
   {
    "cpp": "GameBasicSettings::ControlMode",
@@ -37267,6 +37503,28 @@
    "name": "FrameStyle"
   },
   {
+   "cpp": "CRenderSettings::FrameRateManagerMode",
+   "items": [
+    {
+     "cpp": "CRenderSettings::FrameRateManagerAuto",
+     "name": "Automatic",
+     "value": 0
+    },
+    {
+     "cpp": "CRenderSettings::FrameRateManagerOn",
+     "name": "On",
+     "value": 1
+    },
+    {
+     "cpp": "CRenderSettings::FrameRateManagerOff",
+     "name": "Off",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "FramerateManagerMode"
+  },
+  {
    "cpp": "FriendService::FriendEventType",
    "items": [
     {
@@ -37492,6 +37750,38 @@
    ],
    "legacy": [],
    "name": "Genre"
+  },
+  {
+   "cpp": "CRenderSettings::GraphicsMode",
+   "items": [
+    {
+     "cpp": "CRenderSettings::AutoGraphicsMode",
+     "name": "Automatic",
+     "value": 1
+    },
+    {
+     "cpp": "CRenderSettings::Direct3D9",
+     "name": "Direct3D9",
+     "value": 3
+    },
+    {
+     "cpp": "CRenderSettings::Direct3D11",
+     "name": "Direct3D11",
+     "value": 2
+    },
+    {
+     "cpp": "CRenderSettings::OpenGL",
+     "name": "OpenGL",
+     "value": 4
+    },
+    {
+     "cpp": "CRenderSettings::NoGraphics",
+     "name": "NoGraphics",
+     "value": 5
+    }
+   ],
+   "legacy": [],
+   "name": "GraphicsMode"
   },
   {
    "cpp": "RBX::Handles::VisualStyle",
@@ -38598,6 +38888,23 @@
    "name": "KeyCode"
   },
   {
+   "cpp": "KeywordFilterType",
+   "items": [
+    {
+     "cpp": "INCLUDE_KEYWORDS",
+     "name": "Include",
+     "value": 0
+    },
+    {
+     "cpp": "EXCLUDE_KEYWORDS",
+     "name": "Exclude",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "KeywordFilterType"
+  },
+  {
    "cpp": "Feature::LeftRight",
    "items": [
     {
@@ -39041,6 +39348,43 @@
    "name": "NetworkOwnership"
   },
   {
+   "cpp": "NormalId",
+   "items": [
+    {
+     "cpp": "NORM_Y",
+     "name": "Top",
+     "value": 1
+    },
+    {
+     "cpp": "NORM_Y_NEG",
+     "name": "Bottom",
+     "value": 4
+    },
+    {
+     "cpp": "NORM_Z",
+     "name": "Back",
+     "value": 2
+    },
+    {
+     "cpp": "NORM_Z_NEG",
+     "name": "Front",
+     "value": 5
+    },
+    {
+     "cpp": "NORM_X",
+     "name": "Right",
+     "value": 0
+    },
+    {
+     "cpp": "NORM_X_NEG",
+     "name": "Left",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "NormalId"
+  },
+  {
    "cpp": "AuthoringSettings::OutputLayoutMode",
    "items": [
     {
@@ -39159,6 +39503,38 @@
    ],
    "legacy": [],
    "name": "PartType"
+  },
+  {
+   "cpp": "Path::PathStatus",
+   "items": [
+    {
+     "cpp": "Path::Success",
+     "name": "Success",
+     "value": 0
+    },
+    {
+     "cpp": "Path::ClosestNoPath",
+     "name": "ClosestNoPath",
+     "value": 1
+    },
+    {
+     "cpp": "Path::ClosestOutOfRange",
+     "name": "ClosestOutOfRange",
+     "value": 2
+    },
+    {
+     "cpp": "Path::FailStartNotEmpty",
+     "name": "FailStartNotEmpty",
+     "value": 3
+    },
+    {
+     "cpp": "Path::FailFinishNotEmpty",
+     "name": "FailFinishNotEmpty",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "PathStatus"
   },
   {
    "cpp": "AuthoringSettings::PermissionLevelShown",
@@ -39624,6 +40000,18 @@
    "name": "PyramidSides"
   },
   {
+   "cpp": "CRenderSettings::QualityLevel",
+   "items": [
+    {
+     "cpp": "CRenderSettings::QualityAuto",
+     "name": "Automatic",
+     "value": 0
+    }
+   ],
+   "legacy": [],
+   "name": "QualityLevel"
+  },
+  {
    "cpp": "RunService::RenderPriority",
    "items": [
     {
@@ -39654,6 +40042,153 @@
    ],
    "legacy": [],
    "name": "RenderPriority"
+  },
+  {
+   "cpp": "CRenderSettings::ResolutionPreset",
+   "items": [
+    {
+     "cpp": "CRenderSettings::ResolutionAuto",
+     "name": "Automatic",
+     "value": 0
+    },
+    {
+     "cpp": "CRenderSettings::Resolution720x526",
+     "name": "720x526",
+     "value": 1
+    },
+    {
+     "cpp": "CRenderSettings::Resolution800x600",
+     "name": "800x600",
+     "value": 2
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1024x600",
+     "name": "1024x600",
+     "value": 3
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1024x768",
+     "name": "1024x768",
+     "value": 4
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1280x720",
+     "name": "1280x720",
+     "value": 5
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1280x768",
+     "name": "1280x768",
+     "value": 6
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1152x864",
+     "name": "1152x864",
+     "value": 7
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1280x800",
+     "name": "1280x800",
+     "value": 8
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1360x768",
+     "name": "1360x768",
+     "value": 9
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1280x960",
+     "name": "1280x960",
+     "value": 10
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1280x1024",
+     "name": "1280x1024",
+     "value": 11
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1440x900",
+     "name": "1440x900",
+     "value": 12
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1600x900",
+     "name": "1600x900",
+     "value": 13
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1600x1024",
+     "name": "1600x1024",
+     "value": 14
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1600x1200",
+     "name": "1600x1200",
+     "value": 15
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1680x1050",
+     "name": "1680x1050",
+     "value": 16
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1920x1080",
+     "name": "1920x1080",
+     "value": 17
+    },
+    {
+     "cpp": "CRenderSettings::Resolution1920x1200",
+     "name": "1920x1200",
+     "value": 18
+    }
+   ],
+   "legacy": [
+    {
+     "name": "1024x600 (wide)",
+     "value": 3
+    },
+    {
+     "name": "1280x720 (wide)",
+     "value": 5
+    },
+    {
+     "name": "1280x768 (wide)",
+     "value": 6
+    },
+    {
+     "name": "1280x800 (wide)",
+     "value": 8
+    },
+    {
+     "name": "1360x768 (wide)",
+     "value": 9
+    },
+    {
+     "name": "1440x900 (wide)",
+     "value": 12
+    },
+    {
+     "name": "1600x900 (wide)",
+     "value": 13
+    },
+    {
+     "name": "1600x1024 (wide)",
+     "value": 14
+    },
+    {
+     "name": "1680x1050 (wide)",
+     "value": 16
+    },
+    {
+     "name": "1920x1080 (wide)",
+     "value": 17
+    },
+    {
+     "name": "1920x1200 (wide)",
+     "value": 18
+    }
+   ],
+   "name": "Resolution"
   },
   {
    "cpp": "ReverbType",
@@ -40004,6 +40539,88 @@
    ],
    "legacy": [],
    "name": "SleepAdjustMethod"
+  },
+  {
+   "cpp": "SoundType",
+   "items": [
+    {
+     "cpp": "NO_SOUND",
+     "name": "NoSound",
+     "value": 0
+    },
+    {
+     "cpp": "BOING_SOUND",
+     "name": "Boing",
+     "value": 1
+    },
+    {
+     "cpp": "BOMB_SOUND",
+     "name": "Bomb",
+     "value": 2
+    },
+    {
+     "cpp": "BREAK_SOUND",
+     "name": "Break",
+     "value": 3
+    },
+    {
+     "cpp": "CLICK_SOUND",
+     "name": "Click",
+     "value": 4
+    },
+    {
+     "cpp": "CLOCK_SOUND",
+     "name": "Clock",
+     "value": 5
+    },
+    {
+     "cpp": "RUBBERBAND_SOUND",
+     "name": "Slingshot",
+     "value": 6
+    },
+    {
+     "cpp": "PAGE_SOUND",
+     "name": "Page",
+     "value": 7
+    },
+    {
+     "cpp": "PING_SOUND",
+     "name": "Ping",
+     "value": 8
+    },
+    {
+     "cpp": "SNAP_SOUND",
+     "name": "Snap",
+     "value": 9
+    },
+    {
+     "cpp": "SPLAT_SOUND",
+     "name": "Splat",
+     "value": 10
+    },
+    {
+     "cpp": "STEP_SOUND",
+     "name": "Step",
+     "value": 11
+    },
+    {
+     "cpp": "STEP_ON_SOUND",
+     "name": "StepOn",
+     "value": 12
+    },
+    {
+     "cpp": "SWOOSH_SOUND",
+     "name": "Swoosh",
+     "value": 13
+    },
+    {
+     "cpp": "VICTORY_SOUND",
+     "name": "Victory",
+     "value": 14
+    }
+   ],
+   "legacy": [],
+   "name": "SoundType"
   },
   {
    "cpp": "GuiService::SpecialKey",
@@ -40908,6 +41525,75 @@
    ],
    "legacy": [],
    "name": "VoiceChatState"
+  },
+  {
+   "cpp": "WaterCellDirection",
+   "items": [
+    {
+     "cpp": "WATER_CELL_DIRECTION_NegX",
+     "name": "NegX",
+     "value": 0
+    },
+    {
+     "cpp": "WATER_CELL_DIRECTION_X",
+     "name": "X",
+     "value": 1
+    },
+    {
+     "cpp": "WATER_CELL_DIRECTION_NegY",
+     "name": "NegY",
+     "value": 2
+    },
+    {
+     "cpp": "WATER_CELL_DIRECTION_Y",
+     "name": "Y",
+     "value": 3
+    },
+    {
+     "cpp": "WATER_CELL_DIRECTION_NegZ",
+     "name": "NegZ",
+     "value": 4
+    },
+    {
+     "cpp": "WATER_CELL_DIRECTION_Z",
+     "name": "Z",
+     "value": 5
+    }
+   ],
+   "legacy": [],
+   "name": "WaterDirection"
+  },
+  {
+   "cpp": "WaterCellForce",
+   "items": [
+    {
+     "cpp": "WATER_CELL_FORCE_None",
+     "name": "None",
+     "value": 0
+    },
+    {
+     "cpp": "WATER_CELL_FORCE_Small",
+     "name": "Small",
+     "value": 1
+    },
+    {
+     "cpp": "WATER_CELL_FORCE_Medium",
+     "name": "Medium",
+     "value": 2
+    },
+    {
+     "cpp": "WATER_CELL_FORCE_Strong",
+     "name": "Strong",
+     "value": 3
+    },
+    {
+     "cpp": "WATER_CELL_FORCE_MaxForce",
+     "name": "Max",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "WaterForce"
   },
   {
    "cpp": "XboxKeyBoardType",

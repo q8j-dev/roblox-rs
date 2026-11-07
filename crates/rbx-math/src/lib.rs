@@ -2,12 +2,16 @@ mod brick_color;
 mod brick_color_table;
 mod cframe;
 mod color;
+pub mod materials;
 mod sequence;
 mod types;
 
 pub use brick_color::BrickColor;
 pub use brick_color_table::BrickColorInfo;
-pub use cframe::{CFrame, NormalId, normal_id_to_vector, vector_to_normal_id};
+pub use cframe::{
+    CFrame, NormalId, g3d_direction, is_axis_aligned, matrix_from_orient_id, normal_id_to_vector,
+    orient_id, orthonormalize, quat_from_matrix, vector_to_normal_id,
+};
 pub use color::{Color3, Color3uint8};
 pub use glam::{IVec3, Mat3, Quat, Vec2, Vec3, Vec4};
 pub use sequence::{

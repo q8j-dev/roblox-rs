@@ -9,3 +9,14 @@ publish.workspace = true
 all = { level = "warn", priority = -1 }
 
 [dependencies]
+mlua = { version = "0.12.2", features = ["luau", "send", "vendored"] }
+parking_lot = "0.13.0"
+rbx-base = { version = "0.1.0", path = "../rbx-base" }
+rbx-dom = { version = "0.1.0", path = "../rbx-dom" }
+rbx-format = { version = "0.1.0", path = "../rbx-format" }
+rbx-math = { version = "0.1.0", path = "../rbx-math" }
+rbx-reflection = { version = "0.1.0", path = "../rbx-reflection" }
+tracing = "0.1.44"
+
+[dev-dependencies]
+parking_lot = "0.13.0"

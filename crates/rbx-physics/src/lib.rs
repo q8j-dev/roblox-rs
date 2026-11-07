@@ -1,14 +1,14 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+#![forbid(unsafe_code)]
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+pub mod broadphase;
+pub mod hooks;
+pub mod joins;
+pub mod math;
+pub mod queries;
+pub mod shape;
+pub mod solver;
+pub mod step;
+pub mod world;
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use hooks::{SharedWorld, WorldHooksImpl, shared_world};
+pub use world::{JointKind, PhysicsWorld, StepEvents};

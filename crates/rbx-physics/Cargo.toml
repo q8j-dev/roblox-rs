@@ -9,3 +9,10 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+parking_lot = "0.13.0"
+parry3d = "0.31.1"
+rbx-base = { version = "0.1.0", path = "../rbx-base" }
+rbx-dom = { version = "0.1.0", path = "../rbx-dom" }
+rbx-math = { version = "0.1.0", path = "../rbx-math" }
+rbx-reflection = { version = "0.1.0", path = "../rbx-reflection" }
+tracing = "0.1.44"

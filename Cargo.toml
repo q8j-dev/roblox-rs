@@ -15,21 +15,6 @@ unsafe_code = "forbid"
 [workspace.lints.clippy]
 all = { level = "warn", priority = -1 }
 
-[workspace.dependencies]
-rbx-base = { path = "crates/rbx-base" }
-rbx-math = { path = "crates/rbx-math" }
-rbx-reflection = { path = "crates/rbx-reflection" }
-rbx-dom = { path = "crates/rbx-dom" }
-rbx-format = { path = "crates/rbx-format" }
-rbx-physics = { path = "crates/rbx-physics" }
-rbx-script = { path = "crates/rbx-script" }
-rbx-net = { path = "crates/rbx-net" }
-rbx-render = { path = "crates/rbx-render" }
-rbx-audio = { path = "crates/rbx-audio" }
-rbx-csg = { path = "crates/rbx-csg" }
-rbx-platform = { path = "crates/rbx-platform" }
-rbx-studio-ui = { path = "crates/rbx-studio-ui" }
-
 [profile.dev]
 opt-level = 1
 

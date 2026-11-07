@@ -275,13 +275,11 @@ fn run_multiplayer(
         }
         let e = c.runtime.engine.lock();
         if c.tested {
-            run.tests += e.test.tests;
-            run.errors += e.test.errors;
-            run.failures.extend(
+            run.output.extend(
                 e.test
                     .failures
                     .iter()
-                    .map(|f| format!("client {}: {f}", i + 1)),
+                    .map(|f| format!("client {} check failed: {f}", i + 1)),
             );
         }
         run.output.extend(

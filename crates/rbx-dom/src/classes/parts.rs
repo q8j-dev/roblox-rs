@@ -372,6 +372,48 @@ pub fn clamp_size(dm: &DataModel, id: InstanceId, ui: Vec3) -> Vec3 {
     s
 }
 
+impl DataModel {
+    pub fn convert_to_new_physical_properties(&mut self) {
+        let root = self.root();
+        let parts: Vec<InstanceId> = self
+            .descendants(root)
+            .into_iter()
+            .filter(|&d| self.is_a(d, "BasePart") && !self.is_a(d, "Terrain"))
+            .collect();
+        for id in parts {
+            let custom = matches!(
+                self.get(id, "CustomPhysicalProperties"),
+                Ok(Variant::PhysicalProperties(p)) if p.custom.is_some()
+            );
+            if custom {
+                continue;
+            }
+            let f = |dm: &DataModel, n: &str, d: f32| {
+                dm.get(id, n).ok().and_then(|v| v.as_f32()).unwrap_or(d)
+            };
+            let friction = f(self, "Friction", 0.3);
+            let elasticity = f(self, "Elasticity", 0.5);
+            if (friction - 0.3).abs() <= f32::EPSILON && (elasticity - 0.5).abs() <= f32::EPSILON {
+                continue;
+            }
+            let material = self
+                .get(id, "Material")
+                .ok()
+                .and_then(|v| v.as_enum())
+                .unwrap_or(256);
+            let density = rbx_math::materials::material_physics(material).density;
+            let props =
+                rbx_math::PhysicalProperties::custom(density, friction, elasticity, 1.0, 1.0);
+            self.set_unchecked(
+                id,
+                "CustomPhysicalProperties",
+                Variant::PhysicalProperties(props),
+            );
+            self.notify_changed(id, "CustomPhysicalProperties");
+        }
+    }
+}
+
 pub struct PartBehavior;
 
 impl Behavior for PartBehavior {

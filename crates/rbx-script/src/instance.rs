@@ -255,6 +255,29 @@ pub fn newindex(lua: &Lua, id: InstanceId, key: Value, value: Value) -> Result<(
     if desc.read_only || matches!(name.as_str(), "ClassName" | "className" | "DataCost") {
         return Err(rt("can't set value"));
     }
+    if name == "Parent" && with_state(lua, |s| s.reparent_guard.contains(&id)) {
+        let new_parent = instance_from_value(lua, &value);
+        let message = {
+            let e = eng.lock();
+            let current = e.dm.parent_of(id);
+            if current == new_parent {
+                return Ok(());
+            }
+            let label = |p: Option<InstanceId>| {
+                p.map(|p| e.dm.name_of(p).to_string())
+                    .unwrap_or_else(|| "NULL".into())
+            };
+            let own = e.dm.name_of(id).to_string();
+            format!(
+                "Something unexpectedly tried to set the parent of {own} to {} while trying to set the parent of {own}. Current parent is {}.",
+                label(new_parent),
+                label(current)
+            )
+        };
+        eng.lock()
+            .print(crate::runtime::MessageType::Warning, message);
+        return Ok(());
+    }
     if !current_identity(lua).allows(desc.security) {
         return Err(security_error(
             lua,

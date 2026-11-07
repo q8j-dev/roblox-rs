@@ -110,7 +110,14 @@ impl Engine {
 
     pub fn process_after_load(&mut self) {
         let world = self.world.clone();
-        world.lock().join_all(&mut self.dm);
+        let new_properties = {
+            let mut w = world.lock();
+            w.join_all(&mut self.dm);
+            w.mode == rbx_physics::world::PhysicalMode::New
+        };
+        if new_properties {
+            self.dm.convert_to_new_physical_properties();
+        }
     }
 
     pub fn new(mut dm: DataModel) -> Engine {
@@ -297,6 +304,7 @@ pub struct State {
     pub next_conn: u64,
     pub touch_slots: HashMap<InstanceId, (usize, Option<InstanceId>)>,
     pub test_scripts: std::collections::HashSet<InstanceId>,
+    pub reparent_guard: Vec<InstanceId>,
     pub waiters: HashMap<(InstanceId, &'static str), Vec<(Thread, u64)>>,
     pub dispatch_seq: Option<u64>,
     pub sleepers: Vec<Sleeper>,
@@ -468,6 +476,7 @@ impl ScriptRuntime {
             next_conn: 1,
             touch_slots: HashMap::new(),
             test_scripts: std::collections::HashSet::new(),
+            reparent_guard: Vec::new(),
             waiters: HashMap::new(),
             dispatch_seq: None,
             sleepers: Vec::new(),
@@ -1425,6 +1434,25 @@ fn has_listeners(lua: &Lua, target: InstanceId, event: &'static str) -> bool {
 }
 
 fn dispatch_dom_event(lua: &Lua, ev: &DomEvent) {
+    let guarded = match ev {
+        DomEvent::ChildAdded { child, .. } | DomEvent::ChildRemoved { child, .. } => Some(*child),
+        DomEvent::DescendantAdded { descendant, .. }
+        | DomEvent::DescendantRemoving { descendant, .. } => Some(*descendant),
+        DomEvent::AncestryChanged { child, .. } => Some(*child),
+        _ => None,
+    };
+    if let Some(g) = guarded {
+        with_state(lua, |s| s.reparent_guard.push(g));
+    }
+    dispatch_dom_event_inner(lua, ev);
+    if guarded.is_some() {
+        with_state(lua, |s| {
+            s.reparent_guard.pop();
+        });
+    }
+}
+
+fn dispatch_dom_event_inner(lua: &Lua, ev: &DomEvent) {
     match ev {
         DomEvent::PropertyChanged { id, property } => {
             crate::scripts::on_property_changed(lua, *id, property);

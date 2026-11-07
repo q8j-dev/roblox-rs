@@ -857,7 +857,89 @@ fn zoom_to_extents(_lua: &Lua, _id: InstanceId, _: &[Value]) -> Result<Ret> {
     none()
 }
 
+fn set_join_instance(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let target = args
+        .first()
+        .and_then(|v| crate::runtime::instance_from_value(lua, v));
+    engine(lua).lock().join_after_move.0 = target;
+    none()
+}
+
+fn set_join_target(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let target = args
+        .first()
+        .and_then(|v| crate::runtime::instance_from_value(lua, v));
+    engine(lua).lock().join_after_move.1 = target;
+    none()
+}
+
+fn join_noop(_lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    none()
+}
+
+fn create_join_after_move_joints(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let Some(target) = engine(lua).lock().join_after_move.0.take() else {
+        return none();
+    };
+    with_world(lua, |w, dm| {
+        if !dm.contains(target) {
+            return;
+        }
+        let parts = if dm.is_a(target, "BasePart") {
+            vec![target]
+        } else if dm.is_a(target, "Model") {
+            model_parts(dm, target)
+        } else {
+            return;
+        };
+        let terrain = dm.workspace_terrain();
+        for j in w.manual_joints(dm, &parts, terrain) {
+            let Ok(inst) = dm.create("ManualWeld") else {
+                continue;
+            };
+            let name = if j.terrain {
+                format!("{} Terrain Joint", dm.name_of(j.part1))
+            } else {
+                format!(
+                    "{}-to-{} Strong Joint",
+                    dm.name_of(j.part0),
+                    dm.name_of(j.part1)
+                )
+            };
+            dm.set_name(inst, &name);
+            dm.set_unchecked(inst, "Part0", Variant::Ref(Some(j.part0)));
+            dm.set_unchecked(inst, "Part1", Variant::Ref(Some(j.part1)));
+            dm.set_unchecked(inst, "C0", Variant::CFrame(j.c0));
+            dm.set_unchecked(inst, "C1", Variant::CFrame(j.c1));
+            dm.set_unchecked(inst, "Surface0", Variant::Int(j.surface0 as i32));
+            dm.set_unchecked(inst, "Surface1", Variant::Int(j.surface1 as i32));
+            let _ = dm.set_parent(inst, Some(j.parent));
+        }
+    });
+    none()
+}
+
 pub fn register(r: &mut Registry) {
+    r.add(
+        "JointsService",
+        &["SetJoinAfterMoveInstance"],
+        set_join_instance,
+    );
+    r.add(
+        "JointsService",
+        &["SetJoinAfterMoveTarget"],
+        set_join_target,
+    );
+    r.add(
+        "JointsService",
+        &["ShowPermissibleJoints", "ClearJoinAfterMoveJoints"],
+        join_noop,
+    );
+    r.add(
+        "JointsService",
+        &["CreateJoinAfterMoveJoints"],
+        create_join_after_move_joints,
+    );
     r.add(
         "Workspace",
         &["FindPartOnRay", "findPartOnRay"],

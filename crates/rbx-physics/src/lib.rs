@@ -6,6 +6,7 @@ pub mod csg;
 pub mod hooks;
 pub mod humanoid;
 pub mod joins;
+pub mod manual_joints;
 pub mod math;
 pub mod queries;
 pub mod shape;

@@ -394,11 +394,7 @@ pub fn set_time_position(lua: &Lua, id: InstanceId, value: f64) {
     } else {
         value.max(0.0)
     };
-    let state = e
-        .audio_state
-        .sounds
-        .entry(id)
-        .or_default();
+    let state = e.audio_state.sounds.entry(id).or_default();
     state.position = value;
     state.last_position = value;
     if let Some(v) = state.voice {

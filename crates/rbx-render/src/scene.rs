@@ -415,7 +415,15 @@ fn collect_parts(
         }
         let mut decals = Vec::new();
         collect_decals(dm, id, &mut decals);
-        let (voxel, voxel_transparency) = voxel_shape(dm, id, class, transparency);
+        let humanoid_part = dm.parent_of(id).is_some_and(|p| {
+            dm.class_of(p) != Some("Workspace")
+                && dm.find_first_child_of_class(p, "Humanoid").is_some()
+        });
+        let (voxel, voxel_transparency) = if humanoid_part {
+            (None, transparency)
+        } else {
+            voxel_shape(dm, id, class, transparency)
+        };
         let base_block = class == "Part"
             && !matches!(
                 dm.get(id, "Shape").ok().and_then(|v| v.as_enum()),

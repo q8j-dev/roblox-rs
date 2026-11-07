@@ -580,7 +580,7 @@ impl Mesh {
     pub fn from_file(file: &crate::filemesh::FileMesh, scale: Vec3) -> Mesh {
         let mut mesh = Mesh::default();
         for i in 0..file.positions.len() {
-            let n = (file.normals[i] / scale).normalize_or_zero();
+            let n = file.normals[i].normalize_or_zero();
             let t = if n.y.abs() < 0.99 {
                 Vec3::Y.cross(n).normalize_or(Vec3::X)
             } else {

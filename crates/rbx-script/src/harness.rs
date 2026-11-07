@@ -53,6 +53,13 @@ pub fn run_datamodel(
 ) -> Result<PlaceRun, String> {
     let mut engine = Engine::new(dm);
     engine.content_root = content_root.map(Path::to_path_buf);
+    if let Some(tests) = path
+        .ancestors()
+        .find(|a| a.file_name().is_some_and(|n| n == "places"))
+        .and_then(Path::parent)
+    {
+        engine.asset_dirs.push(tests.join("assets"));
+    }
     engine.process_after_load();
     engine.virtual_clock = Some(
         std::time::SystemTime::now()
@@ -76,7 +83,22 @@ pub fn run_datamodel(
             .and_then(|v| v.as_i32())
             .unwrap_or(0)
     };
-    engine.lock().running = true;
+    let auto_runs = {
+        let e = engine.lock();
+        e.dm.find_service("TestService")
+            .and_then(|ts| e.dm.get(ts, "AutoRuns").ok())
+            .and_then(|v| v.as_bool())
+            .unwrap_or(true)
+    };
+    {
+        let mut e = engine.lock();
+        if test_scripts && !auto_runs {
+            e.running = false;
+            e.stopped = true;
+        } else {
+            e.running = true;
+        }
+    }
     runtime.scan_scripts();
     let mut run = PlaceRun {
         path: path.to_path_buf(),

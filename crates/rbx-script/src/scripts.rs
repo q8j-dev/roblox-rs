@@ -84,11 +84,21 @@ pub fn start_script(lua: &Lua, id: InstanceId, identity: Identity) {
     let (source, name) = {
         let eng = engine(lua);
         let e = eng.lock();
-        let src =
-            e.dm.get(id, "Source")
+        let linked =
+            e.dm.get(id, "LinkedSource")
                 .ok()
                 .and_then(|v| v.as_str().map(str::to_string))
                 .unwrap_or_default();
+        let src = if linked.trim().is_empty() || e.dm.class_of(id) == Some("ModuleScript") {
+            e.dm.get(id, "Source")
+                .ok()
+                .and_then(|v| v.as_str().map(str::to_string))
+                .unwrap_or_default()
+        } else {
+            crate::content::fetch(&e, &linked)
+                .map(|b| String::from_utf8_lossy(&b).into_owned())
+                .unwrap_or_default()
+        };
         (src, e.dm.full_name(id))
     };
     with_state(lua, |s| {
@@ -189,7 +199,11 @@ pub fn reevaluate(lua: &Lua, id: InstanceId) {
         if !e.dm.contains(id) || !e.dm.is_a(id, "BaseScript") {
             return;
         }
-        should_run(&e.dm, e.local_player, id)
+        let verdict = should_run(&e.dm, e.local_player, id);
+        let held = e.stopped
+            && e.dm.class_of(id) != Some("CoreScript")
+            && e.dm.find_service("NetworkClient").is_none();
+        if held { None } else { verdict }
     };
     let running = with_state(lua, |s| {
         s.running_scripts.get(&id).copied().unwrap_or(false)

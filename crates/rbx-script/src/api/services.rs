@@ -1,7 +1,7 @@
 use super::{Registry, Ret, ret};
 use crate::convert::arg_string;
 use crate::instance::push_instance;
-use crate::runtime::engine;
+use crate::runtime::{engine, with_state};
 use crate::types::rt;
 use mlua::{Lua, Result, Value};
 use rbx_dom::{InstanceId, database, is_service_class};
@@ -100,7 +100,42 @@ fn set_timeout(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
 }
 
 fn run_state(lua: &Lua, running: bool) -> Result<Ret> {
-    engine(lua).lock().running = running;
+    let was_stopped = {
+        let eng = engine(lua);
+        let mut e = eng.lock();
+        let was = e.stopped;
+        e.running = running;
+        if running {
+            e.stopped = false;
+        }
+        was
+    };
+    if running && was_stopped {
+        crate::scripts::scan_all(lua);
+    }
+    Ok(Ret::Values(mlua::MultiValue::new()))
+}
+
+fn stop_runtime(lua: &Lua) -> Result<Ret> {
+    {
+        let eng = engine(lua);
+        let mut e = eng.lock();
+        e.running = false;
+        e.stopped = true;
+    }
+    let running: Vec<InstanceId> = with_state(lua, |s| {
+        s.running_scripts
+            .iter()
+            .filter(|(id, on)| **on && !s.test_scripts.contains(id))
+            .map(|(id, _)| *id)
+            .collect()
+    });
+    for id in running {
+        let core = engine(lua).lock().dm.class_of(id) == Some("CoreScript");
+        if !core {
+            crate::scripts::stop_script(lua, id);
+        }
+    }
     Ok(Ret::Values(mlua::MultiValue::new()))
 }
 
@@ -207,8 +242,9 @@ pub fn register(r: &mut Registry) {
         history_can(lua, false)
     });
     r.add("RunService", &["Run"], |lua, _, _| run_state(lua, true));
-    r.add("RunService", &["Pause", "Stop", "Reset"], |lua, _, _| {
-        run_state(lua, false)
+    r.add("RunService", &["Pause"], |lua, _, _| run_state(lua, false));
+    r.add("RunService", &["Stop", "Reset"], |lua, _, _| {
+        stop_runtime(lua)
     });
     r.add("RunService", &["IsRunning"], |lua, _, _| {
         let running = engine(lua).lock().running;

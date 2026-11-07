@@ -268,7 +268,7 @@ pub fn start(lua: &Lua, identity: Identity) -> Result<()> {
     let Some(ts) = test_service(lua) else {
         return Err(rt("TestService not found"));
     };
-    let (scripts, run_count) = {
+    let (scripts, run_count, start_runtime) = {
         let eng = engine(lua);
         let mut e = eng.lock();
         if e.test.running {
@@ -294,9 +294,21 @@ pub fn start(lua: &Lua, identity: Identity) -> Result<()> {
                 .filter(|&c| e.dm.is_a(c, "Script"))
                 .collect();
         e.test.scripts = scripts.len() as u32;
-        e.running = true;
-        (scripts, run_count)
+        let auto_runs =
+            e.dm.get(ts, "AutoRuns")
+                .ok()
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true);
+        let start_runtime = auto_runs && e.stopped;
+        if auto_runs {
+            e.running = true;
+            e.stopped = false;
+        }
+        (scripts, run_count, start_runtime)
     };
+    if start_runtime {
+        crate::scripts::scan_all(lua);
+    }
     for s in scripts {
         let (source, name) = {
             let eng = engine(lua);

@@ -277,7 +277,7 @@ pub fn fire_events(lua: &Lua, events: Vec<(InstanceId, HumanoidEvent)>) {
             HumanoidEvent::FreeFalling(b) => ("FreeFalling", vec![Value::Boolean(b)]),
             HumanoidEvent::PlatformStanding(b) => ("PlatformStanding", vec![Value::Boolean(b)]),
             HumanoidEvent::Seated(b, seat) => {
-                let s = match seat {
+                let s = match seat.filter(|_| b) {
                     Some(p) => push_instance(lua, p).unwrap_or(Value::Nil),
                     None => Value::Nil,
                 };

@@ -1,0 +1,4 @@
+local created = Instance.new("Part")
+created.Name = "CreatedByScript"
+created.Anchored = true
+created.Parent = workspace

@@ -54,10 +54,14 @@ pub struct Engine {
     pub virtual_clock: Option<f64>,
     pub frame_started: std::time::Instant,
     pub last_tick: f64,
+    pub clock_carry: f64,
+    pub frame_clock_peak: f64,
     pub running: bool,
+    pub stopped: bool,
     pub load_string_enabled: bool,
     pub hooks: Vec<Box<dyn EngineHook>>,
     pub content_root: Option<std::path::PathBuf>,
+    pub asset_dirs: Vec<std::path::PathBuf>,
     pub test: crate::api::test::TestState,
     pub world: rbx_physics::SharedWorld,
     pub physics_analyzer_break: bool,
@@ -89,7 +93,11 @@ pub trait EngineHook: Send {
 impl Engine {
     pub fn tick(&mut self) -> f64 {
         let value = match self.virtual_clock {
-            Some(base) => base + self.game_time + self.frame_started.elapsed().as_secs_f64(),
+            Some(base) => {
+                let in_frame = self.frame_started.elapsed().as_secs_f64();
+                self.frame_clock_peak = self.frame_clock_peak.max(in_frame);
+                base + self.game_time + self.clock_carry + in_frame
+            }
             None => std::time::SystemTime::now()
                 .duration_since(std::time::UNIX_EPOCH)
                 .map(|d| d.as_secs_f64())
@@ -121,10 +129,14 @@ impl Engine {
             virtual_clock: None,
             frame_started: std::time::Instant::now(),
             last_tick: 0.0,
+            clock_carry: 0.0,
+            frame_clock_peak: 0.0,
             running: false,
+            stopped: false,
             load_string_enabled: false,
             hooks: Vec::new(),
             content_root: None,
+            asset_dirs: Vec::new(),
             test: Default::default(),
             world,
             physics_analyzer_break: true,
@@ -591,6 +603,8 @@ impl ScriptRuntime {
             let eng = self.engine.clone();
             let mut e = eng.lock();
             e.game_time += dt;
+            e.clock_carry += e.frame_clock_peak;
+            e.frame_clock_peak = 0.0;
             e.frame_started = std::time::Instant::now();
             let t = e.game_time;
             if let Some(ws) = e.dm.find_service("Workspace") {

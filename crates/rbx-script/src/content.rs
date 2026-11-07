@@ -51,6 +51,11 @@ pub fn fetch(e: &Engine, url: &str) -> Option<Vec<u8>> {
         return std::fs::read(path).ok();
     }
     if let Some(id) = asset_number(url) {
+        for dir in &e.asset_dirs {
+            if let Ok(data) = std::fs::read(dir.join(id.to_string())) {
+                return Some(data);
+            }
+        }
         let path = cache_path(e, id)?;
         return std::fs::read(path).ok();
     }

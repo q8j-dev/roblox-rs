@@ -485,3 +485,10 @@ XboxClient/libraries/*
 
 !Library/xulrunner/*
 
+
+/target
+/dist
+*.wasm
+!assets/**/*.wasm
+.DS_Store
+._*

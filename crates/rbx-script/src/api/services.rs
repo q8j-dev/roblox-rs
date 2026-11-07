@@ -35,6 +35,12 @@ pub fn settings_root(lua: &Lua, class: &str) -> Result<InstanceId> {
                 }
             }
         }
+        if class == "UserSettings"
+            && let Ok(child) = e.dm.create_internal("UserGameSettings")
+        {
+            e.dm.set_name(child, "GameSettings");
+            let _ = e.dm.set_parent(child, Some(id));
+        }
         id
     };
     lua.set_named_registry_value(&key, id.raw() as f64)?;

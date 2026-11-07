@@ -41947,6 +41947,111 @@
      "cpp": "CRenderSettings::QualityAuto",
      "name": "Automatic",
      "value": 0
+    },
+    {
+     "cpp": "QualityLevel1",
+     "name": "Level01",
+     "value": 1
+    },
+    {
+     "cpp": "QualityLevel2",
+     "name": "Level02",
+     "value": 2
+    },
+    {
+     "cpp": "QualityLevel3",
+     "name": "Level03",
+     "value": 3
+    },
+    {
+     "cpp": "QualityLevel4",
+     "name": "Level04",
+     "value": 4
+    },
+    {
+     "cpp": "QualityLevel5",
+     "name": "Level05",
+     "value": 5
+    },
+    {
+     "cpp": "QualityLevel6",
+     "name": "Level06",
+     "value": 6
+    },
+    {
+     "cpp": "QualityLevel7",
+     "name": "Level07",
+     "value": 7
+    },
+    {
+     "cpp": "QualityLevel8",
+     "name": "Level08",
+     "value": 8
+    },
+    {
+     "cpp": "QualityLevel9",
+     "name": "Level09",
+     "value": 9
+    },
+    {
+     "cpp": "QualityLevel10",
+     "name": "Level10",
+     "value": 10
+    },
+    {
+     "cpp": "QualityLevel11",
+     "name": "Level11",
+     "value": 11
+    },
+    {
+     "cpp": "QualityLevel12",
+     "name": "Level12",
+     "value": 12
+    },
+    {
+     "cpp": "QualityLevel13",
+     "name": "Level13",
+     "value": 13
+    },
+    {
+     "cpp": "QualityLevel14",
+     "name": "Level14",
+     "value": 14
+    },
+    {
+     "cpp": "QualityLevel15",
+     "name": "Level15",
+     "value": 15
+    },
+    {
+     "cpp": "QualityLevel16",
+     "name": "Level16",
+     "value": 16
+    },
+    {
+     "cpp": "QualityLevel17",
+     "name": "Level17",
+     "value": 17
+    },
+    {
+     "cpp": "QualityLevel18",
+     "name": "Level18",
+     "value": 18
+    },
+    {
+     "cpp": "QualityLevel19",
+     "name": "Level19",
+     "value": 19
+    },
+    {
+     "cpp": "QualityLevel20",
+     "name": "Level20",
+     "value": 20
+    },
+    {
+     "cpp": "QualityLevel21",
+     "name": "Level21",
+     "value": 21
     }
    ],
    "legacy": [],

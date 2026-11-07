@@ -28,6 +28,20 @@ const ENGINE_VALUES: &[(&str, &str)] = &[
     ("UsePGSSolver", "true"),
     ("MaterialPropertiesEnabled", "true"),
     ("FixTouchEndedReporting", "true"),
+    ("UseInGameTopBar", "true"),
+    ("LuaBasedBubbleChat", "true"),
+    ("NewInGameDevConsole", "true"),
+    ("EnableSetCoreTopbarEnabled", "true"),
+    ("SetCoreMoveChat", "true"),
+    ("SetCoreDisableChatBar", "true"),
+    ("SetCoreSendNotifications", "true"),
+    ("SetCoreDisableNotifications", "true"),
+    ("PlayerDropDownEnabled", "true"),
+    ("UseUserListMenu", "true"),
+    ("AllowHideHudShortcut", "true"),
+    ("MobileToggleChatVisibleIcon", "true"),
+    ("UserServerFollowers", "true"),
+    ("FilteringEnabledDialogFix", "true"),
 ];
 
 pub fn flag_value(name: &str) -> Option<String> {

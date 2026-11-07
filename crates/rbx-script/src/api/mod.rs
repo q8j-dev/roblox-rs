@@ -1,8 +1,11 @@
+pub mod actions;
 pub mod animation;
 pub mod bindables;
+pub mod core;
 pub mod gui;
 pub mod http;
 pub mod humanoid;
+pub mod input;
 pub mod instance;
 pub mod misc;
 pub mod network;
@@ -66,6 +69,9 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     stats::register(&mut r);
     http::register(&mut r);
     gui::register(&mut r);
+    core::register(&mut r);
+    input::register(&mut r);
+    actions::register(&mut r);
     r
 });
 
@@ -101,6 +107,20 @@ pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Resul
     }
     if class == "VehicleSeat" && name == "AreHingesDetected" {
         return physics::hinges_detected(lua, id).map(Some);
+    }
+    if class == "Player" && name == "ChatMode" {
+        let guest = {
+            let eng = crate::runtime::engine(lua);
+            let e = eng.lock();
+            matches!(e.dm.get(id, "UserId"), Ok(Variant::Int(u)) if u < 0)
+                || matches!(e.dm.get(id, "UserId"), Ok(Variant::Int64(u)) if u < 0)
+        };
+        let v = crate::convert::variant_to_lua(
+            lua,
+            &Variant::Enum(if guest { 0 } else { 1 }),
+            Some(&rbx_reflection::ValueType::Enum("ChatMode".into())),
+        )?;
+        return Ok(Some(v));
     }
     if matches!(
         name,

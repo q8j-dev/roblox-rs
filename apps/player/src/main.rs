@@ -471,6 +471,9 @@ fn main() {
         if let Err(e) = spawn_local_player(&runtime, &args.name, false) {
             eprintln!("{e}");
         }
+        if let Err(e) = runtime.start_core_scripts("StarterScript") {
+            eprintln!("{e}");
+        }
         (runtime, Some(net))
     } else {
         let mut dm = DataModel::new();
@@ -499,6 +502,12 @@ fn main() {
             eprintln!("{e}");
         }
         runtime.scan_scripts();
+        if let Err(e) = runtime.start_server_core_scripts() {
+            eprintln!("{e}");
+        }
+        if let Err(e) = runtime.start_core_scripts("StarterScript") {
+            eprintln!("{e}");
+        }
         (runtime, None)
     };
     let player = Player {

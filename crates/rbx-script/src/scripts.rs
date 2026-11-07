@@ -29,6 +29,9 @@ pub fn should_run(
     if !dm.in_tree(id) {
         return None;
     }
+    if class == "CoreScript" {
+        return Some(Identity::RobloxGameScript);
+    }
     let backend = dm.find_service("NetworkClient").is_none();
     let frontend = dm.find_service("NetworkServer").is_none();
     let local = is_local_script(dm, id);
@@ -89,7 +92,10 @@ pub fn start_script(lua: &Lua, id: InstanceId, identity: Identity) {
                 .ok()
                 .and_then(|v| v.as_str().map(str::to_string))
                 .unwrap_or_default();
-        let src = if linked.trim().is_empty() || e.dm.class_of(id) == Some("ModuleScript") {
+        let core = with_state(lua, |s| s.core_sources.get(&id).cloned());
+        let src = if let Some(core) = core {
+            core
+        } else if linked.trim().is_empty() || e.dm.class_of(id) == Some("ModuleScript") {
             e.dm.get(id, "Source")
                 .ok()
                 .and_then(|v| v.as_str().map(str::to_string))

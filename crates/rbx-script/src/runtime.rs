@@ -92,6 +92,7 @@ pub struct Engine {
     pub threads_throttled: f64,
     pub base_url: String,
     pub gui: crate::api::gui::GuiState,
+    pub input: crate::api::input::InputState,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -209,6 +210,7 @@ impl Engine {
             threads_throttled: 0.0,
             base_url: crate::api::http::DEFAULT_BASE_URL.to_string(),
             gui: Default::default(),
+            input: Default::default(),
         }
     }
 
@@ -393,6 +395,8 @@ pub struct State {
     pub pending_invokes: Vec<(InstanceId, String, Thread, Vec<Value>)>,
     pub remote: crate::api::remote::RemoteState,
     pub http: crate::api::http::HttpState,
+    pub core_sources: HashMap<InstanceId, String>,
+    pub actions: crate::api::actions::ActionState,
     pub captures: HashMap<usize, Option<Result<MultiValue, String>>>,
     pub capture_threads: HashMap<usize, RegistryKey>,
     pub watchdog: Arc<Mutex<Watchdog>>,
@@ -569,6 +573,8 @@ impl ScriptRuntime {
             pending_invokes: Vec::new(),
             remote: Default::default(),
             http: Default::default(),
+            core_sources: HashMap::new(),
+            actions: Default::default(),
             captures: HashMap::new(),
             capture_threads: HashMap::new(),
             watchdog: Arc::new(Mutex::new(Watchdog::default())),
@@ -1006,6 +1012,68 @@ impl ScriptRuntime {
     pub fn scan_scripts(&self) {
         scan_scripts(&self.lua);
         pump(&self.lua);
+    }
+
+    pub fn describe_waiting(&self) -> Vec<String> {
+        let lua = &self.lua;
+        let traceback = |t: &Thread| -> String {
+            lua.globals()
+                .get::<mlua::Table>("debug")
+                .and_then(|d| d.get::<Function>("traceback"))
+                .and_then(|f| f.call::<String>(t.clone()))
+                .unwrap_or_default()
+        };
+        let mut out = Vec::new();
+        let (children, modules, events) = with_state(lua, |s| {
+            (
+                s.child_waiters
+                    .iter()
+                    .map(|w| (w.parent, w.name.clone(), w.thread.clone()))
+                    .collect::<Vec<_>>(),
+                s.module_waiters
+                    .iter()
+                    .flat_map(|(m, ts)| ts.iter().map(move |t| (*m, t.clone())))
+                    .collect::<Vec<_>>(),
+                s.waiters
+                    .iter()
+                    .flat_map(|((i, ev), ts)| ts.iter().map(move |(t, _)| (*i, *ev, t.clone())))
+                    .collect::<Vec<_>>(),
+            )
+        });
+        let e = self.engine.lock();
+        for (parent, name, t) in children {
+            out.push(format!(
+                "WaitForChild {} in {}\n{}",
+                name,
+                e.dm.full_name(parent),
+                traceback(&t)
+            ));
+        }
+        for (m, t) in modules {
+            out.push(format!("require {}\n{}", e.dm.full_name(m), traceback(&t)));
+        }
+        for (i, ev, t) in events {
+            out.push(format!(
+                "{}.{}:wait()\n{}",
+                e.dm.full_name(i),
+                ev,
+                traceback(&t)
+            ));
+        }
+        out
+    }
+
+    pub fn start_core_scripts(&self, starter: &str) -> mlua::Result<()> {
+        crate::api::core::load_core_modules(&self.lua)?;
+        crate::api::core::add_core_script(&self.lua, starter, None)?;
+        pump(&self.lua);
+        Ok(())
+    }
+
+    pub fn start_server_core_scripts(&self) -> mlua::Result<()> {
+        crate::api::core::add_core_script(&self.lua, "ServerStarterScript", None)?;
+        pump(&self.lua);
+        Ok(())
     }
 
     pub fn fire(&self, target: InstanceId, event: &'static str, args: Vec<Variant>) {
@@ -1780,6 +1848,7 @@ fn dispatch_dom_event_inner(lua: &Lua, ev: &DomEvent) {
             ancestor,
             descendant,
         } => {
+            crate::api::core::collection_changed(lua, *ancestor, *descendant, "ItemAdded");
             if has_listeners(lua, *ancestor, "DescendantAdded")
                 && let Ok(v) = push_instance(lua, *descendant)
             {
@@ -1795,6 +1864,7 @@ fn dispatch_dom_event_inner(lua: &Lua, ev: &DomEvent) {
             ancestor,
             descendant,
         } => {
+            crate::api::core::collection_changed(lua, *ancestor, *descendant, "ItemRemoved");
             if has_listeners(lua, *ancestor, "DescendantRemoving")
                 && let Ok(v) = push_instance(lua, *descendant)
             {

@@ -8,8 +8,8 @@ use rbx_dom::{InstanceId, Variant};
 use rbx_math::Vec2;
 use std::collections::{HashMap, HashSet};
 
-#[derive(Default)]
 pub struct GuiState {
+    pub topbar_transparency: f32,
     pub core_gui_disabled: HashSet<u32>,
     pub keys: HashSet<String>,
     pub special_keys: HashSet<u32>,
@@ -18,6 +18,26 @@ pub struct GuiState {
     pub menu_open: bool,
     pub center_dialogs: Vec<InstanceId>,
     pub selection_groups: HashMap<String, Vec<InstanceId>>,
+    pub button_verbs: HashMap<InstanceId, String>,
+    pub requested_verbs: Vec<String>,
+}
+
+impl Default for GuiState {
+    fn default() -> Self {
+        GuiState {
+            topbar_transparency: 0.5,
+            core_gui_disabled: HashSet::new(),
+            keys: HashSet::new(),
+            special_keys: HashSet::new(),
+            error_message: String::new(),
+            ui_message: (0, String::new()),
+            menu_open: false,
+            center_dialogs: Vec::new(),
+            selection_groups: HashMap::new(),
+            button_verbs: HashMap::new(),
+            requested_verbs: Vec::new(),
+        }
+    }
 }
 
 pub fn register(r: &mut Registry) {

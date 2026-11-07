@@ -53,6 +53,13 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         ("SurfaceGui", "ToolPunchThroughDistance") => Variant::Float(0.0),
         ("SurfaceGui", "Face") => Variant::Enum(5),
         ("SurfaceGui", "Active") => Variant::Bool(true),
+        ("UserGameSettings", "MasterVolume" | "MouseSensitivity") => Variant::Float(1.0),
+        ("UserGameSettings", "StartMaximized") => Variant::Bool(true),
+        ("UserInputService", "KeyboardEnabled" | "MouseEnabled" | "MouseIconEnabled") => {
+            Variant::Bool(true)
+        }
+        ("Players", "ClassicChat") => Variant::Bool(true),
+        ("Players", "BubbleChat") => Variant::Bool(false),
         ("BasePart", "Friction") => Variant::Float(0.3),
         ("BasePart", "Elasticity") => Variant::Float(0.5),
         ("BasePart", "size") | ("BasePart", "Size") => Variant::Vector3(Vec3::new(4.0, 1.2, 2.0)),

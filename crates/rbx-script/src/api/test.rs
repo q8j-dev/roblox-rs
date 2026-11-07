@@ -317,6 +317,7 @@ pub fn start(lua: &Lua, identity: Identity) -> Result<()> {
         };
         with_state(lua, |st| {
             st.running_scripts.insert(s, true);
+            st.test_scripts.insert(s);
         });
         let env = new_environment(lua, Some(s))?;
         let func = match lua

@@ -45,6 +45,7 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         ("Seat", "size") | ("VehicleSeat", "size") => Variant::Vector3(Vec3::new(4.0, 1.2, 2.0)),
         ("Terrain", "WaterColor") => Variant::Color3(Color3::new(0.05, 0.33, 0.36)),
         ("Workspace", "FallenPartsDestroyHeight") => Variant::Float(-500.0),
+        ("Workspace", "PhysicalPropertiesMode") => Variant::Enum(1),
         ("Lighting", "TimeOfDay") => Variant::String("14:00:00".into()),
         ("Lighting", "ClockTime") => Variant::Float(14.0),
         ("Lighting", "GeographicLatitude") => Variant::Float(41.7333),

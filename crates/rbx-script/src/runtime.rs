@@ -284,6 +284,7 @@ pub struct State {
     pub by_event: HashMap<(InstanceId, &'static str), Vec<u64>>,
     pub next_conn: u64,
     pub touch_slots: HashMap<InstanceId, (usize, Option<InstanceId>)>,
+    pub test_scripts: std::collections::HashSet<InstanceId>,
     pub waiters: HashMap<(InstanceId, &'static str), Vec<(Thread, u64)>>,
     pub dispatch_seq: Option<u64>,
     pub sleepers: Vec<Sleeper>,
@@ -454,6 +455,7 @@ impl ScriptRuntime {
             by_event: HashMap::new(),
             next_conn: 1,
             touch_slots: HashMap::new(),
+            test_scripts: std::collections::HashSet::new(),
             waiters: HashMap::new(),
             dispatch_seq: None,
             sleepers: Vec::new(),
@@ -904,11 +906,12 @@ pub fn resume_thread_result(
         if !alive {
             return None;
         }
+        let test_script = with_state(lua, |s| s.test_scripts.contains(&script));
         let verdict = {
             let eng = engine(lua);
             let e = eng.lock();
             if e.dm.is_a(script, "BaseScript") {
-                Some(e.dm.in_tree(script) && !e.dm.get_bool(script, "Disabled"))
+                Some(e.dm.in_tree(script) && (test_script || !e.dm.get_bool(script, "Disabled")))
             } else {
                 None
             }

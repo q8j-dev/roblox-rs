@@ -557,7 +557,7 @@ impl PhysicsWorld {
                 .ok()
                 .and_then(|v| v.as_f32())
                 .unwrap_or(-500.0);
-            self.mode = if get_enum(dm, ws, "PhysicalPropertiesMode") == 1 {
+            self.mode = if get_enum(dm, ws, "PhysicalPropertiesMode") == 0 {
                 PhysicalMode::Legacy
             } else {
                 PhysicalMode::New

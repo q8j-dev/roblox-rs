@@ -21,7 +21,7 @@ rbx-terrain = { version = "0.1.0", path = "../rbx-terrain" }
 texture2ddecoder = "0.1.2"
 thiserror = "2.0.21"
 tracing = "0.1.44"
-wgpu = "30.0.1"
+wgpu = { version = "30.0.1", default-features = false, features = ["std", "parking_lot", "dx12", "metal", "vulkan", "wgsl", "webgpu"] }
 
 [dev-dependencies]
 image = { version = "0.25.10", default-features = false, features = ["png"] }

@@ -22,14 +22,18 @@ pub struct Offscreen {
 pub const FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba8Unorm;
 
 pub fn create_device() -> Result<(wgpu::Device, wgpu::Queue), OffscreenError> {
-    let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
-    let adapter = pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
-        power_preference: wgpu::PowerPreference::HighPerformance,
-        force_fallback_adapter: false,
-        compatible_surface: None,
-        apply_limit_buckets: false,
-    }))
-    .map_err(|e| OffscreenError::Adapter(e.to_string()))?;
+    let instance = crate::create_instance();
+    let request = |fallback: bool| {
+        pollster::block_on(instance.request_adapter(&wgpu::RequestAdapterOptions {
+            power_preference: wgpu::PowerPreference::HighPerformance,
+            force_fallback_adapter: fallback,
+            compatible_surface: None,
+            apply_limit_buckets: false,
+        }))
+    };
+    let adapter = request(false)
+        .or_else(|_| request(true))
+        .map_err(|e| OffscreenError::Adapter(e.to_string()))?;
     pollster::block_on(adapter.request_device(&wgpu::DeviceDescriptor {
         label: Some("rbx-render"),
         required_features: wgpu::Features::empty(),

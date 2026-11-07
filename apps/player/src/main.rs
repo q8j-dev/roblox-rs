@@ -276,7 +276,7 @@ impl Player {
 impl App for Player {
     fn init(&mut self, window: Arc<Window>) {
         let size = window.inner_size();
-        let instance = wgpu::Instance::new(wgpu::InstanceDescriptor::new_without_display_handle());
+        let instance = rbx_render::create_instance();
         let surface = match instance.create_surface(window.clone()) {
             Ok(s) => s,
             Err(e) => {

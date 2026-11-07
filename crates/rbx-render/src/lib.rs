@@ -4,6 +4,7 @@ pub mod lighting;
 pub mod offscreen;
 pub mod renderer;
 pub mod scene;
+pub mod terrain;
 pub mod texture;
 
 pub use offscreen::Offscreen;

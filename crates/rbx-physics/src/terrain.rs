@@ -80,40 +80,11 @@ static CELL_SHAPES: LazyLock<Vec<SharedShape>> = LazyLock::new(|| {
             .collect();
         SharedShape::convex_hull(&v).unwrap_or_else(|| SharedShape::cuboid(h, h, h))
     };
-    vec![
-        SharedShape::cuboid(h, h, h),
-        pts(&[
-            [1., -1., 1.],
-            [1., -1., -1.],
-            [-1., -1., -1.],
-            [-1., -1., 1.],
-            [1., 1., -1.],
-            [-1., 1., -1.],
-        ]),
-        pts(&[
-            [1., -1., 1.],
-            [1., -1., -1.],
-            [-1., -1., -1.],
-            [1., 1., -1.],
-        ]),
-        pts(&[
-            [1., -1., 1.],
-            [1., -1., -1.],
-            [-1., -1., -1.],
-            [-1., -1., 1.],
-            [1., 1., 1.],
-            [1., 1., -1.],
-            [-1., 1., -1.],
-        ]),
-        pts(&[
-            [1., -1., 1.],
-            [1., -1., -1.],
-            [-1., -1., -1.],
-            [1., 1., 1.],
-            [1., 1., -1.],
-            [-1., 1., -1.],
-        ]),
-    ]
+    let mut shapes = vec![SharedShape::cuboid(h, h, h)];
+    for points in &legacy::BLOCK_POINTS[1..] {
+        shapes.push(pts(points));
+    }
+    shapes
 });
 
 pub fn cell_shape(cell: u8) -> Option<&'static SharedShape> {

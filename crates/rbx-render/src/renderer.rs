@@ -85,6 +85,8 @@ pub struct Renderer {
     image_index: HashMap<String, u32>,
     file_meshes: HashMap<String, Option<crate::filemesh::FileMesh>>,
     pub asset_dirs: Vec<PathBuf>,
+    terrain_meshes: Vec<GpuMesh>,
+    terrain_generation: Option<u64>,
     sky_bg: Option<(Vec<String>, wgpu::BindGroup)>,
     meshes: HashMap<MeshKey, GpuMesh>,
     depth: Option<(wgpu::Texture, wgpu::TextureView, u32, u32)>,
@@ -326,6 +328,8 @@ impl Renderer {
             image_index: HashMap::new(),
             file_meshes: HashMap::new(),
             asset_dirs: Vec::new(),
+            terrain_meshes: Vec::new(),
+            terrain_generation: None,
             sky_bg: None,
             meshes: HashMap::new(),
             depth: None,
@@ -352,6 +356,17 @@ impl Renderer {
                         img.upload(&self.device, &self.queue, "material", false)
                             .create_view(&wgpu::TextureViewDescriptor::default())
                     }),
+                Shading::Terrain => read_texture(
+                    &self
+                        .platform_dir
+                        .join("textures")
+                        .join("terrain")
+                        .join("diffuse.dds"),
+                )
+                .map(|img| {
+                    img.upload(&self.device, &self.queue, "terrain", false)
+                        .create_view(&wgpu::TextureViewDescriptor::default())
+                }),
                 Shading::Image(i) => self
                     .image_names
                     .get(i as usize)
@@ -669,7 +684,55 @@ impl Renderer {
     pub fn render(&mut self, dm: &DataModel, target: &wgpu::TextureView, width: u32, height: u32) {
         let aspect = width.max(1) as f32 / height.max(1) as f32;
         let scene = scene::extract(dm, aspect);
+        self.update_terrain(dm);
         self.render_scene(&scene, target, width, height);
+    }
+
+    fn update_terrain(&mut self, dm: &DataModel) {
+        let grid = dm
+            .workspace_terrain()
+            .and_then(|t| dm.terrain(t))
+            .and_then(|t| t.legacy.as_ref())
+            .filter(|g| g.non_empty_cell_count() > 0);
+        let Some(grid) = grid else {
+            self.terrain_meshes.clear();
+            self.terrain_generation = None;
+            return;
+        };
+        let generation = grid.changes.generation();
+        if self.terrain_generation == Some(generation) {
+            return;
+        }
+        self.terrain_generation = Some(generation);
+        self.terrain_meshes.clear();
+        for chunk in grid.non_empty_chunks() {
+            let mesh = crate::terrain::legacy_chunk(grid, chunk);
+            if mesh.indices.is_empty() {
+                continue;
+            }
+            let vertices = self
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("terrain vertices"),
+                    contents: bytemuck::cast_slice(&mesh.vertices),
+                    usage: wgpu::BufferUsages::VERTEX,
+                });
+            let indices = self
+                .device
+                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                    label: Some("terrain indices"),
+                    contents: bytemuck::cast_slice(&mesh.indices),
+                    usage: wgpu::BufferUsages::INDEX,
+                });
+            self.terrain_meshes.push(GpuMesh {
+                vertices,
+                indices,
+                count: mesh.indices.len() as u32,
+            });
+        }
+        if !self.terrain_meshes.is_empty() {
+            self.material_group(Shading::Terrain);
+        }
     }
 
     pub fn render_scene(
@@ -751,6 +814,7 @@ impl Renderer {
                 Shading::Textured(_) => 1.0,
                 Shading::Neon => 2.0,
                 Shading::Image(_) => 3.0,
+                Shading::Terrain => 4.0,
             };
             let rows = scene::instance_rows(&part.cframe, Vec3::ONE, part.mesh_offset);
             let data = InstanceData {
@@ -859,6 +923,32 @@ impl Renderer {
                     pass.set_vertex_buffer(0, mesh.vertices.slice(..));
                     pass.set_index_buffer(mesh.indices.slice(..), wgpu::IndexFormat::Uint32);
                     pass.draw_indexed(0..mesh.count, 0, *start..start + count);
+                }
+            }
+            if !self.terrain_meshes.is_empty() {
+                let terrain_instance = InstanceData {
+                    rows: [
+                        [1.0, 0.0, 0.0, 0.0],
+                        [0.0, 1.0, 0.0, 0.0],
+                        [0.0, 0.0, 1.0, 0.0],
+                    ],
+                    color: [1.0; 4],
+                    extra: [0.0, 1.0, 0.0, 4.0],
+                };
+                let buf = self
+                    .device
+                    .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                        label: Some("terrain instance"),
+                        contents: bytemuck::bytes_of(&terrain_instance),
+                        usage: wgpu::BufferUsages::VERTEX,
+                    });
+                pass.set_pipeline(&self.opaque);
+                pass.set_bind_group(1, &self.materials[&Shading::Terrain], &[]);
+                pass.set_vertex_buffer(1, buf.slice(..));
+                for mesh in &self.terrain_meshes {
+                    pass.set_vertex_buffer(0, mesh.vertices.slice(..));
+                    pass.set_index_buffer(mesh.indices.slice(..), wgpu::IndexFormat::Uint32);
+                    pass.draw_indexed(0..mesh.count, 0, 0..1);
                 }
             }
             if let Some((_, sky)) = &self.sky_bg {

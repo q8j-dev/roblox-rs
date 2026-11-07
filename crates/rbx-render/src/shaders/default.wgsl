@@ -83,7 +83,10 @@ fn fs_main(i: VertexOut) -> @location(0) vec4<f32> {
 
     let near_sample = textureSample(diffuse_map, linear_sampler, i.uv_edge1.xy);
     var albedo: vec4<f32>;
-    if (kind == 3) {
+    let low_sample = textureSample(diffuse_map, linear_sampler, i.uvstuds_edge2.xy);
+    if (kind == 4) {
+        albedo = vec4<f32>(mix(near_sample.rgb, low_sample.rgb, clamp(i.view_depth.w / 200.0, 0.0, 1.0)), 1.0);
+    } else if (kind == 3) {
         albedo = near_sample * i.color;
     } else if (kind == 1) {
         albedo = vec4<f32>(mix(vec3<f32>(1.0), i.color.rgb, mat_sample.a) * mat_sample.rgb, i.color.a);

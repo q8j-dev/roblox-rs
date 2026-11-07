@@ -20,6 +20,7 @@ pub enum Shading {
     Neon,
     Textured(u32),
     Image(u32),
+    Terrain,
 }
 
 #[derive(Clone, Debug)]

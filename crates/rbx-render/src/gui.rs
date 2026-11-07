@@ -106,14 +106,14 @@ pub struct GuiItem {
     pub pivot: Vec2,
 }
 
-fn get_bool(dm: &DataModel, id: InstanceId, name: &str, default: bool) -> bool {
+pub(crate) fn get_bool(dm: &DataModel, id: InstanceId, name: &str, default: bool) -> bool {
     match dm.get(id, name) {
         Ok(Variant::Bool(b)) => b,
         _ => default,
     }
 }
 
-fn get_f32(dm: &DataModel, id: InstanceId, name: &str) -> f32 {
+pub(crate) fn get_f32(dm: &DataModel, id: InstanceId, name: &str) -> f32 {
     match dm.get(id, name) {
         Ok(Variant::Float(v)) => v,
         Ok(Variant::Double(v)) => v as f32,
@@ -122,7 +122,7 @@ fn get_f32(dm: &DataModel, id: InstanceId, name: &str) -> f32 {
     }
 }
 
-fn get_i64(dm: &DataModel, id: InstanceId, name: &str) -> i64 {
+pub(crate) fn get_i64(dm: &DataModel, id: InstanceId, name: &str) -> i64 {
     match dm.get(id, name) {
         Ok(Variant::Int(v)) => v as i64,
         Ok(Variant::Int64(v)) => v,
@@ -143,14 +143,14 @@ fn get_color(dm: &DataModel, id: InstanceId, name: &str) -> [f32; 3] {
     }
 }
 
-fn get_string(dm: &DataModel, id: InstanceId, name: &str) -> String {
+pub(crate) fn get_string(dm: &DataModel, id: InstanceId, name: &str) -> String {
     match dm.get(id, name) {
         Ok(Variant::String(s)) | Ok(Variant::Content(s)) => s,
         _ => String::new(),
     }
 }
 
-fn get_vec2(dm: &DataModel, id: InstanceId, name: &str) -> Vec2 {
+pub(crate) fn get_vec2(dm: &DataModel, id: InstanceId, name: &str) -> Vec2 {
     match dm.get(id, name) {
         Ok(Variant::Vector2(v)) => v,
         _ => Vec2::ZERO,
@@ -386,13 +386,26 @@ fn screen_guis(dm: &DataModel) -> Vec<InstanceId> {
 pub fn extract(dm: &DataModel) -> Vec<GuiItem> {
     let mut items = Vec::new();
     for root in screen_guis(dm) {
-        let base = placement(dm, root);
+        collect_root(dm, root, placement(dm, root), None, &mut items);
+    }
+    messages(dm, &mut items);
+    items
+}
+
+pub(crate) fn collect_root(
+    dm: &DataModel,
+    root: InstanceId,
+    base: Placement,
+    clip: Option<Rect>,
+    items: &mut Vec<GuiItem>,
+) {
+    {
         let mut c = Collector {
             dm,
             layers: (0..=10).map(|_| (Vec::new(), Vec::new())).collect(),
         };
         for &child in dm.children_of(root) {
-            c.load(child, base, None);
+            c.load(child, base, clip);
         }
         for (general, texts) in &c.layers {
             let mut push = |e: &Entry, cmds: Vec<GuiCmd>| {
@@ -434,8 +447,6 @@ pub fn extract(dm: &DataModel) -> Vec<GuiItem> {
             }
         }
     }
-    messages(dm, &mut items);
-    items
 }
 
 fn messages(dm: &DataModel, items: &mut Vec<GuiItem>) {

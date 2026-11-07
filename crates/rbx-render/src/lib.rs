@@ -17,6 +17,7 @@ pub mod shadow;
 pub mod smooth;
 pub mod terrain;
 pub mod texture;
+pub mod world_gui;
 
 pub use offscreen::Offscreen;
 pub use renderer::Renderer;

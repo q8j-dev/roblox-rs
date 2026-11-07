@@ -1054,16 +1054,30 @@ impl Renderer {
         self.update_terrain(dm);
         self.update_lightgrid(dm, &scene);
         self.render_scene(&scene, target, width, height);
-        let items = crate::gui::extract(dm);
+        let world = crate::world_gui::extract(dm);
+        let mut items = world.on_top;
+        items.extend(crate::gui::extract(dm));
+        let cam = &scene.camera;
+        let vp = mat_mul(
+            &perspective(cam.fov_y, aspect, cam.near, cam.far),
+            &look_to(
+                cam.cframe.translation,
+                -cam.cframe.rotation.z_axis,
+                cam.cframe.rotation.y_axis,
+            ),
+        );
         if let Some(mut gui) = self.gui.take() {
             let load = |url: &str| self.read_content(url);
             gui.render(
                 &self.device,
                 &self.queue,
                 target,
+                self.depth.as_ref().map(|d| &d.1),
                 (width.max(1), height.max(1)),
                 self.gui_scale,
                 &items,
+                &world.world,
+                &vp,
                 &load,
             );
             self.gui = Some(gui);

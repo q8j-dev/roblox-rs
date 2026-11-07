@@ -98,7 +98,7 @@ fn main() {
         Vec3::new(1.5, 3.0, 0.0),
         true,
     );
-    part(
+    let wall = part(
         &mut dm,
         ws,
         "Wall",
@@ -106,6 +106,66 @@ fn main() {
         Vec3::new(10.0, 4.0, 0.0),
         true,
     );
+    let head = dm.find_first_child(model, "Head", false).expect("head");
+    for (on_top, offset) in [(false, 2.5), (true, 4.0)] {
+        let bb = dm.create("BillboardGui").expect("billboard");
+        dm.set(
+            bb,
+            "Size",
+            Variant::UDim2(rbx_math::UDim2::new(4.0, 0, 1.0, 0)),
+        )
+        .expect("size");
+        dm.set(
+            bb,
+            "StudsOffset",
+            Variant::Vector3(Vec3::new(0.0, offset, 0.0)),
+        )
+        .expect("offset");
+        dm.set(bb, "AlwaysOnTop", Variant::Bool(on_top))
+            .expect("top");
+        dm.set_parent(bb, Some(head)).expect("parent");
+        let label = dm.create("TextLabel").expect("label");
+        dm.set(
+            label,
+            "Size",
+            Variant::UDim2(rbx_math::UDim2::new(1.0, 0, 1.0, 0)),
+        )
+        .expect("size");
+        dm.set(label, "BackgroundTransparency", Variant::Float(0.5))
+            .expect("bg");
+        dm.set(label, "TextScaled", Variant::Bool(true))
+            .expect("scaled");
+        dm.set(
+            label,
+            "Text",
+            Variant::String(if on_top { "Always on top" } else { "Billboard" }.into()),
+        )
+        .expect("text");
+        dm.set_parent(label, Some(bb)).expect("parent");
+    }
+    let sg = dm.create("SurfaceGui").expect("surface");
+    dm.set(sg, "Face", Variant::Enum(0)).expect("face");
+    dm.set(sg, "CanvasSize", Variant::Vector2(Vec2::new(200.0, 160.0)))
+        .expect("canvas");
+    dm.set_parent(sg, Some(wall)).expect("parent");
+    let sign = dm.create("TextLabel").expect("sign");
+    dm.set(
+        sign,
+        "Size",
+        Variant::UDim2(rbx_math::UDim2::new(1.0, -40, 0.5, 0)),
+    )
+    .expect("size");
+    dm.set(
+        sign,
+        "Position",
+        Variant::UDim2(rbx_math::UDim2::new(0.0, 20, 0.25, 0)),
+    )
+    .expect("pos");
+    dm.set(sign, "TextScaled", Variant::Bool(true))
+        .expect("scaled");
+    dm.set(sign, "Text", Variant::String("SurfaceGui".into()))
+        .expect("text");
+    dm.set_parent(sign, Some(sg)).expect("parent");
     for (i, class) in ["Fire", "Smoke", "Sparkles", "ParticleEmitter"]
         .iter()
         .enumerate()

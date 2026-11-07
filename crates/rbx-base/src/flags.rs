@@ -27,7 +27,6 @@ static DEFAULTS: LazyLock<HashMap<String, String>> = LazyLock::new(|| {
 const ENGINE_VALUES: &[(&str, &str)] = &[
     ("UsePGSSolver", "true"),
     ("MaterialPropertiesEnabled", "true"),
-    ("MaterialPropertiesNewIsDefault", "true"),
     ("FixTouchEndedReporting", "true"),
 ];
 

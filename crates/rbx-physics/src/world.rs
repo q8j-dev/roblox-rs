@@ -300,6 +300,21 @@ pub struct Assembly {
 }
 
 impl Assembly {
+    pub(crate) fn wake_from_sleep(&mut self) {
+        if self.sleeping {
+            self.sleeping = false;
+            self.linear = Vec3::ZERO;
+            self.angular = Vec3::ZERO;
+        }
+        self.history.wake();
+    }
+
+    pub(crate) fn fall_asleep(&mut self) {
+        self.sleeping = true;
+        self.linear = Vec3::ZERO;
+        self.angular = Vec3::ZERO;
+    }
+
     pub fn root_cframe(&self) -> CFrame {
         CFrame::new(
             self.orientation,
@@ -388,6 +403,26 @@ pub struct PhysicsWorld {
 impl Default for PhysicsWorld {
     fn default() -> Self {
         PhysicsWorld::new()
+    }
+}
+
+pub fn physical_mode(value: u32) -> PhysicalMode {
+    use rbx_base::flags::flag_bool;
+    if flag_bool("NewPhysicalPropertiesForcedOnAll", false) {
+        return PhysicalMode::New;
+    }
+    if !flag_bool("MaterialPropertiesEnabled", false) {
+        return PhysicalMode::Legacy;
+    }
+    let threshold = if flag_bool("MaterialPropertiesNewIsDefault", false) {
+        1
+    } else {
+        2
+    };
+    if value >= threshold {
+        PhysicalMode::New
+    } else {
+        PhysicalMode::Legacy
     }
 }
 
@@ -557,11 +592,7 @@ impl PhysicsWorld {
                 .ok()
                 .and_then(|v| v.as_f32())
                 .unwrap_or(-500.0);
-            self.mode = if get_enum(dm, ws, "PhysicalPropertiesMode") == 0 {
-                PhysicalMode::Legacy
-            } else {
-                PhysicalMode::New
-            };
+            self.mode = physical_mode(get_enum(dm, ws, "PhysicalPropertiesMode"));
         }
     }
 

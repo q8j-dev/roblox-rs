@@ -524,8 +524,7 @@ impl PhysicsWorld {
                 *entry = (force, torque);
                 let asm = &mut self.assemblies[ai];
                 if asm.sleeping {
-                    asm.sleeping = false;
-                    asm.history.wake();
+                    asm.wake_from_sleep();
                 }
             }
         }
@@ -718,8 +717,7 @@ impl PhysicsWorld {
             if let Some(asm) = self.assemblies.get_mut(a)
                 && asm.sleeping
             {
-                asm.sleeping = false;
-                asm.history.wake();
+                asm.wake_from_sleep();
             }
         }
         let stale: Vec<(InstanceId, InstanceId)> = self
@@ -1160,7 +1158,7 @@ impl PhysicsWorld {
             }
         }
         for ai in to_sleep {
-            self.assemblies[ai].sleeping = true;
+            self.assemblies[ai].fall_asleep();
         }
     }
 

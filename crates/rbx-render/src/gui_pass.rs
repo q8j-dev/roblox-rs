@@ -512,15 +512,17 @@ impl GuiRenderer {
                 }
                 GuiCmd::Text(cmd) => {
                     let draw = text_quads(cmd);
+                    let typesetter = rbx_text::typesetter(cmd.font);
                     for q in &draw.quads {
-                        let Some([x, y, w, h]) = self.atlas.place(
-                            queue,
-                            cmd.font,
-                            q.ch,
-                            ((q.size as f32) * scale).round().max(1.0) as u32,
-                        ) else {
+                        let target_em = q.em * scale;
+                        let px = (target_em - 1.0).round().max(1.0) as u32;
+                        let raster_em = px as f32 + 1.0;
+                        let Some([x, y, w, h]) = self.atlas.place(queue, cmd.font, q.ch, px) else {
                             continue;
                         };
+                        let g = typesetter.glyph(q.ch, px);
+                        let f = q.em / raster_em;
+                        let pad = rbx_text::FONT_PADDING;
                         let base = if q.stroke {
                             cmd.stroke.unwrap_or(cmd.color)
                         } else {
@@ -528,15 +530,12 @@ impl GuiRenderer {
                         };
                         let color = [base[0], base[1], base[2], base[3] * draw.alpha];
                         let a = ATLAS_SIZE as f32;
-                        let inset = rbx_text::FONT_PADDING * (1.0 - 1.0 / scale.max(1.0));
+                        let snap = |v: f32| (v * scale).round() / scale;
+                        let left = snap(q.pen[0] + (g.xoffset as f32 - pad) * f);
+                        let top = snap(q.pen[1] - (g.yoffset as f32 + pad) * f);
                         quads.push((
                             TextureKey::Glyphs,
-                            Rect::xywh(
-                                q.x + inset,
-                                q.y + inset,
-                                q.w - inset * 2.0,
-                                q.h - inset * 2.0,
-                            ),
+                            Rect::xywh(left, top, w as f32 * f, h as f32 * f),
                             [
                                 x as f32 / a,
                                 y as f32 / a,

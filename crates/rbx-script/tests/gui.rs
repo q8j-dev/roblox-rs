@@ -45,3 +45,23 @@ fn core_gui_settings() {
         "local sg = game:GetService('StarterGui') sg:SetCoreGuiEnabled(Enum.CoreGuiType.All, false) local off = not sg:GetCoreGuiEnabled(Enum.CoreGuiType.Chat) sg:SetCoreGuiEnabled(Enum.CoreGuiType.Chat, true) local got = nil sg:RegisterSetCore('Thing', function(v) got = v end) sg:SetCore('Thing', 5) return off and sg:GetCoreGuiEnabled(Enum.CoreGuiType.Chat) and got == 5 and not pcall(function() sg:SetCore('Missing', 1) end)"
     ));
 }
+
+#[test]
+fn tweens_move_gui_objects() {
+    let f = Fixture::new();
+    f.engine().lock().running = true;
+    assert!(f.bool(
+        "local sg = Instance.new('ScreenGui', game:GetService('StarterGui')) local fr = Instance.new('Frame', sg) fr.Name = 'T' _G.status = nil local ok = fr:TweenPosition(UDim2.new(0, 100, 0, 0), Enum.EasingDirection.Out, Enum.EasingStyle.Linear, 1, false, function(s) _G.status = s end) local again = fr:TweenPosition(UDim2.new(0, 5, 0, 0), 'Out', 'Linear', 1, false) return ok and not again"
+    ));
+    for _ in 0..30 {
+        f.rt.step(1.0 / 60.0);
+    }
+    let mid = f.number("return game:GetService('StarterGui').ScreenGui.T.Position.X.Offset");
+    assert!((45.0..=55.0).contains(&mid), "{mid}");
+    for _ in 0..40 {
+        f.rt.step(1.0 / 60.0);
+    }
+    assert!(f.bool(
+        "return game:GetService('StarterGui').ScreenGui.T.Position.X.Offset == 100 and _G.status == Enum.TweenStatus.Completed"
+    ));
+}

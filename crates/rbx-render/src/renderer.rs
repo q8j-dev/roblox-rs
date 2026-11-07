@@ -90,6 +90,7 @@ pub struct Renderer {
     terrain_generation: Option<u64>,
     smooth: crate::smooth::SmoothTerrain,
     gui: Option<crate::gui_pass::GuiRenderer>,
+    compositor: crate::composite::Compositor,
     sky_bg: Option<(Vec<String>, wgpu::BindGroup)>,
     meshes: HashMap<MeshKey, GpuMesh>,
     depth: Option<(wgpu::Texture, wgpu::TextureView, u32, u32)>,
@@ -321,6 +322,7 @@ impl Renderer {
         let smooth =
             crate::smooth::SmoothTerrain::new(&device, &globals_layout, format, DEPTH_FORMAT);
         let gui = Some(crate::gui_pass::GuiRenderer::new(&device, &queue, format));
+        let compositor = crate::composite::Compositor::new(&device, &queue);
         let white = Image::solid([255, 255, 255, 255])
             .upload(&device, &queue, "white", false)
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -346,6 +348,7 @@ impl Renderer {
             terrain_generation: None,
             smooth,
             gui,
+            compositor,
             sky_bg: None,
             meshes: HashMap::new(),
             depth: None,
@@ -408,6 +411,47 @@ impl Renderer {
             self.materials.insert(shading, bg);
         }
         &self.materials[&shading]
+    }
+
+    fn update_composites(&mut self, composites: &[crate::character::CompositeDesc]) {
+        for desc in composites {
+            let shading = self.image(&desc.url);
+            if self.materials.contains_key(&shading) {
+                continue;
+            }
+            let mut meshes: HashMap<String, Option<crate::filemesh::FileMesh>> = HashMap::new();
+            for l in &desc.layers {
+                if !meshes.contains_key(&l.mesh) {
+                    let m = self.file_mesh(&l.mesh).cloned();
+                    meshes.insert(l.mesh.clone(), m);
+                }
+            }
+            let mut textures: HashMap<String, Option<Image>> = HashMap::new();
+            for l in &desc.layers {
+                if let Some(t) = &l.texture
+                    && !textures.contains_key(t)
+                {
+                    let img = self.read_content(t).and_then(|b| texture::decode(&b).ok());
+                    textures.insert(t.clone(), img);
+                }
+            }
+            let view = self.compositor.render(
+                &self.device,
+                &self.queue,
+                desc,
+                &mut |m| meshes.get(m).cloned().flatten(),
+                &mut |t| textures.get(t).cloned().flatten(),
+            );
+            let bg = self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+                label: Some("character composite"),
+                layout: &self.material_layout,
+                entries: &[wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: wgpu::BindingResource::TextureView(&view),
+                }],
+            });
+            self.materials.insert(shading, bg);
+        }
     }
 
     fn compressed(&self) -> bool {
@@ -637,6 +681,7 @@ impl Renderer {
                 f.scale.z.to_bits(),
             ]
             .hash(&mut h);
+            f.uv.map(|r| r.map(f32::to_bits)).hash(&mut h);
             h.finish() | 1
         });
         let key = MeshKey {
@@ -653,7 +698,16 @@ impl Renderer {
                 Some(f) => {
                     let scale = f.scale;
                     let url = f.url.clone();
-                    self.file_mesh(&url).map(|m| Mesh::from_file(m, scale))
+                    let uv = f.uv;
+                    self.file_mesh(&url).map(|m| {
+                        let mut mesh = Mesh::from_file(m, scale);
+                        if let Some(r) = uv {
+                            for v in &mut mesh.vertices {
+                                v.uv = [v.uv[0] * r[2] + r[0], v.uv[1] * r[3] + r[1]];
+                            }
+                        }
+                        mesh
+                    })
                 }
                 None => None,
             };
@@ -885,6 +939,7 @@ impl Renderer {
 
         let mut opaque: HashMap<(Shading, MeshKey), Vec<InstanceData>> = HashMap::new();
         let mut transparent: Vec<(f32, Shading, MeshKey, InstanceData)> = Vec::new();
+        self.update_composites(&scene.composites);
         for part in &scene.parts {
             let (key, size) = self.mesh_for(part);
             let shading = match &part.texture {

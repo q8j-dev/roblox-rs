@@ -16,6 +16,7 @@ pub mod services;
 pub mod stats;
 pub mod terrain;
 pub mod test;
+pub mod tween;
 
 use crate::types::rt;
 use mlua::{IntoLuaMulti, Lua, MultiValue, Result, Value};
@@ -72,6 +73,7 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     core::register(&mut r);
     input::register(&mut r);
     actions::register(&mut r);
+    tween::register(&mut r);
     r
 });
 

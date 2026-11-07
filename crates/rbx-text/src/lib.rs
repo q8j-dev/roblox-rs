@@ -131,6 +131,8 @@ pub struct GlyphQuad {
     pub ch: char,
     pub size: u32,
     pub stroke: bool,
+    pub pen: [f32; 2],
+    pub em: f32,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -488,6 +490,11 @@ impl Typesetter {
                             ch: c,
                             size: render_size,
                             stroke: is_stroke,
+                            pen: [
+                                line_x + dx + x as f32 * scale,
+                                line_y + dy + ascender as f32 * scale,
+                            ],
+                            em: (measure_size as f32 + FONT_SIZE_PADDING) * scale,
                         });
                     }
                     x += glyph.xadvance;

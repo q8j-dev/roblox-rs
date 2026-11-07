@@ -1,3 +1,5 @@
+pub mod character;
+pub mod composite;
 pub mod filemesh;
 pub mod geometry;
 pub mod gui;

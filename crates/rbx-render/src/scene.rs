@@ -73,6 +73,7 @@ pub struct Scene {
     pub camera: Camera,
     pub lighting: SceneLighting,
     pub sky_faces: Option<[String; 6]>,
+    pub composites: Vec<crate::character::CompositeDesc>,
 }
 
 pub const SURFACE_PROPS: [&str; 6] = [
@@ -185,6 +186,7 @@ pub struct MeshOverride {
 pub struct FileMeshRef {
     pub url: String,
     pub scale: Vec3,
+    pub uv: Option<[f32; 4]>,
 }
 
 fn content_prop(dm: &DataModel, id: InstanceId, name: &str) -> Option<String> {
@@ -226,7 +228,11 @@ fn mesh_override(
             "BlockMesh" => Shape::Block,
             "CylinderMesh" => Shape::Cylinder,
             "FileMesh" => {
-                file = content_prop(dm, c, "MeshId").map(|url| FileMeshRef { url, scale });
+                file = content_prop(dm, c, "MeshId").map(|url| FileMeshRef {
+                    url,
+                    scale,
+                    uv: None,
+                });
                 texture = content_prop(dm, c, "TextureId");
                 Shape::File
             }
@@ -242,6 +248,7 @@ fn mesh_override(
                     file = Some(FileMeshRef {
                         url: "rbxasset://fonts/head.mesh".into(),
                         scale: Vec3::new(xz, size.y, xz) / 1.25,
+                        uv: None,
                     });
                     Shape::File
                 }
@@ -249,7 +256,11 @@ fn mesh_override(
                 3 => Shape::Ball,
                 4 => Shape::Cylinder,
                 5 => {
-                    file = content_prop(dm, c, "MeshId").map(|url| FileMeshRef { url, scale });
+                    file = content_prop(dm, c, "MeshId").map(|url| FileMeshRef {
+                        url,
+                        scale,
+                        uv: None,
+                    });
                     texture = content_prop(dm, c, "TextureId");
                     Shape::File
                 }
@@ -311,7 +322,17 @@ fn collect_decals(dm: &DataModel, part: InstanceId, out: &mut Vec<DecalDraw>) {
     }
 }
 
-fn collect_parts(dm: &DataModel, root: InstanceId, out: &mut Vec<PartDraw>) {
+fn collect_parts(
+    dm: &DataModel,
+    root: InstanceId,
+    out: &mut Vec<PartDraw>,
+    composites: &mut Vec<crate::character::CompositeDesc>,
+) {
+    use crate::character::{BodyPart, Character};
+    let mut characters: std::collections::HashMap<
+        InstanceId,
+        Option<(Character, crate::character::CompositeDesc)>,
+    > = std::collections::HashMap::new();
     for id in dm.descendants(root) {
         let Some(class) = dm.class_of(id) else {
             continue;
@@ -376,6 +397,55 @@ fn collect_parts(dm: &DataModel, root: InstanceId, out: &mut Vec<PartDraw>) {
         }
         let mut decals = Vec::new();
         collect_decals(dm, id, &mut decals);
+        let base_block = class == "Part"
+            && !matches!(
+                dm.get(id, "Shape").ok().and_then(|v| v.as_enum()),
+                Some(0) | Some(2)
+            );
+        let has_mesh = dm
+            .children_of(id)
+            .iter()
+            .any(|c| dm.is_a(*c, "DataModelMesh"));
+        if let Some(model) = dm.parent_of(id) {
+            let entry = characters.entry(model).or_insert_with(|| {
+                crate::character::identify(dm, model).map(|ch| {
+                    let desc = ch.composite(dm);
+                    (ch, desc)
+                })
+            });
+            if let Some((ch, desc)) = entry
+                && let Some(kind) = ch.body_part(id)
+                && ch.is_composited(dm, id, base_block, has_mesh)
+            {
+                let swapped = if kind == BodyPart::Head {
+                    file.as_mut()
+                        .map(|f| f.uv = Some(Character::uv_rect(kind)))
+                        .is_some()
+                } else if let Some((url, scale)) = ch.substitute(kind, size) {
+                    shape = Shape::File;
+                    mesh_scale = Vec3::ONE;
+                    mesh_offset = Vec3::ZERO;
+                    file = Some(FileMeshRef {
+                        url,
+                        scale,
+                        uv: Some(Character::uv_rect(kind)),
+                    });
+                    true
+                } else {
+                    false
+                };
+                if swapped {
+                    texture = Some(desc.url.clone());
+                    c = Color3::new(1.0, 1.0, 1.0);
+                    if kind == BodyPart::Head || (kind == BodyPart::Torso && ch.has_graphic()) {
+                        decals.clear();
+                    }
+                    if !composites.iter().any(|d| d.url == desc.url) {
+                        composites.push(desc.clone());
+                    }
+                }
+            }
+        }
         out.push(PartDraw {
             id,
             shape,
@@ -398,9 +468,10 @@ fn collect_parts(dm: &DataModel, root: InstanceId, out: &mut Vec<PartDraw>) {
 pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
     let _ = aspect;
     let mut parts = Vec::new();
+    let mut composites = Vec::new();
     let ws = dm.find_service("Workspace");
     if let Some(ws) = ws {
-        collect_parts(dm, ws, &mut parts);
+        collect_parts(dm, ws, &mut parts, &mut composites);
     }
     let mut camera = Camera::default();
     if let Some(ws) = ws {
@@ -466,6 +537,7 @@ pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
         camera,
         lighting,
         sky_faces,
+        composites,
     }
 }
 

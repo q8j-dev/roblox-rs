@@ -397,6 +397,7 @@ pub struct State {
     pub http: crate::api::http::HttpState,
     pub core_sources: HashMap<InstanceId, String>,
     pub actions: crate::api::actions::ActionState,
+    pub tweens: crate::api::tween::TweenState,
     pub captures: HashMap<usize, Option<Result<MultiValue, String>>>,
     pub capture_threads: HashMap<usize, RegistryKey>,
     pub watchdog: Arc<Mutex<Watchdog>>,
@@ -575,6 +576,7 @@ impl ScriptRuntime {
             http: Default::default(),
             core_sources: HashMap::new(),
             actions: Default::default(),
+            tweens: Default::default(),
             captures: HashMap::new(),
             capture_threads: HashMap::new(),
             watchdog: Arc::new(Mutex::new(Watchdog::default())),
@@ -796,6 +798,7 @@ impl ScriptRuntime {
             }
             self.step_explosions();
             crate::api::animation::step(&self.lua);
+            crate::api::tween::step(&self.lua, dt as f32);
             pump(&self.lua);
             self.step_physics(dt);
         }

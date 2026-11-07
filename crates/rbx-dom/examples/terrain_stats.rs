@@ -55,6 +55,9 @@ fn main() {
             && !dm.descendants(sg).is_empty()
         {
             gui += 1;
+            if std::env::var("LIST_GUI").is_ok() {
+                println!("gui {} {}", dm.descendants(sg).len(), f.display());
+            }
         }
     }
     println!("places={total} legacy_terrain={legacy} smooth_terrain={smooth} starter_gui={gui}");

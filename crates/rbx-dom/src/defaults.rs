@@ -17,6 +17,42 @@ fn brick(n: i64) -> Color3 {
 
 fn manual(class: &str, prop: &str) -> Option<Variant> {
     Some(match (class, prop) {
+        ("GuiObject", "BorderSizePixel") => Variant::Int(1),
+        ("GuiObject", "BorderColor") => Variant::BrickColor(BrickColor::new(26)),
+        ("GuiObject", "BackgroundColor") => Variant::BrickColor(BrickColor::new(194)),
+        ("GuiObject", "Visible") => Variant::Bool(true),
+        ("GuiButton" | "TextBox", "Active") => Variant::Bool(true),
+        ("GuiButton", "AutoButtonColor") => Variant::Bool(true),
+        ("TextLabel", "Text") => Variant::String("Label".into()),
+        ("TextButton", "Text") => Variant::String("Button".into()),
+        ("TextBox", "Text") => Variant::String("TextBox".into()),
+        ("TextBox", "ClearTextOnFocus") => Variant::Bool(true),
+        ("TextLabel" | "TextButton" | "TextBox", "TextColor3") => Variant::Color3(brick(26)),
+        ("TextLabel" | "TextButton" | "TextBox", "TextColor") => {
+            Variant::BrickColor(BrickColor::new(26))
+        }
+        ("TextLabel" | "TextButton" | "TextBox", "TextXAlignment") => Variant::Enum(2),
+        ("TextLabel" | "TextButton" | "TextBox", "TextYAlignment") => Variant::Enum(1),
+        ("TextLabel" | "TextButton" | "TextBox", "TextStrokeTransparency") => Variant::Float(1.0),
+        ("ImageLabel" | "ImageButton", "ImageColor3") => {
+            Variant::Color3(Color3::new(1.0, 1.0, 1.0))
+        }
+        ("ScrollingFrame", "ScrollBarThickness") => Variant::Int(12),
+        ("ScrollingFrame", "ScrollingEnabled") => Variant::Bool(true),
+        ("ScrollingFrame", "TopImage") => {
+            Variant::Content("rbxasset://textures/ui/Scroll/scroll-top.png".into())
+        }
+        ("ScrollingFrame", "MidImage") => {
+            Variant::Content("rbxasset://textures/ui/Scroll/scroll-middle.png".into())
+        }
+        ("ScrollingFrame", "BottomImage") => {
+            Variant::Content("rbxasset://textures/ui/Scroll/scroll-bottom.png".into())
+        }
+        ("BillboardGui" | "SurfaceGui", "Enabled") => Variant::Bool(true),
+        ("SurfaceGui", "CanvasSize") => Variant::Vector2(Vec2::new(800.0, 600.0)),
+        ("SurfaceGui", "ToolPunchThroughDistance") => Variant::Float(0.0),
+        ("SurfaceGui", "Face") => Variant::Enum(5),
+        ("SurfaceGui", "Active") => Variant::Bool(true),
         ("BasePart", "Friction") => Variant::Float(0.3),
         ("BasePart", "Elasticity") => Variant::Float(0.5),
         ("BasePart", "size") | ("BasePart", "Size") => Variant::Vector3(Vec3::new(4.0, 1.2, 2.0)),

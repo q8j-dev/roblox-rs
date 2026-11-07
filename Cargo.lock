@@ -2792,6 +2792,7 @@ dependencies = [
  "rbx-math",
  "rbx-reflection",
  "rbx-terrain",
+ "rbx-text",
  "texture2ddecoder",
  "thiserror 2.0.21",
  "tracing",

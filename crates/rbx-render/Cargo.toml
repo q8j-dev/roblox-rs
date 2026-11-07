@@ -15,6 +15,7 @@ image = { version = "0.25.10", default-features = false, features = ["png", "jpe
 pollster = "1.0.1"
 rbx-dom = { version = "0.1.0", path = "../rbx-dom" }
 rbx-math = { version = "0.1.0", path = "../rbx-math" }
+rbx-text = { version = "0.1.0", path = "../rbx-text" }
 rbx-reflection = { version = "0.1.0", path = "../rbx-reflection" }
 rbx-terrain = { version = "0.1.0", path = "../rbx-terrain" }
 texture2ddecoder = "0.1.2"

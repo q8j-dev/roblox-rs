@@ -88,6 +88,7 @@ pub struct Renderer {
     terrain_meshes: Vec<GpuMesh>,
     terrain_generation: Option<u64>,
     smooth: crate::smooth::SmoothTerrain,
+    gui: Option<crate::gui_pass::GuiRenderer>,
     sky_bg: Option<(Vec<String>, wgpu::BindGroup)>,
     meshes: HashMap<MeshKey, GpuMesh>,
     depth: Option<(wgpu::Texture, wgpu::TextureView, u32, u32)>,
@@ -311,6 +312,7 @@ impl Renderer {
         });
         let smooth =
             crate::smooth::SmoothTerrain::new(&device, &globals_layout, format, DEPTH_FORMAT);
+        let gui = Some(crate::gui_pass::GuiRenderer::new(&device, &queue, format));
         let white = Image::solid([255, 255, 255, 255])
             .upload(&device, &queue, "white", false)
             .create_view(&wgpu::TextureViewDescriptor::default());
@@ -334,6 +336,7 @@ impl Renderer {
             terrain_meshes: Vec::new(),
             terrain_generation: None,
             smooth,
+            gui,
             sky_bg: None,
             meshes: HashMap::new(),
             depth: None,
@@ -690,6 +693,20 @@ impl Renderer {
         let scene = scene::extract(dm, aspect);
         self.update_terrain(dm);
         self.render_scene(&scene, target, width, height);
+        let items = crate::gui::extract(dm);
+        if let Some(mut gui) = self.gui.take() {
+            let load = |url: &str| self.read_content(url);
+            gui.render(
+                &self.device,
+                &self.queue,
+                target,
+                width.max(1),
+                height.max(1),
+                &items,
+                &load,
+            );
+            self.gui = Some(gui);
+        }
     }
 
     fn update_terrain(&mut self, dm: &DataModel) {

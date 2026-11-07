@@ -15,6 +15,7 @@ fn main() {
     let data = std::fs::read(&args[1]).expect("read place");
     let mut dm = DataModel::new();
     dm.load_place(&data).expect("load place");
+    dm.gui_view.screen = rbx_math::Vec2::new(width as f32, height as f32);
     if let Some(cam) = args.get(5) {
         let v: Vec<f32> = cam.split(',').filter_map(|s| s.parse().ok()).collect();
         if v.len() == 6

@@ -7,6 +7,7 @@ pub mod harness;
 mod instance;
 mod libraries;
 mod materials;
+pub mod net;
 mod runtime;
 mod scripts;
 pub mod security;

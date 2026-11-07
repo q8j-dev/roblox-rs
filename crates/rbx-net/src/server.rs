@@ -2,7 +2,10 @@ use crate::core::{Core, NIL, View};
 use crate::filter::{Filter, Verdict};
 use crate::scope::CONTAINERS;
 use crate::wire::{Message, NetId, NewInstance, PROTOCOL_VERSION, PeerId, SERVER_PEER};
-use rbx_dom::{DataModel, DomEvent, EventCursor, InstanceId, RemoteTarget, Variant, database};
+use rbx_dom::{
+    DataModel, DomEvent, EventCursor, InstanceId, RemoteDelivery, RemoteKind, RemoteTarget,
+    RemoteValue, Variant, database,
+};
 use std::collections::BTreeMap;
 
 #[derive(Default)]
@@ -157,10 +160,11 @@ impl ServerReplicator {
             }) else {
                 continue;
             };
-            let args: Vec<Variant> = call
+            let ids = &self.core.ids;
+            let args: Vec<RemoteValue> = call
                 .args
-                .iter()
-                .map(|a| self.core.encode_value(a))
+                .into_iter()
+                .map(|a| a.map_refs(&mut |r| r.and_then(|i| InstanceId::from_raw(ids.net(i).0))))
                 .collect();
             for (&peer, p) in &self.peers {
                 if !p.joined || player_peer.is_some_and(|only| only != peer) {
@@ -171,9 +175,9 @@ impl ServerReplicator {
                 }
                 self.outbox.push((
                     peer,
-                    Message::Event {
+                    Message::Remote {
                         id: self.core.ids.net(call.instance),
-                        name: "OnClientEvent".into(),
+                        kind: call.kind,
                         args: args.clone(),
                     },
                 ));
@@ -318,15 +322,47 @@ impl ServerReplicator {
                 if !self.verdict(peer, v, "event") {
                     return;
                 }
-                let event = desc.name.as_str();
-                let mut decoded: Vec<Variant> = Vec::with_capacity(args.len() + 1);
-                if event == "OnServerEvent" {
-                    decoded.push(Variant::Ref(player));
+                let decoded = args
+                    .into_iter()
+                    .map(|a| self.decode_arg(dm, peer, a))
+                    .collect();
+                dm.fire_signal(target, desc.name.as_str(), decoded);
+            }
+            Message::Remote { id, kind, args } => {
+                let Some(target) = self.resolve_known(dm, peer, id) else {
+                    return;
+                };
+                let class = dm.class_of(target).unwrap_or("Instance");
+                let expected = match kind {
+                    RemoteKind::Event => "RemoteEvent",
+                    _ => "RemoteFunction",
+                };
+                if !database().is_a(class, expected) {
+                    return;
                 }
-                for a in args {
-                    decoded.push(self.decode_arg(dm, peer, a));
+                let player = self.peers.get(&peer).and_then(Peer::player);
+                if kind == RemoteKind::Event
+                    && let Some(desc) = database().find_event(class, "OnServerEvent")
+                {
+                    let v = Filter { dm, player, strict }.event(target, desc);
+                    if !self.verdict(peer, v, "event") {
+                        return;
+                    }
                 }
-                dm.fire_signal(target, event, decoded);
+                let args = args
+                    .into_iter()
+                    .map(|a| {
+                        a.map_refs(&mut |r| {
+                            r.and_then(|raw| self.resolve_known(dm, peer, NetId(raw.raw())))
+                        })
+                    })
+                    .collect();
+                dm.deliver_remote(RemoteDelivery {
+                    instance: target,
+                    player,
+                    kind,
+                    args,
+                });
             }
             _ => {}
         }

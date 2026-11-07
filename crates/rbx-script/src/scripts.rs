@@ -205,9 +205,15 @@ pub fn reevaluate(lua: &Lua, id: InstanceId) {
             && e.dm.find_service("NetworkClient").is_none();
         if held { None } else { verdict }
     };
-    let running = with_state(lua, |s| {
-        s.running_scripts.get(&id).copied().unwrap_or(false)
+    let (running, test) = with_state(lua, |s| {
+        (
+            s.running_scripts.get(&id).copied().unwrap_or(false),
+            s.test_scripts.contains(&id),
+        )
     });
+    if test {
+        return;
+    }
     match (verdict, running) {
         (Some(identity), false) => start_script(lua, id, identity),
         (None, true) => stop_script(lua, id),

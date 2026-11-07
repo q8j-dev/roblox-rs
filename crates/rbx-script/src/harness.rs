@@ -1,7 +1,9 @@
-use crate::runtime::{Engine, MessageType, ScriptRuntime};
+use crate::net::{NetClient, NetServer};
+use crate::runtime::{Engine, MessageType, ScriptRuntime, Shared};
 use crate::security::Identity;
 use parking_lot::Mutex;
-use rbx_dom::DataModel;
+use rbx_dom::{DataModel, Variant};
+use rbx_net::memory_pair;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -35,22 +37,39 @@ pub const FRAME: f64 = 1.0 / 60.0;
 pub const EMPTY_TEST_SECONDS: f64 = 5.0;
 pub const SCRIPT_TIMEOUT: f64 = 10.0;
 
-pub fn run_place_file(path: &Path, content_root: Option<&Path>) -> Result<PlaceRun, String> {
+fn load_file(path: &Path) -> Result<(DataModel, Vec<String>), String> {
     let data = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
     let mut dm = DataModel::new();
     let load_warnings = dm
         .load_place(&data)
         .map_err(|e| format!("{}: {e}", path.display()))?;
     dm.ensure_terrain();
+    Ok((dm, load_warnings))
+}
+
+pub fn run_place_file(path: &Path, content_root: Option<&Path>) -> Result<PlaceRun, String> {
+    let (dm, load_warnings) = load_file(path)?;
     run_datamodel(dm, path, content_root, load_warnings)
 }
 
-pub fn run_datamodel(
+fn test_service_value(engine: &Shared, name: &str) -> Option<Variant> {
+    let e = engine.lock();
+    e.dm.find_service("TestService")
+        .and_then(|ts| e.dm.get(ts, name).ok())
+}
+
+fn has_test_scripts(engine: &Shared) -> bool {
+    let e = engine.lock();
+    e.dm.find_service("TestService")
+        .map(|ts| e.dm.children_of(ts).iter().any(|&c| e.dm.is_a(c, "Script")))
+        .unwrap_or(false)
+}
+
+fn prepare(
     dm: DataModel,
     path: &Path,
     content_root: Option<&Path>,
-    load_warnings: Vec<String>,
-) -> Result<PlaceRun, String> {
+) -> Result<ScriptRuntime, String> {
     let mut engine = Engine::new(dm);
     engine.content_root = content_root.map(Path::to_path_buf);
     if let Some(tests) = path
@@ -68,38 +87,58 @@ pub fn run_datamodel(
             .unwrap_or(0.0),
     );
     let engine = Arc::new(Mutex::new(engine));
-    let runtime = ScriptRuntime::new(engine.clone()).map_err(|e| e.to_string())?;
+    let runtime = ScriptRuntime::new(engine).map_err(|e| e.to_string())?;
     crate::runtime::set_script_timeout(&runtime.lua, SCRIPT_TIMEOUT);
-    let test_scripts = {
-        let e = engine.lock();
-        e.dm.find_service("TestService")
-            .map(|ts| e.dm.children_of(ts).iter().any(|&c| e.dm.is_a(c, "Script")))
-            .unwrap_or(false)
-    };
-    let players = {
-        let e = engine.lock();
-        e.dm.find_service("TestService")
-            .and_then(|ts| e.dm.get(ts, "NumberOfPlayers").ok())
-            .and_then(|v| v.as_i32())
-            .unwrap_or(0)
-    };
-    let auto_runs = {
-        let e = engine.lock();
-        e.dm.find_service("TestService")
-            .and_then(|ts| e.dm.get(ts, "AutoRuns").ok())
-            .and_then(|v| v.as_bool())
-            .unwrap_or(true)
-    };
-    {
-        let mut e = engine.lock();
-        if test_scripts && !auto_runs {
-            e.running = false;
-            e.stopped = true;
-        } else {
-            e.running = true;
-        }
+    Ok(runtime)
+}
+
+fn arm(runtime: &ScriptRuntime, test_scripts: bool) {
+    let auto_runs = test_service_value(&runtime.engine, "AutoRuns")
+        .and_then(|v| v.as_bool())
+        .unwrap_or(true);
+    let mut e = runtime.engine.lock();
+    if test_scripts && !auto_runs {
+        e.running = false;
+        e.stopped = true;
+    } else {
+        e.running = true;
     }
-    runtime.scan_scripts();
+}
+
+fn finish(run: &mut PlaceRun, engine: &Shared) {
+    let e = engine.lock();
+    run.game_time = e.game_time;
+    run.output = e
+        .output
+        .iter()
+        .map(|m| format!("{:?}: {}", m.kind, m.text))
+        .collect();
+    run.script_errors = e
+        .output
+        .iter()
+        .filter(|m| m.kind == MessageType::Error)
+        .map(|m| m.text.clone())
+        .collect();
+}
+
+fn test_timeout(engine: &Shared) -> f64 {
+    test_service_value(engine, "Timeout")
+        .and_then(|v| v.as_f64())
+        .unwrap_or(10.0)
+}
+
+pub fn run_datamodel(
+    dm: DataModel,
+    path: &Path,
+    content_root: Option<&Path>,
+    load_warnings: Vec<String>,
+) -> Result<PlaceRun, String> {
+    let runtime = prepare(dm, path, content_root)?;
+    let engine = runtime.engine.clone();
+    let test_scripts = has_test_scripts(&engine);
+    let players = test_service_value(&engine, "NumberOfPlayers")
+        .and_then(|v| v.as_i32())
+        .unwrap_or(0);
     let mut run = PlaceRun {
         path: path.to_path_buf(),
         has_tests: test_scripts,
@@ -107,17 +146,16 @@ pub fn run_datamodel(
         players,
         ..PlaceRun::default()
     };
+    if players > 0 && test_scripts {
+        run_multiplayer(runtime, &mut run, path, content_root, players as usize)?;
+        return Ok(run);
+    }
+    arm(&runtime, test_scripts);
+    runtime.scan_scripts();
     if test_scripts {
         crate::api::test::start(&runtime.lua, Identity::LocalGui).map_err(|e| e.to_string())?;
         runtime.pump();
-        let timeout = {
-            let e = engine.lock();
-            e.dm.find_service("TestService")
-                .and_then(|ts| e.dm.get(ts, "Timeout").ok())
-                .and_then(|v| v.as_f64())
-                .unwrap_or(10.0)
-        };
-        let max_frames = ((timeout + 2.0) / FRAME).ceil() as usize;
+        let max_frames = ((test_timeout(&engine) + 2.0) / FRAME).ceil() as usize;
         for _ in 0..max_frames {
             if engine.lock().test.done {
                 break;
@@ -137,18 +175,120 @@ pub fn run_datamodel(
         }
         run.completed = true;
     }
-    let e = engine.lock();
-    run.game_time = e.game_time;
-    run.output = e
-        .output
-        .iter()
-        .map(|m| format!("{:?}: {}", m.kind, m.text))
-        .collect();
-    run.script_errors = e
-        .output
-        .iter()
-        .filter(|m| m.kind == MessageType::Error)
-        .map(|m| m.text.clone())
-        .collect();
+    finish(&mut run, &engine);
     Ok(run)
+}
+
+struct ClientNode {
+    runtime: ScriptRuntime,
+    net: NetClient,
+    tested: bool,
+}
+
+fn run_multiplayer(
+    server: ScriptRuntime,
+    run: &mut PlaceRun,
+    path: &Path,
+    content_root: Option<&Path>,
+    players: usize,
+) -> Result<(), String> {
+    let mut net = NetServer::start(&server);
+    arm(&server, true);
+    server.scan_scripts();
+    crate::api::test::start(&server.lua, Identity::LocalGui).map_err(|e| e.to_string())?;
+    server.pump();
+    let client_file = path.with_extension("clienttest");
+    let mut clients = Vec::with_capacity(players);
+    for i in 0..players {
+        let dm = if client_file.is_file() {
+            load_file(&client_file)?.0
+        } else {
+            let mut dm = DataModel::new();
+            for s in [
+                "Workspace",
+                "Players",
+                "Lighting",
+                "StarterGui",
+                "StarterPack",
+            ] {
+                let _ = dm.get_service(s);
+            }
+            dm.ensure_terrain();
+            dm
+        };
+        let runtime = prepare(dm, &client_file, content_root)?;
+        let (server_end, client_end) = memory_pair();
+        net.accept(Box::new(server_end));
+        let client = NetClient::connect(&runtime, Box::new(client_end));
+        arm(&runtime, has_test_scripts(&runtime.engine));
+        let players_service = runtime
+            .engine
+            .lock()
+            .dm
+            .get_service("Players")
+            .map_err(|e| e.to_string())?;
+        crate::api::players::make_local_player(
+            &runtime.lua,
+            players_service,
+            -(i as i32 + 1),
+            false,
+            Some(&format!("Player{}", i + 1)),
+        )
+        .map_err(|e| e.to_string())?;
+        runtime.scan_scripts();
+        let tested = has_test_scripts(&runtime.engine);
+        if tested {
+            crate::api::test::start(&runtime.lua, Identity::LocalGui).map_err(|e| e.to_string())?;
+        }
+        clients.push(ClientNode {
+            runtime,
+            net: client,
+            tested,
+        });
+    }
+    let max_frames = ((test_timeout(&server.engine) + 2.0) / FRAME).ceil() as usize;
+    for _ in 0..max_frames {
+        if server.engine.lock().test.done {
+            break;
+        }
+        server.step(FRAME);
+        net.tick(&server);
+        for c in &mut clients {
+            c.net.tick(&c.runtime);
+            c.runtime.step(FRAME);
+            c.net.tick(&c.runtime);
+        }
+        net.tick(&server);
+    }
+    let e = server.engine.lock();
+    run.completed = e.test.done;
+    run.tests = e.test.tests;
+    run.warns = e.test.warns;
+    run.errors = e.test.errors;
+    run.failures = e.test.failures.clone();
+    drop(e);
+    finish(run, &server.engine);
+    for (i, c) in clients.iter().enumerate() {
+        if !c.net.joined() {
+            run.errors += 1;
+            run.failures.push(format!("client {} never joined", i + 1));
+        }
+        let e = c.runtime.engine.lock();
+        if c.tested {
+            run.tests += e.test.tests;
+            run.errors += e.test.errors;
+            run.failures.extend(
+                e.test
+                    .failures
+                    .iter()
+                    .map(|f| format!("client {}: {f}", i + 1)),
+            );
+        }
+        run.output.extend(
+            e.output
+                .iter()
+                .map(|m| format!("client {} {:?}: {}", i + 1, m.kind, m.text)),
+        );
+    }
+    Ok(())
 }

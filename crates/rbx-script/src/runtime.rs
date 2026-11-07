@@ -326,6 +326,7 @@ pub struct State {
     pub joins: HashMap<usize, Thread>,
     pub callbacks: HashMap<(InstanceId, String), RegistryKey>,
     pub pending_invokes: Vec<(InstanceId, String, Thread, Vec<Value>)>,
+    pub remote: crate::api::remote::RemoteState,
     pub watchdog: Arc<Mutex<Watchdog>>,
 }
 
@@ -498,6 +499,7 @@ impl ScriptRuntime {
             joins: HashMap::new(),
             callbacks: HashMap::new(),
             pending_invokes: Vec::new(),
+            remote: Default::default(),
             watchdog: Arc::new(Mutex::new(Watchdog::default())),
         });
         let wd = with_state(&lua, |s| s.watchdog.clone());
@@ -982,14 +984,22 @@ pub fn resume_thread_result(
         error_text = Some(text);
     }
     if thread.status() != ThreadStatus::Resumable {
-        let (hook, join, module) = with_state(lua, |s| {
+        let (hook, join, module, reply) = with_state(lua, |s| {
             s.threads.remove(&key);
             (
                 s.finish_hooks.remove(&key),
                 s.joins.remove(&key),
                 s.module_threads.remove(&key),
+                s.remote.replies.remove(&key),
             )
         });
+        if let Some(reply) = reply {
+            let outcome = match &result {
+                Ok(values) => Ok(values.clone()),
+                Err(_) => Err(error_text.clone().unwrap_or_default()),
+            };
+            crate::api::remote::send_reply(lua, reply, outcome);
+        }
         if let Some(module) = module {
             let outcome = match &result {
                 Ok(values) => Ok(values.clone()),
@@ -1378,6 +1388,7 @@ pub fn fire_lua(lua: &Lua, target: InstanceId, event: &'static str, args: MultiV
 pub fn pump(lua: &Lua) {
     for _ in 0..1000 {
         let eng = engine(lua);
+        let deliveries;
         let (dom, fired) = {
             let mut e = eng.lock();
             let cursor = e.cursor;
@@ -1391,6 +1402,7 @@ pub fn pump(lua: &Lua) {
                 };
                 e.print(kind, text);
             }
+            deliveries = e.dm.drain_deliveries();
             let signals = e.dm.drain_signals();
             for (target, event, args, seq) in signals {
                 e.fired.push_back(Fired {
@@ -1404,7 +1416,14 @@ pub fn pump(lua: &Lua) {
             (dom, fired)
         };
         let (start, dom) = dom;
+        let delivered = !deliveries.is_empty();
+        if delivered {
+            crate::api::remote::process_deliveries(lua, deliveries);
+        }
         if dom.is_empty() && fired.is_empty() {
+            if delivered {
+                continue;
+            }
             return;
         }
         for (i, ev) in dom.iter().enumerate() {
@@ -1422,7 +1441,7 @@ pub fn pump(lua: &Lua) {
     }
 }
 
-fn has_listeners(lua: &Lua, target: InstanceId, event: &'static str) -> bool {
+pub fn has_listeners(lua: &Lua, target: InstanceId, event: &'static str) -> bool {
     with_state(lua, |s| {
         s.by_event
             .get(&(target, event))

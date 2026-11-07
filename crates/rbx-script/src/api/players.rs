@@ -68,6 +68,17 @@ fn player_by_user_id(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
 fn create_local_player(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
     let uid = arg_number(args.first()).unwrap_or(0.0) as i32;
     let teleported = arg_bool(args.get(1));
+    let player = make_local_player(lua, id, uid, teleported, None)?;
+    ret(lua, push_instance(lua, player)?)
+}
+
+pub fn make_local_player(
+    lua: &Lua,
+    players: InstanceId,
+    uid: i32,
+    teleported: bool,
+    name: Option<&str>,
+) -> Result<InstanceId> {
     let player = {
         let eng = engine(lua);
         let mut e = eng.lock();
@@ -75,20 +86,23 @@ fn create_local_player(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret>
             return Err(rt("Local player already exists"));
         }
         let p = e.dm.create("Player").map_err(|x| rt(x.to_string()))?;
+        if let Some(n) = name {
+            e.dm.set_name(p, n);
+        }
         e.dm.set_unchecked(p, "TeleportedIn", Variant::Bool(teleported));
         e.dm.set_unchecked(p, "UserId", Variant::Int(uid));
         e.dm.local_player = Some(p);
         e.local_player = Some(p);
-        e.dm.set_parent(p, Some(id))
+        e.dm.set_parent(p, Some(players))
             .map_err(|x| rt(x.to_string()))?;
-        e.dm.notify_changed(id, "LocalPlayer");
+        e.dm.notify_changed(players, "LocalPlayer");
         let gear = e.dm.create("StarterGear").map_err(|x| rt(x.to_string()))?;
         let _ = e.dm.set_parent(gear, Some(p));
         create_player_gui(&mut e, p);
         p
     };
     pump(lua);
-    ret(lua, push_instance(lua, player)?)
+    Ok(player)
 }
 
 fn create_player_gui(e: &mut Engine, player: InstanceId) {

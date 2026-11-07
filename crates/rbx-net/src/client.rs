@@ -1,7 +1,8 @@
 use crate::core::{Core, NIL, View};
-use crate::scope::CONTAINERS;
 use crate::wire::{Message, NetId, NewInstance, PROTOCOL_VERSION, PeerId};
-use rbx_dom::{DataModel, DomEvent, EventCursor, InstanceId, RemoteTarget, Variant};
+use rbx_dom::{
+    DataModel, DomEvent, EventCursor, InstanceId, RemoteDelivery, RemoteKind, RemoteTarget, Variant,
+};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ClientState {
@@ -80,13 +81,16 @@ impl ClientReplicator {
             if call.target != RemoteTarget::Server || !self.view.knows(call.instance) {
                 continue;
             }
-            out.push(Message::Event {
-                id: self.core.ids.net(call.instance),
-                name: "OnServerEvent".into(),
+            let ids = &self.core.ids;
+            out.push(Message::Remote {
+                id: ids.net(call.instance),
+                kind: call.kind,
                 args: call
                     .args
-                    .iter()
-                    .map(|a| self.core.encode_value(a))
+                    .into_iter()
+                    .map(|a| {
+                        a.map_refs(&mut |r| r.and_then(|i| InstanceId::from_raw(ids.net(i).0)))
+                    })
                     .collect(),
             });
         }
@@ -103,16 +107,8 @@ impl ClientReplicator {
         self.view.begin();
         let dm: &DataModel = dm;
         let mut out = Vec::new();
-        for c in CONTAINERS {
-            let Some(container) = dm.find_service(c.class) else {
-                continue;
-            };
-            if !self.view.knows(container) || !c.children {
-                continue;
-            }
-            for d in dm.descendants(container) {
-                self.core.sync(dm, &mut self.view, d, &mut out);
-            }
+        if let Some(player) = dm.local_player.filter(|p| dm.contains(*p)) {
+            self.core.sync(dm, &mut self.view, player, &mut out);
         }
         self.outbox.extend(out);
     }
@@ -187,6 +183,32 @@ impl ClientReplicator {
                     })
                     .collect();
                 dm.fire_signal(target, event, args);
+            }
+            Message::Remote { id, kind, args } => {
+                let Some(target) = self.core.ids.local(dm, id) else {
+                    return;
+                };
+                let expected = match kind {
+                    RemoteKind::Event => "RemoteEvent",
+                    _ => "RemoteFunction",
+                };
+                if !dm.is_a(target, expected) {
+                    return;
+                }
+                let ids = &self.core.ids;
+                let dmr: &DataModel = dm;
+                let args = args
+                    .into_iter()
+                    .map(|a| {
+                        a.map_refs(&mut |r| r.and_then(|raw| ids.local(dmr, NetId(raw.raw()))))
+                    })
+                    .collect();
+                dm.deliver_remote(RemoteDelivery {
+                    instance: target,
+                    player: None,
+                    kind,
+                    args,
+                });
             }
             Message::Ping { nonce } => self.outbox.push(Message::Pong { nonce }),
             Message::JoinComplete => {

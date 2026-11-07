@@ -1,4 +1,4 @@
-use rbx_dom::Variant;
+use rbx_dom::{RemoteKind, RemoteValue, Variant};
 use rbx_math::{CFrame, Vec3};
 use serde::{Deserialize, Serialize};
 
@@ -82,14 +82,10 @@ pub enum Message {
         name: String,
         args: Vec<Variant>,
     },
-    Invoke {
-        call: u32,
+    Remote {
         id: NetId,
-        args: Vec<Variant>,
-    },
-    InvokeResult {
-        call: u32,
-        result: Result<Vec<Variant>, String>,
+        kind: RemoteKind,
+        args: Vec<RemoteValue>,
     },
     Ownership {
         id: NetId,

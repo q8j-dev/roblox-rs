@@ -5,6 +5,7 @@ pub mod instance;
 pub mod misc;
 pub mod physics;
 pub mod players;
+pub mod remote;
 pub mod services;
 pub mod terrain;
 pub mod test;
@@ -56,6 +57,7 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     players::register(&mut r);
     animation::register(&mut r);
     terrain::register(&mut r);
+    remote::register(&mut r);
     r
 });
 

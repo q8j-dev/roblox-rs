@@ -714,6 +714,9 @@ impl UserData for LRegion3 {
             }
             Ok(LRegion3(t.0.expand_to_grid(res)))
         });
+        m.add_meta_method(MetaMethod::Eq, |_, t, o: Value| {
+            Ok(matches!(&o, Value::UserData(u) if u.borrow::<LRegion3>().map(|v| v.0 == t.0).unwrap_or(false)))
+        });
         m.add_meta_method(MetaMethod::ToString, |_, t, ()| {
             Ok(format!(
                 "{}; {}",
@@ -739,6 +742,9 @@ impl UserData for LRegion3int16 {
     }
 
     fn add_methods<M: UserDataMethods<Self>>(m: &mut M) {
+        m.add_meta_method(MetaMethod::Eq, |_, t, o: Value| {
+            Ok(matches!(&o, Value::UserData(u) if u.borrow::<LRegion3int16>().map(|v| v.0 == t.0).unwrap_or(false)))
+        });
         m.add_meta_method(MetaMethod::ToString, |_, t, ()| {
             Ok(format!(
                 "{}, {}, {}; {}, {}, {}",

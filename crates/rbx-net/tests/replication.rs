@@ -1,4 +1,4 @@
-use rbx_dom::{DataModel, InstanceId, RemoteCall, RemoteTarget, Variant};
+use rbx_dom::{DataModel, InstanceId, RemoteCall, RemoteKind, RemoteTarget, RemoteValue, Variant};
 use rbx_math::Vec3;
 use rbx_net::{
     ClientReplicator, Connection, MemoryConnection, PeerId, ServerReplicator, memory_pair,
@@ -278,40 +278,64 @@ fn remote_events_cross_the_wire() {
     let ev = net.dm.create("RemoteEvent").unwrap();
     net.dm.set_name(ev, "Chat");
     net.dm.set_parent(ev, Some(rs)).unwrap();
+    let rf = net.dm.create("RemoteFunction").unwrap();
+    net.dm.set_parent(rf, Some(rs)).unwrap();
     net.pump();
-    net.dm.drain_signals();
 
     let c = &mut net.clients[a];
     let cev = find(&c.dm, &["ReplicatedStorage", "Chat"]).unwrap();
     c.dm.queue_remote(RemoteCall {
         instance: cev,
         target: RemoteTarget::Server,
-        args: vec![Variant::String("hi".into())],
+        kind: RemoteKind::Event,
+        args: vec![
+            RemoteValue::Value(Variant::String("hi".into())),
+            RemoteValue::Map(vec![(
+                "part".into(),
+                RemoteValue::Value(Variant::Ref(Some(cev))),
+            )]),
+        ],
     });
     net.pump();
-    let fired = net.dm.drain_signals();
+    let got = net.dm.drain_deliveries();
     let alice = find(&net.dm, &["Players", "Alice"]).unwrap();
-    assert_eq!(fired.len(), 1);
-    assert_eq!(fired[0].0, ev);
-    assert_eq!(fired[0].1, "OnServerEvent");
+    assert_eq!(got.len(), 1);
+    assert_eq!(got[0].instance, ev);
+    assert_eq!(got[0].player, Some(alice));
     assert_eq!(
-        fired[0].2,
-        vec![Variant::Ref(Some(alice)), Variant::String("hi".into())]
+        got[0].args,
+        vec![
+            RemoteValue::Value(Variant::String("hi".into())),
+            RemoteValue::Map(vec![(
+                "part".into(),
+                RemoteValue::Value(Variant::Ref(Some(ev))),
+            )]),
+        ]
     );
 
-    for c in &mut net.clients {
-        c.dm.drain_signals();
-    }
     net.dm.queue_remote(RemoteCall {
         instance: ev,
         target: RemoteTarget::AllPlayers,
-        args: vec![Variant::Int(7)],
+        kind: RemoteKind::Invoke(3),
+        args: Vec::new(),
     });
     net.pump();
     for c in [a, b] {
-        let fired = net.clients[c].dm.drain_signals();
-        assert_eq!(fired.len(), 1);
-        assert_eq!(fired[0].1, "OnClientEvent");
-        assert_eq!(fired[0].2, vec![Variant::Int(7)]);
+        assert!(net.clients[c].dm.drain_deliveries().is_empty());
+    }
+
+    net.dm.queue_remote(RemoteCall {
+        instance: rf,
+        target: RemoteTarget::AllPlayers,
+        kind: RemoteKind::Invoke(3),
+        args: vec![RemoteValue::Array(vec![RemoteValue::Value(Variant::Int(
+            7,
+        ))])],
+    });
+    net.pump();
+    for c in [a, b] {
+        let got = net.clients[c].dm.drain_deliveries();
+        assert_eq!(got.len(), 1);
+        assert_eq!(got[0].kind, RemoteKind::Invoke(3));
     }
 }

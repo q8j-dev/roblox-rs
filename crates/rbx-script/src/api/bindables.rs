@@ -107,6 +107,24 @@ fn invoke(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
 }
 
 pub fn set_callback(lua: &Lua, id: InstanceId, name: &str, value: Value) -> Result<()> {
+    if matches!(name, "OnServerInvoke" | "OnClientInvoke") {
+        crate::api::remote::check_callback(lua, name)?;
+        match value {
+            Value::Function(f) => {
+                let key = lua.create_registry_value(f)?;
+                with_state(lua, |s| {
+                    s.callbacks.insert((id, name.to_string()), key);
+                });
+            }
+            Value::Nil => {
+                with_state(lua, |s| {
+                    s.callbacks.remove(&(id, name.to_string()));
+                });
+            }
+            _ => return Err(rt(format!("{name} must be set to a function"))),
+        }
+        return crate::api::remote::callback_changed(lua, id);
+    }
     match value {
         Value::Function(f) => {
             let key = lua.create_registry_value(f.clone())?;

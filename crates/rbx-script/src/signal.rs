@@ -40,6 +40,7 @@ pub fn connect(
         id
     });
     touch_slots_changed(lua, target, event, 1);
+    crate::api::remote::flush_latched(lua, target, event);
     if event == "Equipped" {
         let mouse = crate::runtime::engine(lua)
             .lock()

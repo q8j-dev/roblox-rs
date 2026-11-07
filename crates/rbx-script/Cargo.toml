@@ -15,6 +15,7 @@ rbx-base = { version = "0.1.0", path = "../rbx-base" }
 rbx-dom = { version = "0.1.0", path = "../rbx-dom" }
 rbx-format = { version = "0.1.0", path = "../rbx-format" }
 rbx-math = { version = "0.1.0", path = "../rbx-math" }
+rbx-net = { version = "0.1.0", path = "../rbx-net" }
 rbx-physics = { version = "0.1.0", path = "../rbx-physics" }
 rbx-reflection = { version = "0.1.0", path = "../rbx-reflection" }
 tracing = "0.1.44"

@@ -17,3 +17,10 @@ rbx-dom = { version = "0.1.0", path = "../rbx-dom" }
 rbx-math = { version = "0.1.0", path = "../rbx-math" }
 rbx-reflection = { version = "0.1.0", path = "../rbx-reflection" }
 tracing = "0.1.44"
+
+[dev-dependencies]
+criterion = { version = "0.8.2", default-features = false, features = ["cargo_bench_support"] }
+
+[[bench]]
+name = "step"
+harness = false

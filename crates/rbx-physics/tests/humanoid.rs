@@ -213,3 +213,51 @@ fn humanoid_dies_without_health() {
         .count();
     assert_eq!(joints, 0, "joints broken on death");
 }
+
+#[test]
+fn resting_humanoid_stays_kinematic_across_assembly_rebuilds() {
+    let mut dm = DataModel::new();
+    let ws = dm.get_service("Workspace").expect("ws");
+    part(
+        &mut dm,
+        ws,
+        "Base",
+        Vec3::new(200.0, 2.0, 200.0),
+        Vec3::new(0.0, -1.0, 0.0),
+        true,
+    );
+    let (_, h, torso) = character(&mut dm, ws, 2.0);
+    let mut world = PhysicsWorld::new();
+    world.attach(&mut dm);
+    for _ in 0..240 {
+        world.step(&mut dm, 1.0 / 60.0);
+    }
+    assert_eq!(
+        world.humanoid(h).expect("sim").state,
+        HState::RunningNoPhysics
+    );
+    assert!(world.assembly_of(torso).expect("assembly").kinematic);
+    let a = part(
+        &mut dm,
+        ws,
+        "A",
+        Vec3::new(1.0, 1.0, 1.0),
+        Vec3::new(50.0, 5.0, 0.0),
+        false,
+    );
+    let b = part(
+        &mut dm,
+        ws,
+        "B",
+        Vec3::new(1.0, 1.0, 1.0),
+        Vec3::new(51.0, 5.0, 0.0),
+        false,
+    );
+    weld(&mut dm, a, b, "Weld");
+    world.step(&mut dm, 1.0 / 240.0);
+    assert_eq!(
+        world.humanoid(h).expect("sim").state,
+        HState::RunningNoPhysics
+    );
+    assert!(world.assembly_of(torso).expect("assembly").kinematic);
+}

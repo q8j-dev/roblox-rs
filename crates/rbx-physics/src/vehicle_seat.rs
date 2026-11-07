@@ -139,7 +139,7 @@ impl PhysicsWorld {
             let (linear, rotational) = self.part_velocity(si);
             let over_max_speed = linear.length() > control.max_speed;
             let over_turn_speed = rotational.y.abs() > control.turn_speed;
-            let applied = control.torque * 1000.0;
+            let smoother = rbx_base::flags::flag_bool("SmootherVehicleSeatControlSystem", false);
             let wake = control.throttle != 0 || control.steer != 0;
             for h in hinges {
                 let j = &self.joints[&h.joint];
@@ -164,6 +164,36 @@ impl PhysicsWorld {
                 if !h.axle_pointing_in {
                     polarity = -polarity;
                 }
+                let mut gain = 1.0f32;
+                if smoother {
+                    if control.steer == 0 {
+                        let previous = self
+                            .seat_axle_velocities
+                            .insert(h.joint, joint_velocity)
+                            .unwrap_or(0.0);
+                        let mut correction =
+                            (rotational.y * control.throttle as f32 * 5.0).clamp(-1.0, 1.0);
+                        if h.on_right {
+                            correction = -correction;
+                        }
+                        correction = correction.max(0.0);
+                        if control.throttle == 0 {
+                            gain = (joint_velocity.abs() / 10.0).clamp(0.0, 1.0);
+                            if joint_velocity * previous < 0.0 {
+                                let delta = (previous - joint_velocity).abs();
+                                gain *= joint_velocity.abs() / delta;
+                            }
+                        } else if control.max_speed > 0.0 {
+                            gain =
+                                ((linear.length() - control.max_speed).abs() - 0.5).clamp(0.0, 1.0);
+                        }
+                        gain += correction;
+                    } else if control.turn_speed != 0.0 {
+                        gain = 2.0 * (control.turn_speed - rotational.y.abs()) / control.turn_speed
+                            + 1.0;
+                    }
+                }
+                let applied = gain * control.torque * 1000.0;
                 let torque: Vec3 = axle * (polarity as f32 * applied);
                 let (aa, ab) = (self.parts[a].assembly, self.parts[b].assembly);
                 for (ai, t) in [(aa, torque), (ab, -torque)] {

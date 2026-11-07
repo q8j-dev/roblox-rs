@@ -301,6 +301,8 @@ pub struct Assembly {
     pub radius: f32,
     pub moved: bool,
     pub kinematic: bool,
+    pub pre_solve_linear: Vec3,
+    pub pre_solve_angular: Vec3,
 }
 
 impl Assembly {
@@ -320,6 +322,8 @@ impl Assembly {
         self.sleep_checking = checking;
         self.linear = Vec3::ZERO;
         self.angular = Vec3::ZERO;
+        self.pre_solve_linear = Vec3::ZERO;
+        self.pre_solve_angular = Vec3::ZERO;
     }
 
     pub(crate) fn high_velocity(&self) -> bool {
@@ -409,6 +413,7 @@ pub struct PhysicsWorld {
     pub solver: Solver,
     pub mode: PhysicalMode,
     pub fallen_parts_destroy_height: f32,
+    pub spring_kernel_place: bool,
     pub workspace: Option<InstanceId>,
     pub joints_service: Option<InstanceId>,
     pub step_count: u64,
@@ -425,7 +430,9 @@ pub struct PhysicsWorld {
     pub recursive_wake: Vec<usize>,
     pub external_wake: Vec<usize>,
     pub tickled_parts: Vec<InstanceId>,
+    pub plain_wake: Vec<usize>,
     pub vehicle_seats: std::collections::BTreeSet<InstanceId>,
+    pub seat_axle_velocities: HashMap<InstanceId, f32>,
     pub part_joints: HashMap<InstanceId, std::collections::BTreeSet<InstanceId>>,
     pub local_character: Option<InstanceId>,
     cursor: Option<EventCursor>,
@@ -570,6 +577,7 @@ impl PhysicsWorld {
             solver: Solver::default(),
             mode: PhysicalMode::New,
             fallen_parts_destroy_height: -500.0,
+            spring_kernel_place: false,
             workspace: None,
             joints_service: None,
             step_count: 0,
@@ -586,7 +594,9 @@ impl PhysicsWorld {
             recursive_wake: Vec::new(),
             external_wake: Vec::new(),
             tickled_parts: Vec::new(),
+            plain_wake: Vec::new(),
             vehicle_seats: Default::default(),
+            seat_axle_velocities: HashMap::new(),
             part_joints: HashMap::new(),
             local_character: None,
             cursor: None,
@@ -628,6 +638,11 @@ impl PhysicsWorld {
                 .and_then(|v| v.as_f32())
                 .unwrap_or(-500.0);
             self.mode = physical_mode(get_enum(dm, ws, "PhysicalPropertiesMode"));
+            self.spring_kernel_place = dm
+                .get(ws, "PGSPhysicsSolverEnabled")
+                .ok()
+                .and_then(|v| v.as_bool())
+                .is_some_and(|on| !on);
         }
     }
 
@@ -1044,7 +1059,10 @@ impl PhysicsWorld {
 
     fn property_changed(&mut self, dm: &DataModel, id: InstanceId, prop: &'static str) {
         if Some(id) == self.workspace {
-            if matches!(prop, "FallenPartsDestroyHeight" | "PhysicalPropertiesMode") {
+            if matches!(
+                prop,
+                "FallenPartsDestroyHeight" | "PhysicalPropertiesMode" | "PGSPhysicsSolverEnabled"
+            ) {
                 let old = self.mode;
                 self.read_workspace(dm);
                 if old != self.mode {
@@ -1199,6 +1217,7 @@ impl PhysicsWorld {
         {
             asm.sleeping = false;
             asm.history.wake();
+            self.plain_wake.push(a);
         }
     }
 
@@ -1440,6 +1459,7 @@ impl PhysicsWorld {
             return;
         }
         self.topology_dirty = false;
+        self.plain_wake.clear();
         let n = self.parts.len();
         let mut old_vel: Vec<(Vec3, Vec3, bool)> = vec![(Vec3::ZERO, Vec3::ZERO, false); n];
         for (i, p) in self.parts.iter().enumerate() {
@@ -1548,6 +1568,8 @@ impl PhysicsWorld {
                 radius: 0.0,
                 moved: true,
                 kinematic: false,
+                pre_solve_linear: Vec3::ZERO,
+                pre_solve_angular: Vec3::ZERO,
             });
         }
         for (i, c) in comp.iter().enumerate() {
@@ -1577,6 +1599,7 @@ impl PhysicsWorld {
             };
             self.parts[a].assembly != self.parts[b].assembly
         });
+        self.restore_kinematic_humanoids();
         self.flush_spatial();
     }
 

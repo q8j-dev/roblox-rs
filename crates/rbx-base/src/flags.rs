@@ -28,6 +28,8 @@ const ENGINE_VALUES: &[(&str, &str)] = &[
     ("UsePGSSolver", "true"),
     ("PGSUsesConstraintBasedBodyMovers", "true"),
     ("PGSWakePrimitivesWithBodyMoverPropertyChanges", "true"),
+    ("SmootherVehicleSeatControlSystem", "true"),
+    ("PGSWakeOtherAssemblyForJoints", "true"),
     ("MaterialPropertiesEnabled", "true"),
     ("FixTouchEndedReporting", "true"),
     ("UseInGameTopBar", "true"),

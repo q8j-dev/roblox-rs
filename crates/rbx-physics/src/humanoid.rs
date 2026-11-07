@@ -1,3 +1,5 @@
+use crate::shape::ShapeKind;
+use crate::step::joint_k;
 use crate::world::PhysicsWorld;
 use rbx_dom::{DataModel, InstanceId, Variant};
 use rbx_math::{CFrame, Mat3, Vec3};
@@ -723,6 +725,8 @@ pub struct HumanoidSim {
     last_force: Vec3,
     last_torque: Vec3,
     pub touched_hard: bool,
+    pub impact_peak: f32,
+    pub impact_hit: bool,
     pub activate_physics: bool,
     pub activate_impulse: Vec3,
     pub is_walking: bool,
@@ -816,6 +820,8 @@ impl HumanoidSim {
             last_force: Vec3::ZERO,
             last_torque: Vec3::ZERO,
             touched_hard: false,
+            impact_peak: 0.0,
+            impact_hit: false,
             activate_physics: false,
             activate_impulse: Vec3::ZERO,
             is_walking: false,
@@ -1608,6 +1614,86 @@ impl PhysicsWorld {
         h.saved_friction.clear();
     }
 
+    pub(crate) fn latch_humanoid_impacts(&mut self) {
+        let ids: Vec<InstanceId> = self.humanoids.keys().copied().collect();
+        for id in ids {
+            let Some(mut h) = self.humanoids.remove(&id) else {
+                continue;
+            };
+            if let Some(a) = h.app.torso_slow().and_then(|t| self.assembly_index(t)) {
+                let force = self.spring_contact_peak(a);
+                if force > h.impact_peak {
+                    h.impact_peak = force;
+                }
+                if force > 0.0 && !h.impact_hit && self.hit_by_high_impact(&h) {
+                    h.impact_hit = true;
+                }
+            }
+            self.humanoids.insert(id, h);
+        }
+    }
+
+    fn spring_contact_peak(&self, a: usize) -> f32 {
+        let mut total = 0.0;
+        let m1 = self.assemblies[a].mass;
+        for c in self.contacts.values() {
+            if !c.overlapping {
+                continue;
+            }
+            let (Some(pa), Some(pb)) = (self.part(c.a), self.part(c.b)) else {
+                continue;
+            };
+            let other = if pa.assembly == a {
+                pb.assembly
+            } else if pb.assembly == a {
+                pa.assembly
+            } else {
+                continue;
+            };
+            if other == a {
+                continue;
+            }
+            let o = &self.assemblies[other];
+            let mu = if o.anchored || o.kinematic || o.mass <= 0.0 {
+                m1
+            } else {
+                m1 * o.mass / (m1 + o.mass)
+            };
+            let k = joint_k(pa.shape.size, pa.shape.kind == ShapeKind::Ball)
+                .min(joint_k(pb.shape.size, pb.shape.kind == ShapeKind::Ball));
+            let pose_a = pa.cframe * pa.shape.local;
+            let mut approach = 0.0f32;
+            for m in &c.manifolds {
+                let n = pose_a.rotation * crate::math::from_parry_vec(m.local_n1);
+                if n.length_squared() < 0.8 {
+                    continue;
+                }
+                let n = n.normalize();
+                for point in &m.points {
+                    let at = pose_a * crate::math::from_parry_vec(point.local_p1);
+                    let v = n.dot(self.impact_velocity(c.a, at) - self.impact_velocity(c.b, at));
+                    approach = approach.max(v);
+                }
+            }
+            total += approach * (k * mu).sqrt();
+        }
+        total
+    }
+
+    pub(crate) fn restore_kinematic_humanoids(&mut self) {
+        let torsos: Vec<InstanceId> = self
+            .humanoids
+            .values()
+            .filter(|h| h.state.is_no_physics())
+            .filter_map(|h| h.app.torso_slow())
+            .collect();
+        for t in torsos {
+            if let Some(a) = self.assembly_index(t) {
+                self.assemblies[a].kinematic = true;
+            }
+        }
+    }
+
     fn set_kinematic(&mut self, h: &HumanoidSim, on: bool) {
         if let Some(a) = h.app.torso_slow().and_then(|t| self.assembly_index(t))
             && self.assemblies[a].kinematic != on
@@ -2053,16 +2139,31 @@ impl PhysicsWorld {
         let root_cf = self.assemblies[a].root_cframe();
         h.last_torque = root_cf.vector_to_object_space(self.assemblies[a].torque);
         h.last_force = self.assemblies[a].force;
+        let (impact, impact_hit) = if h.state.is_no_physics() {
+            (0.0, false)
+        } else {
+            (
+                std::mem::take(&mut h.impact_peak),
+                std::mem::take(&mut h.impact_hit),
+            )
+        };
         match h.state {
             HState::Running | HState::RunningSlave => {
                 if h.touched_hard {
                     return;
                 }
                 let crit = RAGDOLL_CRITERIA * 6000.0;
-                if (h.last_force.length_squared() > crit * crit
-                    || h.last_torque.length_squared() > crit * crit)
-                    && self.hit_by_high_impact(h)
-                {
+                let tripped = if self.spring_kernel_place {
+                    (h.last_force.length_squared() > crit * crit
+                        || h.last_torque.length_squared() > crit * crit
+                        || impact > crit)
+                        && impact_hit
+                } else {
+                    (h.last_force.length_squared() > crit * crit
+                        || h.last_torque.length_squared() > crit * crit)
+                        && self.hit_by_high_impact(h)
+                };
+                if tripped {
                     h.touched_hard = true;
                     return;
                 }
@@ -2087,6 +2188,16 @@ impl PhysicsWorld {
         }
     }
 
+    fn impact_velocity(&self, id: InstanceId, at: Vec3) -> Vec3 {
+        match self.assembly_index(id) {
+            Some(a) if self.spring_kernel_place && !self.assemblies[a].anchored => {
+                let asm = &self.assemblies[a];
+                asm.pre_solve_linear + asm.pre_solve_angular.cross(at - asm.position)
+            }
+            _ => self.point_velocity(id, at).0,
+        }
+    }
+
     fn hit_by_high_impact(&self, h: &HumanoidSim) -> bool {
         let Some(torso) = h.app.torso_slow() else {
             return false;
@@ -2095,20 +2206,28 @@ impl PhysicsWorld {
             if !c.overlapping || (c.a != torso && c.b != torso) {
                 continue;
             }
+            let Some(pa) = self.part(c.a) else {
+                continue;
+            };
+            let pose_a = pa.cframe * pa.shape.local;
             let other = if c.a == torso { c.b } else { c.a };
             for m in &c.manifolds {
-                for _ in &m.points {
-                    let Some(tp) = self.part(torso) else {
-                        continue;
-                    };
-                    let at = tp.cframe.translation;
-                    let hv = self.point_velocity(torso, at).0;
-                    let ov = self.point_velocity(other, at).0;
-                    let rel = (ov - hv).length();
-                    if rel <= RAGDOLL_CRITERIA {
+                let n = pose_a.rotation * crate::math::from_parry_vec(m.local_n1);
+                if n.length_squared() < 0.8 {
+                    continue;
+                }
+                let n = n.normalize();
+                for point in &m.points {
+                    let at = pose_a * crate::math::from_parry_vec(point.local_p1);
+                    let va = self.impact_velocity(c.a, at);
+                    let vb = self.impact_velocity(c.b, at);
+                    let approach = n.dot(va - vb);
+                    if approach <= RAGDOLL_CRITERIA {
                         continue;
                     }
-                    if hv.length() >= ov.length() {
+                    let human = self.impact_velocity(torso, at);
+                    let object = self.impact_velocity(other, at);
+                    if n.dot(human).abs() >= n.dot(object).abs() {
                         continue;
                     }
                     return true;

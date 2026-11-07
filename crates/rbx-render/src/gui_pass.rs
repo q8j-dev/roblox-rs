@@ -207,7 +207,7 @@ impl GuiRenderer {
                 }),
                 primitive: wgpu::PrimitiveState::default(),
                 depth_stencil: depth,
-                multisample: Default::default(),
+                multisample: crate::renderer::msaa_state(),
                 multiview_mask: None,
                 cache: None,
             })
@@ -560,6 +560,7 @@ impl GuiRenderer {
         device: &wgpu::Device,
         queue: &wgpu::Queue,
         target: &wgpu::TextureView,
+        resolve: Option<&wgpu::TextureView>,
         depth: Option<&wgpu::TextureView>,
         (width, height): (u32, u32),
         scale: f32,
@@ -685,7 +686,7 @@ impl GuiRenderer {
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                     view: target,
                     depth_slice: None,
-                    resolve_target: None,
+                    resolve_target: resolve,
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Load,
                         store: wgpu::StoreOp::Store,

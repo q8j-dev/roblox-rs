@@ -474,7 +474,7 @@ impl SmoothTerrain {
                     stencil: Default::default(),
                     bias: Default::default(),
                 }),
-                multisample: Default::default(),
+                multisample: crate::renderer::msaa_state(),
                 multiview_mask: None,
                 cache: None,
             })

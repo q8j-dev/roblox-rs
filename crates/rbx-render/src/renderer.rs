@@ -9,6 +9,14 @@ use std::path::{Path, PathBuf};
 use wgpu::util::DeviceExt;
 
 pub const DEPTH_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Depth32Float;
+pub const SAMPLE_COUNT: u32 = 4;
+
+pub fn msaa_state() -> wgpu::MultisampleState {
+    wgpu::MultisampleState {
+        count: SAMPLE_COUNT,
+        ..Default::default()
+    }
+}
 pub const SHADING_DISTANCE: f32 = 300.0;
 const OUTLINE_THICKNESS: f32 = 40.0;
 const OUTLINE_BRIGHTNESS_MIN: f32 = 50.0;
@@ -115,6 +123,7 @@ pub struct Renderer {
     sky_bg: Option<(Vec<String>, wgpu::BindGroup)>,
     meshes: HashMap<MeshKey, GpuMesh>,
     depth: Option<(wgpu::Texture, wgpu::TextureView, u32, u32)>,
+    msaa_color: Option<(wgpu::Texture, wgpu::TextureView)>,
     content_dir: PathBuf,
     platform_dir: PathBuf,
     white: wgpu::TextureView,
@@ -390,7 +399,7 @@ impl Renderer {
                     stencil: Default::default(),
                     bias: Default::default(),
                 }),
-                multisample: Default::default(),
+                multisample: crate::renderer::msaa_state(),
                 multiview_mask: None,
                 cache: None,
             })
@@ -464,7 +473,7 @@ impl Renderer {
                     stencil: Default::default(),
                     bias: Default::default(),
                 }),
-                multisample: Default::default(),
+                multisample: crate::renderer::msaa_state(),
                 multiview_mask: None,
                 cache: None,
             })
@@ -514,7 +523,7 @@ impl Renderer {
                 stencil: Default::default(),
                 bias: Default::default(),
             }),
-            multisample: Default::default(),
+            multisample: crate::renderer::msaa_state(),
             multiview_mask: None,
             cache: None,
         });
@@ -567,6 +576,7 @@ impl Renderer {
             sky_bg: None,
             meshes: HashMap::new(),
             depth: None,
+            msaa_color: None,
             content_dir: content_dir.to_path_buf(),
             platform_dir: platform_dir.to_path_buf(),
             white,
@@ -1034,15 +1044,16 @@ impl Renderer {
         {
             return;
         }
+        let size = wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        };
         let texture = self.device.create_texture(&wgpu::TextureDescriptor {
             label: Some("depth"),
-            size: wgpu::Extent3d {
-                width,
-                height,
-                depth_or_array_layers: 1,
-            },
+            size,
             mip_level_count: 1,
-            sample_count: 1,
+            sample_count: SAMPLE_COUNT,
             dimension: wgpu::TextureDimension::D2,
             format: DEPTH_FORMAT,
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
@@ -1050,6 +1061,18 @@ impl Renderer {
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
         self.depth = Some((texture, view, width, height));
+        let color = self.device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("msaa color"),
+            size,
+            mip_level_count: 1,
+            sample_count: SAMPLE_COUNT,
+            dimension: wgpu::TextureDimension::D2,
+            format: self.format,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT,
+            view_formats: &[],
+        });
+        let color_view = color.create_view(&wgpu::TextureViewDescriptor::default());
+        self.msaa_color = Some((color, color_view));
     }
 
     pub fn render(&mut self, dm: &DataModel, target: &wgpu::TextureView, width: u32, height: u32) {
@@ -1075,7 +1098,8 @@ impl Renderer {
             gui.render(
                 &self.device,
                 &self.queue,
-                target,
+                self.msaa_color.as_ref().map(|c| &c.1).unwrap_or(target),
+                Some(target),
                 self.depth.as_ref().map(|d| &d.1),
                 (width.max(1), height.max(1)),
                 self.gui_scale,
@@ -1485,12 +1509,15 @@ impl Renderer {
                 Some(d) => &d.1,
                 None => return,
             };
+            let Some((_, msaa_view)) = &self.msaa_color else {
+                return;
+            };
             let mut pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
                 label: Some("scene"),
                 color_attachments: &[Some(wgpu::RenderPassColorAttachment {
-                    view: target,
+                    view: msaa_view,
                     depth_slice: None,
-                    resolve_target: None,
+                    resolve_target: Some(target),
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
                             r: clear.r as f64,

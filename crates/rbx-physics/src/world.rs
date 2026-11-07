@@ -379,6 +379,13 @@ pub struct StepEvents {
 }
 
 #[derive(Clone, Debug)]
+pub struct OwnershipGroup {
+    pub root: InstanceId,
+    pub assemblies: Vec<InstanceId>,
+    pub parts: Vec<InstanceId>,
+}
+
+#[derive(Clone, Debug)]
 pub struct NetworkRoot {
     pub id: InstanceId,
     pub sleeping: bool,
@@ -1292,6 +1299,91 @@ impl PhysicsWorld {
         self.move_part_external(i, cframe);
         self.set_part_velocity(i, false, angular);
         self.set_part_velocity(i, true, linear);
+    }
+
+    pub fn ownership_groups(&self) -> Vec<OwnershipGroup> {
+        let n = self.assemblies.len();
+        let mut adjacent: Vec<Vec<usize>> = vec![Vec::new(); n];
+        let mut grounded_neighbor = vec![false; n];
+        let mut joints: Vec<&Joint> = self.joints.values().collect();
+        joints.sort_by_key(|j| j.id);
+        for j in joints {
+            let Some((pa, pb)) = self.active_joint(j) else {
+                continue;
+            };
+            let (a, b) = (self.parts[pa].assembly, self.parts[pb].assembly);
+            if a == b || a >= n || b >= n {
+                continue;
+            }
+            match (self.assemblies[a].anchored, self.assemblies[b].anchored) {
+                (false, false) => {
+                    adjacent[a].push(b);
+                    adjacent[b].push(a);
+                }
+                (false, true) => grounded_neighbor[a] = true,
+                (true, false) => grounded_neighbor[b] = true,
+                (true, true) => {}
+            }
+        }
+        let mut seen = vec![false; n];
+        let mut groups = Vec::new();
+        for start in 0..n {
+            if seen[start]
+                || self.assemblies[start].anchored
+                || self.assemblies[start].parts.is_empty()
+            {
+                continue;
+            }
+            let mut members = vec![start];
+            seen[start] = true;
+            let mut i = 0;
+            while i < members.len() {
+                let a = members[i];
+                for &b in &adjacent[a] {
+                    if !seen[b] {
+                        seen[b] = true;
+                        members.push(b);
+                    }
+                }
+                i += 1;
+            }
+            let root_id = |a: usize| self.parts[self.assemblies[a].root].id;
+            let root = members
+                .iter()
+                .copied()
+                .filter(|&a| grounded_neighbor[a])
+                .min_by_key(|&a| root_id(a))
+                .or_else(|| {
+                    members.iter().copied().max_by(|&x, &y| {
+                        self.assemblies[x]
+                            .mass
+                            .partial_cmp(&self.assemblies[y].mass)
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                            .then_with(|| root_id(y).cmp(&root_id(x)))
+                    })
+                })
+                .unwrap_or(start);
+            groups.push(OwnershipGroup {
+                root: root_id(root),
+                assemblies: members.iter().map(|&a| root_id(a)).collect(),
+                parts: members
+                    .iter()
+                    .flat_map(|&a| self.assemblies[a].parts.iter().map(|&p| self.parts[p].id))
+                    .collect(),
+            });
+        }
+        groups
+    }
+
+    pub fn ownership_group_of(&self, id: InstanceId) -> Option<OwnershipGroup> {
+        let a = self.assembly_of(id)?;
+        if a.anchored {
+            return None;
+        }
+        let root = self.parts[a.root].id;
+        self.ownership_groups()
+            .into_iter()
+            .find(|g| g.assemblies.contains(&root))
     }
 
     pub fn network_roots(&self) -> Vec<NetworkRoot> {

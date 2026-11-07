@@ -3,7 +3,7 @@ use rbx_dom::{DataModel, InstanceId};
 use rbx_math::{Vec2, Vec3};
 use rbx_net::wire::SERVER_PEER;
 use rbx_net::{ClientReplicator, Message, PeerId, PhysicsState, ServerReplicator};
-use rbx_physics::world::NetworkRoot;
+use rbx_physics::world::{NetworkRoot, OwnershipGroup};
 use std::collections::HashMap;
 
 pub const SEND_INTERVAL: u32 = 2;
@@ -12,7 +12,6 @@ const SERVER_SLOP: f32 = 1.0;
 const DEFAULT_RADIUS: f32 = 80.0;
 
 struct ClientPoint {
-    peer: PeerId,
     player: InstanceId,
     point: Vec2,
     radius: f32,
@@ -29,9 +28,9 @@ impl ClientPoint {
         (p - self.point).length_squared() < r * r
     }
 
-    fn owns_mechanism(&self, dm: &DataModel, root: &NetworkRoot) -> bool {
+    fn owns_group(&self, dm: &DataModel, group: &OwnershipGroup) -> bool {
         self.character
-            .is_some_and(|ch| root.parts.iter().any(|&p| dm.is_descendant_of(p, ch)))
+            .is_some_and(|ch| group.parts.iter().any(|&p| dm.is_descendant_of(p, ch)))
     }
 }
 
@@ -54,7 +53,7 @@ fn xz(v: Vec3) -> Vec2 {
 
 fn client_points(dm: &DataModel, rep: &ServerReplicator) -> Vec<ClientPoint> {
     let mut out = Vec::new();
-    for (peer, p) in rep.peers() {
+    for (_, p) in rep.peers() {
         let Some(player) = p.player() else {
             continue;
         };
@@ -77,7 +76,6 @@ fn client_points(dm: &DataModel, rep: &ServerReplicator) -> Vec<ClientPoint> {
             _ => DEFAULT_RADIUS,
         };
         out.push(ClientPoint {
-            peer,
             player,
             point: xz(pos),
             radius,
@@ -143,15 +141,15 @@ impl ServerPhysics {
 
     pub fn tick(&mut self, e: &mut Engine, rep: &mut ServerReplicator) {
         self.frame = self.frame.wrapping_add(1);
-        let roots = {
+        let (roots, groups) = {
             let world = e.world.clone();
             let mut w = world.lock();
             w.sync(&mut e.dm);
             w.rebuild_assemblies();
-            w.network_roots()
+            (w.network_roots(), w.ownership_groups())
         };
         let clients = client_points(&e.dm, rep);
-        self.update_owners(e, rep, &roots, &clients);
+        self.update_owners(e, rep, &groups, &clients);
         if self.frame.is_multiple_of(SEND_INTERVAL) {
             self.send_states(e, rep, &roots);
         }
@@ -161,29 +159,45 @@ impl ServerPhysics {
         &mut self,
         e: &mut Engine,
         rep: &mut ServerReplicator,
-        roots: &[NetworkRoot],
+        groups: &[OwnershipGroup],
         clients: &[ClientPoint],
     ) {
         let by_player =
             |p: Option<InstanceId>| p.and_then(|p| clients.iter().find(|c| c.player == p));
-        for r in roots {
-            let entry = e.ownership.get(&r.id).copied();
+        let moving: std::collections::HashSet<InstanceId> = groups
+            .iter()
+            .flat_map(|g| g.parts.iter().copied())
+            .collect();
+        e.ownership.retain(|part, _| moving.contains(part));
+        for g in groups {
+            let entry = e.reconcile_ownership(&g.parts);
             let owner = match entry {
-                Some((owner, false)) => {
-                    if owner.is_none() || by_player(owner).is_some() {
+                (owner, false) => {
+                    let present = owner.is_none_or(|p| {
+                        e.dm.parent_of(p)
+                            .is_some_and(|pp| e.dm.class_of(pp) == Some("Players"))
+                    });
+                    if present {
                         owner
                     } else {
-                        e.ownership.insert(r.id, (None, true));
+                        for part in &g.parts {
+                            e.ownership.insert(*part, (None, true));
+                        }
                         None
                     }
                 }
-                _ => {
-                    let p = xz(r.cframe.translation);
-                    let character_owner = clients.iter().find(|c| c.owns_mechanism(&e.dm, r));
+                (current_owner, true) => {
+                    let pos =
+                        e.dm.get_raw(g.root, "CFrame")
+                            .and_then(|v| v.as_cframe())
+                            .map(|c| c.translation)
+                            .unwrap_or_default();
+                    let p = xz(pos);
+                    let character_owner = clients.iter().find(|c| c.owns_group(&e.dm, g));
                     let new = if let Some(c) = character_owner {
                         Some(c.player)
                     } else {
-                        let current = by_player(entry.and_then(|o| o.0));
+                        let current = by_player(current_owner);
                         let closest = clients.iter().min_by(|a, b| {
                             a.relative_error(p)
                                 .partial_cmp(&b.relative_error(p))
@@ -205,18 +219,30 @@ impl ServerPhysics {
                             _ => None,
                         }
                     };
-                    e.ownership.insert(r.id, (new, true));
+                    for part in &g.parts {
+                        e.ownership.insert(*part, (new, true));
+                    }
                     new
                 }
             };
-            let peer = by_player(owner).map(|c| c.peer).unwrap_or(SERVER_PEER);
-            let previous = self.sent_owner.insert(r.id, peer);
-            if previous != Some(peer) {
-                let net = rep.core.ids.net(r.id);
-                for c in clients {
-                    if rep.knows(c.peer, r.id) && (c.peer == peer || previous == Some(c.peer)) {
+            let peer = owner
+                .and_then(|p| rep.peer_of_player(p))
+                .unwrap_or(SERVER_PEER);
+            for &root in &g.assemblies {
+                let previous = self.sent_owner.insert(root, peer);
+                if previous == Some(peer) {
+                    continue;
+                }
+                let net = rep.core.ids.net(root);
+                let targets: Vec<PeerId> = rep
+                    .peers()
+                    .map(|(p, _)| p)
+                    .filter(|p| *p == peer || previous == Some(*p))
+                    .collect();
+                for target in targets {
+                    if rep.knows(target, root) {
                         rep.send(
-                            c.peer,
+                            target,
                             Message::Ownership {
                                 id: net,
                                 owner: peer,

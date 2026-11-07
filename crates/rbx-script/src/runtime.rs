@@ -187,7 +187,7 @@ impl Engine {
         }
     }
 
-    fn ownership_root(&mut self, id: InstanceId) -> Result<InstanceId, String> {
+    fn ownership_parts(&mut self, id: InstanceId) -> Result<Vec<InstanceId>, String> {
         let ws = self.dm.find_service("Workspace");
         if !ws.is_some_and(|w| self.dm.is_descendant_of(id, w)) {
             return Err(
@@ -206,45 +206,66 @@ impl Engine {
         w.sync(&mut self.dm);
         w.rebuild_assemblies();
         match w.assembly_of(id) {
-            Some(a) if !a.anchored => Ok(w.parts[a.root].id),
-            Some(_) => Err("Network Ownership API cannot be called on Anchored parts or parts welded to Anchored parts.".into()),
-            None => Ok(id),
+            Some(a) if a.anchored => Err("Network Ownership API cannot be called on Anchored parts or parts welded to Anchored parts.".into()),
+            Some(_) => Ok(w
+                .ownership_group_of(id)
+                .map(|g| g.parts)
+                .unwrap_or_else(|| vec![id])),
+            None => Ok(vec![id]),
         }
     }
 
+    pub fn reconcile_ownership(&mut self, parts: &[InstanceId]) -> (Option<InstanceId>, bool) {
+        let mut entries = parts.iter().filter_map(|p| self.ownership.get(p).copied());
+        let Some(first) = entries.next() else {
+            return (None, true);
+        };
+        if entries.all(|e| e == first) {
+            for p in parts {
+                self.ownership.insert(*p, first);
+            }
+            return first;
+        }
+        for p in parts {
+            self.ownership.insert(*p, (None, true));
+        }
+        (None, true)
+    }
+
     pub fn can_set_network_owner(&mut self, id: InstanceId) -> Result<(), String> {
-        self.ownership_root(id).map(|_| ())
+        self.ownership_parts(id).map(|_| ())
     }
 
     pub fn network_owner(&mut self, id: InstanceId) -> Option<InstanceId> {
-        let root = self.ownership_root(id).ok()?;
+        let parts = self.ownership_parts(id).ok()?;
         self.dm.find_service("NetworkServer")?;
-        self.ownership
-            .get(&root)
-            .and_then(|o| o.0)
+        self.reconcile_ownership(&parts)
+            .0
             .filter(|p| self.dm.contains(*p))
     }
 
     pub fn network_ownership_auto(&mut self, id: InstanceId) -> bool {
-        match self.ownership_root(id) {
-            Ok(root) => self.ownership.get(&root).is_none_or(|o| o.1),
+        match self.ownership_parts(id) {
+            Ok(parts) => self.reconcile_ownership(&parts).1,
             Err(_) => true,
         }
     }
 
     pub fn set_network_owner(&mut self, id: InstanceId, player: Option<InstanceId>, auto: bool) {
-        let Ok(root) = self.ownership_root(id) else {
+        let Ok(parts) = self.ownership_parts(id) else {
             return;
         };
-        if auto {
-            let owner = self.ownership.get(&root).and_then(|o| o.0);
-            self.ownership.insert(root, (owner, true));
-            return;
+        let entry = if auto {
+            (self.reconcile_ownership(&parts).0, true)
+        } else {
+            if self.backend_processing() && self.frontend_processing() {
+                return;
+            }
+            (player, false)
+        };
+        for p in parts {
+            self.ownership.insert(p, entry);
         }
-        if self.backend_processing() && self.frontend_processing() {
-            return;
-        }
-        self.ownership.insert(root, (player, false));
     }
 
     pub fn print(&mut self, kind: MessageType, text: impl Into<String>) {

@@ -10,6 +10,7 @@ pub enum Shape {
     Cylinder,
     Wedge,
     CornerWedge,
+    File,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -18,6 +19,7 @@ pub enum Shading {
     SmoothPlastic,
     Neon,
     Textured(u32),
+    Image(u32),
 }
 
 #[derive(Clone, Debug)]
@@ -33,6 +35,17 @@ pub struct PartDraw {
     pub shading: Shading,
     pub specular: (f32, f32),
     pub reflectance: f32,
+    pub file: Option<FileMeshRef>,
+    pub texture: Option<String>,
+    pub decals: Vec<DecalDraw>,
+}
+
+#[derive(Clone, Debug)]
+pub struct DecalDraw {
+    pub face: usize,
+    pub texture: String,
+    pub transparency: f32,
+    pub tile: Option<(f32, f32)>,
 }
 
 #[derive(Clone, Debug)]
@@ -158,7 +171,34 @@ fn part_color(dm: &DataModel, id: InstanceId) -> Color3 {
     }
 }
 
-fn mesh_override(dm: &DataModel, part: InstanceId, shape: Shape) -> Option<(Shape, Vec3, Vec3)> {
+pub struct MeshOverride {
+    pub shape: Shape,
+    pub scale: Vec3,
+    pub offset: Vec3,
+    pub file: Option<FileMeshRef>,
+    pub texture: Option<String>,
+    pub vertex_color: Vec3,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct FileMeshRef {
+    pub url: String,
+    pub scale: Vec3,
+}
+
+fn content_prop(dm: &DataModel, id: InstanceId, name: &str) -> Option<String> {
+    dm.get(id, name)
+        .ok()
+        .and_then(|v| v.as_str().map(str::to_string))
+        .filter(|s| !s.trim().is_empty())
+}
+
+fn mesh_override(
+    dm: &DataModel,
+    part: InstanceId,
+    part_size: Vec3,
+    shape: Shape,
+) -> Option<MeshOverride> {
     for &c in dm.children_of(part) {
         let class = dm.class_of(c)?;
         if !dm.is_a(c, "DataModelMesh") {
@@ -174,26 +214,100 @@ fn mesh_override(dm: &DataModel, part: InstanceId, shape: Shape) -> Option<(Shap
             .ok()
             .and_then(|v| v.as_vec3())
             .unwrap_or(Vec3::ZERO);
+        let vertex_color = dm
+            .get(c, "VertexColor")
+            .ok()
+            .and_then(|v| v.as_vec3())
+            .unwrap_or(Vec3::ONE);
+        let mut file = None;
+        let mut texture = None;
         let s = match class {
             "BlockMesh" => Shape::Block,
             "CylinderMesh" => Shape::Cylinder,
+            "FileMesh" => {
+                file = content_prop(dm, c, "MeshId").map(|url| FileMeshRef { url, scale });
+                texture = content_prop(dm, c, "TextureId");
+                Shape::File
+            }
             "SpecialMesh" => match dm
                 .get(c, "MeshType")
                 .ok()
                 .and_then(|v| v.as_enum())
                 .unwrap_or(6)
             {
-                0 => Shape::Cylinder,
+                0 => {
+                    let size = part_size * scale;
+                    let xz = size.x.min(size.z);
+                    file = Some(FileMeshRef {
+                        url: "rbxasset://fonts/head.mesh".into(),
+                        scale: Vec3::new(xz, size.y, xz) / 1.25,
+                    });
+                    Shape::File
+                }
                 2 => Shape::Wedge,
                 3 => Shape::Ball,
                 4 => Shape::Cylinder,
+                5 => {
+                    file = content_prop(dm, c, "MeshId").map(|url| FileMeshRef { url, scale });
+                    texture = content_prop(dm, c, "TextureId");
+                    Shape::File
+                }
                 _ => Shape::Block,
             },
             _ => shape,
         };
-        return Some((s, scale, offset));
+        if s == Shape::File && file.is_none() {
+            return Some(MeshOverride {
+                shape: Shape::Block,
+                scale,
+                offset,
+                file: None,
+                texture: None,
+                vertex_color,
+            });
+        }
+        return Some(MeshOverride {
+            shape: s,
+            scale,
+            offset,
+            file,
+            texture,
+            vertex_color,
+        });
     }
     None
+}
+
+fn collect_decals(dm: &DataModel, part: InstanceId, out: &mut Vec<DecalDraw>) {
+    for &c in dm.children_of(part) {
+        if !dm.is_a(c, "Decal") {
+            continue;
+        }
+        let Some(texture) = content_prop(dm, c, "Texture") else {
+            continue;
+        };
+        let transparency = get_f32(dm, c, "Transparency", 0.0).clamp(0.0, 1.0);
+        if transparency >= 1.0 {
+            continue;
+        }
+        let face = dm
+            .get(c, "Face")
+            .ok()
+            .and_then(|v| v.as_enum())
+            .unwrap_or(5) as usize;
+        let tile = dm.is_a(c, "Texture").then(|| {
+            (
+                get_f32(dm, c, "StudsPerTileU", 2.0).max(0.01),
+                get_f32(dm, c, "StudsPerTileV", 2.0).max(0.01),
+            )
+        });
+        out.push(DecalDraw {
+            face: face.min(5),
+            texture,
+            transparency,
+            tile,
+        });
+    }
 }
 
 fn collect_parts(dm: &DataModel, root: InstanceId, out: &mut Vec<PartDraw>) {
@@ -227,10 +341,16 @@ fn collect_parts(dm: &DataModel, root: InstanceId, out: &mut Vec<PartDraw>) {
         };
         let mut mesh_scale = Vec3::ONE;
         let mut mesh_offset = Vec3::ZERO;
-        if let Some((s, sc, off)) = mesh_override(dm, id, shape) {
-            shape = s;
-            mesh_scale = sc;
-            mesh_offset = off;
+        let mut file = None;
+        let mut texture = None;
+        let mut vertex_color = Vec3::ONE;
+        if let Some(m) = mesh_override(dm, id, size, shape) {
+            shape = m.shape;
+            mesh_scale = m.scale;
+            mesh_offset = m.offset;
+            file = m.file;
+            texture = m.texture;
+            vertex_color = m.vertex_color;
         }
         let material = dm
             .get(id, "Material")
@@ -249,7 +369,12 @@ fn collect_parts(dm: &DataModel, root: InstanceId, out: &mut Vec<PartDraw>) {
             surfaces[i] =
                 Surface::from_enum(dm.get(id, name).ok().and_then(|v| v.as_enum()).unwrap_or(0));
         }
-        let c = part_color(dm, id);
+        let mut c = part_color(dm, id);
+        if texture.is_some() {
+            c = Color3::new(vertex_color.x, vertex_color.y, vertex_color.z);
+        }
+        let mut decals = Vec::new();
+        collect_decals(dm, id, &mut decals);
         out.push(PartDraw {
             id,
             shape,
@@ -262,6 +387,9 @@ fn collect_parts(dm: &DataModel, root: InstanceId, out: &mut Vec<PartDraw>) {
             shading,
             specular: specular(material),
             reflectance: get_f32(dm, id, "Reflectance", 0.0).clamp(0.0, 1.0),
+            file,
+            texture,
+            decals,
         });
     }
 }

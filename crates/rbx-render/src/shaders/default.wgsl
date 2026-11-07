@@ -81,8 +81,11 @@ fn fs_main(i: VertexOut) -> @location(0) vec4<f32> {
     let fade = clamp(1.0 - i.view_depth.w * LQMAT_FADE_FACTOR, 0.0, 1.0);
     let mat_sample = sample_far(i.uv_edge1.xy, fade, CFG_FAR_DIFFUSE_CUTOFF);
 
+    let near_sample = textureSample(diffuse_map, linear_sampler, i.uv_edge1.xy);
     var albedo: vec4<f32>;
-    if (kind == 1) {
+    if (kind == 3) {
+        albedo = near_sample * i.color;
+    } else if (kind == 1) {
         albedo = vec4<f32>(mix(vec3<f32>(1.0), i.color.rgb, mat_sample.a) * mat_sample.rgb, i.color.a);
     } else {
         albedo = vec4<f32>(i.color.rgb * (studs.r * 2.0), i.color.a);

@@ -576,6 +576,111 @@ impl Mesh {
     }
 }
 
+impl Mesh {
+    pub fn from_file(file: &crate::filemesh::FileMesh, scale: Vec3) -> Mesh {
+        let mut mesh = Mesh::default();
+        for i in 0..file.positions.len() {
+            let n = (file.normals[i] / scale).normalize_or_zero();
+            let t = if n.y.abs() < 0.99 {
+                Vec3::Y.cross(n).normalize_or(Vec3::X)
+            } else {
+                Vec3::X
+            };
+            let uv = file.uvs[i];
+            mesh.push(
+                file.positions[i] * scale,
+                n,
+                Vec2::new(uv[0], uv[1]),
+                Vec2::ZERO,
+                t,
+                Vec4::splat(NO_OUTLINES),
+            );
+        }
+        for tri in file.indices.chunks_exact(3) {
+            mesh.indices.extend_from_slice(&[tri[0], tri[1], tri[2]]);
+        }
+        mesh.min = file.min * scale;
+        mesh.max = file.max * scale;
+        mesh
+    }
+
+    pub fn decal(size: Vec3, face: usize, tile: Option<(f32, f32)>) -> Mesh {
+        const FACES: [[usize; 4]; 6] = [
+            [6, 7, 4, 5],
+            [3, 7, 2, 6],
+            [7, 3, 5, 1],
+            [3, 2, 1, 0],
+            [5, 1, 4, 0],
+            [2, 6, 0, 4],
+        ];
+        let normals = [Vec3::X, Vec3::Y, Vec3::Z, -Vec3::X, -Vec3::Y, -Vec3::Z];
+        let e = size * 0.5;
+        let o = -e;
+        let (cx, cy, cz) = (Vec3::X * size.x, Vec3::Y * size.y, Vec3::Z * size.z);
+        let corners = [
+            o,
+            o + cz,
+            o + cy,
+            o + cy + cz,
+            o + cx,
+            o + cx + cz,
+            o + cx + cy,
+            o + cx + cy + cz,
+        ];
+        let face = face.min(5);
+        let n = normals[face];
+        let uv = match tile {
+            Some((u, v)) => match face {
+                0 => Vec2::new(size.z / u, size.y / v),
+                1 => Vec2::new(-size.x / u, size.z / v),
+                2 => Vec2::new(size.x / u, size.y / v),
+                3 => Vec2::new(-size.z / u, size.y / v),
+                4 => Vec2::new(size.x / u, -size.z / v),
+                _ => Vec2::new(-size.x / u, size.y / v),
+            },
+            None => Vec2::ONE,
+        };
+        let lift = n * 0.002;
+        let mut mesh = Mesh::default();
+        let f = FACES[face];
+        let edge = Vec4::splat(NO_OUTLINES);
+        mesh.push(
+            corners[f[0]] + lift,
+            n,
+            Vec2::new(uv.x, 0.0),
+            Vec2::ZERO,
+            Vec3::X,
+            edge,
+        );
+        mesh.push(
+            corners[f[1]] + lift,
+            n,
+            Vec2::new(0.0, 0.0),
+            Vec2::ZERO,
+            Vec3::X,
+            edge,
+        );
+        mesh.push(
+            corners[f[2]] + lift,
+            n,
+            Vec2::new(uv.x, uv.y),
+            Vec2::ZERO,
+            Vec3::X,
+            edge,
+        );
+        mesh.push(
+            corners[f[3]] + lift,
+            n,
+            Vec2::new(0.0, uv.y),
+            Vec2::ZERO,
+            Vec3::X,
+            edge,
+        );
+        mesh.quad(0);
+        mesh.finish(size)
+    }
+}
+
 fn edges_for(face: usize, surfaces: &[Surface; 6]) -> Vec4 {
     if surfaces[face] == Surface::SmoothNoOutlines {
         Vec4::splat(NO_OUTLINES)

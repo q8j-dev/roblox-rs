@@ -58,6 +58,8 @@ struct MeshKey {
     surfaces: [u8; 6],
     ignore_studs: bool,
     tiling: u32,
+    file: u64,
+    decal: u8,
 }
 
 struct GpuMesh {
@@ -79,6 +81,10 @@ pub struct Renderer {
     sky_layout: wgpu::BindGroupLayout,
     sampler: wgpu::Sampler,
     materials: HashMap<Shading, wgpu::BindGroup>,
+    image_names: Vec<String>,
+    image_index: HashMap<String, u32>,
+    file_meshes: HashMap<String, Option<crate::filemesh::FileMesh>>,
+    pub asset_dirs: Vec<PathBuf>,
     sky_bg: Option<(Vec<String>, wgpu::BindGroup)>,
     meshes: HashMap<MeshKey, GpuMesh>,
     depth: Option<(wgpu::Texture, wgpu::TextureView, u32, u32)>,
@@ -251,7 +257,7 @@ impl Renderer {
                 }),
                 primitive: wgpu::PrimitiveState {
                     topology: wgpu::PrimitiveTopology::TriangleList,
-                    front_face: wgpu::FrontFace::Cw,
+                    front_face: wgpu::FrontFace::Ccw,
                     cull_mode: Some(wgpu::Face::Back),
                     ..Default::default()
                 },
@@ -316,6 +322,10 @@ impl Renderer {
             sky_layout,
             sampler,
             materials: HashMap::new(),
+            image_names: Vec::new(),
+            image_index: HashMap::new(),
+            file_meshes: HashMap::new(),
+            asset_dirs: Vec::new(),
             sky_bg: None,
             meshes: HashMap::new(),
             depth: None,
@@ -342,6 +352,15 @@ impl Renderer {
                         img.upload(&self.device, &self.queue, "material", false)
                             .create_view(&wgpu::TextureViewDescriptor::default())
                     }),
+                Shading::Image(i) => self
+                    .image_names
+                    .get(i as usize)
+                    .and_then(|u| self.read_content(u))
+                    .and_then(|b| texture::decode(&b).ok())
+                    .map(|img| {
+                        img.upload(&self.device, &self.queue, "image", false)
+                            .create_view(&wgpu::TextureViewDescriptor::default())
+                    }),
                 _ => None,
             };
             let view = view.unwrap_or_else(|| self.white.clone());
@@ -356,6 +375,95 @@ impl Renderer {
             self.materials.insert(shading, bg);
         }
         &self.materials[&shading]
+    }
+
+    fn image(&mut self, url: &str) -> Shading {
+        if let Some(&i) = self.image_index.get(url) {
+            return Shading::Image(i);
+        }
+        let i = self.image_names.len() as u32;
+        self.image_names.push(url.to_string());
+        self.image_index.insert(url.to_string(), i);
+        Shading::Image(i)
+    }
+
+    fn read_content(&self, url: &str) -> Option<Vec<u8>> {
+        if let Some(p) = self.resolve_content(url) {
+            return std::fs::read(p).ok();
+        }
+        let lower = url.trim().to_ascii_lowercase();
+        let id: u64 = if let Some(rest) = lower.strip_prefix("rbxassetid://") {
+            rest.trim().parse().ok()?
+        } else {
+            let at = lower.find("id=")?;
+            lower[at + 3..]
+                .chars()
+                .take_while(|c| c.is_ascii_digit())
+                .collect::<String>()
+                .parse()
+                .ok()?
+        };
+        self.asset_dirs
+            .iter()
+            .find_map(|d| std::fs::read(d.join(id.to_string())).ok())
+    }
+
+    fn file_mesh(&mut self, url: &str) -> Option<&crate::filemesh::FileMesh> {
+        if !self.file_meshes.contains_key(url) {
+            let mesh = self
+                .read_content(url)
+                .and_then(|b| match crate::filemesh::read(&b) {
+                    Ok(m) => Some(m),
+                    Err(e) => {
+                        tracing::warn!("{url}: {e}");
+                        None
+                    }
+                });
+            self.file_meshes.insert(url.to_string(), mesh);
+        }
+        self.file_meshes.get(url).and_then(Option::as_ref)
+    }
+
+    fn upload_mesh(&mut self, key: MeshKey, mesh: &Mesh) {
+        let vertices = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("mesh vertices"),
+                contents: bytemuck::cast_slice(&mesh.vertices),
+                usage: wgpu::BufferUsages::VERTEX,
+            });
+        let indices = self
+            .device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("mesh indices"),
+                contents: bytemuck::cast_slice(&mesh.indices),
+                usage: wgpu::BufferUsages::INDEX,
+            });
+        self.meshes.insert(
+            key,
+            GpuMesh {
+                vertices,
+                indices,
+                count: mesh.indices.len() as u32,
+            },
+        );
+    }
+
+    fn decal_mesh(&mut self, size: Vec3, face: usize, tile: Option<(f32, f32)>) -> MeshKey {
+        let key = MeshKey {
+            shape: Shape::Block,
+            size: [size.x.to_bits(), size.y.to_bits(), size.z.to_bits()],
+            surfaces: [0; 6],
+            ignore_studs: true,
+            tiling: tile.map_or(0, |t| t.0.to_bits() ^ t.1.to_bits().rotate_left(7)),
+            file: 0,
+            decal: face as u8 + 1,
+        };
+        if !self.meshes.contains_key(&key) {
+            let mesh = Mesh::decal(size, face, tile);
+            self.upload_mesh(key, &mesh);
+        }
+        key
     }
 
     fn resolve_content(&self, url: &str) -> Option<PathBuf> {
@@ -474,58 +582,60 @@ impl Renderer {
     }
 
     fn mesh_for(&mut self, part: &PartDraw) -> (MeshKey, Vec3) {
-        let size = match part.shape {
-            Shape::Block | Shape::Wedge | Shape::CornerWedge => part.size * part.mesh_scale,
-            Shape::Ball | Shape::Cylinder => part.size * part.mesh_scale,
-        };
+        let size = part.size * part.mesh_scale;
         let ignore_studs = !matches!(part.shading, Shading::Plastic);
         let tiling = match part.shading {
             Shading::Textured(m) => scene::tiling(m),
             _ => 1.0,
         };
+        let file_hash = part.file.as_ref().map_or(0, |f| {
+            use std::hash::{Hash, Hasher};
+            let mut h = std::collections::hash_map::DefaultHasher::new();
+            f.url.hash(&mut h);
+            [
+                f.scale.x.to_bits(),
+                f.scale.y.to_bits(),
+                f.scale.z.to_bits(),
+            ]
+            .hash(&mut h);
+            h.finish() | 1
+        });
         let key = MeshKey {
             shape: part.shape,
             size: [size.x.to_bits(), size.y.to_bits(), size.z.to_bits()],
             surfaces: part.surfaces.map(|s| s as u8),
             ignore_studs,
             tiling: tiling.to_bits(),
+            file: file_hash,
+            decal: 0,
         };
         if !self.meshes.contains_key(&key) {
-            let mesh = match part.shape {
-                Shape::Block => Mesh::block(&BlockParams {
+            let file_mesh = match &part.file {
+                Some(f) => {
+                    let scale = f.scale;
+                    let url = f.url.clone();
+                    self.file_mesh(&url).map(|m| Mesh::from_file(m, scale))
+                }
+                None => None,
+            };
+            let block = |ignore_studs| {
+                Mesh::block(&BlockParams {
                     size,
                     surfaces: part.surfaces,
                     ignore_studs,
                     surface_offset: Vec2::ZERO,
                     tiling,
-                }),
+                })
+            };
+            let mesh = match part.shape {
+                Shape::File => file_mesh.unwrap_or_else(|| block(true)),
+                Shape::Block => block(ignore_studs),
                 Shape::Wedge => Mesh::wedge(size, &part.surfaces, tiling),
                 Shape::CornerWedge => Mesh::corner_wedge(size, &part.surfaces, tiling),
                 Shape::Ball => Mesh::sphere(size, tiling),
                 Shape::Cylinder => Mesh::cylinder(size, tiling),
             };
-            let vertices = self
-                .device
-                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                    label: Some("mesh vertices"),
-                    contents: bytemuck::cast_slice(&mesh.vertices),
-                    usage: wgpu::BufferUsages::VERTEX,
-                });
-            let indices = self
-                .device
-                .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                    label: Some("mesh indices"),
-                    contents: bytemuck::cast_slice(&mesh.indices),
-                    usage: wgpu::BufferUsages::INDEX,
-                });
-            self.meshes.insert(
-                key,
-                GpuMesh {
-                    vertices,
-                    indices,
-                    count: mesh.indices.len() as u32,
-                },
-            );
+            self.upload_mesh(key, &mesh);
         }
         (key, size)
     }
@@ -631,26 +741,42 @@ impl Renderer {
         let mut opaque: HashMap<(Shading, MeshKey), Vec<InstanceData>> = HashMap::new();
         let mut transparent: Vec<(f32, Shading, MeshKey, InstanceData)> = Vec::new();
         for part in &scene.parts {
-            let (key, _) = self.mesh_for(part);
-            let kind = match part.shading {
+            let (key, size) = self.mesh_for(part);
+            let shading = match &part.texture {
+                Some(t) if part.shape == Shape::File => self.image(t),
+                _ => part.shading,
+            };
+            let kind = match shading {
                 Shading::Plastic | Shading::SmoothPlastic => 0.0,
                 Shading::Textured(_) => 1.0,
                 Shading::Neon => 2.0,
+                Shading::Image(_) => 3.0,
             };
+            let rows = scene::instance_rows(&part.cframe, Vec3::ONE, part.mesh_offset);
             let data = InstanceData {
-                rows: scene::instance_rows(&part.cframe, Vec3::ONE, part.mesh_offset),
+                rows,
                 color: part.color,
-                extra: [part.specular.0, part.specular.1, kind, part.reflectance],
+                extra: [part.specular.0, part.specular.1, part.reflectance, kind],
             };
-            let data = InstanceData {
-                extra: [data.extra[0], data.extra[1], data.extra[3], kind],
-                ..data
-            };
+            let d = (part.cframe.translation - eye).length_squared();
             if part.color[3] < 1.0 {
-                let d = (part.cframe.translation - eye).length_squared();
-                transparent.push((d, part.shading, key, data));
+                transparent.push((d, shading, key, data));
             } else {
-                opaque.entry((part.shading, key)).or_default().push(data);
+                opaque.entry((shading, key)).or_default().push(data);
+            }
+            for decal in &part.decals {
+                let decal_shading = self.image(&decal.texture);
+                let decal_key = if part.shape == Shape::File {
+                    key
+                } else {
+                    self.decal_mesh(size, decal.face, decal.tile)
+                };
+                let decal_data = InstanceData {
+                    rows,
+                    color: [1.0, 1.0, 1.0, (1.0 - decal.transparency) * part.color[3]],
+                    extra: [part.specular.0, part.specular.1, 0.0, 3.0],
+                };
+                transparent.push((d - 0.001, decal_shading, decal_key, decal_data));
             }
         }
         transparent.sort_by(|a, b| b.0.partial_cmp(&a.0).unwrap_or(std::cmp::Ordering::Equal));

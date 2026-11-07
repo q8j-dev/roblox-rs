@@ -33,6 +33,10 @@ struct Args {
     screenshot: Option<PathBuf>,
     #[arg(long, default_value_t = 120)]
     screenshot_frames: u32,
+    #[arg(long, default_value_t = 0.6)]
+    yaw: f32,
+    #[arg(long, default_value_t = 16.0)]
+    distance: f32,
     #[arg(long, default_value = "info")]
     log: String,
 }
@@ -476,9 +480,9 @@ fn main() {
         assets,
         accumulator: 0.0,
         camera: OrbitCamera {
-            yaw: 0.6,
+            yaw: args.yaw,
             pitch: 0.35,
-            distance: 16.0,
+            distance: args.distance,
             focus: Vec3::ZERO,
         },
         keys: HashSet::new(),

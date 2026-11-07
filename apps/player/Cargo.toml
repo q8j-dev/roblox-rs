@@ -9,3 +9,14 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+clap = { version = "4.6.7", features = ["derive"] }
+parking_lot = "0.13.0"
+pollster = "1.0.1"
+rbx-base = { version = "0.1.0", path = "../../crates/rbx-base" }
+rbx-dom = { version = "0.1.0", path = "../../crates/rbx-dom" }
+rbx-math = { version = "0.1.0", path = "../../crates/rbx-math" }
+rbx-net = { version = "0.1.0", path = "../../crates/rbx-net" }
+rbx-platform = { version = "0.1.0", path = "../../crates/rbx-platform" }
+rbx-render = { version = "0.1.0", path = "../../crates/rbx-render" }
+rbx-script = { version = "0.1.0", path = "../../crates/rbx-script" }
+tracing = "0.1.44"

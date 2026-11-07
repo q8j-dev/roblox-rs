@@ -816,6 +816,7 @@ impl ScriptRuntime {
             if let Some(ws) = e.dm.find_service("Workspace") {
                 e.dm.store_silent(ws, "DistributedGameTime", Variant::Double(t));
             }
+            crate::api::gui::sync_view(&mut e);
             let frontend = e.dm.find_service("NetworkServer").is_none();
             if frontend && e.running {
                 crate::api::players::ensure_player_scripts(&mut e);

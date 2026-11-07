@@ -574,7 +574,10 @@ impl App for Player {
         {
             self.take_screenshot(&path);
             if let Some(dump) = self.dump_gui.clone() {
-                let text = dump_gui(&self.runtime.engine.lock().dm);
+                let mut text = dump_gui(&self.runtime.engine.lock().dm);
+                for item in rbx_render::gui::extract(&self.runtime.engine.lock().dm) {
+                    text.push_str(&format!("ITEM {:?} clip={:?}\n", item.cmd, item.clip));
+                }
                 if let Err(e) = std::fs::write(&dump, text) {
                     tracing::error!("{}: {e}", dump.display());
                 }

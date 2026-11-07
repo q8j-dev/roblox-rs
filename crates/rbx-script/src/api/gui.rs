@@ -20,6 +20,7 @@ pub struct GuiState {
     pub selection_groups: HashMap<String, Vec<InstanceId>>,
     pub button_verbs: HashMap<InstanceId, String>,
     pub requested_verbs: Vec<String>,
+    pub last_view: Option<rbx_dom::gui::GuiView>,
 }
 
 impl Default for GuiState {
@@ -36,6 +37,7 @@ impl Default for GuiState {
             selection_groups: HashMap::new(),
             button_verbs: HashMap::new(),
             requested_verbs: Vec::new(),
+            last_view: None,
         }
     }
 }
@@ -494,4 +496,43 @@ fn get_core(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
         )));
     }
     invoke_callback(lua, id, &key, MultiValue::new(), "")
+}
+
+pub fn sync_view(e: &mut crate::runtime::Engine) {
+    let view = e.dm.gui_view;
+    if e.gui.last_view == Some(view) {
+        return;
+    }
+    let first = e.gui.last_view.is_none();
+    e.gui.last_view = Some(view);
+    if first {
+        return;
+    }
+    let mut parents = Vec::new();
+    if let Some(core) = e.dm.find_service("CoreGui") {
+        parents.push(core);
+    }
+    if let Some(pg) =
+        e.dm.local_player
+            .and_then(|p| e.dm.find_first_child_of_class(p, "PlayerGui"))
+    {
+        parents.push(pg);
+    }
+    let mut ids = Vec::new();
+    for parent in parents {
+        for &c in e.dm.children_of(parent) {
+            if matches!(e.dm.class_of(c), Some("ScreenGui" | "GuiMain")) {
+                ids.push(c);
+                ids.extend(
+                    e.dm.descendants(c)
+                        .into_iter()
+                        .filter(|&d| e.dm.is_a(d, "GuiBase2d")),
+                );
+            }
+        }
+    }
+    for id in ids {
+        e.dm.notify_changed(id, "AbsoluteSize");
+        e.dm.notify_changed(id, "AbsolutePosition");
+    }
 }

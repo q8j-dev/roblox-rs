@@ -65,3 +65,11 @@ fn tweens_move_gui_objects() {
         "return game:GetService('StarterGui').ScreenGui.T.Position.X.Offset == 100 and _G.status == Enum.TweenStatus.Completed"
     ));
 }
+
+#[test]
+fn desktop_input_devices_are_reported() {
+    let f = Fixture::new();
+    assert!(f.bool(
+        "local uis = game:GetService('UserInputService') return uis.MouseEnabled == true and uis.KeyboardEnabled == true and uis.TouchEnabled == false"
+    ));
+}

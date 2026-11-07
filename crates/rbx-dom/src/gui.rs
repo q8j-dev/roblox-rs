@@ -108,7 +108,10 @@ pub fn gui_parent(dm: &DataModel, id: InstanceId) -> Option<InstanceId> {
 
 pub fn canvas(dm: &DataModel, id: InstanceId, own: Placement) -> Placement {
     if dm.class_of(id) == Some("ScrollingFrame") {
-        let canvas_size = resolve(udim2(dm, id, "CanvasSize"), own.size);
+        let basis = gui_parent(dm, id)
+            .map(|p| placement(dm, p).size)
+            .unwrap_or(own.size);
+        let canvas_size = resolve(udim2(dm, id, "CanvasSize"), basis).max(own.size);
         let offset = vec2(dm, id, "CanvasPosition");
         return Placement {
             position: own.position - offset,

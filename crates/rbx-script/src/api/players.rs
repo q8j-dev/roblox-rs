@@ -240,6 +240,94 @@ fn world_extents(e: &Engine) -> Option<(Vec3, Vec3)> {
     }
 }
 
+fn joint_frame(id: rbx_math::NormalId, x: f32, y: f32, z: f32) -> CFrame {
+    CFrame::new(
+        rbx_physics::joins::normal_id_to_matrix(id),
+        Vec3::new(x, y, z),
+    )
+}
+
+pub fn build_joints(dm: &mut DataModel, humanoid: InstanceId) {
+    use rbx_math::NormalId::{Left, Right, Top};
+    if dm.find_first_child_of_class(humanoid, "Status").is_none()
+        && let Ok(status) = dm.create_internal("Status")
+    {
+        let _ = dm.set(status, "Archivable", Variant::Bool(false));
+        let _ = dm.set_parent(status, Some(humanoid));
+    }
+    let Some(character) = dm.parent_of(humanoid).filter(|m| dm.is_a(*m, "Model")) else {
+        return;
+    };
+    if dm.get_bool(dm.root(), "ForceR15") {
+        return;
+    }
+    let part = |dm: &DataModel, name: &str| {
+        dm.find_first_child(character, name, false)
+            .filter(|p| dm.is_a(*p, "BasePart"))
+    };
+    let Some(torso) = part(dm, "Torso") else {
+        return;
+    };
+    let motor = |dm: &mut DataModel,
+                 name: &str,
+                 p0: InstanceId,
+                 p1: Option<InstanceId>,
+                 c0: CFrame,
+                 c1: CFrame,
+                 parent: InstanceId| {
+        let Ok(m) = dm.create("Motor6D") else {
+            return;
+        };
+        dm.set_name(m, name);
+        let _ = dm.set(m, "MaxVelocity", Variant::Float(0.1));
+        let _ = dm.set(m, "Part0", Variant::Ref(Some(p0)));
+        let _ = dm.set(m, "Part1", Variant::Ref(p1));
+        let _ = dm.set(m, "C0", Variant::CFrame(c0));
+        let _ = dm.set(m, "C1", Variant::CFrame(c1));
+        let _ = dm.set_parent(m, Some(parent));
+    };
+    if let Some(root) = part(dm, "HumanoidRootPart") {
+        let f = joint_frame(Top, 0.0, 0.0, 0.0);
+        motor(dm, "RootJoint", root, Some(torso), f, f, root);
+    }
+    let limbs = [
+        (
+            "Right Shoulder",
+            "Right Arm",
+            joint_frame(Right, 1.0, 0.5, 0.0),
+            joint_frame(Right, -0.5, 0.5, 0.0),
+        ),
+        (
+            "Left Shoulder",
+            "Left Arm",
+            joint_frame(Left, -1.0, 0.5, 0.0),
+            joint_frame(Left, 0.5, 0.5, 0.0),
+        ),
+        (
+            "Right Hip",
+            "Right Leg",
+            joint_frame(Right, 1.0, -1.0, 0.0),
+            joint_frame(Right, 0.5, 1.0, 0.0),
+        ),
+        (
+            "Left Hip",
+            "Left Leg",
+            joint_frame(Left, -1.0, -1.0, 0.0),
+            joint_frame(Left, -0.5, 1.0, 0.0),
+        ),
+        (
+            "Neck",
+            "Head",
+            joint_frame(Top, 0.0, 1.0, 0.0),
+            joint_frame(Top, 0.0, -0.5, 0.0),
+        ),
+    ];
+    for (name, limb, c0, c1) in limbs {
+        let p1 = part(dm, limb);
+        motor(dm, name, torso, p1, c0, c1, torso);
+    }
+}
+
 pub fn load_character(lua: &Lua, player: InstanceId, in_game: bool, preferred: &str) -> Result<()> {
     let (old, model) = {
         let eng = engine(lua);
@@ -340,6 +428,9 @@ pub fn load_character(lua: &Lua, player: InstanceId, in_game: bool, preferred: &
         }
         let name = e.dm.name_of(player).to_string();
         e.dm.set_name(model, &name);
+        if let Some(h) = e.dm.find_first_child_of_class(model, "Humanoid") {
+            build_joints(&mut e.dm, h);
+        }
         let _ = e.dm.set(model, "Archivable", Variant::Bool(false));
         let old = e.dm.get_ref(player, "Character");
         if e.backend_processing() {

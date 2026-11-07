@@ -247,9 +247,37 @@ fn run_multiplayer(
         });
     }
     let max_frames = ((test_timeout(&server.engine) + 2.0) / FRAME).ceil() as usize;
-    for _ in 0..max_frames {
+    let trace_server = std::env::var("RBX_TRACE_SERVER").ok();
+    let trace_client = std::env::var("RBX_TRACE_CLIENT").ok();
+    let trace_every: usize = std::env::var("RBX_TRACE_EVERY")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(300)
+        .max(1);
+    for frame in 0..max_frames {
         if server.engine.lock().test.done {
             break;
+        }
+        if frame % trace_every == 0 {
+            if let Some(src) = &trace_server {
+                let r = server.execute_named(src, "Trace", Identity::CmdLine, Default::default());
+                eprintln!("trace t={:.1} server: {r:?}", frame as f64 * FRAME);
+            }
+            if let Some(src) = &trace_client {
+                for (i, c) in clients.iter().enumerate() {
+                    let r = c.runtime.execute_named(
+                        src,
+                        "Trace",
+                        Identity::CmdLine,
+                        Default::default(),
+                    );
+                    eprintln!(
+                        "trace t={:.1} client {}: {r:?}",
+                        frame as f64 * FRAME,
+                        i + 1
+                    );
+                }
+            }
         }
         server.step(FRAME);
         net.tick(&server);

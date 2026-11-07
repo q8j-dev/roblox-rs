@@ -11,7 +11,9 @@ pub use behavior::{Behavior, SetOutcome, behaviors_for};
 pub use classes::parts::{clamp_size, min_size};
 pub use classes::terrain::TerrainData;
 pub use classes::{SERVICE_CLASSES, is_service_class};
-pub use datamodel::{DataModel, DomError, Instance, MessageLevel, WorldHooks, coerce_to};
+pub use datamodel::{
+    DataModel, DomError, Instance, MessageLevel, RemoteCall, RemoteTarget, WorldHooks, coerce_to,
+};
 pub use defaults::default_value;
 pub use events::{DomEvent, EventCursor};
 pub use layout::{ClassLayout, layout_for};

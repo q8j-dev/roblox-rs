@@ -73,6 +73,20 @@ pub enum MessageLevel {
     Error,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum RemoteTarget {
+    Server,
+    Player(InstanceId),
+    AllPlayers,
+}
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct RemoteCall {
+    pub instance: InstanceId,
+    pub target: RemoteTarget,
+    pub args: Vec<Variant>,
+}
+
 pub struct DataModel {
     instances: HashMap<InstanceId, Instance>,
     next_id: u64,
@@ -91,6 +105,7 @@ pub struct DataModel {
     messages: Vec<(MessageLevel, String)>,
     pub frontend_processing: bool,
     signals: std::collections::VecDeque<(InstanceId, &'static str, Vec<Variant>, u64)>,
+    remote: Vec<RemoteCall>,
 }
 
 impl Default for DataModel {
@@ -130,6 +145,7 @@ impl DataModel {
             messages: Vec::new(),
             frontend_processing: true,
             signals: Default::default(),
+            remote: Vec::new(),
         };
         let root = match dm.create_internal(class) {
             Ok(id) => id,
@@ -189,6 +205,14 @@ impl DataModel {
     pub fn fire_signal(&mut self, id: InstanceId, event: &'static str, args: Vec<Variant>) {
         let seq = self.events.position();
         self.signals.push_back((id, event, args, seq));
+    }
+
+    pub fn queue_remote(&mut self, call: RemoteCall) {
+        self.remote.push(call);
+    }
+
+    pub fn drain_remote(&mut self) -> Vec<RemoteCall> {
+        std::mem::take(&mut self.remote)
     }
 
     pub fn standard_out(&mut self, level: MessageLevel, text: impl Into<String>) {

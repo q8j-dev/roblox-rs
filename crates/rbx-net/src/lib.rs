@@ -1,14 +1,14 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+mod client;
+mod core;
+mod filter;
+pub mod scope;
+mod server;
+mod transport;
+pub mod wire;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use client::{ClientReplicator, ClientState};
+pub use core::{Core, IdMap, View};
+pub use filter::{Filter, Verdict};
+pub use server::{Peer, ServerReplicator};
+pub use transport::{Connection, MemoryConnection, memory_pair};
+pub use wire::{Channel, Message, NetId, NewInstance, PROTOCOL_VERSION, PeerId, PhysicsState};

@@ -1,5 +1,6 @@
 pub mod animation;
 pub mod bindables;
+pub mod gui;
 pub mod http;
 pub mod humanoid;
 pub mod instance;
@@ -64,6 +65,7 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     network::register(&mut r);
     stats::register(&mut r);
     http::register(&mut r);
+    gui::register(&mut r);
     r
 });
 
@@ -99,6 +101,17 @@ pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Resul
     }
     if class == "VehicleSeat" && name == "AreHingesDetected" {
         return physics::hinges_detected(lua, id).map(Some);
+    }
+    if matches!(
+        name,
+        "AbsolutePosition"
+            | "AbsoluteSize"
+            | "AbsoluteWindowSize"
+            | "TextBounds"
+            | "TextFits"
+            | "ViewportSize"
+    ) {
+        return gui::get_gui_property(lua, id, class, name);
     }
     Ok(None)
 }

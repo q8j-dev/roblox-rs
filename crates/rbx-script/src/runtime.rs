@@ -91,6 +91,7 @@ pub struct Engine {
     pub jobs_stats_window: f64,
     pub threads_throttled: f64,
     pub base_url: String,
+    pub gui: crate::api::gui::GuiState,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -207,6 +208,7 @@ impl Engine {
             jobs_stats_window: 5.0,
             threads_throttled: 0.0,
             base_url: crate::api::http::DEFAULT_BASE_URL.to_string(),
+            gui: Default::default(),
         }
     }
 

@@ -2811,6 +2811,7 @@ dependencies = [
  "rbx-net",
  "rbx-physics",
  "rbx-reflection",
+ "rbx-text",
  "serde_json",
  "tracing",
  "ureq",
@@ -2827,6 +2828,13 @@ dependencies = [
  "rbx-math",
  "serde_json",
  "thiserror 2.0.21",
+]
+
+[[package]]
+name = "rbx-text"
+version = "0.1.0"
+dependencies = [
+ "ab_glyph",
 ]
 
 [[package]]

@@ -94,6 +94,7 @@ pub struct DataModel {
     signals: std::collections::VecDeque<(InstanceId, &'static str, Vec<Variant>, u64)>,
     remote: Vec<crate::remote::RemoteCall>,
     deliveries: Vec<crate::remote::RemoteDelivery>,
+    pub gui_view: crate::gui::GuiView,
 }
 
 impl Default for DataModel {
@@ -135,6 +136,7 @@ impl DataModel {
             signals: Default::default(),
             remote: Vec::new(),
             deliveries: Vec::new(),
+            gui_view: crate::gui::GuiView::default(),
         };
         let root = match dm.create_internal(class) {
             Ok(id) => id,

@@ -89,6 +89,7 @@ pub struct Engine {
     pub stats_sources: HashMap<InstanceId, crate::api::stats::StatSource>,
     pub fps: f64,
     pub jobs_stats_window: f64,
+    pub threads_throttled: f64,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -203,6 +204,7 @@ impl Engine {
             stats_sources: HashMap::new(),
             fps: 0.0,
             jobs_stats_window: 5.0,
+            threads_throttled: 0.0,
         }
     }
 
@@ -1300,7 +1302,21 @@ pub fn schedule_delay(lua: &Lua, seconds: f64, func: Function) -> mlua::Result<(
     Ok(())
 }
 
+fn waiting_threads_budget(lua: &Lua) -> f64 {
+    let Ok(root) = crate::api::services::settings_root(lua, "GlobalSettings") else {
+        return 0.1;
+    };
+    let eng = engine(lua);
+    let e = eng.lock();
+    e.dm.find_first_child_of_class(root, "LuaSettings")
+        .and_then(|l| e.dm.get(l, "WaitingThreadsBudget").ok())
+        .and_then(|v| v.as_f64())
+        .unwrap_or(0.1)
+}
+
 fn resume_sleepers(lua: &Lua) {
+    let budget = std::time::Duration::from_secs_f64((waiting_threads_budget(lua) / 60.0).max(0.0));
+    let started = std::time::Instant::now();
     let now = engine(lua).lock().game_time;
     let mut due = with_state(lua, |s| {
         let mut due = Vec::new();
@@ -1319,12 +1335,26 @@ fn resume_sleepers(lua: &Lua) {
             .partial_cmp(&b.wake)
             .unwrap_or(std::cmp::Ordering::Equal)
     });
-    for s in due {
+    let mut throttling = false;
+    let mut due = due.into_iter();
+    for s in due.by_ref() {
         let elapsed = now - s.start;
         let args = MultiValue::from_vec(vec![Value::Number(elapsed), Value::Number(now)]);
         resume_thread(lua, &s.thread, args);
         pump(lua);
+        if started.elapsed() > budget {
+            throttling = true;
+            break;
+        }
     }
+    let deferred: Vec<Sleeper> = due.collect();
+    if !deferred.is_empty() {
+        with_state(lua, |st| st.sleepers.extend(deferred));
+    }
+    let eng = engine(lua);
+    let mut e = eng.lock();
+    let sample = if throttling { 1.0 } else { 0.0 };
+    e.threads_throttled += (sample - e.threads_throttled) * 0.05;
 }
 
 pub fn make_ready(lua: &Lua, thread: Thread, values: Vec<Variant>) {

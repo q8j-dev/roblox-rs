@@ -113,7 +113,7 @@ fn value_of(lua: &Lua, id: InstanceId) -> f64 {
     match source {
         None | Some(StatSource::Group) => 0.0,
         Some(StatSource::LuaThreads) => with_state(lua, |s| s.threads.len()) as f64,
-        Some(StatSource::LuaThreadsThrottled) => 0.0,
+        Some(StatSource::LuaThreadsThrottled) => engine(lua).lock().threads_throttled,
         Some(other) => {
             let eng = engine(lua);
             let e = eng.lock();

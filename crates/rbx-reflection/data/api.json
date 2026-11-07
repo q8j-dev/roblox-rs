@@ -20577,7 +20577,7 @@
    "name": "Platform",
    "properties": [],
    "security": null,
-   "superclass": "ParticleEmitter",
+   "superclass": "Part",
    "superclass_cpp": "PlatformImpl",
    "yield_functions": []
   },
@@ -26339,7 +26339,7 @@
    "name": "RunningAverageItemDouble",
    "properties": [],
    "security": null,
-   "superclass": "ReflectionMetadataItem",
+   "superclass": "StatsItem",
    "superclass_cpp": "RunningAverageItem",
    "yield_functions": []
   },
@@ -26353,7 +26353,7 @@
    "name": "RunningAverageItemInt",
    "properties": [],
    "security": null,
-   "superclass": "ReflectionMetadataItem",
+   "superclass": "StatsItem",
    "superclass_cpp": "RunningAverageItem",
    "yield_functions": []
   },
@@ -26367,7 +26367,7 @@
    "name": "RunningAverageTimeIntervalItem",
    "properties": [],
    "security": null,
-   "superclass": "ReflectionMetadataItem",
+   "superclass": "StatsItem",
    "superclass_cpp": "RunningAverageTimeIntervalItem",
    "yield_functions": []
   },
@@ -27358,7 +27358,7 @@
     }
    ],
    "security": null,
-   "superclass": "ParticleEmitter",
+   "superclass": "Part",
    "superclass_cpp": "SeatImpl",
    "yield_functions": []
   },
@@ -28200,7 +28200,7 @@
     }
    ],
    "security": null,
-   "superclass": "ParticleEmitter",
+   "superclass": "Part",
    "superclass_cpp": "PlatformImpl",
    "yield_functions": []
   },
@@ -35191,7 +35191,7 @@
     }
    ],
    "security": null,
-   "superclass": "ParticleEmitter",
+   "superclass": "BasePart",
    "superclass_cpp": "SeatImpl",
    "yield_functions": []
   },

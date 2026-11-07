@@ -62,7 +62,7 @@ impl GuiCamera {
     }
 }
 
-fn vec3(dm: &DataModel, id: InstanceId, name: &str) -> Vec3 {
+pub(crate) fn vec3(dm: &DataModel, id: InstanceId, name: &str) -> Vec3 {
     match dm.get(id, name) {
         Ok(Variant::Vector3(v)) => v,
         _ => Vec3::ZERO,
@@ -119,29 +119,39 @@ fn in_world(dm: &DataModel, id: InstanceId, ws: InstanceId) -> bool {
     dm.is_descendant_of(id, ws)
 }
 
-fn gather(dm: &DataModel, id: InstanceId, out: &mut Vec<InstanceId>) {
+fn gather(
+    dm: &DataModel,
+    id: InstanceId,
+    out: &mut Vec<InstanceId>,
+    mut humanoids: Option<&mut Vec<InstanceId>>,
+) {
     for &c in dm.children_of(id) {
         match dm.class_of(c) {
             Some("BillboardGui" | "SurfaceGui") => out.push(c),
             Some("ScreenGui" | "GuiMain") => {}
-            _ => gather(dm, c, out),
+            Some("Humanoid") => {
+                if let Some(h) = humanoids.as_deref_mut() {
+                    h.push(c);
+                }
+            }
+            _ => gather(dm, c, out, humanoids.as_deref_mut()),
         }
     }
 }
 
-fn roots(dm: &DataModel) -> Vec<InstanceId> {
+fn roots(dm: &DataModel, humanoids: &mut Vec<InstanceId>) -> Vec<InstanceId> {
     let mut out = Vec::new();
     if let Some(ws) = dm.find_service("Workspace") {
-        gather(dm, ws, &mut out);
+        gather(dm, ws, &mut out, Some(humanoids));
     }
     if let Some(pg) = dm
         .local_player
         .and_then(|p| dm.find_first_child_of_class(p, "PlayerGui"))
     {
-        gather(dm, pg, &mut out);
+        gather(dm, pg, &mut out, None);
     }
     if let Some(core) = dm.find_service("CoreGui") {
-        gather(dm, core, &mut out);
+        gather(dm, core, &mut out, None);
     }
     out
 }
@@ -311,7 +321,8 @@ pub fn extract(dm: &DataModel) -> WorldGuis {
         return out;
     };
     let mut on_top: Vec<(f32, Vec<GuiItem>)> = Vec::new();
-    for gui in roots(dm) {
+    let mut humanoids = Vec::new();
+    for gui in roots(dm, &mut humanoids) {
         if !get_bool(dm, gui, "Enabled", true) {
             continue;
         }
@@ -337,6 +348,7 @@ pub fn extract(dm: &DataModel) -> WorldGuis {
             _ => {}
         }
     }
+    crate::name_tags::extract(dm, &cam, &humanoids, &mut on_top);
     on_top.sort_by(|a, b| b.0.total_cmp(&a.0));
     out.on_top = on_top.into_iter().flat_map(|(_, items)| items).collect();
     out.world.sort_by(|a, b| b.distance.total_cmp(&a.distance));

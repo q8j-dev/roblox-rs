@@ -8,6 +8,7 @@ pub mod gui_pass;
 pub mod lightgrid;
 pub mod lightgrid_terrain;
 pub mod lighting;
+pub mod name_tags;
 pub mod offscreen;
 pub mod particle_pass;
 pub mod particles;

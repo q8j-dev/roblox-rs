@@ -1,3 +1,5 @@
+pub mod adorn;
+pub mod adorn_pass;
 pub mod celestial;
 pub mod character;
 pub mod composite;

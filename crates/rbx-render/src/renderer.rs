@@ -107,6 +107,7 @@ pub struct Renderer {
     stars: crate::celestial::StarField,
     particles: crate::particles::ParticleSystem,
     particle_pass: crate::particle_pass::ParticlePass,
+    adorn_pass: crate::adorn_pass::AdornPass,
     pub frame_dt: f32,
     lgrid_texture: wgpu::Texture,
     lgrid_active: bool,
@@ -524,6 +525,8 @@ impl Renderer {
         let white = Image::solid([255, 255, 255, 255])
             .upload(&device, &queue, "white", false)
             .create_view(&wgpu::TextureViewDescriptor::default());
+        let adorn_pass =
+            crate::adorn_pass::AdornPass::new(&device, &globals_layout, format, &white);
         Renderer {
             device,
             queue,
@@ -556,6 +559,7 @@ impl Renderer {
             stars: crate::celestial::StarField::default(),
             particles: crate::particles::ParticleSystem::default(),
             particle_pass,
+            adorn_pass,
             frame_dt: 0.0,
             lgrid_texture,
             lgrid_active: false,
@@ -1390,6 +1394,23 @@ impl Renderer {
                 &load,
             );
         }
+        let adorn_textures = self.adorn_pass.missing_textures(&scene.adorns);
+        let adorn_images: HashMap<String, Option<Image>> = adorn_textures
+            .into_iter()
+            .map(|u| {
+                let img = self.read_content(&u).and_then(|b| texture::decode(&b).ok());
+                (u, img)
+            })
+            .collect();
+        self.adorn_pass.prepare(
+            &self.device,
+            &self.queue,
+            &scene.adorns,
+            eye,
+            cam.fov_y,
+            (width, height),
+            &|url: &str| adorn_images.get(url).cloned().flatten(),
+        );
         let particle_buffer = (!particle_vertices.is_empty()).then(|| {
             self.device
                 .create_buffer_init(&wgpu::util::BufferInitDescriptor {
@@ -1575,6 +1596,8 @@ impl Renderer {
                 pass.set_bind_group(0, &self.globals_bg, &[]);
                 self.particle_pass.draw(&mut pass, buf, &particle_draws);
             }
+            pass.set_bind_group(0, &self.globals_bg, &[]);
+            self.adorn_pass.draw(&mut pass);
         }
         self.queue.submit([encoder.finish()]);
         let _ = &self.sampler;

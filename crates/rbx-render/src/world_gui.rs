@@ -76,7 +76,7 @@ fn udim2(dm: &DataModel, id: InstanceId, name: &str) -> UDim2 {
     }
 }
 
-fn part_box(dm: &DataModel, id: InstanceId) -> Option<(CFrame, Vec3)> {
+pub(crate) fn part_box(dm: &DataModel, id: InstanceId) -> Option<(CFrame, Vec3)> {
     if dm.is_a(id, "BasePart") {
         let cf = dm.get_raw(id, "CFrame").and_then(|v| v.as_cframe())?;
         return Some((cf, vec3(dm, id, "Size")));

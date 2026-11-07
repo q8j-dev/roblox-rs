@@ -91,6 +91,7 @@ pub struct Scene {
     pub composites: Vec<crate::character::CompositeDesc>,
     pub focus: Vec3,
     pub lights: Vec<crate::lightgrid::LightSource>,
+    pub adorns: crate::adorn::Adorns,
 }
 
 pub const SURFACE_PROPS: [&str; 6] = [
@@ -858,11 +859,13 @@ pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
         },
     };
     let effects = ws.map(|w| collect_effects(dm, w)).unwrap_or_default();
+    let adorns = crate::adorn::extract(dm, camera.cframe.translation);
     Scene {
         parts,
         effects,
         celestial,
         lights,
+        adorns,
         focus: focus.unwrap_or(camera.cframe.translation),
         camera,
         lighting,

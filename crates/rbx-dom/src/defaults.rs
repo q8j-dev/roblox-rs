@@ -177,6 +177,11 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         }
         ("RocketPropulsion", "MaxTorque") => Variant::Vector3(Vec3::new(4e5, 4e5, 0.0)),
         ("RocketPropulsion", "TargetOffset") => Variant::Vector3(Vec3::ZERO),
+        ("BoxHandleAdornment", "Size") => Variant::Vector3(Vec3::ONE),
+        ("ConeHandleAdornment", "Radius") => Variant::Float(0.5),
+        ("CylinderHandleAdornment" | "SphereHandleAdornment", "Radius") => Variant::Float(1.0),
+        ("ImageHandleAdornment", "Size") => Variant::Vector2(Vec2::ONE),
+        ("ImageHandleAdornment", "Color3") => Variant::Color3(brick(1)),
         ("ArcHandles", "Axes") => Variant::Axes(rbx_math::Axes(7)),
         ("Handles", "Faces") => Variant::Faces(rbx_math::Faces(63)),
         ("FloorWire", "TextureSize") | ("TextureTrail", "TextureSize") => {

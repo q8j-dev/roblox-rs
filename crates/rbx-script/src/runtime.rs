@@ -93,6 +93,7 @@ pub struct Engine {
     pub base_url: String,
     pub gui: crate::api::gui::GuiState,
     pub input: crate::api::input::InputState,
+    pub animate_fallback: bool,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -211,6 +212,7 @@ impl Engine {
             base_url: crate::api::http::DEFAULT_BASE_URL.to_string(),
             gui: Default::default(),
             input: Default::default(),
+            animate_fallback: false,
         }
     }
 

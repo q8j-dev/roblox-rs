@@ -416,10 +416,14 @@ pub fn load_character(lua: &Lua, player: InstanceId, in_game: bool, preferred: &
             ));
         }
         if !override_animate {
+            let keyframes_available =
+                !e.animate_fallback || crate::content::fetch(e, "rbxassetid://180435571").is_some();
             let file = if force_r15 {
                 "fonts/humanoidAnimateR15.rbxm"
-            } else {
+            } else if keyframes_available {
                 "fonts/humanoidAnimateLocalKeyframe2.rbxm"
+            } else {
+                "fonts/humanoidAnimateLocal.rbxm"
             };
             extras.extend(load_content_model(e, file));
         }

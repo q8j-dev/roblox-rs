@@ -250,12 +250,17 @@ fn hex(bytes: &[u8]) -> String {
 impl Job {
     fn new(dm: DataModel, bind: std::net::IpAddr, content: Option<PathBuf>) -> Result<Job, String> {
         let mut engine = Engine::new(dm);
+        let has_content = content.is_some();
         engine.content_root = content;
+        engine.animate_fallback = true;
         engine.process_after_load();
         engine.running = true;
         let runtime = ScriptRuntime::new(Arc::new(parking_lot::Mutex::new(engine)))
             .map_err(|e| e.to_string())?;
         runtime.scan_scripts();
+        if has_content && let Err(e) = runtime.start_server_core_scripts() {
+            tracing::warn!("server core scripts: {e}");
+        }
         Ok(Job {
             runtime,
             net: None,

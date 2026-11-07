@@ -108,6 +108,7 @@ fn decode_hash(hex: &str) -> Option<[u8; 32]> {
 fn make_runtime(dm: DataModel, assets: &Path) -> Result<ScriptRuntime, String> {
     let mut engine = Engine::new(dm);
     engine.content_root = Some(assets.join("content"));
+    engine.animate_fallback = true;
     engine.process_after_load();
     engine.running = true;
     ScriptRuntime::new(Arc::new(Mutex::new(engine))).map_err(|e| e.to_string())

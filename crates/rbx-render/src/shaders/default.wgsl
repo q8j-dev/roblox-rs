@@ -36,9 +36,11 @@ fn shadow_prepare(world: vec3<f32>) -> vec3<f32> {
     return vec3<f32>(dot(g.shadow_matrix0, c), dot(g.shadow_matrix1, c), dot(g.shadow_matrix2, c));
 }
 
+const SHADOW_BIAS: f32 = 0.0016;
+
 fn shadow_sample(lpos: vec3<f32>, light_shadow: f32) -> f32 {
     let sm = textureSampleLevel(shadow_map, shadow_sampler, lpos.xy, 0.0).rg;
-    let sm_shadow = step(sm.x, lpos.z) * clamp(9.0 - 20.0 * abs(lpos.z - 0.5), 0.0, 1.0);
+    let sm_shadow = step(sm.x + SHADOW_BIAS, lpos.z) * clamp(9.0 - 20.0 * abs(lpos.z - 0.5), 0.0, 1.0);
     return (1.0 - sm_shadow * sm.y * g.outline_brightness_shadow.w) * light_shadow;
 }
 
@@ -135,14 +137,15 @@ fn fs_main(i: VertexOut) -> @location(0) vec4<f32> {
 
     let normal = normalize(i.normal_specpower.xyz);
     let ndotl = dot(normal, -g.lamp0_dir.xyz);
-    let diffuse_intensity = clamp(ndotl, 0.0, 1.0) * g.lamp0_color.rgb + max(-ndotl, 0.0) * g.lamp1_color.rgb;
+    let key_intensity = clamp(ndotl, 0.0, 1.0) * g.lamp0_color.rgb;
+    let fill_intensity = max(-ndotl, 0.0) * g.lamp1_color.rgb;
     let specular_intensity = select(0.0, i.spec_reflect_kind.x, ndotl > 0.0);
     let specular_power = i.normal_specpower.w;
 
     let light = lgrid_sample(i.lgrid);
     let shadow = shadow_sample(i.shadow_pos, light.a);
 
-    let diffuse = (g.ambient_color.rgb + diffuse_intensity * shadow + light.rgb) * albedo.rgb;
+    let diffuse = (g.ambient_color.rgb + key_intensity * shadow + fill_intensity * light.a + light.rgb) * albedo.rgb;
     let half_vec = normalize(-g.lamp0_dir.xyz + normalize(i.view_depth.xyz));
     let specular = g.lamp0_color.rgb * (specular_intensity * shadow * pow(clamp(dot(normal, half_vec), 0.0, 1.0), max(specular_power, 1.0)));
 

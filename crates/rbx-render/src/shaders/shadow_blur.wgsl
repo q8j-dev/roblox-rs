@@ -39,6 +39,8 @@ fn fs_main(i: VertexOut) -> @location(0) vec4<f32> {
         color = color + data.y * w;
         weight = weight + w;
     }
+    let center = textureSampleLevel(source, blur_sampler, i.uv, 0.0).x;
+    let own = select(depth, center, center < 0.999);
     let m = textureSampleLevel(mask, blur_sampler, i.uv, 0.0).r;
-    return vec4<f32>(depth, color * m / weight, 0.0, 0.0);
+    return vec4<f32>(own, color * m / weight, 0.0, 0.0);
 }

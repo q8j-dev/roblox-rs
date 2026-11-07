@@ -3,6 +3,7 @@ use rbx_math::Vec3;
 use wgpu::util::DeviceExt;
 
 pub const SHADOW_SIZE: u32 = 1024;
+pub const SHADOW_FORMAT: wgpu::TextureFormat = wgpu::TextureFormat::Rgba16Float;
 const TEXEL_SIZE: f32 = 0.2;
 const DEPTH_RADIUS: f32 = 64.0;
 
@@ -70,7 +71,7 @@ impl ShadowMap {
                 mip_level_count: 1,
                 sample_count: 1,
                 dimension: wgpu::TextureDimension::D2,
-                format: wgpu::TextureFormat::Rgba8Unorm,
+                format: SHADOW_FORMAT,
                 usage: wgpu::TextureUsages::RENDER_ATTACHMENT
                     | wgpu::TextureUsages::TEXTURE_BINDING,
                 view_formats: &[],
@@ -153,7 +154,7 @@ impl ShadowMap {
                 entry_point: Some("fs_main"),
                 compilation_options: Default::default(),
                 targets: &[Some(wgpu::ColorTargetState {
-                    format: wgpu::TextureFormat::Rgba8Unorm,
+                    format: SHADOW_FORMAT,
                     blend: None,
                     write_mask: wgpu::ColorWrites::ALL,
                 })],

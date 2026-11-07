@@ -1,0 +1,1600 @@
+{
+ "Accoutrement": {
+  "BackendAccoutrementState": {
+   "Int": 0
+  }
+ },
+ "AnimationController": {
+  "Name": {
+   "String": "AnimationController"
+  }
+ },
+ "ArcHandles": {
+  "Axes": {
+   "Axes": 7
+  }
+ },
+ "Attachment": {
+  "Name": {
+   "String": "Attachment"
+  },
+  "Position": {
+   "Vector3": [
+    1.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "Backpack": {
+  "Name": {
+   "String": "Backpack"
+  }
+ },
+ "BadgeService": {
+  "Name": {
+   "String": "BadgeService"
+  }
+ },
+ "BasePart": {
+  "BrickColor": {
+   "BrickColor": 194
+  },
+  "LocalTransparencyModifier": {
+   "Float": 0.0
+  },
+  "Locked": {
+   "Bool": false
+  },
+  "Reflectance": {
+   "Float": 0.0
+  },
+  "Transparency": {
+   "Float": 0.0
+  },
+  "brickColor": {
+   "BrickColor": 194
+  }
+ },
+ "BaseScript": {
+  "Disabled": {
+   "Bool": false
+  }
+ },
+ "BevelMesh": {
+  "Bevel": {
+   "Float": 0.0
+  },
+  "Bevel Roundness": {
+   "Float": 0.0
+  },
+  "Bulge": {
+   "Float": 0.0
+  }
+ },
+ "BillboardGui": {
+  "Active": {
+   "Bool": false
+  },
+  "AlwaysOnTop": {
+   "Bool": false
+  },
+  "Enabled": {
+   "Bool": true
+  }
+ },
+ "BodyAngularVelocity": {
+  "AngularVelocity": {
+   "Vector3": [
+    0.0,
+    2.0,
+    0.0
+   ]
+  },
+  "MaxTorque": {
+   "Vector3": [
+    4000.0,
+    4000.0,
+    4000.0
+   ]
+  },
+  "P": {
+   "Float": 1250.0
+  },
+  "angularvelocity": {
+   "Vector3": [
+    0.0,
+    2.0,
+    0.0
+   ]
+  },
+  "maxTorque": {
+   "Vector3": [
+    4000.0,
+    4000.0,
+    4000.0
+   ]
+  }
+ },
+ "BodyColors": {
+  "HeadColor": {
+   "BrickColor": 226
+  },
+  "LeftArmColor": {
+   "BrickColor": 226
+  },
+  "LeftLegColor": {
+   "BrickColor": 23
+  },
+  "Name": {
+   "String": "Body Colors"
+  },
+  "RightArmColor": {
+   "BrickColor": 226
+  },
+  "RightLegColor": {
+   "BrickColor": 23
+  },
+  "TorsoColor": {
+   "BrickColor": 28
+  }
+ },
+ "BodyForce": {
+  "Force": {
+   "Vector3": [
+    0.0,
+    1.0,
+    0.0
+   ]
+  },
+  "force": {
+   "Vector3": [
+    0.0,
+    1.0,
+    0.0
+   ]
+  }
+ },
+ "BodyGyro": {
+  "D": {
+   "Float": 500.0
+  },
+  "MaxTorque": {
+   "Vector3": [
+    400000.0,
+    0.0,
+    400000.0
+   ]
+  },
+  "P": {
+   "Float": 3000.0
+  },
+  "maxTorque": {
+   "Vector3": [
+    400000.0,
+    0.0,
+    400000.0
+   ]
+  }
+ },
+ "BodyPosition": {
+  "D": {
+   "Float": 1250.0
+  },
+  "MaxForce": {
+   "Vector3": [
+    4000.0,
+    4000.0,
+    4000.0
+   ]
+  },
+  "P": {
+   "Float": 10000.0
+  },
+  "Position": {
+   "Vector3": [
+    0.0,
+    50.0,
+    0.0
+   ]
+  },
+  "maxForce": {
+   "Vector3": [
+    4000.0,
+    4000.0,
+    4000.0
+   ]
+  },
+  "position": {
+   "Vector3": [
+    0.0,
+    50.0,
+    0.0
+   ]
+  }
+ },
+ "BodyThrust": {
+  "Location": {
+   "Vector3": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "location": {
+   "Vector3": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "BodyVelocity": {
+  "MaxForce": {
+   "Vector3": [
+    4000.0,
+    4000.0,
+    4000.0
+   ]
+  },
+  "P": {
+   "Float": 1250.0
+  },
+  "Velocity": {
+   "Vector3": [
+    0.0,
+    2.0,
+    0.0
+   ]
+  },
+  "maxForce": {
+   "Vector3": [
+    4000.0,
+    4000.0,
+    4000.0
+   ]
+  },
+  "velocity": {
+   "Vector3": [
+    0.0,
+    2.0,
+    0.0
+   ]
+  }
+ },
+ "CSGDictionaryService": {
+  "Name": {
+   "String": "CSGDictionaryService"
+  }
+ },
+ "Camera": {
+  "HeadLocked": {
+   "Bool": true
+  },
+  "Name": {
+   "String": "Camera"
+  }
+ },
+ "CharacterMesh": {
+  "BaseTextureId": {
+   "Int": 0
+  },
+  "MeshId": {
+   "Int": 0
+  },
+  "OverlayTextureId": {
+   "Int": 0
+  }
+ },
+ "ClickDetector": {
+  "MaxActivationDistance": {
+   "Float": 32.0
+  },
+  "Name": {
+   "String": "ClickDetector"
+  }
+ },
+ "Clothing": {
+  "Name": {
+   "String": "Clothing"
+  }
+ },
+ "ConeHandleAdornment": {
+  "Height": {
+   "Float": 2.0
+  }
+ },
+ "Configuration": {
+  "Name": {
+   "String": "Configuration"
+  }
+ },
+ "CornerWedgePart": {
+  "Name": {
+   "String": "CornerWedge"
+  }
+ },
+ "CylinderHandleAdornment": {
+  "Height": {
+   "Float": 1.0
+  }
+ },
+ "DataModel": {
+  "ForceR15": {
+   "Bool": false
+  }
+ },
+ "DataModelMesh": {
+  "Name": {
+   "String": "Mesh"
+  },
+  "Offset": {
+   "Vector3": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Scale": {
+   "Vector3": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "VertexColor": {
+   "Vector3": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  }
+ },
+ "DataStoreService": {
+  "LegacyNamingScheme": {
+   "Bool": false
+  }
+ },
+ "Debris": {
+  "MaxItems": {
+   "Int": 1000
+  }
+ },
+ "DebugSettings": {
+  "IsScriptStackTracingEnabled": {
+   "Bool": true
+  },
+  "Name": {
+   "String": "Diagnostics"
+  },
+  "ReportExtendedMachineConfiguration": {
+   "Bool": false
+  }
+ },
+ "Decal": {
+  "LocalTransparencyModifier": {
+   "Float": 0.0
+  },
+  "Name": {
+   "String": "Decal"
+  },
+  "Shiny": {
+   "Float": 20.0
+  },
+  "Specular": {
+   "Float": 0.0
+  },
+  "Transparency": {
+   "Float": 0.0
+  }
+ },
+ "Dialog": {
+  "ConversationDistance": {
+   "Float": 25.0
+  },
+  "InUse": {
+   "Bool": false
+  }
+ },
+ "Explosion": {
+  "BlastPressure": {
+   "Float": 500000.0
+  },
+  "BlastRadius": {
+   "Float": 4.0
+  },
+  "DestroyJointRadiusPercent": {
+   "Float": 1.0
+  },
+  "Name": {
+   "String": "Explosion"
+  }
+ },
+ "Feature": {
+  "Name": {
+   "String": "Feature"
+  }
+ },
+ "Fire": {
+  "Color": {
+   "Color3": {
+    "b": 0,
+    "g": 0.5,
+    "r": 1
+   }
+  },
+  "Heat": {
+   "Float": 9.0
+  },
+  "SecondaryColor": {
+   "Color3": {
+    "b": 0,
+    "g": 0,
+    "r": 1
+   }
+  },
+  "Size": {
+   "Float": 5.0
+  },
+  "heat_xml": {
+   "Float": 9.0
+  },
+  "size": {
+   "Float": 5.0
+  },
+  "size_xml": {
+   "Float": 5.0
+  }
+ },
+ "FloorWire": {
+  "CycleOffset": {
+   "Float": 0.0
+  },
+  "StudsBetweenTextures": {
+   "Float": 4.0
+  },
+  "TextureSize": {
+   "Vector2": [
+    1.0,
+    1.0
+   ]
+  },
+  "Velocity": {
+   "Float": 2.0
+  },
+  "WireRadius": {
+   "Float": 0.0625
+  }
+ },
+ "FlyweightService": {
+  "Name": {
+   "String": "FlyweightService"
+  }
+ },
+ "Folder": {
+  "Name": {
+   "String": "Folder"
+  }
+ },
+ "ForceField": {
+  "Name": {
+   "String": "ForceField"
+  }
+ },
+ "GameSettings": {
+  "Name": {
+   "String": "Game Options"
+  }
+ },
+ "GlobalSettings": {
+  "Name": {
+   "String": "Global Settings"
+  }
+ },
+ "GuiBase3d": {
+  "Color3": {
+   "Color3": {
+    "b": 0.6745098039215687,
+    "g": 0.4117647058823529,
+    "r": 0.050980392156862744
+   }
+  },
+  "Transparency": {
+   "Float": 0.0
+  },
+  "Visible": {
+   "Bool": true
+  }
+ },
+ "GuiButton": {
+  "AutoButtonColor": {
+   "Bool": true
+  },
+  "Modal": {
+   "Bool": false
+  },
+  "Selected": {
+   "Bool": false
+  }
+ },
+ "GuiItem": {
+  "Name": {
+   "String": "Unnamed GuiItem"
+  }
+ },
+ "GuiObject": {
+  "BackgroundColor3": {
+   "Color3": {
+    "b": 0.6470588235294118,
+    "g": 0.6352941176470588,
+    "r": 0.6392156862745098
+   }
+  },
+  "BackgroundTransparency": {
+   "Float": 0.0
+  },
+  "BorderColor3": {
+   "Color3": {
+    "b": 0.20784313725490197,
+    "g": 0.16470588235294117,
+    "r": 0.10588235294117647
+   }
+  },
+  "BorderSizePixel": {
+   "Int": 1
+  },
+  "ClipsDescendants": {
+   "Bool": false
+  },
+  "Draggable": {
+   "Bool": false
+  },
+  "Selectable": {
+   "Bool": false
+  },
+  "Visible": {
+   "Bool": true
+  }
+ },
+ "GuiRoot": {
+  "Name": {
+   "String": "GuiRoot"
+  }
+ },
+ "GuiService": {
+  "CoreGuiNavigationEnabled": {
+   "Bool": true
+  },
+  "GuiNavigationEnabled": {
+   "Bool": true
+  }
+ },
+ "HandleAdornment": {
+  "AlwaysOnTop": {
+   "Bool": false
+  },
+  "ZIndex": {
+   "Int": -1
+  }
+ },
+ "Handles": {
+  "Faces": {
+   "Faces": 63
+  }
+ },
+ "Hole": {
+  "Name": {
+   "String": "Hole"
+  }
+ },
+ "HopperBin": {
+  "Name": {
+   "String": "HopperBin"
+  }
+ },
+ "HttpService": {
+  "HttpEnabled": {
+   "Bool": false
+  }
+ },
+ "Humanoid": {
+  "AutoJumpEnabled": {
+   "Bool": true
+  },
+  "AutoRotate": {
+   "Bool": true
+  },
+  "Health": {
+   "Float": 100.0
+  },
+  "Health_XML": {
+   "Float": 100.0
+  },
+  "HipHeight": {
+   "Float": 0.0
+  },
+  "MaxHealth": {
+   "Float": 100.0
+  },
+  "MaxSlopeAngle": {
+   "Float": 89.0
+  },
+  "MoveDirectionInternal": {
+   "Vector3": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "Name": {
+   "String": "Humanoid"
+  },
+  "PlatformStand": {
+   "Bool": false
+  },
+  "Sit": {
+   "Bool": false
+  },
+  "Strafe": {
+   "Bool": false
+  },
+  "WalkAngleError": {
+   "Float": 0.0
+  },
+  "WalkSpeed": {
+   "Float": 16.0
+  },
+  "maxHealth": {
+   "Float": 100.0
+  }
+ },
+ "ImageHandleAdornment": {
+  "Image": {
+   "Content": "rbxasset://textures/SurfacesDefault.png"
+  }
+ },
+ "InputObject": {
+  "Position": {
+   "Vector3": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "InsertService": {
+  "AllowInsertFreeModels": {
+   "Bool": false
+  }
+ },
+ "Instance": {
+  "Archivable": {
+   "Bool": true
+  },
+  "RobloxLocked": {
+   "Bool": false
+  },
+  "archivable": {
+   "Bool": true
+  }
+ },
+ "JointsService": {
+  "Name": {
+   "String": "JointsService"
+  }
+ },
+ "Keyframe": {
+  "Time": {
+   "Float": 0.0
+  }
+ },
+ "KeyframeSequence": {
+  "Loop": {
+   "Bool": true
+  }
+ },
+ "Light": {
+  "Brightness": {
+   "Float": 1.0
+  },
+  "Color": {
+   "Color3": {
+    "b": 1,
+    "g": 1,
+    "r": 1
+   }
+  },
+  "Enabled": {
+   "Bool": true
+  },
+  "Shadows": {
+   "Bool": false
+  }
+ },
+ "Lighting": {
+  "Ambient": {
+   "Color3": {
+    "b": 0.5,
+    "g": 0.5,
+    "r": 0.5
+   }
+  },
+  "Brightness": {
+   "Float": 1.0
+  },
+  "ColorShift_Bottom": {
+   "Color3": {
+    "b": 0.0,
+    "g": 0.0,
+    "r": 0.0
+   }
+  },
+  "ColorShift_Top": {
+   "Color3": {
+    "b": 0.0,
+    "g": 0.0,
+    "r": 0.0
+   }
+  },
+  "FogColor": {
+   "Color3": {
+    "b": 0.75,
+    "g": 0.75,
+    "r": 0.75
+   }
+  },
+  "FogEnd": {
+   "Float": 100000.0
+  },
+  "FogStart": {
+   "Float": 0.0
+  },
+  "GlobalShadows": {
+   "Bool": false
+  },
+  "Name": {
+   "String": "Lighting"
+  },
+  "OutdoorAmbient": {
+   "Color3": {
+    "b": 0.5,
+    "g": 0.5,
+    "r": 0.5
+   }
+  },
+  "Outlines": {
+   "Bool": true
+  },
+  "ShadowColor": {
+   "Color3": {
+    "b": 0.72,
+    "g": 0.7,
+    "r": 0.7
+   }
+  }
+ },
+ "LineHandleAdornment": {
+  "Length": {
+   "Float": 5.0
+  },
+  "Thickness": {
+   "Float": 1.0
+  }
+ },
+ "LocalWorkspace": {
+  "Name": {
+   "String": "LocalWorkspace"
+  }
+ },
+ "LogService": {
+  "Name": {
+   "String": "LogService"
+  }
+ },
+ "LuaSourceContainer": {
+  "CachedRemoteSourceLoadState": {
+   "Int": 0
+  }
+ },
+ "ManualGlue": {
+  "Name": {
+   "String": "ManualGlue"
+  }
+ },
+ "ManualWeld": {
+  "Name": {
+   "String": "ManualWeld"
+  }
+ },
+ "Motor": {
+  "Name": {
+   "String": "Motor"
+  }
+ },
+ "Motor6D": {
+  "Name": {
+   "String": "Motor6D"
+  }
+ },
+ "MotorFeature": {
+  "Name": {
+   "String": "MotorFeature"
+  }
+ },
+ "NegateOperation": {
+  "Name": {
+   "String": "NegativePart"
+  }
+ },
+ "NetworkSettings": {
+  "ClientPhysicsSendRate": {
+   "Float": 20.0
+  },
+  "DataGCRate": {
+   "Float": 20.0
+  },
+  "DataMtuAdjust": {
+   "Int": -200
+  },
+  "DataSendRate": {
+   "Float": 30.0
+  },
+  "ExperimentalPhysicsEnabled": {
+   "Bool": true
+  },
+  "ExtraMemoryUsed": {
+   "Int": 0
+  },
+  "Name": {
+   "String": "Network"
+  },
+  "PhysicsMtuAdjust": {
+   "Int": -200
+  },
+  "PhysicsSendRate": {
+   "Float": 20.0
+  },
+  "ReceiveRate": {
+   "Double": 60.0
+  },
+  "TotalNumMovementWayPoint": {
+   "Int": 1000
+  },
+  "TouchSendRate": {
+   "Float": 10.0
+  }
+ },
+ "NonReplicatedCSGDictionaryService": {
+  "Name": {
+   "String": "NonReplicatedCSGDictionaryService"
+  }
+ },
+ "ParallelRampPart": {
+  "Name": {
+   "String": "ParallelRamp"
+  }
+ },
+ "PartOperation": {
+  "InitialSize": {
+   "Vector3": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "Name": {
+   "String": "PartOperation"
+  },
+  "UsePartColor": {
+   "Bool": false
+  }
+ },
+ "PathfindingService": {
+  "EmptyCutoff": {
+   "Float": 0.1568627450980392
+  }
+ },
+ "PersonalServerService": {
+  "RoleSets": {
+   "String": ""
+  }
+ },
+ "PhysicsSettings": {
+  "Name": {
+   "String": "Physics"
+  },
+  "ThrottleAdjustTime": {
+   "Double": 1.0
+  }
+ },
+ "PlatformService": {
+  "BlurIntensity": {
+   "Float": 0.0
+  },
+  "Brightness": {
+   "Float": 0.0
+  },
+  "Contrast": {
+   "Float": 0.0
+  },
+  "GrayscaleLevel": {
+   "Float": 0.0
+  },
+  "TintColor": {
+   "Color3": {
+    "b": 1.0,
+    "g": 1.0,
+    "r": 1.0
+   }
+  }
+ },
+ "Player": {
+  "AccountAgeReplicate": {
+   "Int": 0
+  },
+  "AutoJumpEnabled": {
+   "Bool": true
+  },
+  "CanLoadCharacterAppearance": {
+   "Bool": true
+  },
+  "DataComplexityLimit": {
+   "Int": 45000
+  },
+  "DevEnableMouseLock": {
+   "Bool": true
+  },
+  "FollowUserIdReplicated": {
+   "Int": 0
+  },
+  "HasBuildTools": {
+   "Bool": false
+  },
+  "Neutral": {
+   "Bool": true
+  },
+  "TeamColor": {
+   "BrickColor": 1
+  },
+  "TeleportedIn": {
+   "Bool": false
+  },
+  "UserId": {
+   "Int": 0
+  },
+  "userId": {
+   "Int": 0
+  }
+ },
+ "PlayerGui": {
+  "Name": {
+   "String": "PlayerGui"
+  }
+ },
+ "Players": {
+  "CharacterAutoLoads": {
+   "Bool": true
+  },
+  "MaxPlayersInternal": {
+   "Int": 12
+  },
+  "Name": {
+   "String": "Players"
+  }
+ },
+ "PointLight": {
+  "Range": {
+   "Float": 8.0
+  }
+ },
+ "Pose": {
+  "MaskWeight": {
+   "Float": 0.0
+  },
+  "Weight": {
+   "Float": 1.0
+  }
+ },
+ "PrismPart": {
+  "Name": {
+   "String": "Prism"
+  }
+ },
+ "PyramidPart": {
+  "Name": {
+   "String": "Pyramid"
+  }
+ },
+ "RenderSettings": {
+  "Name": {
+   "String": "Rendering"
+  }
+ },
+ "RightAngleRampPart": {
+  "Name": {
+   "String": "RightAngleRamp"
+  }
+ },
+ "RocketPropulsion": {
+  "Active": {
+   "Bool": false
+  },
+  "CartoonFactor": {
+   "Float": 0.7
+  },
+  "MaxSpeed": {
+   "Float": 30.0
+  },
+  "MaxThrust": {
+   "Float": 4000.0
+  },
+  "MaxTorque": {
+   "Vector3": [
+    400000.0,
+    400000.0,
+    0.0
+   ]
+  },
+  "TargetOffset": {
+   "Vector3": [
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "TargetRadius": {
+   "Float": 4.0
+  },
+  "ThrustD": {
+   "Float": 0.001
+  },
+  "ThrustP": {
+   "Float": 5.0
+  },
+  "TurnD": {
+   "Float": 500.0
+  },
+  "TurnP": {
+   "Float": 3000.0
+  }
+ },
+ "ScriptContext": {
+  "Name": {
+   "String": "Script Context"
+  },
+  "ScriptsDisabled": {
+   "Bool": false
+  }
+ },
+ "ScrollingFrame": {
+  "BottomImage": {
+   "Content": "rbxasset://textures/ui/Scroll/scroll-bottom.png"
+  },
+  "CanvasPosition": {
+   "Vector2": [
+    0.0,
+    0.0
+   ]
+  },
+  "CanvasSize": {
+   "UDim2": {
+    "x": {
+     "offset": 0,
+     "scale": 0.0
+    },
+    "y": {
+     "offset": 0,
+     "scale": 2.0
+    }
+   }
+  },
+  "MidImage": {
+   "Content": "rbxasset://textures/ui/Scroll/scroll-middle.png"
+  },
+  "ScrollBarThickness": {
+   "Int": 12
+  },
+  "ScrollingEnabled": {
+   "Bool": true
+  },
+  "TopImage": {
+   "Content": "rbxasset://textures/ui/Scroll/scroll-top.png"
+  }
+ },
+ "Seat": {
+  "Disabled": {
+   "Bool": false
+  }
+ },
+ "Selection": {
+  "Name": {
+   "String": "Selection"
+  }
+ },
+ "SelectionBox": {
+  "LineThickness": {
+   "Float": 0.15
+  },
+  "SurfaceColor3": {
+   "Color3": {
+    "b": 0.6745098039215687,
+    "g": 0.4117647058823529,
+    "r": 0.050980392156862744
+   }
+  },
+  "SurfaceTransparency": {
+   "Float": 1.0
+  }
+ },
+ "SelectionSphere": {
+  "SurfaceColor3": {
+   "Color3": {
+    "b": 0.6745098039215687,
+    "g": 0.4117647058823529,
+    "r": 0.050980392156862744
+   }
+  },
+  "SurfaceTransparency": {
+   "Float": 1.0
+  }
+ },
+ "ServerScriptService": {
+  "LoadStringEnabled": {
+   "Bool": false
+  }
+ },
+ "ShirtGraphic": {
+  "Name": {
+   "String": "Shirt Graphic"
+  }
+ },
+ "SkateboardController": {
+  "Name": {
+   "String": "SkateboardController"
+  }
+ },
+ "SkateboardPlatform": {
+  "Steer": {
+   "Int": 0
+  },
+  "StickyWheels": {
+   "Bool": true
+  },
+  "Throttle": {
+   "Int": 0
+  }
+ },
+ "Skin": {
+  "Name": {
+   "String": "Skin"
+  },
+  "SkinColor": {
+   "BrickColor": 226
+  }
+ },
+ "Sky": {
+  "CelestialBodiesShown": {
+   "Bool": true
+  },
+  "MoonAngularSize": {
+   "Float": 11.0
+  },
+  "MoonTextureId": {
+   "Content": "rbxasset://sky/moon.jpg"
+  },
+  "Name": {
+   "String": "Sky"
+  },
+  "SkyboxBk": {
+   "Content": "rbxasset://textures/sky/sky512_bk.tex"
+  },
+  "SkyboxDn": {
+   "Content": "rbxasset://textures/sky/sky512_dn.tex"
+  },
+  "SkyboxFt": {
+   "Content": "rbxasset://textures/sky/sky512_ft.tex"
+  },
+  "SkyboxLf": {
+   "Content": "rbxasset://textures/sky/sky512_lf.tex"
+  },
+  "SkyboxRt": {
+   "Content": "rbxasset://textures/sky/sky512_rt.tex"
+  },
+  "SkyboxUp": {
+   "Content": "rbxasset://textures/sky/sky512_up.tex"
+  },
+  "StarCount": {
+   "Int": 3000
+  },
+  "SunAngularSize": {
+   "Float": 21.0
+  },
+  "SunTextureId": {
+   "Content": "rbxasset://sky/sun.jpg"
+  }
+ },
+ "Smoke": {
+  "Color": {
+   "Color3": {
+    "b": 1,
+    "g": 1,
+    "r": 1
+   }
+  },
+  "Opacity": {
+   "Float": 0.5
+  },
+  "RiseVelocity": {
+   "Float": 1.0
+  },
+  "Size": {
+   "Float": 1.0
+  },
+  "opacity_xml": {
+   "Float": 0.5
+  },
+  "riseVelocity_xml": {
+   "Float": 1.0
+  },
+  "size_xml": {
+   "Float": 1.0
+  }
+ },
+ "Sound": {
+  "Looped": {
+   "Bool": false
+  },
+  "MaxDistance": {
+   "Float": 100000.0
+  },
+  "MinDistance": {
+   "Float": 10.0
+  },
+  "Name": {
+   "String": "Sound"
+  },
+  "Pitch": {
+   "Float": 1.0
+  },
+  "PlayCount": {
+   "Int": -1
+  },
+  "PlayOnRemove": {
+   "Bool": false
+  }
+ },
+ "SoundService": {
+  "DistanceFactor": {
+   "Float": 10.0
+  },
+  "DopplerScale": {
+   "Float": 1.0
+  },
+  "RolloffScale": {
+   "Float": 1.0
+  }
+ },
+ "Sparkles": {
+  "SparkleColor": {
+   "Color3": {
+    "b": 1.0,
+    "g": 0.09803921568627451,
+    "r": 0.5647058823529412
+   }
+  }
+ },
+ "SpawnLocation": {
+  "AllowTeamChangeOnTouch": {
+   "Bool": false
+  },
+  "Duration": {
+   "Int": 10
+  },
+  "Enabled": {
+   "Bool": true
+  },
+  "Neutral": {
+   "Bool": true
+  }
+ },
+ "SpecialMesh": {
+  "Name": {
+   "String": "Mesh"
+  }
+ },
+ "SpotLight": {
+  "Range": {
+   "Float": 16.0
+  }
+ },
+ "StarterGear": {
+  "Name": {
+   "String": "StarterGear"
+  }
+ },
+ "StarterGui": {
+  "ResetPlayerGuiOnSpawn": {
+   "Bool": true
+  },
+  "ShowDevelopmentGui": {
+   "Bool": true
+  }
+ },
+ "StarterPlayer": {
+  "AutoJumpEnabled": {
+   "Bool": true
+  },
+  "EnableMouseLockOption": {
+   "Bool": true
+  },
+  "LoadCharacterAppearance": {
+   "Bool": true
+  }
+ },
+ "Studio": {
+  "Device Pairing Code": {
+   "Int": 0
+  },
+  "Drag Multiple Parts As Single Part": {
+   "Bool": false
+  },
+  "LuaDebuggerEnabled": {
+   "Bool": true
+  },
+  "OverrideCoreScripts": {
+   "Bool": false
+  }
+ },
+ "StudioTool": {
+  "Enabled": {
+   "Bool": false
+  }
+ },
+ "SurfaceGui": {
+  "Active": {
+   "Bool": true
+  },
+  "CanvasSize": {
+   "Vector2": [
+    800.0,
+    600.0
+   ]
+  },
+  "Enabled": {
+   "Bool": true
+  },
+  "ToolPunchThroughDistance": {
+   "Float": 0.0
+  }
+ },
+ "SurfaceLight": {
+  "Range": {
+   "Float": 16.0
+  }
+ },
+ "TaskScheduler": {
+  "Name": {
+   "String": "Task Scheduler"
+  }
+ },
+ "Team": {
+  "AutoAssignable": {
+   "Bool": true
+  },
+  "AutoColorCharacters": {
+   "Bool": true
+  },
+  "Score": {
+   "Int": 0
+  }
+ },
+ "TeleportService": {
+  "Name": {
+   "String": "Teleport Service"
+  }
+ },
+ "Terrain": {
+  "Name": {
+   "String": "Terrain"
+  },
+  "SmoothReplicate": {
+   "Int": -1
+  },
+  "WaterColor": {
+   "Color3": {
+    "b": 0.36,
+    "g": 0.33,
+    "r": 0.05
+   }
+  },
+  "WaterTransparency": {
+   "Float": 0.3
+  },
+  "WaterWaveSize": {
+   "Float": 0.15
+  },
+  "WaterWaveSpeed": {
+   "Float": 10.0
+  }
+ },
+ "TextBox": {
+  "ClearTextOnFocus": {
+   "Bool": true
+  },
+  "MultiLine": {
+   "Bool": false
+  }
+ },
+ "Texture": {
+  "Name": {
+   "String": "Texture"
+  }
+ },
+ "TextureTrail": {
+  "CycleOffset": {
+   "Float": 0.0
+  },
+  "StudsBetweenTextures": {
+   "Float": 4.0
+  },
+  "TextureSize": {
+   "Vector2": [
+    1.0,
+    1.0
+   ]
+  },
+  "Velocity": {
+   "Float": 2.0
+  }
+ },
+ "Tool": {
+  "CanBeDropped": {
+   "Bool": true
+  },
+  "ManualActivationOnly": {
+   "Bool": false
+  },
+  "RequiresHandle": {
+   "Bool": true
+  },
+  "ToolTip": {
+   "String": ""
+  }
+ },
+ "TouchTransmitter": {
+  "Name": {
+   "String": "TouchInterest"
+  }
+ },
+ "TrussPart": {
+  "Name": {
+   "String": "Truss"
+  }
+ },
+ "UnionOperation": {
+  "Name": {
+   "String": "Union"
+  }
+ },
+ "UserGameSettings": {
+  "AllTutorialsDisabled": {
+   "Bool": false
+  },
+  "ComputerCameraMovementChanged": {
+   "Bool": false
+  },
+  "ComputerMovementChanged": {
+   "Bool": false
+  },
+  "Fullscreen": {
+   "Bool": false
+  },
+  "MasterVolume": {
+   "Float": 1.0
+  },
+  "MouseSensitivity": {
+   "Float": 1.0
+  },
+  "Name": {
+   "String": "GameSettings"
+  },
+  "StartMaximized": {
+   "Bool": true
+  },
+  "StartScreenPosition": {
+   "Vector2": [
+    20.0,
+    20.0
+   ]
+  },
+  "StartScreenSize": {
+   "Vector2": [
+    800.0,
+    600.0
+   ]
+  },
+  "TouchCameraMovementChanged": {
+   "Bool": false
+  },
+  "TouchMovementChanged": {
+   "Bool": false
+  },
+  "UsedHideHudShortcut": {
+   "Bool": false
+  }
+ },
+ "UserInputService": {
+  "ModalEnabled": {
+   "Bool": false
+  },
+  "MouseIconEnabled": {
+   "Bool": true
+  }
+ },
+ "UserSettings": {
+  "Name": {
+   "String": "GlobalBasicSettings"
+  }
+ },
+ "VehicleSeat": {
+  "Disabled": {
+   "Bool": false
+  },
+  "HeadsUpDisplay": {
+   "Bool": true
+  },
+  "MaxSpeed": {
+   "Float": 25.0
+  },
+  "Steer": {
+   "Int": 0
+  },
+  "Throttle": {
+   "Int": 0
+  },
+  "Torque": {
+   "Float": 10.0
+  },
+  "TurnSpeed": {
+   "Float": 1.0
+  }
+ },
+ "VelocityMotor": {
+  "Name": {
+   "String": "VelocityMotor"
+  }
+ },
+ "Visit": {
+  "Name": {
+   "String": "Visit"
+  }
+ },
+ "WedgePart": {
+  "Name": {
+   "String": "Wedge"
+  }
+ },
+ "Workspace": {
+  "AllowThirdPartySales": {
+   "Bool": false
+  },
+  "DistributedGameTime": {
+   "Double": 0.0
+  },
+  "ExpSolverEnabled_Replicate": {
+   "Bool": false
+  },
+  "FilteringEnabled": {
+   "Bool": false
+  },
+  "Name": {
+   "String": "Workspace"
+  },
+  "PGSPhysicsSolverEnabled": {
+   "Bool": false
+  },
+  "StreamingEnabled": {
+   "Bool": false
+  }
+ }
+}

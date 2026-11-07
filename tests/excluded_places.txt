@@ -1,0 +1,1 @@
+humanoidAnimateR15.rbxm	damaged by line-ending conversion in the original repository; the legacy engine can't load it either, and the brute-force repair that fixed characterR15.rbxm doesn't finish on it

@@ -6,23 +6,23 @@ Read `docs/GOAL.md` and this file first after any context reset.
 
 ## Current phase
 
-Phase 1 (setup).
+Phase 3 (simulation). Phases 1 and 2 are done: workspace, CI, reflection data, math, place file reader and writer, and the instance tree all load and save every test place.
 
 ## Legacy to Rust
 
 | Legacy | Target | Status | Notes |
 |---|---|---|---|
-| `Base/` (RbxAssert, RbxFormat, HardwareInfo, cpucount, rbx/, util/, microprofile) | `rbx-base` | not started | asserts become `debug_assert!` and `tracing`; microprofile becomes `tracing` spans |
-| `Base/include/simd` | `rbx-math` | not started | glam handles SIMD |
+| `Base/` (RbxAssert, RbxFormat, HardwareInfo, cpucount, rbx/, util/, microprofile) | `rbx-base` | in progress | asserts become `debug_assert!` and `tracing`; microprofile becomes `tracing` spans |
+| `Base/include/simd` | `rbx-math` | ported | glam handles SIMD |
 | `App/v8kernel` (math kernel, bodies, connectors) | `rbx-physics` | not started | |
 | `App/v8world` (World, Primitive, Assembly, Contact, Joints) | `rbx-physics` | not started | |
 | `App/solver` (PGS solver) | `rbx-physics` | not started | |
 | `App.BulletPhysics/` | `rbx-physics` via parry3d | not started | only collision detection is used |
-| `App/v8tree` (Instance, Service, reflection glue) | `rbx-dom` | not started | |
-| `App/reflection`, `Base/include/rbx` reflection | `rbx-reflection` | not started | |
-| `App/v8datamodel` | `rbx-dom` (classes), `rbx-format` (serializers), `rbx-script` (bindings) | not started | |
-| `App/v8xml` | `rbx-format` | not started | XML place format |
-| `App/lz4` | `rbx-format` via the lz4_flex crate | not started | binary place chunks |
+| `App/v8tree` (Instance, Service, reflection glue) | `rbx-dom` | ported | |
+| `App/reflection`, `Base/include/rbx` reflection | `rbx-reflection` | ported | |
+| `App/v8datamodel` | `rbx-dom` (classes), `rbx-format` (serializers), `rbx-script` (bindings) | in progress | |
+| `App/v8xml` | `rbx-format` | ported | XML place format |
+| `App/lz4` | `rbx-format` via the lz4_flex crate | ported | binary place chunks |
 | `App/script`, `App/Lua-5.1.4` | `rbx-script` (Luau via mlua) | not started | |
 | `App/humanoid` | `rbx-physics` (controller) and `rbx-dom` (class) | not started | |
 | `App/tool` | `rbx-dom` and `apps/studio` | not started | dragger, mouse commands |
@@ -33,7 +33,7 @@ Phase 1 (setup).
 | `CSG/` (sgCore) | `rbx-csg` | not started | |
 | `Network/` (replicators, players, filtering) | `rbx-net` | not started | |
 | `Network/raknet` | `rbx-net` (quinn, WebTransport, WebSocket) | not started | new wire format |
-| `Rendering/g3d`, `Rendering/RbxG3D` | `rbx-math` | not started | |
+| `Rendering/g3d`, `Rendering/RbxG3D` | `rbx-math` | in progress | |
 | `Rendering/GfxCore` (D3D9, D3D11, GL) | `rbx-render` (wgpu) | not started | |
 | `Rendering/GfxRender` | `rbx-render` | not started | freetype becomes a Rust font crate |
 | `Rendering/GfxBase`, `Rendering/AppDraw` | `rbx-render` | not started | |
@@ -43,11 +43,11 @@ Phase 1 (setup).
 | `RCCService/` | `apps/server` | not started | SOAP becomes an HTTP/JSON API |
 | `Roblox.RccServiceArbiter/` | `apps/arbiter` | not started | |
 | `RobloxStudio/` | `apps/studio`, `rbx-studio-ui` | not started | |
-| `content/` | `assets/content` | not started | |
-| `PlatformContent/` | `assets/platform-content` | not started | |
-| `BuiltInPlugins/` | `assets/plugins/builtin` | not started | |
-| `StudioPlugins/` | `assets/plugins/studio` | not started | |
-| `RobloxTest/`, `App.UnitTest/`, `Base.UnitTest/`, `RCCService.Test/`, `RCCService.Thumb.Test/` | `tests/` | not started | |
+| `content/` | `assets/content` | in progress | moved; scripts not yet updated | |
+| `PlatformContent/` | `assets/platform-content` | in progress | moved; scripts not yet updated | |
+| `BuiltInPlugins/` | `assets/plugins/builtin` | in progress | moved; scripts not yet updated | |
+| `StudioPlugins/` | `assets/plugins/studio` | in progress | moved; scripts not yet updated | |
+| `RobloxTest/`, `App.UnitTest/`, `Base.UnitTest/`, `RCCService.Test/`, `RCCService.Thumb.Test/` | `tests/` | in progress | place files moved to `tests/places`; Lua and physics tests not yet | |
 | `fmod/` | `rbx-audio` (Kira) | not started | |
 | `Win/` (video capture, DirectShow) | `apps/player` | not started | |
 

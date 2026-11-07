@@ -527,9 +527,18 @@ impl ReflectionDatabase {
         name: &str,
     ) -> impl Iterator<Item = &'a ClassDescriptor> + 'a {
         let mut cur = self.classes.get(name);
+        let mut steps = 0;
         std::iter::from_fn(move || {
             let c = cur?;
-            cur = c.superclass.as_deref().and_then(|s| self.classes.get(s));
+            steps += 1;
+            cur = if steps > 64 {
+                None
+            } else {
+                c.superclass
+                    .as_deref()
+                    .filter(|s| *s != c.name)
+                    .and_then(|s| self.classes.get(s))
+            };
             Some(c)
         })
     }

@@ -38,6 +38,18 @@ pub fn place_files() -> Vec<PathBuf> {
     for dir in ["tests", "assets", "legacy"] {
         collect(&root.join(dir), &mut files);
     }
+    let excluded: Vec<String> =
+        std::fs::read_to_string(root.join("tests").join("excluded_places.txt"))
+            .unwrap_or_default()
+            .lines()
+            .filter_map(|l| l.split('\t').next())
+            .filter(|l| !l.trim().is_empty())
+            .map(|l| l.trim().to_string())
+            .collect();
+    files.retain(|f| {
+        let name = f.file_name().and_then(|n| n.to_str()).unwrap_or("");
+        !excluded.iter().any(|e| e == name)
+    });
     files.sort();
     files
 }

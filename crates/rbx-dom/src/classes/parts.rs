@@ -1,0 +1,264 @@
+use crate::behavior::{Behavior, SetOutcome};
+use crate::datamodel::DataModel;
+use rbx_math::{BrickColor, CFrame, Mat3, Vec3};
+use rbx_reflection::{InstanceId, Variant};
+use std::collections::HashMap;
+
+pub struct BasePartBehavior;
+
+fn cframe(dm: &DataModel, id: InstanceId) -> CFrame {
+    dm.get_raw(id, "CFrame")
+        .and_then(|v| v.as_cframe())
+        .unwrap_or_default()
+}
+
+fn sanitize(cf: CFrame) -> CFrame {
+    if !cf.is_finite() {
+        CFrame::from_translation(Vec3::new(0.0, -f32::MAX, 0.0))
+    } else {
+        cf.orthonormalized_if_needed()
+    }
+}
+
+trait OrthoIfNeeded {
+    fn orthonormalized_if_needed(self) -> Self;
+}
+
+impl OrthoIfNeeded for CFrame {
+    fn orthonormalized_if_needed(self) -> CFrame {
+        let m = self.rotation;
+        let err = (m.x_axis.length_squared() - 1.0).abs()
+            + (m.y_axis.length_squared() - 1.0).abs()
+            + (m.z_axis.length_squared() - 1.0).abs()
+            + m.x_axis.dot(m.y_axis).abs()
+            + m.y_axis.dot(m.z_axis).abs()
+            + m.x_axis.dot(m.z_axis).abs();
+        if err > 1e-5 {
+            self.orthonormalized()
+        } else {
+            self
+        }
+    }
+}
+
+impl Behavior for BasePartBehavior {
+    fn computed(&self) -> &'static [&'static str] {
+        &["Position", "Rotation", "Color", "CoordinateFrame"]
+    }
+
+    fn get(&self, dm: &DataModel, id: InstanceId, prop: &str) -> Option<Variant> {
+        match prop {
+            "Position" => Some(Variant::Vector3(cframe(dm, id).translation)),
+            "CoordinateFrame" => Some(Variant::CFrame(cframe(dm, id))),
+            "Rotation" => {
+                let (x, y, z) = cframe(dm, id).to_euler_xyz();
+                Some(Variant::Vector3(Vec3::new(
+                    x.to_degrees(),
+                    y.to_degrees(),
+                    z.to_degrees(),
+                )))
+            }
+            "Color" => Some(Variant::Color3(
+                dm.get_raw(id, "BrickColor")
+                    .and_then(|v| v.as_brick_color())
+                    .unwrap_or_default()
+                    .color3(),
+            )),
+            _ => None,
+        }
+    }
+
+    fn set(&self, dm: &mut DataModel, id: InstanceId, prop: &str, value: &Variant) -> SetOutcome {
+        match prop {
+            "CFrame" | "CoordinateFrame" => {
+                let Some(cf) = value.as_cframe() else {
+                    return SetOutcome::Unhandled;
+                };
+                let target = dm
+                    .with_world_hooks(|h, dm| h.mechanism_root_for_script(dm, id))
+                    .unwrap_or(id);
+                let cf = sanitize(cf);
+                if cframe(dm, target) != cf {
+                    dm.set_unchecked(target, "CFrame", Variant::CFrame(cf));
+                    dm.notify_changed(target, "Position");
+                    dm.notify_changed(target, "Rotation");
+                    dm.with_world_hooks(|h, dm| h.pv_changed_from_reflection(dm, target));
+                }
+                SetOutcome::Handled
+            }
+            "Position" => {
+                let Some(p) = value.as_vec3() else {
+                    return SetOutcome::Unhandled;
+                };
+                let mut cf = cframe(dm, id);
+                if cf.translation != p {
+                    cf.translation = p;
+                    self.move_with_joints(dm, id, cf);
+                }
+                SetOutcome::Handled
+            }
+            "Rotation" => {
+                let Some(r) = value.as_vec3() else {
+                    return SetOutcome::Unhandled;
+                };
+                let mut cf = cframe(dm, id);
+                let rot = Mat3::from_rotation_x(r.x.to_radians())
+                    * Mat3::from_rotation_y(r.y.to_radians())
+                    * Mat3::from_rotation_z(r.z.to_radians());
+                if rot != cf.rotation {
+                    cf.rotation = rot;
+                    self.move_with_joints(dm, id, cf);
+                }
+                SetOutcome::Handled
+            }
+            "Color" => {
+                let Some(c) = value.as_color3() else {
+                    return SetOutcome::Unhandled;
+                };
+                let b = BrickColor::closest(c);
+                dm.set_unchecked(id, "BrickColor", Variant::BrickColor(b));
+                dm.notify_changed(id, "Color");
+                SetOutcome::Handled
+            }
+            "Size" => {
+                let Some(s) = value.as_vec3() else {
+                    return SetOutcome::Unhandled;
+                };
+                dm.with_world_hooks(|h, dm| h.destroy_joints(dm, id));
+                let clamped = clamp_size(dm, id, s);
+                let current = dm.get_raw(id, "size").and_then(|v| v.as_vec3());
+                if Some(clamped) != current {
+                    set_size_xml(dm, id, clamped);
+                } else if clamped != s {
+                    dm.notify_changed(id, "Size");
+                }
+                dm.with_world_hooks(|h, dm| h.safe_move(dm, id));
+                dm.with_world_hooks(|h, dm| h.join(dm, id));
+                SetOutcome::Handled
+            }
+            "size" | "siz" => {
+                let Some(s) = value.as_vec3() else {
+                    return SetOutcome::Unhandled;
+                };
+                set_size_xml(dm, id, s);
+                SetOutcome::Handled
+            }
+            "Velocity" | "RotVelocity" => {
+                let target = dm
+                    .with_world_hooks(|h, dm| h.mechanism_root_for_script(dm, id))
+                    .unwrap_or(id);
+                if target != id {
+                    dm.set_unchecked(target, prop, value.clone());
+                    dm.with_world_hooks(|h, dm| h.pv_changed_from_reflection(dm, target));
+                    return SetOutcome::Handled;
+                }
+                SetOutcome::Unhandled
+            }
+            _ => SetOutcome::Unhandled,
+        }
+    }
+
+    fn changed(&self, dm: &mut DataModel, id: InstanceId, prop: &'static str) {
+        match prop {
+            "BrickColor" => dm.notify_changed(id, "Color"),
+            "size" => dm.notify_changed(id, "Size"),
+            "Velocity" | "RotVelocity" => {
+                dm.with_world_hooks(|h, dm| h.pv_changed_from_reflection(dm, id));
+            }
+            _ => {}
+        }
+    }
+}
+
+impl BasePartBehavior {
+    fn move_with_joints(&self, dm: &mut DataModel, id: InstanceId, cf: CFrame) {
+        dm.with_world_hooks(|h, dm| h.destroy_joints(dm, id));
+        let cf = sanitize(cf);
+        dm.set_unchecked(id, "CFrame", Variant::CFrame(cf));
+        dm.notify_changed(id, "Position");
+        dm.notify_changed(id, "Rotation");
+        dm.with_world_hooks(|h, dm| h.pv_changed_from_reflection(dm, id));
+        dm.with_world_hooks(|h, dm| h.safe_move(dm, id));
+        dm.with_world_hooks(|h, dm| h.join(dm, id));
+    }
+}
+
+fn has_three_dimensional_size(dm: &DataModel, id: InstanceId) -> bool {
+    if dm.class_of(id) == Some("Part") {
+        let shape = dm
+            .get_raw(id, "shape")
+            .and_then(|v| v.as_enum())
+            .unwrap_or(1);
+        return shape != 0;
+    }
+    true
+}
+
+fn set_size_xml(dm: &mut DataModel, id: InstanceId, size: Vec3) {
+    let size = if has_three_dimensional_size(dm, id) {
+        size
+    } else {
+        Vec3::splat(size.x)
+    };
+    let current = dm.get_raw(id, "size").and_then(|v| v.as_vec3());
+    if current != Some(size) {
+        dm.set_unchecked(id, "size", Variant::Vector3(size));
+    }
+}
+
+pub fn min_size(dm: &DataModel, id: InstanceId) -> Vec3 {
+    let class = dm.class_of(id).unwrap_or("");
+    if dm.is_a(id, "FormFactorPart") {
+        let ff = dm
+            .get_raw(id, "formFactorRaw")
+            .and_then(|v| v.as_enum())
+            .unwrap_or(1);
+        return match ff {
+            0 => Vec3::ONE,
+            1 => Vec3::new(1.0, 1.2, 1.0),
+            2 => Vec3::new(1.0, 0.4, 1.0),
+            _ => Vec3::splat(0.2),
+        };
+    }
+    if class == "TrussPart" {
+        return Vec3::splat(2.0);
+    }
+    Vec3::splat(0.2)
+}
+
+fn clamp_size(dm: &DataModel, id: InstanceId, ui: Vec3) -> Vec3 {
+    let min = min_size(dm, id);
+    let mut s = ui.max(min);
+    if dm.is_a(id, "FormFactorPart") {
+        let ff = dm
+            .get_raw(id, "formFactorRaw")
+            .and_then(|v| v.as_enum())
+            .unwrap_or(1);
+        if let 0..=2 = ff {
+            let y_grid = if ff == 2 {
+                0.4
+            } else if ff == 1 {
+                1.2
+            } else {
+                1.0
+            };
+            s.x = s.x.round().max(1.0);
+            s.z = s.z.round().max(1.0);
+            s.y = ((s.y / y_grid).round() * y_grid).max(y_grid.min(min.y));
+            if ff == 0 {
+                s.y = s.y.round().max(1.0);
+            }
+        }
+    }
+    if dm.class_of(id) == Some("TrussPart") {
+        s = Vec3::new(2.0, (s.y / 2.0).round().max(1.0) * 2.0, 2.0);
+    }
+    if !has_three_dimensional_size(dm, id) {
+        s = Vec3::splat(s.x);
+    }
+    s
+}
+
+pub fn register(map: &mut HashMap<&'static str, &'static dyn Behavior>) {
+    map.insert("BasePart", &BasePartBehavior);
+}

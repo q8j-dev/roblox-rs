@@ -536,11 +536,21 @@ struct DynProps {
     ang: Vec3,
 }
 
-#[derive(Clone, Copy, Debug, Default)]
+#[derive(Clone, Copy, Debug)]
 struct MassInertia {
     inertia: Mat3,
     mass_inv: f32,
     pos_to_vel: f32,
+}
+
+impl Default for MassInertia {
+    fn default() -> Self {
+        MassInertia {
+            inertia: Mat3::ZERO,
+            mass_inv: 0.0,
+            pos_to_vel: 0.0,
+        }
+    }
 }
 
 impl MassInertia {

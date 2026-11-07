@@ -41,7 +41,7 @@ Phase 3 (simulation). Phases 1 and 2 are done: workspace, CI, reflection data, m
 | `ClientBase/`, `ClientShared/` | `rbx-base`, `apps/player` | not started | InfluxDB and analytics removed |
 | `WindowsClient/`, `Mac/`, `RobloxMac/` | `apps/player`, `rbx-platform` | not started | |
 | `RCCService/` | `apps/server` | in progress | SOAP operations are HTTP/JSON routes under `/v1`; jobs run in their own threads; local asset and content server |
-| `Roblox.RccServiceArbiter/` | `apps/arbiter` | not started | |
+| `Roblox.RccServiceArbiter/` | `apps/arbiter` | done | fronts the server API, keeps a warm process pool, routes each job to a process, recycles processes after their job, restarts processes that stop answering, sweeps expired jobs; the thread pool config and client settings fetch were tied to Roblox web services and are not ported |
 | `RobloxStudio/` | `apps/studio`, `rbx-studio-ui` | not started | |
 | `content/` | `assets/content` | in progress | moved; scripts not yet updated | |
 | `PlatformContent/` | `assets/platform-content` | in progress | moved; scripts not yet updated | |

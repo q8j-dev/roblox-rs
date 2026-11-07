@@ -60,7 +60,8 @@ impl Offscreen {
             usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
             view_formats: &[],
         });
-        let renderer = Renderer::new(device, queue, FORMAT, content, platform);
+        let mut renderer = Renderer::new(device, queue, FORMAT, content, platform);
+        renderer.lighting_budget = usize::MAX;
         Ok(Offscreen {
             renderer,
             target,

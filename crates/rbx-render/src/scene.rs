@@ -39,6 +39,8 @@ pub struct PartDraw {
     pub file: Option<FileMeshRef>,
     pub texture: Option<String>,
     pub decals: Vec<DecalDraw>,
+    pub voxel: Option<crate::lightgrid::VoxelShape>,
+    pub voxel_transparency: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -74,6 +76,7 @@ pub struct Scene {
     pub lighting: SceneLighting,
     pub sky_faces: Option<[String; 6]>,
     pub composites: Vec<crate::character::CompositeDesc>,
+    pub focus: Vec3,
 }
 
 pub const SURFACE_PROPS: [&str; 6] = [
@@ -397,6 +400,7 @@ fn collect_parts(
         }
         let mut decals = Vec::new();
         collect_decals(dm, id, &mut decals);
+        let (voxel, voxel_transparency) = voxel_shape(dm, id, class, transparency);
         let base_block = class == "Part"
             && !matches!(
                 dm.get(id, "Shape").ok().and_then(|v| v.as_enum()),
@@ -461,7 +465,58 @@ fn collect_parts(
             file,
             texture,
             decals,
+            voxel,
+            voxel_transparency,
         });
+    }
+}
+
+fn voxel_shape(
+    dm: &DataModel,
+    id: InstanceId,
+    class: &str,
+    transparency: f32,
+) -> (Option<crate::lightgrid::VoxelShape>, f32) {
+    use crate::lightgrid::VoxelShape;
+    for &c in dm.children_of(id) {
+        if !dm.is_a(c, "DataModelMesh") {
+            continue;
+        }
+        let zero_offset = dm
+            .get(c, "Offset")
+            .ok()
+            .and_then(|v| v.as_vec3())
+            .unwrap_or(Vec3::ZERO)
+            == Vec3::ZERO;
+        let shape = match dm.class_of(c) {
+            Some("SpecialMesh") => match dm.get(c, "MeshType").ok().and_then(|v| v.as_enum()) {
+                Some(0) => Some(VoxelShape::CylinderY),
+                Some(1) => Some(VoxelShape::Torso),
+                Some(2) => Some(VoxelShape::Wedge),
+                Some(3) => Some(VoxelShape::Ellipsoid),
+                Some(4) => Some(VoxelShape::CylinderX),
+                Some(6) => Some(VoxelShape::Block),
+                _ => None,
+            },
+            Some("BlockMesh") if zero_offset => Some(VoxelShape::Block),
+            Some("CylinderMesh") if zero_offset => Some(VoxelShape::CylinderY),
+            _ => None,
+        };
+        return (shape, transparency);
+    }
+    match class {
+        "WedgePart" => (Some(VoxelShape::Wedge), transparency),
+        "CornerWedgePart" => (Some(VoxelShape::CornerWedge), transparency),
+        "TrussPart" => (Some(VoxelShape::Block), 0.75 + 0.25 * transparency),
+        "Part" | "FormFactorPart" | "SkateboardPlatform" | "Seat" | "SpawnLocation"
+        | "VehicleSeat" | "FlagStand" | "Platform" => {
+            match dm.get(id, "Shape").ok().and_then(|v| v.as_enum()) {
+                Some(0) => (Some(VoxelShape::Sphere), transparency),
+                Some(2) => (Some(VoxelShape::CylinderX), transparency),
+                _ => (Some(VoxelShape::Block), transparency),
+            }
+        }
+        _ => (None, transparency),
     }
 }
 
@@ -474,6 +529,7 @@ pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
         collect_parts(dm, ws, &mut parts, &mut composites);
     }
     let mut camera = Camera::default();
+    let mut focus = None;
     if let Some(ws) = ws {
         let cam = dm
             .get_ref(ws, "CurrentCamera")
@@ -482,6 +538,10 @@ pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
             if let Some(cf) = dm.get_raw(cam, "CFrame").and_then(|v| v.as_cframe()) {
                 camera.cframe = cf;
             }
+            focus = dm
+                .get_raw(cam, "Focus")
+                .and_then(|v| v.as_cframe())
+                .map(|c| c.translation);
             camera.fov_y = get_f32(dm, cam, "FieldOfView", 70.0)
                 .clamp(1.0, 120.0)
                 .to_radians();
@@ -503,6 +563,8 @@ pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
                 .ok()
                 .and_then(|v| v.as_bool())
                 .unwrap_or(true),
+            global_shadows: dm.get_bool(l, "GlobalShadows"),
+            outdoor_ambient: get_color3(dm, l, "OutdoorAmbient", Color3::new(0.5, 0.5, 0.5)),
         }),
         None => SceneLighting::compute(&LightingInputs {
             game_time: 14.0 * 3600.0,
@@ -515,6 +577,8 @@ pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
             fog_start: 0.0,
             fog_end: 100000.0,
             outlines: true,
+            global_shadows: false,
+            outdoor_ambient: Color3::new(0.5, 0.5, 0.5),
         }),
     };
     let sky_faces = dm.find_service("Lighting").and_then(|l| {
@@ -534,6 +598,7 @@ pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
     });
     Scene {
         parts,
+        focus: focus.unwrap_or(camera.cframe.translation),
         camera,
         lighting,
         sky_faces,

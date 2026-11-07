@@ -13,6 +13,10 @@ struct Globals {
     light_border: vec4<f32>,
     fade_distance_glow: vec4<f32>,
     outline_brightness_shadow: vec4<f32>,
+    lgrid_scale: vec4<f32>,
+    lgrid_offset: vec4<f32>,
+    lgrid_center: vec4<f32>,
+    lgrid_radius: vec4<f32>,
 };
 
 struct TerrainParams {
@@ -22,6 +26,19 @@ struct TerrainParams {
 
 @group(0) @binding(0) var<uniform> g: Globals;
 @group(0) @binding(1) var linear_sampler: sampler;
+@group(0) @binding(3) var lgrid_texture: texture_3d<f32>;
+@group(0) @binding(4) var lgrid_sampler: sampler;
+
+fn lgrid_prepare(world: vec3<f32>, normal: vec3<f32>) -> vec3<f32> {
+    return (world + normal * 6.0) * g.lgrid_scale.xyz + g.lgrid_offset.xyz;
+}
+
+fn lgrid_sample(c: vec3<f32>) -> vec4<f32> {
+    let edge = step(g.lgrid_radius.xyz, abs(c - g.lgrid_center.xyz));
+    let edgef = clamp(dot(edge, vec3<f32>(1.0)), 0.0, 1.0);
+    let light = textureSampleLevel(lgrid_texture, lgrid_sampler, vec3<f32>(c.x, c.z, c.y), 0.0);
+    return mix(light, g.light_border, edgef);
+}
 @group(1) @binding(0) var albedo_map: texture_2d<f32>;
 @group(1) @binding(1) var specular_map: texture_2d<f32>;
 @group(1) @binding(2) var<uniform> params: TerrainParams;
@@ -44,6 +61,7 @@ struct VertexOut {
     @location(4) normal: vec3<f32>,
     @location(5) view_depth: vec4<f32>,
     @location(6) fog: f32,
+    @location(7) lgrid: vec3<f32>,
 };
 
 @vertex
@@ -58,6 +76,7 @@ fn vs_main(v: VertexIn) -> VertexOut {
     o.normal = v.normal;
     o.view_depth = vec4<f32>(g.camera_position.xyz - v.position, hpos.w);
     o.fog = (g.fog_params.z - hpos.w) * g.fog_params.w;
+    o.lgrid = lgrid_prepare(v.position, normalize(v.normal));
     return o;
 }
 
@@ -73,7 +92,7 @@ fn sample_blend(t: texture_2d<f32>, i: VertexOut) -> vec4<f32> {
 
 @fragment
 fn fs_main(i: VertexOut) -> @location(0) vec4<f32> {
-    let light = g.light_border;
+    let light = lgrid_sample(i.lgrid);
     let shadow = light.a;
     let albedo = sample_blend(albedo_map, i);
     let p = sample_blend(specular_map, i);
@@ -92,7 +111,7 @@ fn fs_main(i: VertexOut) -> @location(0) vec4<f32> {
 
 @fragment
 fn fs_water(i: VertexOut) -> @location(0) vec4<f32> {
-    let light = g.light_border;
+    let light = lgrid_sample(i.lgrid);
     let normal = normalize(i.normal);
     let view = normalize(i.view_depth.xyz);
     let ndotl = dot(normal, -g.lamp0_dir.xyz);

@@ -13,10 +13,27 @@ struct Globals {
     light_border: vec4<f32>,
     fade_distance_glow: vec4<f32>,
     outline_brightness_shadow: vec4<f32>,
+    lgrid_scale: vec4<f32>,
+    lgrid_offset: vec4<f32>,
+    lgrid_center: vec4<f32>,
+    lgrid_radius: vec4<f32>,
 };
 
 @group(0) @binding(0) var<uniform> g: Globals;
 @group(0) @binding(1) var linear_sampler: sampler;
+@group(0) @binding(3) var lgrid_texture: texture_3d<f32>;
+@group(0) @binding(4) var lgrid_sampler: sampler;
+
+fn lgrid_prepare(world: vec3<f32>, normal: vec3<f32>) -> vec3<f32> {
+    return (world + normal * 6.0) * g.lgrid_scale.xyz + g.lgrid_offset.xyz;
+}
+
+fn lgrid_sample(c: vec3<f32>) -> vec4<f32> {
+    let edge = step(g.lgrid_radius.xyz, abs(c - g.lgrid_center.xyz));
+    let edgef = clamp(dot(edge, vec3<f32>(1.0)), 0.0, 1.0);
+    let light = textureSampleLevel(lgrid_texture, lgrid_sampler, vec3<f32>(c.x, c.z, c.y), 0.0);
+    return mix(light, g.light_border, edgef);
+}
 @group(0) @binding(2) var studs_map: texture_2d<f32>;
 @group(1) @binding(0) var diffuse_map: texture_2d<f32>;
 
@@ -46,6 +63,7 @@ struct VertexOut {
     @location(4) view_depth: vec4<f32>,
     @location(5) normal_specpower: vec4<f32>,
     @location(6) spec_reflect_kind: vec4<f32>,
+    @location(7) lgrid: vec3<f32>,
 };
 
 @vertex
@@ -64,6 +82,7 @@ fn vs_main(v: VertexIn) -> VertexOut {
     o.uvstuds_edge2 = vec4<f32>(v.uv_studs, edges.zw);
     o.normal_specpower = vec4<f32>(normal, v.extra.y);
     o.spec_reflect_kind = vec4<f32>(v.extra.x, v.extra.z, v.extra.w, 0.0);
+    o.lgrid = lgrid_prepare(world, normal);
     return o;
 }
 
@@ -100,7 +119,7 @@ fn fs_main(i: VertexOut) -> @location(0) vec4<f32> {
     let specular_intensity = select(0.0, i.spec_reflect_kind.x, ndotl > 0.0);
     let specular_power = i.normal_specpower.w;
 
-    let light = g.light_border;
+    let light = lgrid_sample(i.lgrid);
     let shadow = light.a;
 
     let diffuse = (g.ambient_color.rgb + diffuse_intensity * shadow + light.rgb) * albedo.rgb;

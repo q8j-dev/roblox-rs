@@ -249,6 +249,8 @@ pub struct SceneLighting {
     pub clear_color: Color3,
     pub outlines: bool,
     pub shadow_intensity: f32,
+    pub global_shadows: bool,
+    pub sky_ambient: Color3,
 }
 
 pub struct LightingInputs {
@@ -262,6 +264,8 @@ pub struct LightingInputs {
     pub fog_start: f32,
     pub fog_end: f32,
     pub outlines: bool,
+    pub global_shadows: bool,
+    pub outdoor_ambient: Color3,
 }
 
 fn len(c: Color3) -> f32 {
@@ -312,6 +316,12 @@ impl SceneLighting {
             clear_color: sky.sky_ambient,
             outlines: i.outlines,
             shadow_intensity: shadow_fade * RENDER_SHADOW_INTENSITY,
+            global_shadows: i.global_shadows,
+            sky_ambient: Color3::new(
+                (i.outdoor_ambient.r - i.ambient.r).max(0.0),
+                (i.outdoor_ambient.g - i.ambient.g).max(0.0),
+                (i.outdoor_ambient.b - i.ambient.b).max(0.0),
+            ),
         }
     }
 }

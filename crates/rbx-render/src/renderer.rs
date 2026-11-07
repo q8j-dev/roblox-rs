@@ -31,6 +31,10 @@ pub struct Globals {
     pub light_border: [f32; 4],
     pub fade_distance_glow: [f32; 4],
     pub outline_brightness_shadow: [f32; 4],
+    pub lgrid_scale: [f32; 4],
+    pub lgrid_offset: [f32; 4],
+    pub lgrid_center: [f32; 4],
+    pub lgrid_radius: [f32; 4],
 }
 
 #[repr(C)]
@@ -91,6 +95,10 @@ pub struct Renderer {
     smooth: crate::smooth::SmoothTerrain,
     gui: Option<crate::gui_pass::GuiRenderer>,
     compositor: crate::composite::Compositor,
+    lightgrid: crate::lightgrid::LightGrid,
+    lgrid_texture: wgpu::Texture,
+    lgrid_active: bool,
+    pub lighting_budget: usize,
     sky_bg: Option<(Vec<String>, wgpu::BindGroup)>,
     meshes: HashMap<MeshKey, GpuMesh>,
     depth: Option<(wgpu::Texture, wgpu::TextureView, u32, u32)>,
@@ -172,7 +180,48 @@ impl Renderer {
                     },
                     count: None,
                 },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 3,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Texture {
+                        sample_type: wgpu::TextureSampleType::Float { filterable: true },
+                        view_dimension: wgpu::TextureViewDimension::D3,
+                        multisampled: false,
+                    },
+                    count: None,
+                },
+                wgpu::BindGroupLayoutEntry {
+                    binding: 4,
+                    visibility: wgpu::ShaderStages::FRAGMENT,
+                    ty: wgpu::BindingType::Sampler(wgpu::SamplerBindingType::Filtering),
+                    count: None,
+                },
             ],
+        });
+        let lgrid_size = crate::lightgrid::LightGrid::texture_size();
+        let lgrid_texture = device.create_texture(&wgpu::TextureDescriptor {
+            label: Some("light grid"),
+            size: wgpu::Extent3d {
+                width: lgrid_size.x as u32,
+                height: lgrid_size.y as u32,
+                depth_or_array_layers: lgrid_size.z as u32,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D3,
+            format: wgpu::TextureFormat::Rgba8Unorm,
+            usage: wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_DST,
+            view_formats: &[],
+        });
+        let lgrid_view = lgrid_texture.create_view(&wgpu::TextureViewDescriptor::default());
+        let lgrid_sampler = device.create_sampler(&wgpu::SamplerDescriptor {
+            label: Some("light grid"),
+            address_mode_u: wgpu::AddressMode::Repeat,
+            address_mode_v: wgpu::AddressMode::Repeat,
+            address_mode_w: wgpu::AddressMode::Repeat,
+            mag_filter: wgpu::FilterMode::Linear,
+            min_filter: wgpu::FilterMode::Linear,
+            ..Default::default()
         });
         let material_layout = device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
             label: Some("material"),
@@ -223,6 +272,14 @@ impl Renderer {
                 wgpu::BindGroupEntry {
                     binding: 2,
                     resource: wgpu::BindingResource::TextureView(&studs_view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 3,
+                    resource: wgpu::BindingResource::TextureView(&lgrid_view),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 4,
+                    resource: wgpu::BindingResource::Sampler(&lgrid_sampler),
                 },
             ],
         });
@@ -349,6 +406,10 @@ impl Renderer {
             smooth,
             gui,
             compositor,
+            lightgrid: crate::lightgrid::LightGrid::new(),
+            lgrid_texture,
+            lgrid_active: false,
+            lighting_budget: 24,
             sky_bg: None,
             meshes: HashMap::new(),
             depth: None,
@@ -411,6 +472,79 @@ impl Renderer {
             self.materials.insert(shading, bg);
         }
         &self.materials[&shading]
+    }
+
+    fn update_lightgrid(&mut self, dm: &DataModel, scene: &Scene) {
+        let l = &scene.lighting;
+        if !l.global_shadows {
+            self.lgrid_active = false;
+            return;
+        }
+        self.lgrid_active = true;
+        let parts: Vec<crate::lightgrid::VoxelPart> = scene
+            .parts
+            .iter()
+            .filter_map(|p| {
+                p.voxel.map(|shape| crate::lightgrid::VoxelPart {
+                    shape,
+                    size: p.size,
+                    cframe: p.cframe,
+                    transparency: p.voxel_transparency,
+                })
+            })
+            .collect();
+        let terrain = dm.workspace_terrain().and_then(|t| dm.terrain(t));
+        let generation = terrain.map_or(0, |t| {
+            t.smooth.as_ref().map_or(0, |g| g.changes.generation())
+                ^ t.legacy
+                    .as_ref()
+                    .map_or(0, |g| g.changes.generation() << 32)
+                ^ (t as *const rbx_dom::TerrainData as usize as u64)
+        });
+        let fill = |chunk: rbx_math::IVec3, out: &mut [u8]| {
+            crate::lightgrid_terrain::fill(terrain, chunk, out);
+        };
+        let to8 = |c: f32| (c.clamp(0.0, 1.0) * 255.0) as u8;
+        let inputs = crate::lightgrid::LightInputs {
+            focus: scene.focus,
+            parts: &parts,
+            terrain: &fill,
+            terrain_generation: generation,
+            light_direction: l.key_direction,
+            sky_ambient: [
+                to8(l.sky_ambient.r),
+                to8(l.sky_ambient.g),
+                to8(l.sky_ambient.b),
+            ],
+            shadows: true,
+        };
+        self.lightgrid.update(&inputs, self.lighting_budget);
+        for (index, data) in self.lightgrid.uploads.drain(..) {
+            let w = crate::lightgrid::LightGrid::wrapped(index);
+            self.queue.write_texture(
+                wgpu::TexelCopyTextureInfo {
+                    texture: &self.lgrid_texture,
+                    mip_level: 0,
+                    origin: wgpu::Origin3d {
+                        x: (w.x * crate::lightgrid::CHUNK_XZ) as u32,
+                        y: (w.z * crate::lightgrid::CHUNK_XZ) as u32,
+                        z: (w.y * crate::lightgrid::CHUNK_Y) as u32,
+                    },
+                    aspect: wgpu::TextureAspect::All,
+                },
+                &data,
+                wgpu::TexelCopyBufferLayout {
+                    offset: 0,
+                    bytes_per_row: Some(crate::lightgrid::CHUNK_XZ as u32 * 4),
+                    rows_per_image: Some(crate::lightgrid::CHUNK_XZ as u32),
+                },
+                wgpu::Extent3d {
+                    width: crate::lightgrid::CHUNK_XZ as u32,
+                    height: crate::lightgrid::CHUNK_XZ as u32,
+                    depth_or_array_layers: crate::lightgrid::CHUNK_Y as u32,
+                },
+            );
+        }
     }
 
     fn update_composites(&mut self, composites: &[crate::character::CompositeDesc]) {
@@ -763,6 +897,7 @@ impl Renderer {
         let aspect = width.max(1) as f32 / height.max(1) as f32;
         let scene = scene::extract(dm, aspect);
         self.update_terrain(dm);
+        self.update_lightgrid(dm, &scene);
         self.render_scene(&scene, target, width, height);
         let items = crate::gui::extract(dm);
         if let Some(mut gui) = self.gui.take() {
@@ -925,7 +1060,11 @@ impl Renderer {
                     0.0
                 },
             ],
-            light_border: [0.0, 0.0, 0.0, 1.0],
+            light_border: if self.lgrid_active {
+                self.lightgrid.border_color()
+            } else {
+                [0.0, 0.0, 0.0, 1.0]
+            },
             fade_distance_glow: [
                 SHADING_DISTANCE,
                 1.0 / SHADING_DISTANCE,
@@ -933,7 +1072,22 @@ impl Renderer {
                 1.0,
             ],
             outline_brightness_shadow: [mul, add, 0.0, l.shadow_intensity],
+            lgrid_scale: [0.0; 4],
+            lgrid_offset: [0.0; 4],
+            lgrid_center: [0.0; 4],
+            lgrid_radius: [-1.0, -1.0, -1.0, 0.0],
         };
+        let mut globals = globals;
+        if self.lgrid_active {
+            let size = crate::lightgrid::LightGrid::grid_size();
+            let offset = self.lightgrid.grid_offset();
+            let scale = Vec3::new(1.0 / size.x, 1.0 / size.y, 1.0 / size.z);
+            let center = (offset + size * 0.5) * scale;
+            let radius = size * 0.5 * 0.95 * scale;
+            globals.lgrid_scale = [scale.x, scale.y, scale.z, 0.0];
+            globals.lgrid_center = [center.x, center.y, center.z, 0.0];
+            globals.lgrid_radius = [radius.x, radius.y, radius.z, 0.0];
+        }
         self.queue
             .write_buffer(&self.globals, 0, bytemuck::bytes_of(&globals));
 

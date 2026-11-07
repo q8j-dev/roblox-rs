@@ -4,6 +4,8 @@ pub mod filemesh;
 pub mod geometry;
 pub mod gui;
 pub mod gui_pass;
+pub mod lightgrid;
+pub mod lightgrid_terrain;
 pub mod lighting;
 pub mod offscreen;
 pub mod renderer;

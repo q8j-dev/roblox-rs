@@ -30,3 +30,6 @@ opt-level = 3
 [profile.release]
 lto = "thin"
 codegen-units = 1
+
+[patch.crates-io]
+mlua = { git = "https://github.com/mlua-rs/mlua", rev = "a0ad4535fc72ba89967a931c5be57b162b5f0f3f" }

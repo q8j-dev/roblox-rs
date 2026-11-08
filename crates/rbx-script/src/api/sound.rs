@@ -226,7 +226,7 @@ fn emit(lua: &Lua, id: InstanceId, event: &'static str, extra: Option<i64>) {
     };
     let mut args = vec![Value::String(s)];
     if let Some(n) = extra {
-        args.push(Value::Integer(n));
+        args.push(Value::Integer(n as mlua::Integer));
     }
     fire_lua(lua, id, event, MultiValue::from_vec(args));
 }

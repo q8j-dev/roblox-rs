@@ -134,7 +134,7 @@ pub(crate) fn read_texture(path: &Path) -> Option<Image> {
 }
 
 pub(crate) fn read_texture_gpu(path: &Path, compressed: bool) -> Option<Image> {
-    let bytes = std::fs::read(path).ok()?;
+    let bytes = rbx_base::vfs::read(path).ok()?;
     match texture::decode_for_gpu(&bytes, compressed) {
         Ok(img) => Some(img),
         Err(e) => {
@@ -778,7 +778,7 @@ impl Renderer {
 
     fn read_content(&self, url: &str) -> Option<Vec<u8>> {
         if let Some(p) = self.resolve_content(url) {
-            return std::fs::read(p).ok();
+            return rbx_base::vfs::read(p).ok();
         }
         let lower = url.trim().to_ascii_lowercase();
         let id: u64 = if let Some(rest) = lower.strip_prefix("rbxassetid://") {
@@ -794,7 +794,7 @@ impl Renderer {
         };
         self.asset_dirs
             .iter()
-            .find_map(|d| std::fs::read(d.join(id.to_string())).ok())
+            .find_map(|d| rbx_base::vfs::read(d.join(id.to_string())).ok())
     }
 
     fn file_mesh(&mut self, url: &str) -> Option<&crate::filemesh::FileMesh> {
@@ -866,7 +866,7 @@ impl Renderer {
         {
             path.push(part);
         }
-        if path.is_file() {
+        if rbx_base::vfs::is_file(&path) {
             return Some(path);
         }
         let mut alt = self.platform_dir.clone();
@@ -876,7 +876,7 @@ impl Renderer {
         {
             alt.push(part);
         }
-        alt.is_file().then_some(alt)
+        rbx_base::vfs::is_file(&alt).then_some(alt)
     }
 
     fn sky_group(&mut self, faces: Option<&[String; 6]>) -> &wgpu::BindGroup {

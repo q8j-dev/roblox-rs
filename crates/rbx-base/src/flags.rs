@@ -112,7 +112,7 @@ pub fn load_flags_json(text: &str) -> Result<usize, String> {
 }
 
 pub fn load_flags_file(path: &Path) -> Result<usize, String> {
-    let text = std::fs::read_to_string(path).map_err(|e| e.to_string())?;
+    let text = crate::vfs::read_to_string(path).map_err(|e| e.to_string())?;
     load_flags_json(&text)
 }
 

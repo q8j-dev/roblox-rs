@@ -169,10 +169,11 @@ fn bind_render_step(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
         _ => return Err(rt("Argument 3 missing or nil")),
     };
     let key = lua.create_registry_value(f)?;
+    let identity = crate::runtime::current_identity(lua);
     let e = engine(lua);
     let mut e = e.lock();
     e.render_bindings.retain(|b| b.0 != name);
-    e.render_bindings.push((name, priority, key));
+    e.render_bindings.push((name, priority, key, identity));
     e.render_bindings.sort_by_key(|b| b.1);
     Ok(Ret::Values(mlua::MultiValue::new()))
 }

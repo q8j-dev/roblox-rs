@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>Roblox</title>
+<style>
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+canvas { display: block; position: fixed; inset: 0; width: 100vw !important; height: 100vh !important; touch-action: none; outline: none; }
+#status { position: fixed; left: 16px; bottom: 16px; color: #ddd; font: 16px/1.4 system-ui, sans-serif; }
+</style>
+</head>
+<body>
+<div id="status">Loading</div>
+<script type="module">
+const status = document.getElementById("status");
+if (!navigator.gpu) {
+  status.textContent = "This browser has no WebGPU support.";
+} else {
+  try {
+    const mod = await import("./player.js");
+    await mod.default();
+    status.remove();
+  } catch (e) {
+    status.textContent = "Failed to start: " + e;
+    console.error(e, e && e.stack);
+  }
+}
+</script>
+</body>
+</html>

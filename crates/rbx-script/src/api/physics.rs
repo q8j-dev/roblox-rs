@@ -109,7 +109,7 @@ pub(crate) fn with_world<R>(
 
 pub fn hinges_detected(lua: &Lua, id: InstanceId) -> Result<Value> {
     let n = with_world(lua, |w, _| w.vehicle_seat_hinges(id).len());
-    Ok(Value::Integer(n as i64))
+    Ok(Value::Integer(n as mlua::Integer))
 }
 
 fn material_value(lua: &Lua, m: u32) -> Result<Value> {

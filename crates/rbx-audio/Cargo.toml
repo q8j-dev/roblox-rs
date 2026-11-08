@@ -9,5 +9,13 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
-kira = "0.12"
 tracing = "0.1.44"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+kira = "0.12"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+kira = { version = "0.12", default-features = false, features = ["mp3", "ogg", "vorbis", "flac", "wav", "pcm"] }
+send_wrapper = "0.6.0"
+wasm-bindgen = "0.2.130"
+web-sys = { version = "0.3.107", features = ["AudioBuffer", "AudioContext", "AudioContextState", "AudioDestinationNode", "AudioNode", "AudioProcessingEvent", "ScriptProcessorNode"] }

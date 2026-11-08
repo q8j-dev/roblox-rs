@@ -4,10 +4,10 @@ use crate::convert::{arg_bool, arg_number, arg_string};
 use crate::runtime::{Engine, Resume, engine, make_ready_lua, with_state};
 use crate::types::rt;
 use mlua::{Lua, MultiValue, Result, Thread, Value};
+use rbx_base::time::{Duration, Instant};
 use rbx_dom::{InstanceId, RemoteValue, Variant};
 use serde_json::{Map, Value as Json};
 use std::sync::mpsc;
-use std::time::{Duration, Instant};
 
 pub const DEFAULT_BASE_URL: &str = "http://localhost:64989/";
 const REQUESTS_PER_MINUTE: usize = 500;
@@ -327,8 +327,8 @@ fn random_u64() -> u64 {
     use std::hash::{BuildHasher, Hasher};
     let mut h = std::collections::hash_map::RandomState::new().build_hasher();
     h.write_u128(
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
+        rbx_base::time::SystemTime::now()
+            .duration_since(rbx_base::time::UNIX_EPOCH)
             .map(|d| d.as_nanos())
             .unwrap_or(0),
     );

@@ -145,6 +145,14 @@ pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Resul
         let desktop = !cfg!(any(target_os = "ios", target_os = "android"));
         return Ok(Some(Value::Boolean(desktop)));
     }
+    if class == "UserInputService" && name == "TouchEnabled" {
+        let touch = crate::runtime::engine(lua)
+            .lock()
+            .input
+            .pointer
+            .touch_enabled;
+        return Ok(Some(Value::Boolean(touch)));
+    }
     if matches!(class, "Mouse" | "PlayerMouse") {
         return user_input::get_mouse_property(lua, id, name);
     }

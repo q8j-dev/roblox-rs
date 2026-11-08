@@ -40,7 +40,7 @@ fn emit_particles(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
         lua,
         id,
         "OnEmitRequested",
-        mlua::MultiValue::from_vec(vec![Value::Integer(n as i64)]),
+        mlua::MultiValue::from_vec(vec![Value::Integer(n as mlua::Integer)]),
     );
     none()
 }
@@ -145,7 +145,7 @@ fn read_core_source(dir: &Path, name: &str) -> Option<String> {
         .split('/')
         .fold(dir.to_path_buf(), |p, part| p.join(part))
         .with_extension("lua");
-    std::fs::read_to_string(path).ok()
+    rbx_base::vfs::read_to_string(path).ok()
 }
 
 pub fn add_core_script(lua: &Lua, name: &str, parent: Option<InstanceId>) -> Result<InstanceId> {
@@ -189,21 +189,22 @@ fn add_core_script_local(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<R
 }
 
 fn collect_modules(dir: &Path, prefix: &str, out: &mut Vec<(String, String)>) {
-    let Ok(entries) = std::fs::read_dir(dir) else {
+    let Ok(mut entries) = rbx_base::vfs::read_dir(dir) else {
         return;
     };
-    let mut entries: Vec<_> = entries.flatten().collect();
-    entries.sort_by_key(|e| e.file_name());
-    for entry in entries {
-        let path = entry.path();
-        let name = entry.file_name().to_string_lossy().into_owned();
+    entries.sort();
+    for path in entries {
+        let name = path
+            .file_name()
+            .map(|n| n.to_string_lossy().into_owned())
+            .unwrap_or_default();
         if name.starts_with('.') {
             continue;
         }
-        if path.is_dir() {
+        if rbx_base::vfs::is_dir(&path) {
             collect_modules(&path, &format!("{prefix}{name}/"), out);
         } else if let Some(stem) = name.strip_suffix(".lua")
-            && let Ok(src) = std::fs::read_to_string(&path)
+            && let Ok(src) = rbx_base::vfs::read_to_string(&path)
         {
             out.push((format!("{prefix}{stem}"), src));
         }

@@ -25,3 +25,7 @@ pub use runtime::{
 };
 pub use scripts::should_run;
 pub use security::Identity;
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+mod wasm_rt;
+#[cfg(all(target_arch = "wasm32", target_os = "unknown"))]
+pub use wasm_rt::init_c_runtime;

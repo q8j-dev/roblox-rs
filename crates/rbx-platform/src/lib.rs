@@ -1,9 +1,9 @@
+use rbx_base::time::Instant;
 use std::sync::Arc;
-use std::time::Instant;
 use winit::application::ApplicationHandler;
 use winit::dpi::{LogicalSize, PhysicalPosition};
 use winit::event::{
-    DeviceEvent, DeviceId, ElementState, MouseButton, MouseScrollDelta, WindowEvent,
+    DeviceEvent, DeviceId, ElementState, MouseButton, MouseScrollDelta, TouchPhase, WindowEvent,
 };
 use winit::event_loop::{ActiveEventLoop, ControlFlow, EventLoop};
 use winit::keyboard::{KeyCode, PhysicalKey};
@@ -40,6 +40,19 @@ pub enum Input {
         height: u32,
     },
     Focus(bool),
+    Touch {
+        id: u64,
+        phase: TouchStage,
+        x: f32,
+        y: f32,
+    },
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TouchStage {
+    Began,
+    Moved,
+    Ended,
 }
 
 pub trait App {
@@ -175,9 +188,14 @@ impl<A: App> ApplicationHandler for Runner<A> {
         if self.window.is_some() {
             return;
         }
-        let attrs = Window::default_attributes()
-            .with_title(self.title.clone())
-            .with_inner_size(LogicalSize::new(self.size.0, self.size.1));
+        let attrs = Window::default_attributes().with_title(self.title.clone());
+        #[cfg(not(target_arch = "wasm32"))]
+        let attrs = attrs.with_inner_size(LogicalSize::new(self.size.0, self.size.1));
+        #[cfg(target_arch = "wasm32")]
+        let attrs = {
+            use winit::platform::web::WindowAttributesExtWebSys;
+            attrs.with_append(true).with_prevent_default(true)
+        };
         match event_loop.create_window(attrs) {
             Ok(w) => {
                 let w = Arc::new(w);
@@ -238,6 +256,19 @@ impl<A: App> ApplicationHandler for Runner<A> {
                 };
                 self.app.input(Input::Wheel { delta: d });
             }
+            WindowEvent::Touch(touch) => {
+                let phase = match touch.phase {
+                    TouchPhase::Started => TouchStage::Began,
+                    TouchPhase::Moved => TouchStage::Moved,
+                    TouchPhase::Ended | TouchPhase::Cancelled => TouchStage::Ended,
+                };
+                self.app.input(Input::Touch {
+                    id: touch.id,
+                    phase,
+                    x: touch.location.x as f32,
+                    y: touch.location.y as f32,
+                });
+            }
             WindowEvent::RedrawRequested => {
                 let now = Instant::now();
                 let dt = now.duration_since(self.last).as_secs_f64();
@@ -267,9 +298,10 @@ impl<A: App> ApplicationHandler for Runner<A> {
     }
 }
 
-pub fn run(title: &str, size: (u32, u32), app: impl App) -> Result<(), String> {
+pub fn run(title: &str, size: (u32, u32), app: impl App + 'static) -> Result<(), String> {
     let event_loop = EventLoop::new().map_err(|e| e.to_string())?;
     event_loop.set_control_flow(ControlFlow::Poll);
+    #[allow(unused_mut)]
     let mut runner = Runner {
         app,
         title: title.to_string(),
@@ -278,7 +310,16 @@ pub fn run(title: &str, size: (u32, u32), app: impl App) -> Result<(), String> {
         last: Instant::now(),
         cursor: (0.0, 0.0),
     };
-    event_loop.run_app(&mut runner).map_err(|e| e.to_string())
+    #[cfg(target_arch = "wasm32")]
+    {
+        use winit::platform::web::EventLoopExtWebSys;
+        event_loop.spawn_app(runner);
+        Ok(())
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        event_loop.run_app(&mut runner).map_err(|e| e.to_string())
+    }
 }
 
 pub fn user_data_dir(app: &str) -> std::path::PathBuf {

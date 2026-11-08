@@ -1,33 +1,4 @@
-#[cfg(not(target_arch = "wasm32"))]
-use std::time::Instant;
-
-#[cfg(target_arch = "wasm32")]
-#[derive(Clone, Copy, Debug)]
-struct Instant(f64);
-
-#[cfg(target_arch = "wasm32")]
-impl Instant {
-    fn now() -> Instant {
-        Instant(wasm_now())
-    }
-
-    fn elapsed_secs(&self) -> f64 {
-        (wasm_now() - self.0) / 1000.0
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
-static WASM_CLOCK: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(0);
-
-#[cfg(target_arch = "wasm32")]
-pub fn set_wasm_now_ms(ms: f64) {
-    WASM_CLOCK.store(ms.to_bits(), std::sync::atomic::Ordering::Relaxed);
-}
-
-#[cfg(target_arch = "wasm32")]
-fn wasm_now() -> f64 {
-    f64::from_bits(WASM_CLOCK.load(std::sync::atomic::Ordering::Relaxed))
-}
+pub use web_time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Stopwatch {
@@ -48,14 +19,7 @@ impl Stopwatch {
     }
 
     pub fn elapsed(&self) -> f64 {
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            self.start.elapsed().as_secs_f64()
-        }
-        #[cfg(target_arch = "wasm32")]
-        {
-            self.start.elapsed_secs()
-        }
+        self.start.elapsed().as_secs_f64()
     }
 
     pub fn reset(&mut self) -> f64 {
@@ -76,4 +40,11 @@ impl Clock {
         self.game_time += dt;
         self.frame += 1;
     }
+}
+
+pub fn unix_seconds() -> f64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_secs_f64())
+        .unwrap_or(0.0)
 }

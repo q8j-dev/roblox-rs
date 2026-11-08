@@ -15,6 +15,7 @@ pub const MOUSE_BUTTON2: u32 = 1;
 pub const MOUSE_BUTTON3: u32 = 2;
 pub const MOUSE_WHEEL: u32 = 3;
 pub const MOUSE_MOVEMENT: u32 = 4;
+pub const TOUCH: u32 = 7;
 pub const KEYBOARD: u32 = 8;
 pub const FOCUS: u32 = 9;
 
@@ -46,6 +47,7 @@ pub struct PointerState {
     pub objects: HashMap<(u32, u32), InstanceId>,
     pub hover: Vec<InstanceId>,
     pub pressed: HashMap<u32, InstanceId>,
+    pub touch_enabled: bool,
 }
 
 fn state_value(kind: InputKind) -> u32 {
@@ -206,7 +208,7 @@ fn input_object(lua: &Lua, ev: &InputEvent) -> Option<InstanceId> {
     let mut e = eng.lock();
     let key = (
         ev.input_type,
-        if ev.input_type == KEYBOARD {
+        if ev.input_type == KEYBOARD || ev.input_type == TOUCH {
             ev.key_code
         } else {
             0
@@ -229,14 +231,22 @@ fn input_object(lua: &Lua, ev: &InputEvent) -> Option<InstanceId> {
         }
     };
     let inset = Vec3::new(e.dm.gui_view.inset[0], e.dm.gui_view.inset[1], 0.0);
-    let position = if is_mouse(ev.input_type) {
+    let position = if is_mouse(ev.input_type) || ev.input_type == TOUCH {
         ev.position - inset
     } else {
         ev.position
     };
+    if ev.input_type == TOUCH && ev.kind == InputKind::Ended {
+        e.input.pointer.objects.remove(&key);
+    }
+    let key_code = if ev.input_type == TOUCH {
+        0
+    } else {
+        ev.key_code
+    };
     e.dm.set_unchecked(obj, "UserInputType", Variant::Enum(ev.input_type));
     e.dm.set_unchecked(obj, "UserInputState", Variant::Enum(state_value(ev.kind)));
-    e.dm.set_unchecked(obj, "KeyCode", Variant::Enum(ev.key_code));
+    e.dm.set_unchecked(obj, "KeyCode", Variant::Enum(key_code));
     e.dm.set_unchecked(obj, "Position", Variant::Vector3(position));
     e.dm.set_unchecked(obj, "Delta", Variant::Vector3(ev.delta));
     Some(obj)
@@ -247,7 +257,10 @@ fn fire_xy(lua: &Lua, id: InstanceId, event: &'static str, p: Vec2) {
         lua,
         id,
         event,
-        MultiValue::from_vec(vec![Value::Integer(p.x as i64), Value::Integer(p.y as i64)]),
+        MultiValue::from_vec(vec![
+            Value::Integer(p.x as mlua::Integer),
+            Value::Integer(p.y as mlua::Integer),
+        ]),
     );
 }
 
@@ -687,7 +700,26 @@ fn update_state(lua: &Lua, ev: &InputEvent) {
     }
 }
 
+fn touch_as_mouse(ev: &InputEvent) -> InputEvent {
+    InputEvent {
+        kind: ev.kind,
+        input_type: if ev.kind == InputKind::Changed {
+            MOUSE_MOVEMENT
+        } else {
+            MOUSE_BUTTON1
+        },
+        key_code: 0,
+        position: ev.position,
+        delta: ev.delta,
+        text: None,
+    }
+}
+
 pub fn process(lua: &Lua, ev: InputEvent) {
+    if ev.input_type == TOUCH {
+        process_touch(lua, ev);
+        return;
+    }
     update_state(lua, &ev);
     let Some(obj) = input_object(lua, &ev) else {
         return;
@@ -730,6 +762,78 @@ pub fn process(lua: &Lua, ev: InputEvent) {
     }
     if !sunk || ev.input_type == MOUSE_MOVEMENT {
         mouse_events(lua, &ev);
+    }
+    pump(lua);
+}
+
+fn process_touch(lua: &Lua, ev: InputEvent) {
+    let primary = {
+        let eng = engine(lua);
+        let mut e = eng.lock();
+        let first = !e
+            .input
+            .pointer
+            .objects
+            .keys()
+            .any(|(t, id)| *t == TOUCH && *id != ev.key_code);
+        if first {
+            e.input.pointer.position = Vec2::new(ev.position.x, ev.position.y);
+        }
+        if e.input.last_input_type != Some(TOUCH) {
+            e.input.last_input_type = Some(TOUCH);
+        }
+        first
+    };
+    let Some(obj) = input_object(lua, &ev) else {
+        return;
+    };
+    let menu_open = engine(lua).lock().gui.menu_open;
+    let mouse = touch_as_mouse(&ev);
+    let mut sunk = false;
+    if primary {
+        if ev.kind != InputKind::Changed {
+            let moved = InputEvent {
+                kind: InputKind::Changed,
+                input_type: MOUSE_MOVEMENT,
+                ..touch_as_mouse(&ev)
+            };
+            gui_mouse(lua, &moved);
+        }
+        sunk = gui_mouse(lua, &mouse);
+    }
+    let state = state_value(ev.kind);
+    let action = ActionInput::InputType(TOUCH);
+    if !sunk {
+        sunk = dispatch(lua, &action, TOUCH, state, obj, true, false);
+    }
+    if !sunk {
+        sunk = dispatch(lua, &action, TOUCH, state, obj, false, menu_open);
+    }
+    let uis = engine(lua).lock().dm.find_service("UserInputService");
+    if let Some(uis) = uis {
+        let (input_event, touch_event) = match ev.kind {
+            InputKind::Began => ("InputBegan", "TouchStarted"),
+            InputKind::Changed => ("InputChanged", "TouchMoved"),
+            InputKind::Ended => ("InputEnded", "TouchEnded"),
+        };
+        for event in [input_event, touch_event] {
+            if let Ok(v) = push_instance(lua, obj) {
+                fire_lua(
+                    lua,
+                    uis,
+                    event,
+                    MultiValue::from_vec(vec![v, Value::Boolean(sunk)]),
+                );
+            }
+        }
+    }
+    if primary {
+        if !sunk && !menu_open {
+            workspace_input(lua, &mouse);
+        }
+        if !sunk || mouse.input_type == MOUSE_MOVEMENT {
+            mouse_events(lua, &mouse);
+        }
     }
     pump(lua);
 }
@@ -796,7 +900,7 @@ pub fn get_mouse_property(lua: &Lua, id: InstanceId, name: &str) -> Result<Optio
                 "ViewSizeX" => screen.x - inset.x,
                 _ => screen.y - inset.y,
             };
-            Ok(Some(Value::Integer(v as i64)))
+            Ok(Some(Value::Integer(v as mlua::Integer)))
         }
         "UnitRay" | "Origin" => {
             let ray = {
@@ -853,22 +957,26 @@ pub fn get_mouse_property(lua: &Lua, id: InstanceId, name: &str) -> Result<Optio
 
 pub fn render_step(lua: &Lua, dt: f64) {
     super::camera::step(lua, dt as f32);
-    let bindings: Vec<mlua::Function> = {
+    let bindings: Vec<(mlua::Function, crate::security::Identity)> = {
         let eng = engine(lua);
         let e = eng.lock();
         e.render_bindings
             .iter()
-            .filter_map(|b| lua.registry_value::<mlua::Function>(&b.2).ok())
+            .filter_map(|b| {
+                lua.registry_value::<mlua::Function>(&b.2)
+                    .ok()
+                    .map(|f| (f, b.3))
+            })
             .collect()
     };
-    for f in bindings {
+    for (f, identity) in bindings {
         crate::runtime::spawn_function(
             lua,
             f,
             MultiValue::from_vec(vec![Value::Number(dt)]),
             crate::runtime::ThreadInfo {
                 script: None,
-                identity: crate::security::Identity::GameScript,
+                identity,
             },
         );
     }

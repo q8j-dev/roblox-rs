@@ -60,10 +60,11 @@ pub fn to_f32(v: &Value) -> f32 {
     }
 }
 
+#[allow(clippy::useless_conversion)]
 pub fn to_i64(v: &Value) -> i64 {
     match v {
         Value::Number(n) => *n as i64,
-        Value::Integer(i) => *i,
+        Value::Integer(i) => i64::from(*i),
         Value::String(s) => s
             .to_str()
             .ok()

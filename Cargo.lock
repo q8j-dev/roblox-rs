@@ -654,6 +654,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "console_error_panic_hook"
+version = "0.1.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a06aeb73f470f66dcdbf7223caeebb85984942f22f1adb2a088cf9668146bbbc"
+dependencies = [
+ "cfg-if",
+ "wasm-bindgen",
+]
+
+[[package]]
 name = "const-oid"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1806,9 +1816,9 @@ checksum = "4050469837a6ff301cd14c1f8f24f88549e6d548f24f64e2148eb0f72cebc51f"
 
 [[package]]
 name = "lua-src"
-version = "551.0.2"
+version = "551.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d400ffef0e3d4d29287092bdc5a276d0bf468b2c69709d5bab0d469312d9f947"
+checksum = "41d22b201501a536c0f5a96c7589b268b559172b20fb029064434e38ddcecb1f"
 dependencies = [
  "cc",
 ]
@@ -1825,9 +1835,9 @@ dependencies = [
 
 [[package]]
 name = "luau0-src"
-version = "0.22.0+luau740"
+version = "0.23.0+luau745"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ea012e8a8aaff2f7b6c788fad41a60630003b6a0932bcf045f7d14952c9bd31"
+checksum = "44a77f4ce1adc38145ccd67a0e4b1928e642aedf906d1131d7f703e573c31162"
 dependencies = [
  "cc",
 ]
@@ -1945,8 +1955,7 @@ dependencies = [
 [[package]]
 name = "mlua"
 version = "0.12.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a7ae6b65bf54b7fdd4cf5b6f44f60862350ebf3fe3779b3a9cc005e7fa14f81"
+source = "git+https://github.com/mlua-rs/mlua?rev=a0ad4535fc72ba89967a931c5be57b162b5f0f3f#a0ad4535fc72ba89967a931c5be57b162b5f0f3f"
 dependencies = [
  "bstr",
  "either",
@@ -1960,8 +1969,7 @@ dependencies = [
 [[package]]
 name = "mlua-sys"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1631cda17bd6486410ab751d91f5fd4484f441589278cdad879eb3afc721a285"
+source = "git+https://github.com/mlua-rs/mlua?rev=a0ad4535fc72ba89967a931c5be57b162b5f0f3f#a0ad4535fc72ba89967a931c5be57b162b5f0f3f"
 dependencies = [
  "cc",
  "cfg-if",
@@ -2708,6 +2716,7 @@ name = "player"
 version = "0.1.0"
 dependencies = [
  "clap",
+ "console_error_panic_hook",
  "parking_lot 0.13.0",
  "pollster",
  "rbx-audio",
@@ -2719,6 +2728,10 @@ dependencies = [
  "rbx-render",
  "rbx-script",
  "tracing",
+ "tracing-subscriber",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]
@@ -2976,7 +2989,10 @@ name = "rbx-audio"
 version = "0.1.0"
 dependencies = [
  "kira",
+ "send_wrapper",
  "tracing",
+ "wasm-bindgen",
+ "web-sys",
 ]
 
 [[package]]
@@ -2988,6 +3004,8 @@ dependencies = [
  "serde_json",
  "tracing",
  "tracing-subscriber",
+ "web-sys",
+ "web-time",
 ]
 
 [[package]]
@@ -3071,6 +3089,7 @@ dependencies = [
 name = "rbx-platform"
 version = "0.1.0"
 dependencies = [
+ "rbx-base",
  "tracing",
  "winit",
 ]
@@ -3092,6 +3111,7 @@ dependencies = [
  "ddsfile",
  "image",
  "pollster",
+ "rbx-base",
  "rbx-dom",
  "rbx-math",
  "rbx-reflection",

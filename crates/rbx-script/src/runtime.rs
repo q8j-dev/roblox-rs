@@ -52,7 +52,7 @@ pub struct Engine {
     pub clock: Stopwatch,
     pub game_time: f64,
     pub virtual_clock: Option<f64>,
-    pub frame_started: std::time::Instant,
+    pub frame_started: rbx_base::time::Instant,
     pub last_tick: f64,
     pub clock_carry: f64,
     pub frame_clock_peak: f64,
@@ -82,7 +82,7 @@ pub struct Engine {
     pub active_tracks: HashMap<InstanceId, Vec<InstanceId>>,
     pub kfs_cache: HashMap<String, Option<InstanceId>>,
     pub active_kfs: HashMap<String, InstanceId>,
-    pub render_bindings: Vec<(String, i32, mlua::RegistryKey)>,
+    pub render_bindings: Vec<(String, i32, mlua::RegistryKey, Identity)>,
     pub network_requests: Vec<NetworkRequest>,
     pub client_count: usize,
     pub net_stats: Vec<NetPeerStats>,
@@ -141,8 +141,8 @@ impl Engine {
                 self.frame_clock_peak = self.frame_clock_peak.max(in_frame);
                 base + self.game_time + self.clock_carry + in_frame
             }
-            None => std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
+            None => rbx_base::time::SystemTime::now()
+                .duration_since(rbx_base::time::UNIX_EPOCH)
                 .map(|d| d.as_secs_f64())
                 .unwrap_or(0.0),
         };
@@ -177,7 +177,7 @@ impl Engine {
             clock: Stopwatch::new(),
             game_time: 0.0,
             virtual_clock: None,
-            frame_started: std::time::Instant::now(),
+            frame_started: rbx_base::time::Instant::now(),
             last_tick: 0.0,
             clock_carry: 0.0,
             frame_clock_peak: 0.0,
@@ -781,6 +781,10 @@ impl ScriptRuntime {
         crate::api::user_input::render_step(&self.lua, dt);
     }
 
+    pub fn set_touch_enabled(&self, enabled: bool) {
+        self.engine.lock().input.pointer.touch_enabled = enabled;
+    }
+
     pub fn window_focus(&self, focused: bool) {
         let uis = self.engine.lock().dm.find_service("UserInputService");
         if let Some(uis) = uis {
@@ -821,7 +825,7 @@ impl ScriptRuntime {
             }
             e.clock_carry += e.frame_clock_peak;
             e.frame_clock_peak = 0.0;
-            e.frame_started = std::time::Instant::now();
+            e.frame_started = rbx_base::time::Instant::now();
             let t = e.game_time;
             if let Some(ws) = e.dm.find_service("Workspace") {
                 e.dm.store_silent(ws, "DistributedGameTime", Variant::Double(t));
@@ -1523,7 +1527,7 @@ fn waiting_threads_budget(lua: &Lua) -> f64 {
 
 fn resume_sleepers(lua: &Lua) {
     let budget = std::time::Duration::from_secs_f64((waiting_threads_budget(lua) / 60.0).max(0.0));
-    let started = std::time::Instant::now();
+    let started = rbx_base::time::Instant::now();
     let now = engine(lua).lock().game_time;
     let mut due = with_state(lua, |s| {
         let mut due = Vec::new();

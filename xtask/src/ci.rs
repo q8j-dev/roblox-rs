@@ -38,13 +38,24 @@ fn step_env(
     }
 }
 
-pub const WEB_RUSTFLAGS: &str = "-C target-feature=+atomics,+bulk-memory,+mutable-globals -C link-arg=--shared-memory -C link-arg=--max-memory=4294967296 -C link-arg=--import-memory -C link-arg=--export=__wasm_init_tls -C link-arg=--export=__tls_size -C link-arg=--export=__tls_align -C link-arg=--export=__tls_base";
+pub const WEB_RUSTFLAGS: &[&str] = &[
+    "-Ctarget-feature=+atomics,+bulk-memory,+mutable-globals",
+    "-Clink-arg=--shared-memory",
+    "-Clink-arg=--max-memory=4294967296",
+    "-Clink-arg=--import-memory",
+    "-Clink-arg=--export=__wasm_init_tls",
+    "-Clink-arg=--export=__tls_size",
+    "-Clink-arg=--export=__tls_align",
+    "-Clink-arg=--export=__tls_base",
+];
 
 pub fn build_web(root: &Path, release: bool) -> Result<(), String> {
+    let sdk = crate::wasi::ensure_sdk(root)?;
     let mut args = vec![
         "build",
         "-p",
         "player",
+        "--lib",
         "--target",
         "wasm32-unknown-unknown",
         "-Z",
@@ -53,17 +64,15 @@ pub fn build_web(root: &Path, release: bool) -> Result<(), String> {
     if release {
         args.push("--release");
     }
-    step_env(
-        "web build",
-        root,
-        "cargo",
-        &args,
-        &[
-            ("RUSTFLAGS", WEB_RUSTFLAGS),
-            ("RUSTC_BOOTSTRAP", "1"),
-            ("CARGO_TARGET_DIR", "target/web"),
-        ],
-    )?;
+    let mut flags: Vec<String> = WEB_RUSTFLAGS.iter().map(|s| s.to_string()).collect();
+    flags.extend(crate::wasi::link_flags(&sdk));
+    let encoded = flags.join("\u{1f}");
+    let mut env: Vec<(String, String)> = crate::wasi::env(&sdk);
+    env.push(("CARGO_ENCODED_RUSTFLAGS".into(), encoded));
+    env.push(("RUSTC_BOOTSTRAP".into(), "1".into()));
+    env.push(("CARGO_TARGET_DIR".into(), "target/web".into()));
+    let env_refs: Vec<(&str, &str)> = env.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
+    step_env("web build", root, "cargo", &args, &env_refs)?;
     let profile = if release { "release" } else { "debug" };
     let wasm = format!("target/web/wasm32-unknown-unknown/{profile}/player.wasm");
     step(
@@ -79,6 +88,7 @@ pub fn build_web(root: &Path, release: bool) -> Result<(), String> {
             "--no-typescript",
         ],
     )?;
+    write_content_index(root)?;
     let page = root.join("apps/player/web");
     if page.is_dir() {
         let out = root.join("dist/web");
@@ -93,6 +103,44 @@ pub fn build_web(root: &Path, release: bool) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+pub const WEB_CONTENT_DIRS: &[&str] = &[
+    "assets/content",
+    "assets/platform-content/pc",
+    "tests/places",
+];
+
+fn collect_files(root: &Path, dir: &Path, out: &mut Vec<String>) {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return;
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if entry.file_name().to_string_lossy().starts_with('.') {
+            continue;
+        }
+        if path.is_dir() {
+            collect_files(root, &path, out);
+        } else if let Ok(rel) = path.strip_prefix(root) {
+            let parts: Vec<String> = rel
+                .components()
+                .map(|c| c.as_os_str().to_string_lossy().into_owned())
+                .collect();
+            out.push(parts.join("/"));
+        }
+    }
+}
+
+pub fn write_content_index(root: &Path) -> Result<(), String> {
+    let mut files = Vec::new();
+    for d in WEB_CONTENT_DIRS {
+        collect_files(root, &root.join(d), &mut files);
+    }
+    files.sort();
+    let out = root.join("dist/web");
+    std::fs::create_dir_all(&out).map_err(|e| e.to_string())?;
+    std::fs::write(out.join("content-index.txt"), files.join("\n")).map_err(|e| e.to_string())
 }
 
 pub fn run(root: &Path, options: &[String]) -> Result<(), String> {

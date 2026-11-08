@@ -48,7 +48,7 @@ pub fn fetch(e: &Engine, url: &str) -> Option<Vec<u8>> {
             .split(['/', '\\'])
             .filter(|s| !s.is_empty() && *s != "..")
             .fold(root.clone(), |p, s| p.join(s));
-        if let Ok(data) = std::fs::read(&path) {
+        if let Ok(data) = rbx_base::vfs::read(&path) {
             return Some(data);
         }
         let key = format!("rbxasset://{}", rest.replace('\\', "/"));
@@ -64,7 +64,7 @@ pub fn fetch(e: &Engine, url: &str) -> Option<Vec<u8>> {
             .is_some_and(|x| x.eq_ignore_ascii_case("wav"))
         {
             for ext in ["mp3", "ogg"] {
-                if let Ok(data) = std::fs::read(path.with_extension(ext)) {
+                if let Ok(data) = rbx_base::vfs::read(path.with_extension(ext)) {
                     return Some(data);
                 }
             }
@@ -73,23 +73,23 @@ pub fn fetch(e: &Engine, url: &str) -> Option<Vec<u8>> {
     }
     if let Some(id) = asset_number(url) {
         for dir in &e.asset_dirs {
-            if let Ok(data) = std::fs::read(dir.join(id.to_string())) {
+            if let Ok(data) = rbx_base::vfs::read(dir.join(id.to_string())) {
                 return Some(data);
             }
         }
         let path = cache_path(e, id)?;
-        return std::fs::read(path).ok();
+        return rbx_base::vfs::read(path).ok();
     }
     None
 }
 
 fn fetch_asset(e: &Engine, id: u64) -> Option<Vec<u8>> {
     for dir in &e.asset_dirs {
-        if let Ok(data) = std::fs::read(dir.join(id.to_string())) {
+        if let Ok(data) = rbx_base::vfs::read(dir.join(id.to_string())) {
             return Some(data);
         }
     }
-    std::fs::read(cache_path(e, id)?).ok()
+    rbx_base::vfs::read(cache_path(e, id)?).ok()
 }
 
 pub fn register(e: &mut Engine, data: Vec<u8>) -> String {

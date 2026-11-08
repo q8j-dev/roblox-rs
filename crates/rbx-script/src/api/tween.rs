@@ -15,7 +15,7 @@ pub struct Tween {
     elapsed: f32,
     direction: u32,
     style: u32,
-    callback: Option<RegistryKey>,
+    callback: Option<(RegistryKey, crate::security::Identity)>,
 }
 
 #[derive(Default)]
@@ -240,8 +240,8 @@ pub fn interpolate(
     }
 }
 
-fn finish(lua: &Lua, callback: Option<RegistryKey>, status: u32) {
-    let Some(key) = callback else {
+fn finish(lua: &Lua, callback: Option<(RegistryKey, crate::security::Identity)>, status: u32) {
+    let Some((key, identity)) = callback else {
         return;
     };
     let func = lua.registry_value::<Function>(&key).ok();
@@ -262,7 +262,7 @@ fn finish(lua: &Lua, callback: Option<RegistryKey>, status: u32) {
         MultiValue::from_vec(vec![value]),
         ThreadInfo {
             script: None,
-            identity: crate::security::Identity::GameScript,
+            identity,
         },
     );
 }
@@ -337,7 +337,10 @@ fn start(
         return Ok(false);
     }
     let callback = match callback {
-        Some(f) => Some(lua.create_registry_value(f)?),
+        Some(f) => Some((
+            lua.create_registry_value(f)?,
+            crate::runtime::current_identity(lua),
+        )),
         None => None,
     };
     let cancelled = with_state(lua, |s| {
@@ -444,7 +447,7 @@ pub fn step(lua: &Lua, dt: f32) {
             };
             if done && alive {
                 finish(lua, callback, 1);
-            } else if done && let Some(k) = callback {
+            } else if done && let Some((k, _)) = callback {
                 let _ = lua.remove_registry_value(k);
             }
         }

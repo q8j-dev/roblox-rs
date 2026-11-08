@@ -83,8 +83,8 @@ fn prepare(
     }
     engine.process_after_load();
     engine.virtual_clock = Some(
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
+        rbx_base::time::SystemTime::now()
+            .duration_since(rbx_base::time::UNIX_EPOCH)
             .map(|d| d.as_secs_f64())
             .unwrap_or(0.0),
     );
@@ -158,7 +158,7 @@ pub fn run_datamodel(
         crate::api::test::start(&runtime.lua, Identity::LocalGui).map_err(|e| e.to_string())?;
         runtime.pump();
         let max_frames = ((test_timeout(&engine) + 2.0) / FRAME).ceil() as usize;
-        let started = std::time::Instant::now();
+        let started = rbx_base::time::Instant::now();
         for _ in 0..max_frames {
             if engine.lock().test.done {
                 break;
@@ -177,7 +177,7 @@ pub fn run_datamodel(
         run.failures = e.test.failures.clone();
     } else {
         let frames = (EMPTY_TEST_SECONDS / FRAME).ceil() as usize;
-        let started = std::time::Instant::now();
+        let started = rbx_base::time::Instant::now();
         for _ in 0..frames {
             if started.elapsed() > WALL_LIMIT {
                 run.timed_out = true;
@@ -266,7 +266,7 @@ fn run_multiplayer(
         .and_then(|v| v.parse().ok())
         .unwrap_or(300)
         .max(1);
-    let started = std::time::Instant::now();
+    let started = rbx_base::time::Instant::now();
     for frame in 0..max_frames {
         if server.engine.lock().test.done {
             break;

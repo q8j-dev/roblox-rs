@@ -73,3 +73,23 @@ fn desktop_input_devices_are_reported() {
         "local uis = game:GetService('UserInputService') return uis.MouseEnabled == true and uis.KeyboardEnabled == true and uis.TouchEnabled == false"
     ));
 }
+
+#[test]
+fn tween_callbacks_keep_the_caller_identity() {
+    let f = Fixture::new();
+    f.run();
+    f.execute_as(
+        "local gs = game:GetService('GuiService') gs:SetMenuIsOpen(true) \
+         local sg = Instance.new('ScreenGui', game:GetService('CoreGui')) local fr = Instance.new('Frame', sg) \
+         fr.Name = 'Probe' \
+         fr:TweenPosition(UDim2.new(0, 10, 0, 0), Enum.EasingDirection.In, Enum.EasingStyle.Quad, 0.2, true, function() \
+           fr.Name = pcall(function() gs:SetMenuIsOpen(false) end) and 'Closed' or 'Denied' end)",
+        Identity::RobloxGameScript,
+    )
+    .expect("start tween");
+    f.step_seconds(1.0);
+    assert!(core_bool(
+        &f,
+        "return game:GetService('CoreGui').ScreenGui:FindFirstChild('Closed') ~= nil"
+    ));
+}

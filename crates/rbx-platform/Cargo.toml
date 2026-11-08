@@ -9,5 +9,6 @@ publish.workspace = true
 all = { level = "warn", priority = -1 }
 
 [dependencies]
+rbx-base = { version = "0.1.0", path = "../rbx-base" }
 tracing = "0.1.44"
 winit = "0.30.13"

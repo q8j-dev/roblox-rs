@@ -86,7 +86,7 @@ pub fn load_library(lua: &Lua, name: &str) -> Result<Value> {
         .join("scripts")
         .join("Libraries")
         .join(format!("{name}.lua"));
-    let Ok(source) = std::fs::read_to_string(&path) else {
+    let Ok(source) = rbx_base::vfs::read_to_string(&path) else {
         return Err(rt(format!("Unknown library {name}")));
     };
     let env = new_environment(lua, None)?;

@@ -214,7 +214,7 @@ pub fn load_content_model(e: &mut Engine, rel: &str) -> Vec<InstanceId> {
         return Vec::new();
     };
     let path = root.join(rel.replace('/', std::path::MAIN_SEPARATOR_STR));
-    let Ok(data) = std::fs::read(&path) else {
+    let Ok(data) = rbx_base::vfs::read(&path) else {
         return Vec::new();
     };
     match e.dm.load_model(&data) {

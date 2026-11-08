@@ -2,9 +2,15 @@ use kira::effect::reverb::{ReverbBuilder, ReverbHandle};
 use kira::sound::static_sound::{StaticSoundData, StaticSoundHandle, StaticSoundSettings};
 use kira::sound::{PlaybackState, Region};
 use kira::track::MainTrackBuilder;
-use kira::{
-    AudioManager, AudioManagerSettings, Decibels, DefaultBackend, Mix, Panning, PlaybackRate, Tween,
-};
+use kira::{AudioManager, AudioManagerSettings, Decibels, Mix, Panning, PlaybackRate, Tween};
+
+#[cfg(target_arch = "wasm32")]
+mod web;
+
+#[cfg(not(target_arch = "wasm32"))]
+type OutputBackend = kira::DefaultBackend;
+#[cfg(target_arch = "wasm32")]
+type OutputBackend = web::WebBackend;
 use std::collections::HashMap;
 use std::io::Cursor;
 use std::sync::Arc;
@@ -39,7 +45,7 @@ struct Voice {
 }
 
 pub struct AudioEngine {
-    manager: Option<AudioManager<DefaultBackend>>,
+    manager: Option<AudioManager<OutputBackend>>,
     reverb: Option<ReverbHandle>,
     clips: HashMap<String, Option<Arc<Clip>>>,
     voices: HashMap<VoiceId, Voice>,
@@ -106,7 +112,7 @@ impl AudioEngine {
             main_track_builder: main,
             ..Default::default()
         };
-        match AudioManager::<DefaultBackend>::new(settings) {
+        match AudioManager::<OutputBackend>::new(settings) {
             Ok(manager) => AudioEngine {
                 manager: Some(manager),
                 reverb: Some(reverb),
@@ -117,6 +123,11 @@ impl AudioEngine {
                 AudioEngine::disabled()
             }
         }
+    }
+
+    pub fn resume_output(&self) {
+        #[cfg(target_arch = "wasm32")]
+        web::resume();
     }
 
     pub fn enabled(&self) -> bool {

@@ -1,5 +1,7 @@
 mod audit;
 mod ci;
+mod serve;
+mod wasi;
 
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -17,8 +19,9 @@ fn main() -> ExitCode {
         "audit" => audit::run(&repo_root()),
         "ci" => ci::run(&repo_root(), rest),
         "web" => ci::build_web(&repo_root(), rest.iter().any(|a| a == "--release")),
+        "serve" => serve::run(&repo_root(), rest),
         _ => {
-            eprintln!("usage: cargo xtask <audit|ci|web> [options]");
+            eprintln!("usage: cargo xtask <audit|ci|web|serve> [options]");
             eprintln!("  ci options: --skip-docker --skip-cross --skip-web --quick");
             Ok(())
         }

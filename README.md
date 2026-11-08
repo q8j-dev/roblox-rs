@@ -1,4 +1,4 @@
-# experimental port of roblox to rust
+# roblox-rs; a port of roblox to rust
 
 ## technical info
 
@@ -14,4 +14,4 @@ wasm builds are multithreaded
 
 ## ai disclosure
 
-this is an experimental project made with claude opus 5.5. 
+this is a highly experimental project made with claude opus 5.5. i did not read the code. this is just for fun, mainly.

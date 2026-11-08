@@ -1,8 +1,12 @@
 # experimental port of roblox to rust
 
-## info
+## technical info
 
-vmprotect, netpmc, ghc (golden hash checker) all stripped out. wgpu is used for the graphics backend. egui is used for studio ui. 
+v- mprotect, netpmc, and the golden hash checker are completely stripped out.
+- wgpu is used for graphics, so it can run on vulkan, dx12, metal, opengl es, and webgpu/webgl.
+- egui is used for the studio ui.
+
+## platforms
 
 there is support for windows, linux, macos and wasm, with experimental mobile support that is untested
 

@@ -5,7 +5,7 @@ use rbx_math::{BrickColor, CFrame, Color3};
 use rbx_reflection::{Security, ValueType, VariantType, database};
 use std::collections::BTreeMap;
 
-pub fn explorer(ui: &mut Ui, doc: &mut Document) {
+pub fn explorer(ui: &mut Ui, doc: &mut Document) -> Option<InstanceId> {
     let (root, children) = {
         let e = doc.runtime.engine.lock();
         let root = e.dm.root();
@@ -13,16 +13,24 @@ pub fn explorer(ui: &mut Ui, doc: &mut Document) {
     };
     let _ = root;
     let selection = doc.selection();
+    let mut open = None;
     egui::ScrollArea::both()
         .auto_shrink([false, false])
         .show(ui, |ui| {
             for id in children {
-                explorer_node(ui, doc, id, &selection);
+                explorer_node(ui, doc, id, &selection, &mut open);
             }
         });
+    open
 }
 
-fn explorer_node(ui: &mut Ui, doc: &mut Document, id: InstanceId, selection: &[InstanceId]) {
+fn explorer_node(
+    ui: &mut Ui,
+    doc: &mut Document,
+    id: InstanceId,
+    selection: &[InstanceId],
+    open: &mut Option<InstanceId>,
+) {
     let (name, class, kids) = {
         let e = doc.runtime.engine.lock();
         if !e.dm.contains(id) {
@@ -35,9 +43,12 @@ fn explorer_node(ui: &mut Ui, doc: &mut Document, id: InstanceId, selection: &[I
         )
     };
     let selected = selection.contains(&id);
-    let label = |ui: &mut Ui| {
+    let mut label = |ui: &mut Ui| {
         let text = RichText::new(&name);
         let r = ui.selectable_label(selected, text).on_hover_text(&class);
+        if r.double_clicked() && doc.script_source(id).is_some() {
+            *open = Some(id);
+        }
         if r.clicked() {
             let additive =
                 ui.input(|i| i.modifiers.ctrl || i.modifiers.command || i.modifiers.shift);
@@ -68,7 +79,7 @@ fn explorer_node(ui: &mut Ui, doc: &mut Document, id: InstanceId, selection: &[I
         .show_header(ui, label)
         .body(|ui| {
             for k in kids {
-                explorer_node(ui, doc, k, selection);
+                explorer_node(ui, doc, k, selection, open);
             }
         });
     }
@@ -336,13 +347,153 @@ pub fn script_editor(ui: &mut Ui, doc: &mut Document, id: InstanceId, buffer: &m
         }
     });
     egui::ScrollArea::vertical().show(ui, |ui| {
+        let mut layouter = |ui: &Ui, text: &dyn egui::TextBuffer, wrap: f32| {
+            let mut job = luau_layout(text.as_str());
+            job.wrap.max_width = wrap;
+            ui.fonts_mut(|f| f.layout_job(job))
+        };
         ui.add(
             egui::TextEdit::multiline(buffer)
                 .font(egui::TextStyle::Monospace)
                 .code_editor()
                 .desired_width(f32::INFINITY)
-                .desired_rows(30),
+                .desired_rows(30)
+                .layouter(&mut layouter),
         );
     });
     keep_open
+}
+
+const LUAU_KEYWORDS: &[&str] = &[
+    "and", "break", "continue", "do", "else", "elseif", "end", "export", "false", "for",
+    "function", "if", "in", "local", "nil", "not", "or", "repeat", "return", "then", "true",
+    "type", "until", "while",
+];
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum Token {
+    Plain,
+    Keyword,
+    Builtin,
+    Number,
+    Str,
+    Comment,
+}
+
+fn long_bracket_level(b: &[u8], i: usize) -> Option<usize> {
+    if b.get(i) != Some(&b'[') {
+        return None;
+    }
+    let mut j = i + 1;
+    while b.get(j) == Some(&b'=') {
+        j += 1;
+    }
+    (b.get(j) == Some(&b'[')).then_some(j - i - 1)
+}
+
+fn long_bracket_end(b: &[u8], from: usize, level: usize) -> usize {
+    let mut i = from;
+    while i < b.len() {
+        if b[i] == b']' {
+            let mut j = i + 1;
+            while j < b.len() && b[j] == b'=' {
+                j += 1;
+            }
+            if j - i - 1 == level && b.get(j) == Some(&b']') {
+                return j + 1;
+            }
+        }
+        i += 1;
+    }
+    b.len()
+}
+
+pub fn luau_tokens(src: &str) -> Vec<(std::ops::Range<usize>, Token)> {
+    let b = src.as_bytes();
+    let mut out: Vec<(std::ops::Range<usize>, Token)> = Vec::new();
+    let mut i = 0;
+    while i < b.len() {
+        let start = i;
+        let c = b[i];
+        let kind = if c == b'-' && b.get(i + 1) == Some(&b'-') {
+            i += 2;
+            if let Some(level) = long_bracket_level(b, i) {
+                i = long_bracket_end(b, i + level + 2, level);
+            } else {
+                while i < b.len() && b[i] != b'\n' {
+                    i += 1;
+                }
+            }
+            Token::Comment
+        } else if let Some(level) = long_bracket_level(b, i) {
+            i = long_bracket_end(b, i + level + 2, level);
+            Token::Str
+        } else if c == b'"' || c == b'\'' || c == b'`' {
+            i += 1;
+            while i < b.len() && b[i] != c && b[i] != b'\n' {
+                if b[i] == b'\\' {
+                    i += 1;
+                }
+                i += 1;
+            }
+            i = (i + 1).min(b.len());
+            Token::Str
+        } else if c.is_ascii_digit() || (c == b'.' && b.get(i + 1).is_some_and(u8::is_ascii_digit)) {
+            while i < b.len() && (b[i].is_ascii_alphanumeric() || b[i] == b'.' || b[i] == b'_') {
+                i += 1;
+            }
+            Token::Number
+        } else if c.is_ascii_alphabetic() || c == b'_' {
+            while i < b.len() && (b[i].is_ascii_alphanumeric() || b[i] == b'_') {
+                i += 1;
+            }
+            let word = &src[start..i];
+            if LUAU_KEYWORDS.contains(&word) {
+                Token::Keyword
+            } else if matches!(
+                word,
+                "game" | "workspace" | "script" | "print" | "warn" | "error" | "wait" | "spawn"
+                    | "delay" | "tick" | "require" | "pairs" | "ipairs" | "math" | "string"
+                    | "table" | "Instance" | "Vector3" | "CFrame" | "Color3" | "BrickColor"
+                    | "UDim2" | "Enum" | "self" | "typeof" | "pcall" | "tostring" | "tonumber"
+            ) {
+                Token::Builtin
+            } else {
+                Token::Plain
+            }
+        } else {
+            i += src[i..].chars().next().map_or(1, char::len_utf8);
+            Token::Plain
+        };
+        match out.last_mut() {
+            Some((r, k)) if *k == kind && r.end == start => r.end = i,
+            _ => out.push((start..i, kind)),
+        }
+    }
+    out
+}
+
+pub fn luau_layout(src: &str) -> egui::text::LayoutJob {
+    let mut job = egui::text::LayoutJob::default();
+    let font = egui::FontId::monospace(13.0);
+    for (range, kind) in luau_tokens(src) {
+        let color = match kind {
+            Token::Plain => Color32::from_rgb(30, 30, 30),
+            Token::Keyword => Color32::from_rgb(0, 0, 160),
+            Token::Builtin => Color32::from_rgb(0, 0, 127),
+            Token::Number => Color32::from_rgb(0, 127, 127),
+            Token::Str => Color32::from_rgb(127, 0, 127),
+            Token::Comment => Color32::from_rgb(0, 127, 0),
+        };
+        job.append(
+            &src[range],
+            0.0,
+            egui::TextFormat {
+                font_id: font.clone(),
+                color,
+                ..Default::default()
+            },
+        );
+    }
+    job
 }

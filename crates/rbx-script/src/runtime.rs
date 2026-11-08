@@ -92,6 +92,7 @@ pub struct Engine {
     pub threads_throttled: f64,
     pub base_url: String,
     pub gui: crate::api::gui::GuiState,
+    pub plugins: crate::api::plugin::PluginState,
     pub input: crate::api::input::InputState,
     pub camera: crate::api::camera::CameraState,
     pub audio: rbx_audio::AudioEngine,
@@ -217,6 +218,7 @@ impl Engine {
             threads_throttled: 0.0,
             base_url: crate::api::http::DEFAULT_BASE_URL.to_string(),
             gui: Default::default(),
+            plugins: Default::default(),
             input: Default::default(),
             camera: Default::default(),
             audio: rbx_audio::AudioEngine::disabled(),
@@ -771,6 +773,18 @@ impl ScriptRuntime {
             resume_thread_result(&self.lua, &thread, args).unwrap_or_else(|| Ok(MultiValue::new()));
         pump(&self.lua);
         result
+    }
+
+    pub fn run_plugin(&self, source: &str, name: &str, dir: Option<std::path::PathBuf>) -> Result<(), String> {
+        self.engine.lock().plugins.current_dir = dir;
+        let r = self.execute_named(source, name, Identity::StudioPlugin, MultiValue::new());
+        self.engine.lock().plugins.current_dir = None;
+        r.map(|_| ())
+    }
+
+    pub fn click_plugin_button(&self, button: InstanceId) {
+        fire_lua(&self.lua, button, "Click", MultiValue::new());
+        pump(&self.lua);
     }
 
     pub fn input(&self, event: crate::api::user_input::InputEvent) {

@@ -1,0 +1,932 @@
+{
+ "Accessory": {
+  "ExplorerImageIndex": 32,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Accoutrement": {
+  "ExplorerImageIndex": 32,
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "Animation": {
+  "ExplorerImageIndex": 60,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "AnimationController": {
+  "ExplorerImageIndex": 60,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "AnimationTrack": {
+  "ExplorerImageIndex": 60,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "ArcHandles": {
+  "ExplorerImageIndex": 56,
+  "ExplorerOrder": 20,
+  "parent": null
+ },
+ "AssetService": {
+  "parent": null
+ },
+ "Backpack": {
+  "ExplorerImageIndex": 20,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "BackpackItem": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "BadgeService": {
+  "parent": null
+ },
+ "BasePart": {
+  "ExplorerOrder": -1,
+  "parent": null
+ },
+ "BevelMesh": {
+  "parent": null
+ },
+ "BillboardGui": {
+  "ExplorerImageIndex": 64,
+  "ExplorerOrder": 14,
+  "PreferredParent": "StarterGui",
+  "parent": null
+ },
+ "BindableEvent": {
+  "ExplorerImageIndex": 67,
+  "ExplorerOrder": 5,
+  "parent": null
+ },
+ "BindableFunction": {
+  "ExplorerImageIndex": 66,
+  "ExplorerOrder": 4,
+  "parent": null
+ },
+ "BlockMesh": {
+  "ExplorerImageIndex": 8,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "BodyAngularVelocity": {
+  "ExplorerImageIndex": 14,
+  "ExplorerOrder": 14,
+  "parent": null
+ },
+ "BodyColors": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "BodyForce": {
+  "ExplorerImageIndex": 14,
+  "ExplorerOrder": 14,
+  "parent": null
+ },
+ "BodyGyro": {
+  "ExplorerImageIndex": 14,
+  "ExplorerOrder": 14,
+  "parent": null
+ },
+ "BodyPosition": {
+  "ExplorerImageIndex": 14,
+  "ExplorerOrder": 14,
+  "parent": null
+ },
+ "BodyThrust": {
+  "ExplorerImageIndex": 14,
+  "ExplorerOrder": 14,
+  "parent": null
+ },
+ "BodyVelocity": {
+  "ExplorerImageIndex": 14,
+  "ExplorerOrder": 14,
+  "parent": null
+ },
+ "BoolValue": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "BrickColorValue": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "CFrameValue": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Camera": {
+  "ExplorerImageIndex": 5,
+  "ExplorerOrder": 5,
+  "parent": null
+ },
+ "ChangeHistoryService": {
+  "parent": null
+ },
+ "CharacterMesh": {
+  "ExplorerImageIndex": 60,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "Chat": {
+  "parent": null
+ },
+ "ClickDetector": {
+  "ExplorerImageIndex": 41,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Clothing": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "CollectionService": {
+  "parent": null
+ },
+ "Color3Value": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Configuration": {
+  "ExplorerImageIndex": 58,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "ContextActionService": {
+  "parent": null
+ },
+ "CoreGui": {
+  "ExplorerImageIndex": 46,
+  "parent": null
+ },
+ "CornerWedgePart": {
+  "ExplorerImageIndex": 1,
+  "ExplorerOrder": 12,
+  "parent": null
+ },
+ "CustomEvent": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "CustomEventReceiver": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "CylinderMesh": {
+  "ExplorerImageIndex": 8,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "DataModel": {
+  "parent": null
+ },
+ "DataModelMesh": {
+  "parent": null
+ },
+ "Debris": {
+  "ExplorerImageIndex": 30,
+  "ExplorerOrder": -1,
+  "parent": null
+ },
+ "DebugSettings": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "DebuggerBreakpoint": {
+  "parent": null
+ },
+ "DebuggerManager": {
+  "parent": null
+ },
+ "DebuggerWatch": {
+  "parent": null
+ },
+ "Decal": {
+  "ExplorerImageIndex": 7,
+  "ExplorerOrder": 4,
+  "parent": null
+ },
+ "Dialog": {
+  "ExplorerImageIndex": 62,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "DialogChoice": {
+  "ExplorerImageIndex": 63,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "DoubleConstrainedValue": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Explosion": {
+  "ExplorerImageIndex": 36,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "FaceInstance": {
+  "parent": null
+ },
+ "Feature": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "FileMesh": {
+  "parent": null
+ },
+ "Fire": {
+  "ExplorerImageIndex": 61,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Flag": {
+  "ExplorerImageIndex": 38,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "FlagStand": {
+  "ExplorerImageIndex": 39,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "FloorWire": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Folder": {
+  "ExplorerImageIndex": 77,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "ForceField": {
+  "ExplorerImageIndex": 37,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Frame": {
+  "ExplorerImageIndex": 48,
+  "ExplorerOrder": 15,
+  "PreferredParent": "StarterGui",
+  "parent": null
+ },
+ "FunctionalTest": {
+  "ExplorerOrder": 1,
+  "parent": null
+ },
+ "GameSettings": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "GlobalSettings": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "Glue": {
+  "parent": null
+ },
+ "GuiBase2d": {
+  "parent": null
+ },
+ "GuiButton": {
+  "ExplorerImageIndex": 52,
+  "ExplorerOrder": 16,
+  "parent": null
+ },
+ "GuiMain": {
+  "ExplorerImageIndex": 47,
+  "ExplorerOrder": 14,
+  "parent": null
+ },
+ "GuiObject": {
+  "parent": null
+ },
+ "Handles": {
+  "ExplorerImageIndex": 53,
+  "ExplorerOrder": 19,
+  "parent": null
+ },
+ "Hat": {
+  "ExplorerImageIndex": 45,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Hint": {
+  "ExplorerImageIndex": 33,
+  "ExplorerOrder": 11,
+  "parent": null
+ },
+ "Hole": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "Hopper": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "HopperBin": {
+  "ExplorerImageIndex": 22,
+  "ExplorerOrder": 24,
+  "parent": null
+ },
+ "HttpService": {
+  "ExplorerOrder": 101,
+  "parent": null
+ },
+ "Humanoid": {
+  "ExplorerImageIndex": 9,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "ImageButton": {
+  "ExplorerImageIndex": 52,
+  "ExplorerOrder": 16,
+  "PreferredParent": "StarterGui",
+  "parent": null
+ },
+ "ImageLabel": {
+  "ExplorerImageIndex": 49,
+  "ExplorerOrder": 18,
+  "PreferredParent": "StarterGui",
+  "parent": null
+ },
+ "InputObject": {
+  "parent": null
+ },
+ "InsertService": {
+  "parent": null
+ },
+ "Instance": {
+  "parent": null
+ },
+ "IntConstrainedValue": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "IntValue": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Item": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "JointInstance": {
+  "ExplorerImageIndex": 34,
+  "ExplorerOrder": 20,
+  "parent": null
+ },
+ "JointsService": {
+  "parent": null
+ },
+ "Keyframe": {
+  "ExplorerImageIndex": 60,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "Lighting": {
+  "ExplorerImageIndex": 13,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "LocalBackpack": {
+  "parent": null
+ },
+ "LocalBackpackItem": {
+  "parent": null
+ },
+ "LocalScript": {
+  "ExplorerImageIndex": 18,
+  "ExplorerOrder": 4,
+  "parent": null
+ },
+ "LogService": {
+  "parent": null
+ },
+ "MarketplaceService": {
+  "ExplorerImageIndex": 46,
+  "parent": null
+ },
+ "Message": {
+  "ExplorerImageIndex": 33,
+  "ExplorerOrder": 11,
+  "PreferredParent": "StarterGui",
+  "parent": null
+ },
+ "Model": {
+  "ExplorerImageIndex": 2,
+  "ExplorerOrder": 10,
+  "parent": null
+ },
+ "ModuleScript": {
+  "ExplorerImageIndex": 76,
+  "ExplorerOrder": 5,
+  "parent": null
+ },
+ "Motor": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "MotorFeature": {
+  "parent": null
+ },
+ "Mouse": {
+  "parent": null
+ },
+ "NegateOperation": {
+  "ExplorerImageIndex": 72,
+  "ExplorerOrder": 0,
+  "Insertable": false,
+  "parent": null
+ },
+ "NetworkClient": {
+  "ExplorerImageIndex": 16,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "NetworkMarker": {
+  "parent": null
+ },
+ "NetworkPeer": {
+  "parent": null
+ },
+ "NetworkReplicator": {
+  "ExplorerImageIndex": 29,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "NetworkServer": {
+  "ExplorerImageIndex": 15,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "NetworkSettings": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "NumberValue": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "ObjectValue": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "PVInstance": {
+  "parent": null
+ },
+ "Pants": {
+  "ExplorerImageIndex": 44,
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "ParallelRampPart": {
+  "ExplorerImageIndex": 1,
+  "ExplorerOrder": 12,
+  "parent": null
+ },
+ "Part": {
+  "ExplorerImageIndex": 1,
+  "ExplorerOrder": 11,
+  "parent": null
+ },
+ "PartPairLasso": {
+  "ExplorerImageIndex": 57,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "ParticleEmitter": {
+  "ExplorerImageIndex": 80,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Platform": {
+  "ExplorerImageIndex": 35,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Player": {
+  "ExplorerImageIndex": 12,
+  "ExplorerOrder": 1,
+  "parent": null
+ },
+ "PlayerGui": {
+  "ExplorerImageIndex": 46,
+  "ExplorerOrder": 13,
+  "parent": null
+ },
+ "PlayerScripts": {
+  "ExplorerImageIndex": 78,
+  "ExplorerOrder": 13,
+  "parent": null
+ },
+ "Players": {
+  "ExplorerImageIndex": 21,
+  "ExplorerOrder": 2,
+  "parent": null
+ },
+ "Plugin": {
+  "parent": null
+ },
+ "PluginManager": {
+  "parent": null
+ },
+ "PluginMouse": {
+  "parent": null
+ },
+ "PointLight": {
+  "ExplorerImageIndex": 13,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "PointsService": {
+  "parent": null
+ },
+ "Pose": {
+  "ExplorerImageIndex": 60,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "PrismPart": {
+  "ExplorerImageIndex": 1,
+  "ExplorerOrder": 12,
+  "parent": null
+ },
+ "ProfilingItem": {
+  "parent": null
+ },
+ "PyramidPart": {
+  "ExplorerImageIndex": 1,
+  "ExplorerOrder": 12,
+  "parent": null
+ },
+ "RayValue": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "RemoteEvent": {
+  "ExplorerImageIndex": 75,
+  "ExplorerOrder": 5,
+  "parent": null
+ },
+ "RemoteFunction": {
+  "ExplorerImageIndex": 74,
+  "ExplorerOrder": 4,
+  "parent": null
+ },
+ "RenderSettings": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "ReplicatedFirst": {
+  "ExplorerImageIndex": 70,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "ReplicatedStorage": {
+  "ExplorerImageIndex": 70,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "RightAngleRampPart": {
+  "ExplorerImageIndex": 1,
+  "ExplorerOrder": 12,
+  "parent": null
+ },
+ "RobloxReplicatedStorage": {
+  "parent": null
+ },
+ "RocketPropulsion": {
+  "ExplorerImageIndex": 14,
+  "ExplorerOrder": 14,
+  "parent": null
+ },
+ "RootInstance": {
+  "parent": null
+ },
+ "RotateP": {
+  "parent": null
+ },
+ "RotateV": {
+  "parent": null
+ },
+ "ScreenGui": {
+  "ExplorerImageIndex": 47,
+  "ExplorerOrder": 14,
+  "PreferredParent": "StarterGui",
+  "parent": null
+ },
+ "Script": {
+  "ExplorerImageIndex": 6,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "ScriptContext": {
+  "parent": null
+ },
+ "ScriptDebugger": {
+  "parent": null
+ },
+ "ScrollingFrame": {
+  "ExplorerImageIndex": 48,
+  "ExplorerOrder": 15,
+  "PreferredParent": "StarterGui",
+  "parent": null
+ },
+ "Seat": {
+  "ExplorerImageIndex": 35,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Selection": {
+  "parent": null
+ },
+ "SelectionBox": {
+  "ExplorerImageIndex": 54,
+  "ExplorerOrder": 21,
+  "parent": null
+ },
+ "SelectionPartLasso": {
+  "ExplorerImageIndex": 57,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "SelectionPointLasso": {
+  "ExplorerImageIndex": 57,
+  "ExplorerOrder": 22,
+  "parent": null
+ },
+ "SelectionSphere": {
+  "ExplorerImageIndex": 54,
+  "ExplorerOrder": 21,
+  "parent": null
+ },
+ "ServerScriptService": {
+  "ExplorerImageIndex": 71,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "ServerStorage": {
+  "ExplorerImageIndex": 69,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "ServiceProvider": {
+  "parent": null
+ },
+ "Shirt": {
+  "ExplorerImageIndex": 43,
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "ShirtGraphic": {
+  "ExplorerImageIndex": 40,
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "SkateboardPlatform": {
+  "ExplorerImageIndex": 35,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Skin": {
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "Sky": {
+  "ExplorerImageIndex": 28,
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "Smoke": {
+  "ExplorerImageIndex": 59,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Snap": {
+  "parent": null
+ },
+ "Sound": {
+  "ExplorerImageIndex": 11,
+  "ExplorerOrder": 1,
+  "parent": null
+ },
+ "SoundService": {
+  "ExplorerImageIndex": 31,
+  "ExplorerOrder": 50,
+  "parent": null
+ },
+ "Sparkles": {
+  "ExplorerImageIndex": 42,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "SpawnLocation": {
+  "ExplorerImageIndex": 25,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "SpecialMesh": {
+  "ExplorerImageIndex": 8,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "SpotLight": {
+  "ExplorerImageIndex": 13,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "StarterCharacterScripts": {
+  "ExplorerImageIndex": 78,
+  "ExplorerOrder": 13,
+  "parent": null
+ },
+ "StarterGear": {
+  "ExplorerImageIndex": 20,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "StarterGui": {
+  "ExplorerImageIndex": 46,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "StarterPack": {
+  "ExplorerImageIndex": 20,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "StarterPlayer": {
+  "ExplorerImageIndex": 79,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "StarterPlayerScripts": {
+  "ExplorerImageIndex": 78,
+  "ExplorerOrder": 13,
+  "parent": null
+ },
+ "StatsItem": {
+  "parent": null
+ },
+ "Status": {
+  "ExplorerImageIndex": 2,
+  "ExplorerOrder": 10,
+  "parent": null
+ },
+ "StockSound": {
+  "ExplorerOrder": -1,
+  "parent": null
+ },
+ "StringValue": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "StudioTool": {
+  "parent": null
+ },
+ "SurfaceGui": {
+  "ExplorerImageIndex": 64,
+  "ExplorerOrder": 14,
+  "PreferredParent": "StarterGui",
+  "parent": null
+ },
+ "SurfaceLight": {
+  "ExplorerImageIndex": 13,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "SurfaceSelection": {
+  "ExplorerImageIndex": 55,
+  "ExplorerOrder": 21,
+  "parent": null
+ },
+ "TaskScheduler": {
+  "parent": null
+ },
+ "Team": {
+  "ExplorerImageIndex": 24,
+  "ExplorerOrder": 1,
+  "parent": null
+ },
+ "Teams": {
+  "ExplorerImageIndex": 23,
+  "ExplorerOrder": 14,
+  "parent": null
+ },
+ "TeleportService": {
+  "parent": null
+ },
+ "Terrain": {
+  "ExplorerImageIndex": 65,
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "TerrainRegion": {
+  "ExplorerImageIndex": 65,
+  "ExplorerOrder": 0,
+  "parent": null
+ },
+ "TestService": {
+  "ExplorerImageIndex": 68,
+  "ExplorerOrder": 100,
+  "parent": null
+ },
+ "TextBox": {
+  "ExplorerImageIndex": 51,
+  "ExplorerOrder": 17,
+  "PreferredParent": "StarterGui",
+  "parent": null
+ },
+ "TextButton": {
+  "ExplorerImageIndex": 51,
+  "ExplorerOrder": 17,
+  "PreferredParent": "StarterGui",
+  "parent": null
+ },
+ "TextLabel": {
+  "ExplorerImageIndex": 50,
+  "ExplorerOrder": 19,
+  "PreferredParent": "StarterGui",
+  "parent": null
+ },
+ "Texture": {
+  "ExplorerImageIndex": 10,
+  "ExplorerOrder": 4,
+  "parent": null
+ },
+ "TextureTrail": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "Tool": {
+  "ExplorerImageIndex": 17,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "TouchTransmitter": {
+  "ExplorerImageIndex": 37,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "TrussPart": {
+  "ExplorerImageIndex": 1,
+  "ExplorerOrder": 12,
+  "parent": null
+ },
+ "UnionOperation": {
+  "ExplorerImageIndex": 73,
+  "ExplorerOrder": 0,
+  "Insertable": false,
+  "parent": null
+ },
+ "UserInputService": {
+  "parent": null
+ },
+ "Vector3Value": {
+  "ExplorerImageIndex": 4,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "VehicleSeat": {
+  "ExplorerImageIndex": 35,
+  "ExplorerOrder": 3,
+  "parent": null
+ },
+ "VelocityMotor": {
+  "parent": null
+ },
+ "WedgePart": {
+  "ExplorerImageIndex": 1,
+  "ExplorerOrder": 12,
+  "parent": null
+ },
+ "Weld": {
+  "ExplorerImageIndex": 34,
+  "ExplorerOrder": 20,
+  "parent": null
+ },
+ "Workspace": {
+  "ExplorerImageIndex": 19,
+  "ExplorerOrder": 1,
+  "parent": null
+ }
+}

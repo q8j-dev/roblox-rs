@@ -1,0 +1,59 @@
+use egui::{Rect, TextureHandle, TextureId, pos2};
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+
+pub struct Icons {
+    root: PathBuf,
+    cache: HashMap<PathBuf, Option<TextureHandle>>,
+    classes: Option<(TextureHandle, usize)>,
+}
+
+fn decode(bytes: &[u8]) -> Option<egui::ColorImage> {
+    let img = image::load_from_memory(bytes).ok()?.to_rgba8();
+    let size = [img.width() as usize, img.height() as usize];
+    Some(egui::ColorImage::from_rgba_unmultiplied(size, img.as_raw()))
+}
+
+impl Icons {
+    pub fn new(root: &Path) -> Icons {
+        Icons {
+            root: root.to_path_buf(),
+            cache: HashMap::new(),
+            classes: None,
+        }
+    }
+
+    pub fn get(&mut self, ctx: &egui::Context, path: &Path) -> Option<TextureHandle> {
+        let full = if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            self.root.join(path)
+        };
+        self.cache
+            .entry(full.clone())
+            .or_insert_with(|| {
+                let bytes = std::fs::read(&full).ok()?;
+                let img = decode(&bytes)?;
+                Some(ctx.load_texture(full.display().to_string(), img, egui::TextureOptions::LINEAR))
+            })
+            .clone()
+    }
+
+    pub fn studio(&mut self, ctx: &egui::Context, rel: &str) -> Option<TextureHandle> {
+        self.get(ctx, Path::new(rel))
+    }
+
+    pub fn class(&mut self, ctx: &egui::Context, index: usize) -> Option<(TextureId, Rect)> {
+        if self.classes.is_none() {
+            let bytes = std::fs::read(self.root.join("images/ClassImages.PNG")).ok()?;
+            let img = decode(&bytes)?;
+            let count = img.size[0] / 16;
+            let tex = ctx.load_texture("ClassImages", img, egui::TextureOptions::NEAREST);
+            self.classes = Some((tex, count.max(1)));
+        }
+        let (tex, count) = self.classes.as_ref()?;
+        let i = index.min(count - 1) as f32;
+        let w = 1.0 / *count as f32;
+        Some((tex.id(), Rect::from_min_max(pos2(i * w, 0.0), pos2((i + 1.0) * w, 1.0))))
+    }
+}

@@ -186,6 +186,13 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
     })?;
     g.set("settings", settings_fn)?;
     g.set(
+        "PluginManager",
+        lua.create_function(|lua, ()| {
+            let id = crate::api::plugin::manager(lua)?;
+            push_instance(lua, id)
+        })?,
+    )?;
+    g.set(
         "UserSettings",
         lua.create_function(|lua, ()| {
             let id = crate::api::services::settings_root(lua, "UserSettings")?;
@@ -332,6 +339,7 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
         "Spawn",
         "settings",
         "UserSettings",
+        "PluginManager",
         "stats",
         "Stats",
         "loadstring",

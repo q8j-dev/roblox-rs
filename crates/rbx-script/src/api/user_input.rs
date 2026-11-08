@@ -603,9 +603,13 @@ fn mouse_events(lua: &Lua, ev: &InputEvent) {
             .and_then(|p| e.mice.get(&p).copied())
             .filter(|m| e.dm.contains(*m))
     };
-    let Some(mouse) = mouse else {
-        return;
-    };
+    let plugin_mouse = engine(lua).lock().plugins.active_mouse();
+    for m in mouse.into_iter().chain(plugin_mouse) {
+        fire_mouse(lua, m, ev);
+    }
+}
+
+fn fire_mouse(lua: &Lua, mouse: InstanceId, ev: &InputEvent) {
     match (ev.input_type, ev.kind) {
         (MOUSE_MOVEMENT, _) => fire_lua(lua, mouse, "Move", MultiValue::new()),
         (MOUSE_BUTTON1, InputKind::Began) => fire_lua(lua, mouse, "Button1Down", MultiValue::new()),

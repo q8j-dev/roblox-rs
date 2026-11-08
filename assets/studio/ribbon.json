@@ -1,0 +1,2746 @@
+{
+ "tag": "MainWindow",
+ "children": [
+  {
+   "tag": "QuickAccessBar",
+   "tooltip": "Customize Quick Access Bar",
+   "visible": "true",
+   "children": [
+    {
+     "tag": "addaction",
+     "name": "fileNewAction",
+     "visible": "true"
+    },
+    {
+     "tag": "addaction",
+     "name": "fileOpenAction",
+     "visible": "false"
+    },
+    {
+     "tag": "addaction",
+     "name": "fileSaveAction",
+     "visible": "false"
+    },
+    {
+     "tag": "addaction",
+     "name": "undoAction",
+     "visible": "true"
+    },
+    {
+     "tag": "addaction",
+     "name": "redoAction",
+     "visible": "true"
+    },
+    {
+     "tag": "addaction",
+     "name": "simulationPlayAction",
+     "visible": "true"
+    },
+    {
+     "tag": "addaction",
+     "name": "simulationResetAction",
+     "visible": "true"
+    },
+    {
+     "tag": "addaction",
+     "name": "cutAction",
+     "visible": "false"
+    },
+    {
+     "tag": "addaction",
+     "name": "copyAction",
+     "visible": "false"
+    },
+    {
+     "tag": "addaction",
+     "name": "pasteAction",
+     "visible": "false"
+    },
+    {
+     "tag": "addaction",
+     "name": "duplicateSelectionAction",
+     "visible": "false"
+    }
+   ]
+  },
+  {
+   "tag": "SystemButton",
+   "name": "File",
+   "icon": "images/RobloxStudio.png",
+   "tooltipicon": "images/Studio Ribbon Icons/roblox.png",
+   "tooltip": "Click here to open, save or publish,\nand to see everything else you can \ndo with the document",
+   "children": [
+    {
+     "tag": "SystemPopup",
+     "children": [
+      {
+       "tag": "addaction",
+       "name": "fileNewAction"
+      },
+      {
+       "tag": "addaction",
+       "name": "fileOpenAction"
+      },
+      {
+       "tag": "addaction",
+       "name": "filePublishedProjectsAction"
+      },
+      {
+       "tag": "addaction",
+       "name": "fileCloseAction",
+       "style": "textundericon"
+      },
+      {
+       "tag": "addseparator"
+      },
+      {
+       "tag": "addaction",
+       "name": "fileSaveAction"
+      },
+      {
+       "tag": "addaction",
+       "name": "fileSaveAsAction"
+      },
+      {
+       "tag": "addaction",
+       "name": "publishToRobloxAction"
+      },
+      {
+       "tag": "addaction",
+       "name": "publishToRobloxAsAction"
+      },
+      {
+       "tag": "addaction",
+       "name": "publishSelectionToRobloxAction"
+      },
+      {
+       "tag": "addaction",
+       "name": "downloadPlaceCopyAction"
+      },
+      {
+       "tag": "addseparator"
+      },
+      {
+       "tag": "submenu",
+       "name": "Advanced",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "fileOpenRecentSavesAction"
+        },
+        {
+         "tag": "addaction",
+         "name": "publishGameAction"
+        },
+        {
+         "tag": "addaction",
+         "name": "exportPlaceAction"
+        },
+        {
+         "tag": "addaction",
+         "name": "shortcutHelpAction"
+        },
+        {
+         "tag": "addaction",
+         "name": "fastLogDumpAction"
+        }
+       ]
+      },
+      {
+       "tag": "addseparator"
+      },
+      {
+       "tag": "addaction",
+       "name": "aboutRobloxAction"
+      },
+      {
+       "tag": "addaction",
+       "name": "onlineHelpAction"
+      },
+      {
+       "tag": "addaction",
+       "name": "settingsAction"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "tag": "RibbonBar",
+   "minimizeButton": "true",
+   "themeoptions": "false",
+   "font": "",
+   "children": [
+    {
+     "tag": "TabPage",
+     "name": "Home",
+     "children": [
+      {
+       "tag": "Group",
+       "name": "Clipboard",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "pasteAction",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/Home/Paste.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "copyAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/Home/Copy-16x16.png"
+        },
+        {
+         "tag": "addaction",
+         "name": "cutAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/Home/Cut-16x16.png"
+        },
+        {
+         "tag": "addaction",
+         "name": "duplicateSelectionAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/Home/Copy-16x16.png"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Tools",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "advArrowToolAction",
+         "style": "textundericon",
+         "text": "Select",
+         "tooltip": "Select an Object",
+         "icon": "images/RibbonIcons/Home/Drag.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "advTranslateAction",
+         "style": "textundericon",
+         "text": "Move",
+         "tooltip": "Move an Object",
+         "icon": "images/RibbonIcons/Home/Translate.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "resizeAction",
+         "style": "textundericon",
+         "text": "Scale",
+         "tooltip": "Resize an Object",
+         "icon": "images/RibbonIcons/Home/Resize.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "advRotateAction",
+         "style": "textundericon",
+         "text": "Rotate",
+         "tooltip": "Rotate an Object",
+         "icon": "images/RibbonIcons/Home/Rotate.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "name": "toggleCollisionCheckAction",
+         "style": "textbesideicon",
+         "text": "Collisions ",
+         "tooltip": "Check for collisions when dragging",
+         "icon": "images/RibbonIcons/Home/Collisions-Enabled-16x16.png",
+         "width": "16",
+         "height": "16"
+        },
+        {
+         "tag": "MenuButton",
+         "handleMenuTrigger": "false",
+         "name": "jointCreationMode",
+         "text": "Join",
+         "icon": "images/RibbonIcons/Home/Join.png",
+         "tooltip": "Choose how parts are joined together",
+         "width": "16",
+         "height": "16",
+         "children": [
+          {
+           "tag": "ActionGroup",
+           "name": "jointCreationMode",
+           "style": "textundericon",
+           "ischeckable": "true",
+           "children": [
+            {
+             "tag": "addaction",
+             "name": "Always",
+             "text": "Always",
+             "value": "Always",
+             "icon": "images/RibbonIcons/Home/Join.png",
+             "tooltip": "Always join adjacent parts",
+             "width": "32",
+             "height": "32"
+            },
+            {
+             "tag": "addaction",
+             "name": "Surface only",
+             "text": "Surface only",
+             "value": "Surface only",
+             "icon": "images/t_surfaceSmooth_old.png",
+             "tooltip": "Join based on surface type",
+             "width": "32",
+             "height": "32"
+            },
+            {
+             "tag": "addaction",
+             "name": "Never",
+             "text": "Never",
+             "value": "Never",
+             "icon": "images/t_surfaceWeld_old.png",
+             "tooltip": "Never join parts automatically",
+             "width": "32",
+             "height": "32"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Insert",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "viewToolboxAction",
+         "text": "Toolbox",
+         "style": "textundericon",
+         "icon": "images/ToolboxIcon.png",
+         "tooltip": "Insert items from the toolbox",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "MenuPopupButton",
+         "handleMenuTrigger": "true",
+         "name": "placePartAction",
+         "value": "PartLargeAction",
+         "style": "textundericon",
+         "popupStyle": "menubutton",
+         "text": "Part",
+         "tooltip": "Place a part into the workspace",
+         "icon": "images/RibbonIcons/Insert/Part.png",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "ActionGroup",
+           "name": "insertBasicObject",
+           "style": "textbesideicon",
+           "ischeckable": "false",
+           "children": [
+            {
+             "tag": "addaction",
+             "name": "PartLargeAction",
+             "text": "Block",
+             "value": "Part",
+             "tooltip": "Insert block part",
+             "icon": "images/RibbonIcons/Insert/Part.png",
+             "width": "32",
+             "height": "32"
+            },
+            {
+             "tag": "addaction",
+             "name": "SphereLargeAction",
+             "text": "Sphere",
+             "value": "Sphere",
+             "tooltip": "Insert sphere part",
+             "icon": "images/RibbonIcons/Insert/Sphere.png",
+             "width": "32",
+             "height": "32"
+            },
+            {
+             "tag": "addaction",
+             "name": "WedgeLargeAction",
+             "text": "Wedge",
+             "value": "WedgePart",
+             "tooltip": "Insert wedge part",
+             "icon": "images/RibbonIcons/Insert/Wedge.png",
+             "width": "32",
+             "height": "32"
+            },
+            {
+             "tag": "addaction",
+             "name": "CylinderLargeAction",
+             "text": "Cylinder",
+             "value": "Cylinder",
+             "tooltip": "Insert cylinder part",
+             "icon": "images/RibbonIcons/Insert/Cylinder.png",
+             "width": "32",
+             "height": "32"
+            }
+           ]
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Edit",
+       "options": "true",
+       "children": [
+        {
+         "tag": "groupoptionsmenu",
+         "tooltip": "Actions as Tools",
+         "handleMenuTrigger": "true",
+         "children": [
+          {
+           "tag": "addaction",
+           "name": "materialActionAsTool",
+           "text": "Material Action as Tool",
+           "ischeckable": "true",
+           "tooltip": "Toggles material action as tool"
+          },
+          {
+           "tag": "addaction",
+           "name": "colorFillActionAsTool",
+           "text": "Color Action as Tool",
+           "ischeckable": "true",
+           "tooltip": "Toggles material action as tool"
+          }
+         ]
+        },
+        {
+         "tag": "MenuPopupButton",
+         "handleMenuTrigger": "true",
+         "name": "actionMaterialSelector",
+         "style": "textundericon",
+         "ischeckable": "true",
+         "popupStyle": "menubutton",
+         "text": "Material",
+         "tooltip": "Select material and apply to parts",
+         "icon": "images/RibbonIcons/Home/Material.png",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "addaction",
+           "name": "ms_Plastic",
+           "style": "textbesideicon",
+           "text": "Plastic",
+           "value": "Plastic",
+           "icon": "images/Studio Ribbon Icons/plastic.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Wood",
+           "style": "textbesideicon",
+           "text": "Wood",
+           "value": "Wood",
+           "icon": "images/Studio Ribbon Icons/wood.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_WoodPlanks",
+           "style": "textbesideicon",
+           "text": "Wood Planks",
+           "value": "WoodPlanks",
+           "icon": "images/Studio Ribbon Icons/woodplanks.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Slate",
+           "style": "textbesideicon",
+           "text": "Slate",
+           "value": "Slate",
+           "icon": "images/Studio Ribbon Icons/slate.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Concrete",
+           "style": "textbesideicon",
+           "text": "Concrete",
+           "value": "Concrete",
+           "icon": "images/Studio Ribbon Icons/concrete.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Metal",
+           "style": "textbesideicon",
+           "text": "Metal",
+           "value": "Metal",
+           "icon": "images/Studio Ribbon Icons/metal.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_CorrodedMetal",
+           "style": "textbesideicon",
+           "text": "Corroded Metal",
+           "value": "CorrodedMetal",
+           "icon": "images/Studio Ribbon Icons/corrodedmetal.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_DiamondPlate",
+           "style": "textbesideicon",
+           "text": "Diamond Plate",
+           "value": "DiamondPlate",
+           "icon": "images/Studio Ribbon Icons/diamondplate.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Foil",
+           "style": "textbesideicon",
+           "text": "Foil",
+           "value": "Foil",
+           "icon": "images/Studio Ribbon Icons/foil.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Grass",
+           "style": "textbesideicon",
+           "text": "Grass",
+           "value": "Grass",
+           "icon": "images/Studio Ribbon Icons/grass.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Ice",
+           "style": "textbesideicon",
+           "text": "Ice",
+           "value": "Ice",
+           "icon": "images/Studio Ribbon Icons/ice.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Brick",
+           "style": "textbesideicon",
+           "text": "Brick",
+           "value": "Brick",
+           "icon": "images/Studio Ribbon Icons/brick.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Sand",
+           "style": "textbesideicon",
+           "text": "Sand",
+           "value": "Sand",
+           "icon": "images/Studio Ribbon Icons/sand.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Fabric",
+           "style": "textbesideicon",
+           "text": "Fabric",
+           "value": "Fabric",
+           "icon": "images/Studio Ribbon Icons/fabric.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Granite",
+           "style": "textbesideicon",
+           "text": "Granite",
+           "value": "Granite",
+           "icon": "images/Studio Ribbon Icons/granite.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Marble",
+           "style": "textbesideicon",
+           "text": "Marble",
+           "value": "Marble",
+           "icon": "images/Studio Ribbon Icons/marble.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Pebble",
+           "style": "textbesideicon",
+           "text": "Pebble",
+           "value": "Pebble",
+           "icon": "images/Studio Ribbon Icons/pebble.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Cobblestone",
+           "style": "textbesideicon",
+           "text": "Cobblestone",
+           "value": "Cobblestone",
+           "icon": "images/Studio Ribbon Icons/cobblestone.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_SmoothPlastic",
+           "style": "textbesideicon",
+           "text": "SmoothPlastic",
+           "value": "SmoothPlastic",
+           "icon": "images/Studio Ribbon Icons/smoothPlastic.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Neon",
+           "style": "textbesideicon",
+           "text": "Neon",
+           "value": "Neon",
+           "icon": "images/Studio Ribbon Icons/neon.png",
+           "width": "32",
+           "height": "32"
+          }
+         ]
+        },
+        {
+         "tag": "ColorPicker",
+         "name": "actionColorSelector",
+         "style": "textundericon",
+         "ischeckable": "true",
+         "type": "color",
+         "text": "Color",
+         "icon": "images/RibbonIcons/Home/Color.png",
+         "tooltip": "Select color and apply to parts",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "name": "groupSelectionAction",
+         "icon": "images/RibbonIcons/Home/Group.png",
+         "style": "textbesideicon",
+         "tooltip": "Group the selected parts into a model",
+         "width": "16",
+         "height": "16"
+        },
+        {
+         "tag": "addaction",
+         "name": "ungroupSelectionAction",
+         "icon": "images/RibbonIcons/Home/Ungroup.png",
+         "style": "textbesideicon",
+         "tooltip": "Ungroup the model into the original parts",
+         "width": "16",
+         "height": "16"
+        },
+        {
+         "tag": "addaction",
+         "name": "anchorAction",
+         "text": "Anchor ",
+         "icon": "images/RibbonIcons/Home/Anchor.png",
+         "style": "textbesideicon",
+         "tooltip": "Anchor/Unanchor the selected parts",
+         "width": "16",
+         "height": "16"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Terrain",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "Generate.Smooth Terrain.Terrain.",
+         "isProxy": "true",
+         "text": "Generate",
+         "style": "textbesideicon",
+         "tooltip": "Generate landscapes of terrain.",
+         "type": "plugin",
+         "icon": "images/RibbonIcons/Terrain/SmoothTerrain/generate.png",
+         "width": "16",
+         "height": "16"
+        },
+        {
+         "tag": "addaction",
+         "name": "Add.Smooth Terrain.Terrain.",
+         "isProxy": "true",
+         "text": "Add",
+         "style": "textbesideicon",
+         "tooltip": "Click and hold to add terrain.",
+         "type": "plugin",
+         "icon": "images/RibbonIcons/Terrain/SmoothTerrain/add.png",
+         "width": "16",
+         "height": "16"
+        },
+        {
+         "tag": "addaction",
+         "name": "Paint.Smooth Terrain.Terrain.",
+         "isProxy": "true",
+         "text": "Paint",
+         "tooltip": "Paint the material of the terrain.",
+         "type": "plugin",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/Terrain/SmoothTerrain/paint.png",
+         "width": "16",
+         "height": "16"
+        },
+        {
+         "tag": "addaction",
+         "name": "Grow.Smooth Terrain.Terrain.",
+         "isProxy": "true",
+         "text": "Grow",
+         "style": "textbesideicon",
+         "type": "plugin",
+         "tooltip": "Click and hold to grow and expand terrain.",
+         "icon": "images/RibbonIcons/Terrain/SmoothTerrain/grow.png",
+         "width": "16",
+         "height": "16"
+        },
+        {
+         "tag": "addaction",
+         "name": "Erode.Smooth Terrain.Terrain.",
+         "isProxy": "true",
+         "text": "Erode",
+         "style": "textbesideicon",
+         "type": "plugin",
+         "tooltip": "Click and hold to erode and remove terrain.",
+         "icon": "images/RibbonIcons/Terrain/SmoothTerrain/erode.png",
+         "width": "16",
+         "height": "16"
+        },
+        {
+         "tag": "addaction",
+         "name": "Smooth.Smooth Terrain.Terrain.",
+         "isProxy": "true",
+         "text": "Smooth",
+         "style": "textbesideicon",
+         "type": "plugin",
+         "tooltip": "Brush to smooth out rough or jagged terrain.",
+         "icon": "images/RibbonIcons/Terrain/SmoothTerrain/smooth.png",
+         "width": "16",
+         "height": "16"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Test",
+       "children": [
+        {
+         "tag": "MenuPopupButton",
+         "handleMenuTrigger": "true",
+         "selectChangesText": "true",
+         "name": "playGameActionGroup",
+         "style": "textundericon",
+         "popupStyle": "menubutton",
+         "text": "Play",
+         "tooltip": "Play the game inside the window",
+         "icon": "images/RibbonIcons/Test/Run.png",
+         "value": "simulationPlayAction",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "addaction",
+           "text": "Play",
+           "name": "simulationPlayAction",
+           "style": "textundericon",
+           "value": "simulationPlayAction",
+           "icon": "images/RibbonIcons/Test/Play-Solo.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "text": "Run",
+           "name": "simulationRunAction",
+           "style": "textundericon",
+           "value": "simulationRunAction",
+           "icon": "images/RibbonIcons/Test/Run.png",
+           "width": "32",
+           "height": "32"
+          }
+         ]
+        },
+        {
+         "tag": "addaction",
+         "name": "simulationResetAction",
+         "style": "textundericon",
+         "text": "Stop",
+         "icon": "images/RibbonIcons/Test/Stop.png",
+         "width": "32",
+         "height": "32"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "tag": "TabPage",
+     "name": "Model",
+     "children": [
+      {
+       "tag": "Group",
+       "name": "Tools",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "advArrowToolAction",
+         "style": "textundericon",
+         "text": "Select",
+         "tooltip": "Select an Object",
+         "icon": "images/RibbonIcons/Home/Drag.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "advTranslateAction",
+         "style": "textundericon",
+         "text": "Move",
+         "tooltip": "Move an Object",
+         "icon": "images/RibbonIcons/Home/Translate.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "resizeAction",
+         "style": "textundericon",
+         "text": "Scale",
+         "tooltip": "Resize an Object",
+         "icon": "images/RibbonIcons/Home/Resize.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "advRotateAction",
+         "style": "textundericon",
+         "text": "Rotate",
+         "tooltip": "Rotate an Object",
+         "icon": "images/RibbonIcons/Home/Rotate.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "Transform",
+         "instancename": "Transform",
+         "style": "textundericon",
+         "text": "Transform",
+         "tooltip": "Precisely Manipulate an Object",
+         "type": "plugin",
+         "icon": "images/RibbonIcons/Home/Plane.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "MenuButton",
+         "name": "lockMenu",
+         "text": "Lock",
+         "icon": "images/RibbonIcons/Home/Lock-16x16.png",
+         "tooltip": "Click on parts to lock/unlock",
+         "width": "16",
+         "height": "16",
+         "children": [
+          {
+           "tag": "addaction",
+           "name": "lockAction",
+           "text": "Lock Tool"
+          },
+          {
+           "tag": "addaction",
+           "name": "unlockAllAction"
+          }
+         ]
+        },
+        {
+         "tag": "addaction",
+         "name": "toggleCollisionCheckAction",
+         "style": "textbesideicon",
+         "text": "Collisions ",
+         "tooltip": "Check for collisions when dragging",
+         "icon": "images/RibbonIcons/Home/Collisions-Enabled-16x16.png",
+         "width": "16",
+         "height": "16"
+        },
+        {
+         "tag": "MenuButton",
+         "handleMenuTrigger": "false",
+         "name": "jointCreationMode",
+         "text": "Join",
+         "icon": "images/RibbonIcons/Home/Join.png",
+         "tooltip": "Choose how parts are joined together",
+         "width": "16",
+         "height": "16",
+         "children": [
+          {
+           "tag": "ActionGroup",
+           "name": "jointCreationMode",
+           "style": "textundericon",
+           "ischeckable": "true",
+           "children": [
+            {
+             "tag": "addaction",
+             "name": "Always",
+             "text": "Always",
+             "value": "Always",
+             "icon": "images/RibbonIcons/Home/Join.png",
+             "tooltip": "Always join adjacent parts",
+             "width": "32",
+             "height": "32"
+            },
+            {
+             "tag": "addaction",
+             "name": "Surface only",
+             "text": "Surface only",
+             "value": "Surface only",
+             "icon": "images/t_surfaceSmooth_old.png",
+             "tooltip": "Join based on surface type",
+             "width": "32",
+             "height": "32"
+            },
+            {
+             "tag": "addaction",
+             "name": "Never",
+             "text": "Never",
+             "value": "Never",
+             "icon": "images/t_surfaceWeld_old.png",
+             "tooltip": "Never join parts automatically",
+             "width": "32",
+             "height": "32"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "type": "radio",
+         "name": "gridToOneAction",
+         "style": "textbesideicon",
+         "text": "1 Stud",
+         "tooltip": "Set drag grid to 1 stud"
+        },
+        {
+         "tag": "addaction",
+         "type": "radio",
+         "name": "gridToOneFifthAction",
+         "style": "textbesideicon",
+         "text": "1/5th Stud",
+         "tooltip": "Set drag grid to 1/5th of a stud"
+        },
+        {
+         "tag": "addaction",
+         "type": "radio",
+         "name": "gridToOffAction",
+         "style": "textbesideicon",
+         "text": "Off",
+         "tooltip": "Disable drag grid"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Parts",
+       "options": "true",
+       "children": [
+        {
+         "tag": "groupoptionsmenu",
+         "tooltip": "Actions as Tools",
+         "handleMenuTrigger": "true",
+         "children": [
+          {
+           "tag": "addaction",
+           "name": "materialActionAsTool",
+           "text": "Material Action as Tool",
+           "ischeckable": "true",
+           "tooltip": "Toggles material action as tool"
+          },
+          {
+           "tag": "addaction",
+           "name": "colorFillActionAsTool",
+           "text": "Color Action as Tool",
+           "ischeckable": "true",
+           "tooltip": "Toggles material action as tool"
+          }
+         ]
+        },
+        {
+         "tag": "MenuPopupButton",
+         "handleMenuTrigger": "true",
+         "name": "placePartAction",
+         "value": "PartLargeAction",
+         "style": "textundericon",
+         "popupStyle": "menubutton",
+         "text": "Part",
+         "tooltip": "Place part",
+         "icon": "images/RibbonIcons/Insert/Part.png",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "ActionGroup",
+           "name": "insertBasicObject",
+           "style": "textbesideicon",
+           "ischeckable": "false",
+           "children": [
+            {
+             "tag": "addaction",
+             "name": "PartLargeAction",
+             "text": "Block",
+             "value": "Part",
+             "tooltip": "Insert block part",
+             "icon": "images/RibbonIcons/Insert/Part.png",
+             "width": "32",
+             "height": "32"
+            },
+            {
+             "tag": "addaction",
+             "name": "SphereLargeAction",
+             "text": "Sphere",
+             "value": "Sphere",
+             "tooltip": "Insert sphere part",
+             "icon": "images/RibbonIcons/Insert/Sphere.png",
+             "width": "32",
+             "height": "32"
+            },
+            {
+             "tag": "addaction",
+             "name": "WedgeLargeAction",
+             "text": "Wedge",
+             "value": "WedgePart",
+             "tooltip": "Insert wedge part",
+             "icon": "images/RibbonIcons/Insert/Wedge.png",
+             "width": "32",
+             "height": "32"
+            },
+            {
+             "tag": "addaction",
+             "name": "CylinderLargeAction",
+             "text": "Cylinder",
+             "value": "Cylinder",
+             "tooltip": "Insert cylinder part",
+             "icon": "images/RibbonIcons/Insert/Cylinder.png",
+             "width": "32",
+             "height": "32"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "tag": "MenuPopupButton",
+         "handleMenuTrigger": "true",
+         "name": "actionMaterialSelector",
+         "style": "textundericon",
+         "ischeckable": "true",
+         "popupStyle": "menubutton",
+         "text": "Material",
+         "tooltip": "Select material and apply to parts",
+         "icon": "images/RibbonIcons/Home/Material.png",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "addaction",
+           "name": "ms_Plastic",
+           "style": "textbesideicon",
+           "text": "Plastic",
+           "value": "Plastic",
+           "icon": "images/Studio Ribbon Icons/plastic.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Wood",
+           "style": "textbesideicon",
+           "text": "Wood",
+           "value": "Wood",
+           "icon": "images/Studio Ribbon Icons/wood.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_WoodPlanks",
+           "style": "textbesideicon",
+           "text": "Wood Planks",
+           "value": "WoodPlanks",
+           "icon": "images/Studio Ribbon Icons/woodplanks.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Slate",
+           "style": "textbesideicon",
+           "text": "Slate",
+           "value": "Slate",
+           "icon": "images/Studio Ribbon Icons/slate.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Concrete",
+           "style": "textbesideicon",
+           "text": "Concrete",
+           "value": "Concrete",
+           "icon": "images/Studio Ribbon Icons/concrete.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Metal",
+           "style": "textbesideicon",
+           "text": "Metal",
+           "value": "Metal",
+           "icon": "images/Studio Ribbon Icons/metal.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_CorrodedMetal",
+           "style": "textbesideicon",
+           "text": "Corroded Metal",
+           "value": "CorrodedMetal",
+           "icon": "images/Studio Ribbon Icons/corrodedmetal.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_DiamondPlate",
+           "style": "textbesideicon",
+           "text": "Diamond Plate",
+           "value": "DiamondPlate",
+           "icon": "images/Studio Ribbon Icons/diamondplate.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Foil",
+           "style": "textbesideicon",
+           "text": "Foil",
+           "value": "Foil",
+           "icon": "images/Studio Ribbon Icons/foil.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Grass",
+           "style": "textbesideicon",
+           "text": "Grass",
+           "value": "Grass",
+           "icon": "images/Studio Ribbon Icons/grass.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Ice",
+           "style": "textbesideicon",
+           "text": "Ice",
+           "value": "Ice",
+           "icon": "images/Studio Ribbon Icons/ice.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Brick",
+           "style": "textbesideicon",
+           "text": "Brick",
+           "value": "Brick",
+           "icon": "images/Studio Ribbon Icons/brick.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Sand",
+           "style": "textbesideicon",
+           "text": "Sand",
+           "value": "Sand",
+           "icon": "images/Studio Ribbon Icons/sand.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Fabric",
+           "style": "textbesideicon",
+           "text": "Fabric",
+           "value": "Fabric",
+           "icon": "images/Studio Ribbon Icons/fabric.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Granite",
+           "style": "textbesideicon",
+           "text": "Granite",
+           "value": "Granite",
+           "icon": "images/Studio Ribbon Icons/granite.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Marble",
+           "style": "textbesideicon",
+           "text": "Marble",
+           "value": "Marble",
+           "icon": "images/Studio Ribbon Icons/marble.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Pebble",
+           "style": "textbesideicon",
+           "text": "Pebble",
+           "value": "Pebble",
+           "icon": "images/Studio Ribbon Icons/pebble.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Cobblestone",
+           "style": "textbesideicon",
+           "text": "Cobblestone",
+           "value": "Cobblestone",
+           "icon": "images/Studio Ribbon Icons/cobblestone.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_SmoothPlastic",
+           "style": "textbesideicon",
+           "text": "SmoothPlastic",
+           "value": "SmoothPlastic",
+           "icon": "images/Studio Ribbon Icons/smoothPlastic.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ms_Neon",
+           "style": "textbesideicon",
+           "text": "Neon",
+           "value": "Neon",
+           "icon": "images/Studio Ribbon Icons/neon.png",
+           "width": "32",
+           "height": "32"
+          }
+         ]
+        },
+        {
+         "tag": "ColorPicker",
+         "name": "actionColorSelector",
+         "style": "textundericon",
+         "ischeckable": "true",
+         "type": "color",
+         "text": "Color",
+         "icon": "images/RibbonIcons/Home/Color.png",
+         "tooltip": "Select color and apply to parts",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "MenuButton",
+         "name": "actionSurface",
+         "style": "textundericon",
+         "iconvisibleinmenu": "false",
+         "tooltip": "Pick a surface type, and click on part surfaces to apply",
+         "text": "Surface",
+         "ischeckable": "true",
+         "icon": "images/RibbonIcons/Home/Surfaces.png",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "addaction",
+           "name": "glueSurfaceAction",
+           "text": "Glue"
+          },
+          {
+           "tag": "addaction",
+           "name": "smoothSurfaceAction",
+           "text": "Smooth"
+          },
+          {
+           "tag": "addaction",
+           "name": "smoothNoOutlinesAction",
+           "text": "Smooth, No Outline"
+          },
+          {
+           "tag": "addaction",
+           "name": "studsAction",
+           "text": "Studs"
+          },
+          {
+           "tag": "addaction",
+           "name": "inletAction",
+           "text": "Inlets"
+          },
+          {
+           "tag": "addaction",
+           "name": "universalsAction",
+           "text": "Universal"
+          },
+          {
+           "tag": "addaction",
+           "name": "weldSurfaceAction",
+           "text": "Add Weld"
+          },
+          {
+           "tag": "addaction",
+           "name": "hingeAction",
+           "style": "textundericon",
+           "text": "Hinge",
+           "icon": "images/RibbonIcons/Home/Joint.png",
+           "tooltip": "Attach a hinge to a part",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "motorRightAction",
+           "style": "textundericon",
+           "text": "Motor",
+           "tooltip": "Attach a motor to a part",
+           "icon": "images/RibbonIcons/Home/Motor.png",
+           "width": "32",
+           "height": "32"
+          }
+         ]
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "name": "groupSelectionAction",
+         "icon": "images/RibbonIcons/Home/Group.png",
+         "style": "textbesideicon",
+         "tooltip": "Group the selected parts into a model",
+         "width": "16",
+         "height": "16"
+        },
+        {
+         "tag": "addaction",
+         "name": "ungroupSelectionAction",
+         "icon": "images/RibbonIcons/Home/Ungroup.png",
+         "style": "textbesideicon",
+         "tooltip": "Ungroup the model into the original parts",
+         "width": "16",
+         "height": "16"
+        },
+        {
+         "tag": "addaction",
+         "name": "anchorAction",
+         "text": "Anchor ",
+         "icon": "images/RibbonIcons/Home/Anchor.png",
+         "style": "textbesideicon",
+         "tooltip": "Anchor/Unanchor the selected parts",
+         "width": "16",
+         "height": "16"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Solid Modeling",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "unionSelectionAction",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/Home/Union.png",
+         "tooltip": "Fuse parts together to make a single part",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "negateSelectionAction",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/Home/Negate.png",
+         "tooltip": "Negate parts for making holes",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "separateSelectionAction",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/Home/Separate.png",
+         "tooltip": "Separate parts from a fused selection",
+         "width": "32",
+         "height": "32"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Gameplay",
+       "children": [
+        {
+         "tag": "MenuButton",
+         "name": "actionParticleEffects",
+         "style": "textundericon",
+         "text": "Effects",
+         "tooltip": "Select a part and then click here to add effects",
+         "icon": "images/RibbonIcons/Insert/Effects.png",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "ActionGroup",
+           "name": "insertBasicObject",
+           "style": "textbesideicon",
+           "ischeckable": "false",
+           "children": [
+            {
+             "tag": "addaction",
+             "name": "Explosion",
+             "value": "Explosion",
+             "icon": "images/RibbonIcons/Insert/Weapon.png",
+             "width": "16",
+             "height": "16",
+             "style": "textundericon"
+            },
+            {
+             "tag": "addaction",
+             "name": "Fire",
+             "value": "Fire",
+             "icon": "images/RibbonIcons/Insert/Effects.png",
+             "width": "16",
+             "height": "16",
+             "style": "textundericon"
+            },
+            {
+             "tag": "addaction",
+             "name": "PointLight",
+             "value": "PointLight",
+             "icon": "images/Studio 2.0 icons/16x16/light.png",
+             "width": "16",
+             "height": "16",
+             "style": "textundericon"
+            },
+            {
+             "tag": "addaction",
+             "name": "Smoke",
+             "value": "Smoke",
+             "icon": "images/Studio 2.0 icons/16x16/smoke.png",
+             "style": "textundericon"
+            },
+            {
+             "tag": "addaction",
+             "name": "Sparkles",
+             "value": "Sparkles",
+             "icon": "images/Studio 2.0 icons/16x16/sparkles.png",
+             "width": "16",
+             "height": "16",
+             "style": "textundericon"
+            },
+            {
+             "tag": "addaction",
+             "name": "SpotLight",
+             "value": "SpotLight",
+             "icon": "images/Studio 2.0 icons/16x16/light.png",
+             "width": "16",
+             "height": "16",
+             "style": "textundericon"
+            },
+            {
+             "tag": "addaction",
+             "name": "SurfaceLight",
+             "fflag": "SurfaceLightEnabled",
+             "value": "SurfaceLight",
+             "icon": "images/Studio 2.0 icons/16x16/light.png",
+             "width": "16",
+             "height": "16",
+             "style": "textundericon"
+            },
+            {
+             "tag": "addaction",
+             "name": "ParticleEmitter",
+             "fflag": "CustomEmitterInstanceEnabled",
+             "value": "ParticleEmitter",
+             "icon": "images/Studio 2.0 icons/16x16/particle_icon_16.png",
+             "width": "16",
+             "height": "16",
+             "style": "textundericon"
+            }
+           ]
+          }
+         ]
+        },
+        {
+         "tag": "ActionGroup",
+         "name": "insertBasicObject",
+         "style": "textundericon",
+         "ischeckable": "false",
+         "children": [
+          {
+           "tag": "addaction",
+           "name": "startLocationAction",
+           "text": "Spawn",
+           "value": "SpawnLocation",
+           "icon": "images/Studio 2.0 icons/32x32/spawn_location.png",
+           "tooltip": "Click here to add a spawn point into your game",
+           "width": "32",
+           "height": "32"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Advanced",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "actionInsertAdvancedObject",
+         "iscommonslot": "true",
+         "text": "Advanced Objects",
+         "tooltip": "Insert scripts and other advanced objects into the game",
+         "ischeckable": "true",
+         "icon": "images/RibbonIcons/Insert/Advanced-Objects.png",
+         "style": "textundericon",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "insertModelAction",
+         "style": "textundericon",
+         "text": "Model",
+         "tooltip": "Insert a model from the local files",
+         "icon": "images/RibbonIcons/Insert/Import-Model.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "insertServiceAction",
+         "style": "textundericon",
+         "text": "Service",
+         "tooltip": "Insert service from a service selection",
+         "icon": "images/RibbonIcons/Insert/Service.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "ActionGroup",
+         "name": "insertBasicObject",
+         "style": "textbesideicon",
+         "ischeckable": "false",
+         "children": [
+          {
+           "tag": "addaction",
+           "name": "ScriptLargeAction",
+           "text": "Script",
+           "value": "Script",
+           "tooltip": "Insert a script",
+           "icon": "images/RibbonIcons/Insert/Script.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "LocalScriptLargeAction",
+           "text": "LocalScript",
+           "value": "LocalScript",
+           "tooltip": "Insert a local script",
+           "icon": "images/RibbonIcons/Insert/LocalScript.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "name": "ModuleScriptLargeAction",
+           "text": "ModuleScript",
+           "value": "ModuleScript",
+           "tooltip": "Insert a module script",
+           "icon": "images/RibbonIcons/Insert/ModuleScript.png",
+           "width": "32",
+           "height": "32"
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "tag": "TabPage",
+     "name": "Terrain",
+     "children": [
+      {
+       "tag": "Group",
+       "name": "Terrain",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "Generator",
+         "instancename": "Generator",
+         "text": "Generator",
+         "style": "textundericon",
+         "tooltip": "Use the random terrain generator",
+         "type": "plugin",
+         "icon": "images/RibbonIcons/Terrain/terrain.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "Builder",
+         "instancename": "Builder",
+         "text": "Builder",
+         "style": "textundericon",
+         "tooltip": "Place terrain blocks on the field",
+         "type": "plugin",
+         "icon": "images/RibbonIcons/Terrain/builder.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "Remover",
+         "instancename": "Remover",
+         "text": "Remover",
+         "style": "textundericon",
+         "tooltip": "Remove terrain blocks from the field",
+         "type": "plugin",
+         "icon": "images/RibbonIcons/Terrain/destroyer.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "Elevation Adjuster",
+         "instancename": "Elevation Adjuster",
+         "text": "Elevation Adjuster",
+         "tooltip": "Adjust the elevation of the terrain",
+         "type": "plugin",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/Terrain/elevation.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "Brush",
+         "instancename": "Brush",
+         "text": "Brush",
+         "style": "textundericon",
+         "type": "plugin",
+         "tooltip": "Paint the world with terrain blocks",
+         "icon": "images/RibbonIcons/Terrain/brush.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "Crater",
+         "instancename": "Crater",
+         "text": "Crater",
+         "style": "textundericon",
+         "type": "plugin",
+         "tooltip": "Create a terrain crater",
+         "icon": "images/RibbonIcons/Terrain/crater.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "Roads",
+         "instancename": "Roads",
+         "text": "Roads",
+         "style": "textundericon",
+         "type": "plugin",
+         "tooltip": "Create a road between two points",
+         "icon": "images/RibbonIcons/Terrain/roads.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "Material Brush",
+         "instancename": "Material Brush",
+         "text": "Material Brush",
+         "tooltip": "Paint terrain blocks a different material",
+         "style": "textundericon",
+         "type": "plugin",
+         "icon": "images/RibbonIcons/Terrain/materialBrush.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "Stamper",
+         "instancename": "Stamper",
+         "text": "Stamper",
+         "style": "textundericon",
+         "tooltip": "Stamp objects",
+         "type": "plugin",
+         "icon": "images/RibbonIcons/Terrain/stamp.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "Flood Fill",
+         "instancename": "Flood Fill",
+         "text": "Flood Fill",
+         "style": "textundericon",
+         "tooltip": "Fill a crevice in the terrain",
+         "type": "plugin",
+         "icon": "images/RibbonIcons/Terrain/floodFill.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "Convert To Smooth",
+         "instancename": "Convert To Smooth",
+         "text": "Convert To Smooth",
+         "style": "textundericon",
+         "tooltip": "Switch to smooth terrain and new tools",
+         "type": "plugin",
+         "icon": "images/RibbonIcons/Terrain/smooth.png",
+         "width": "32",
+         "height": "32"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "tag": "TabPage",
+     "name": "Test",
+     "children": [
+      {
+       "tag": "Group",
+       "name": "Simulation",
+       "children": [
+        {
+         "tag": "MenuPopupButton",
+         "handleMenuTrigger": "true",
+         "selectChangesText": "true",
+         "name": "playGameActionGroup",
+         "style": "textundericon",
+         "popupStyle": "menubutton",
+         "text": "Play",
+         "tooltip": "Play the game inside the window",
+         "icon": "images/RibbonIcons/Test/Run.png",
+         "value": "simulationPlayAction",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "addaction",
+           "text": "Play",
+           "name": "simulationPlayAction",
+           "style": "textundericon",
+           "value": "simulationPlayAction",
+           "icon": "images/RibbonIcons/Test/Play-Solo.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "text": "Run",
+           "name": "simulationRunAction",
+           "style": "textundericon",
+           "value": "simulationRunAction",
+           "icon": "images/RibbonIcons/Test/Run.png",
+           "width": "32",
+           "height": "32"
+          }
+         ]
+        },
+        {
+         "tag": "addaction",
+         "name": "executeScriptAction",
+         "style": "textundericon",
+         "text": "Run Script",
+         "icon": "images/RibbonIcons/Test/Run-Script.png",
+         "tooltip": "Execute Lua code from a file",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "simulationStopAction",
+         "style": "textundericon",
+         "text": "Pause",
+         "icon": "images/RibbonIcons/Test/Pause.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "simulationResetAction",
+         "style": "textundericon",
+         "text": "Stop",
+         "icon": "images/RibbonIcons/Test/Stop.png",
+         "width": "32",
+         "height": "32"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Clients and Servers",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "pairRbxDevDeviceAction",
+         "iscommonslot": "true",
+         "style": "textundericon",
+         "text": "Pair Test Device",
+         "tooltip": "Pair a device to studio for testing",
+         "icon": "images/RibbonIcons/Test/Pair-Device.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "startServerAndPlayersAction",
+         "iscommonslot": "true",
+         "style": "textundericon",
+         "text": "Start",
+         "tooltip": "Start server and players",
+         "icon": "images/RibbonIcons/Test/Start-Server.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addcheckbox",
+         "name": "startServerCB",
+         "text": "Server",
+         "checked": "true"
+        },
+        {
+         "tag": "addcombobox",
+         "name": "playersMode",
+         "children": [
+          {
+           "tag": "comboboxitem",
+           "text": "0 Player",
+           "value": "0"
+          },
+          {
+           "tag": "comboboxitem",
+           "text": "1 Player",
+           "value": "1",
+           "defaultvalue": "true"
+          },
+          {
+           "tag": "comboboxitem",
+           "text": "2 Players",
+           "value": "2"
+          },
+          {
+           "tag": "comboboxitem",
+           "text": "3 Players",
+           "value": "3"
+          },
+          {
+           "tag": "comboboxitem",
+           "text": "4 Players",
+           "value": "4"
+          },
+          {
+           "tag": "comboboxitem",
+           "text": "5 Players",
+           "value": "5"
+          },
+          {
+           "tag": "comboboxitem",
+           "text": "6 Players",
+           "value": "6"
+          },
+          {
+           "tag": "comboboxitem",
+           "text": "7 Players",
+           "value": "7"
+          },
+          {
+           "tag": "comboboxitem",
+           "text": "8 Players",
+           "value": "8"
+          }
+         ]
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "name": "cleanupServersAndPlayersAction",
+         "style": "textundericon",
+         "text": "Cleanup",
+         "icon": "images/Studio 2.0 icons/32x32/delete_x_32.png",
+         "width": "32",
+         "height": "32"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Emulation",
+       "children": [
+        {
+         "tag": "MenuButton",
+         "handleMenuTrigger": "true",
+         "name": "emulateDeviceAction",
+         "style": "textundericon",
+         "popupStyle": "menubutton",
+         "text": "Choose Device",
+         "tooltip": "Emulate roblox as if it were another device",
+         "icon": "images/RibbonIcons/Test/EmulateComputer.png",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "addaction",
+           "name": "manageEmulationDeviceAction",
+           "style": "textbesideicon",
+           "text": "Manage Devices...",
+           "icon": "images/Studio 2.0 icons/16x16/emulate_device_16.png",
+           "width": "16",
+           "height": "16"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Audio",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "audioToggleAction",
+         "iscommonslot": "true",
+         "style": "textundericon",
+         "ischeckable": "true",
+         "icon": "images/RibbonIcons/Test/Audio-Disabled.png",
+         "width": "32",
+         "height": "32",
+         "text": "Mute",
+         "tooltip": "Toggle Game Audio Sounds"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Analyze",
+       "fflag": "AnalyzerGroupUIEnabled",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "analyzePhysicsToggleAction",
+         "fflag": "PhysicsAnalyzerEnabled",
+         "iscommonslot": "true",
+         "style": "textundericon",
+         "ischeckable": "true",
+         "icon": "images/RibbonIcons/Test/Physics-Test.png",
+         "width": "32",
+         "height": "32",
+         "text": "Physics",
+         "tooltip": "Toggle Physics Analyzer"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "tag": "TabPage",
+     "name": "View",
+     "children": [
+      {
+       "tag": "Group",
+       "name": "Show",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "viewObjectExplorerAction",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/View/Explorer.png",
+         "tooltip": "View a list of objects in the workspace",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "name": "viewPropertiesAction",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/View/Properties.png",
+         "tooltip": "View properties of objects",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "name": "actionStartPage",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Start-Page.png",
+         "tooltip": "Login, view places you own, browse your roblox catalog",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "gameExplorerAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Explorer.png",
+         "tooltip": "View Game Explorer",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "viewToolboxAction",
+         "text": "Toolbox",
+         "style": "textbesideicon",
+         "icon": "images/ToolboxIcon.png",
+         "tooltip": "Insert items from the toolbox",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "name": "viewContextualHelpAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Help-Wiki.png",
+         "tooltip": "View context-sensitive help",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "fflag": "StudioShowTutorialsByDefault",
+         "name": "viewTutorialsAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Tutorials.png",
+         "tooltip": "View Tutorials",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "objectBrowserAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Object-Browser.png",
+         "tooltip": "View Lua API objects that can be accessed through scripting",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "name": "viewOutputWindowAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Output.png",
+         "tooltip": "See the output feed of your scripts",
+         "text": "Output",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "viewScriptAnalysisAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Output.png",
+         "tooltip": "View Script Analysis",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "viewCommandBarAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Output.png",
+         "tooltip": "Command Bar",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "fflag": "LuaDebugger",
+         "name": "breakpointsDockWidgetAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Breakpoint.png",
+         "tooltip": "View existing breakpoints",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "fflag": "LuaDebugger",
+         "name": "callStackDockWidgetAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Call-Stack.png",
+         "tooltip": "View current call stack",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "fflag": "LuaDebugger",
+         "name": "watchDockWidgetAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/Test/Watch-Window.png",
+         "tooltip": "View currently watched variables",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "name": "viewDiagnosticsAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Diagnostics.png",
+         "tooltip": "View diagnostic information of your game",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "viewTaskSchedulerAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Task-Scheduler.png",
+         "tooltip": "View task execution information",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "viewScriptPerformanceAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Script-Performance.png",
+         "tooltip": "View script performance information",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "name": "viewFindResultsWindowAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/Find-Results.png",
+         "tooltip": "Find results window",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "viewTeamCreateAction",
+         "style": "textbesideicon",
+         "icon": "images/RibbonIcons/View/TeamCreate.png",
+         "tooltip": "View Team Create Window",
+         "height": "32",
+         "width": "32"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Actions",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "toggleAxisWidgetAction",
+         "style": "textundericon",
+         "text": "Display Axis",
+         "icon": "images/RibbonIcons/View/Display-Axis.png",
+         "tooltip": "Show world-space aligned coordinate axis",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "actionFullScreen",
+         "style": "textundericon",
+         "text": "Full Screen",
+         "icon": "images/RibbonIcons/View/Fullscreen.png",
+         "tooltip": "Enabled Full Screen mode",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "screenShotAction",
+         "style": "textundericon",
+         "text": "Screen Shot",
+         "icon": "images/RibbonIcons/View/Screen-Capture.png",
+         "tooltip": "Take a screenshot",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "toggleVideoRecordAction",
+         "style": "textundericon",
+         "iswindowsonly": "true",
+         "icon": "images/RibbonIcons/View/Record-Video.png",
+         "tooltip": "Record a video",
+         "height": "32",
+         "width": "32"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Settings",
+       "children": [
+        {
+         "tag": "addaction",
+         "type": "radio",
+         "name": "gridSizeToTwoAction",
+         "action": "gridSizeToTwoAction",
+         "tooltip": "Resize grid to two studs",
+         "style": "textbesideicon",
+         "text": "2 Studs"
+        },
+        {
+         "tag": "addaction",
+         "type": "radio",
+         "name": "gridSizeToFourAction",
+         "action": "gridSizeToFourAction",
+         "tooltip": "Resize grid to four studs",
+         "style": "textbesideicon",
+         "text": "4 Studs"
+        },
+        {
+         "tag": "addaction",
+         "type": "radio",
+         "name": "gridSizeToSixteenAction",
+         "action": "gridSizeToSixteenAction",
+         "tooltip": "Resize grid to sixteen studs",
+         "style": "textbesideicon",
+         "text": "16 Studs"
+        },
+        {
+         "tag": "addseparator",
+         "visible": "false"
+        },
+        {
+         "tag": "addaction",
+         "name": "toggle3DGridAction",
+         "style": "textundericon",
+         "text": "Show Grid",
+         "icon": "images/RibbonIcons/View/Show-Grid.png",
+         "tooltip": "Display a 3D grid on the y=0 plane",
+         "height": "32",
+         "width": "32"
+        },
+        {
+         "tag": "MenuButton",
+         "name": "switchWindowsMenu",
+         "text": "Switch Windows",
+         "icon": "images/RibbonIcons/View/Switch-Windows.png",
+         "tooltip": "Switch to a different Studio window",
+         "ischeckable": "false",
+         "width": "32",
+         "height": "32"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Stats",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "testStatsAction",
+         "action": "testStatsAction",
+         "text": "Stats",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addaction",
+         "name": "testRenderStatsAction",
+         "action": "testRenderStatsAction",
+         "text": "Render",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addaction",
+         "name": "testPhysicsStatsAction",
+         "action": "testPhysicsStatsAction",
+         "text": "Physics",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addaction",
+         "name": "testNetworkStatsAction",
+         "action": "testNetworkStatsAction",
+         "text": "Network",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addaction",
+         "name": "testSummaryStatsAction",
+         "action": "testSummaryStatsAction",
+         "text": "Summary",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addaction",
+         "fflag": "StudioCustomStatsEnabled",
+         "name": "testCustomStatsAction",
+         "action": "testCustomStatsAction",
+         "text": "Custom",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addaction",
+         "name": "testClearStatsAction",
+         "action": "testClearStatsAction",
+         "text": "Clear",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/Home/Delete.png",
+         "height": "32",
+         "width": "32"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "tag": "TabPage",
+     "name": "Plugins",
+     "children": [
+      {
+       "tag": "Group",
+       "name": "Tools",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "managePluginsAction",
+         "text": "Manage Plugins",
+         "style": "textundericon",
+         "height": "32",
+         "width": "32",
+         "tooltip": "Manage plugins installed from roblox.com",
+         "icon": "images/RibbonIcons/AddOns/Manage-Plugins.png"
+        },
+        {
+         "tag": "addaction",
+         "name": "openPluginsFolderAction",
+         "text": "Plugins Folder",
+         "style": "textundericon",
+         "height": "32",
+         "width": "32",
+         "tooltip": "Open the local plugins folder",
+         "icon": "images/RibbonIcons/AddOns/Plugins-folder.png"
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "tag": "TabPage",
+     "name": "scriptMenu",
+     "text": "Script Menu",
+     "contextcolor": "4",
+     "contexttitle": "Script tools",
+     "visible": "false",
+     "children": [
+      {
+       "tag": "Group",
+       "name": "Clipboard",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "pasteAction",
+         "style": "textundericon",
+         "tooltip": "Paste item in clipboard",
+         "icon": "images/RibbonIcons/Home/Paste.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "cutAction",
+         "style": "textbesideicon",
+         "tooltip": "Cut selected text",
+         "icon": "images/RibbonIcons/Home/Cut-16x16.png"
+        },
+        {
+         "tag": "addaction",
+         "name": "copyAction",
+         "style": "textbesideicon",
+         "tooltip": "Copy selected text",
+         "icon": "images/RibbonIcons/Home/Copy-16x16.png"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Edit",
+       "children": [
+        {
+         "tag": "MenuButton",
+         "name": "actionFindMenu",
+         "style": "textundericon",
+         "text": "Find",
+         "icon": "images/RibbonIcons/Home/Find.png",
+         "tooltip": "Find text...",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "addaction",
+           "name": "findAction",
+           "icon": "images/Studio 2.0 icons/16x16/find.png"
+          },
+          {
+           "tag": "addaction",
+           "name": "findNextAction",
+           "icon": "images/Studio 2.0 icons/16x16/find_next.png"
+          },
+          {
+           "tag": "addaction",
+           "name": "findPreviousAction",
+           "icon": "images/Studio 2.0 icons/16x16/find_previous.png"
+          },
+          {
+           "tag": "addaction",
+           "name": "findInScriptsAction",
+           "icon": "images/Studio 2.0 icons/16x16/find.png"
+          },
+          {
+           "tag": "addaction",
+           "name": "goToLineAction",
+           "icon": "images/Studio 2.0 icons/16x16/goToLine.png"
+          }
+         ]
+        },
+        {
+         "tag": "addaction",
+         "name": "replaceAction",
+         "text": "Replace",
+         "style": "textundericon",
+         "tooltip": "Find text and replace with...",
+         "icon": "images/RibbonIcons/Home/Replace.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "MenuButton",
+         "name": "actionSelectMenu",
+         "text": "Select",
+         "tooltip": "Select text...",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/Home/Select.png",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "addaction",
+           "name": "selectAllAction",
+           "icon": "images/RibbonIcons/Home/Select.png",
+           "width": "16",
+           "height": "16"
+          },
+          {
+           "tag": "addaction",
+           "name": "selectChildrenAction",
+           "icon": "images/Studio 2.0 icons/16x16/select_children.png"
+          }
+         ]
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Test",
+       "children": [
+        {
+         "tag": "MenuPopupButton",
+         "handleMenuTrigger": "true",
+         "selectChangesText": "true",
+         "name": "playGameActionGroup",
+         "style": "textundericon",
+         "popupStyle": "menubutton",
+         "text": "Play",
+         "tooltip": "Play the game inside the window",
+         "icon": "images/RibbonIcons/Test/Run.png",
+         "value": "simulationPlayAction",
+         "width": "32",
+         "height": "32",
+         "children": [
+          {
+           "tag": "addaction",
+           "text": "Play",
+           "name": "simulationPlayAction",
+           "style": "textundericon",
+           "value": "simulationPlayAction",
+           "icon": "images/RibbonIcons/Test/Play-Solo.png",
+           "width": "32",
+           "height": "32"
+          },
+          {
+           "tag": "addaction",
+           "text": "Run",
+           "name": "simulationRunAction",
+           "style": "textundericon",
+           "value": "simulationRunAction",
+           "icon": "images/RibbonIcons/Test/Run.png",
+           "width": "32",
+           "height": "32"
+          }
+         ]
+        },
+        {
+         "tag": "addaction",
+         "name": "simulationStopAction",
+         "style": "textundericon",
+         "text": "Pause",
+         "icon": "images/RibbonIcons/Test/Pause.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "simulationResetAction",
+         "style": "textundericon",
+         "text": "Stop",
+         "icon": "images/RibbonIcons/Test/Stop.png",
+         "width": "32",
+         "height": "32"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Debugger",
+       "fflag": "LuaDebugger",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "stepIntoAction",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/Test/Step-In.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "stepOverAction",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/Test/Step-Over.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "stepOutAction",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/Test/Step-Out.png",
+         "width": "32",
+         "height": "32"
+        },
+        {
+         "tag": "addaction",
+         "name": "addWatchAction",
+         "style": "textundericon",
+         "icon": "images/RibbonIcons/Test/Add-Watch.png",
+         "tooltip": "Watch the highlighted variable's value",
+         "width": "32",
+         "height": "32"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "fflag": "LuaDebuggerBreakOnError",
+       "name": "Debug Errors",
+       "children": [
+        {
+         "tag": "addaction",
+         "type": "radio",
+         "name": "neverBreakOnScriptErrorsAction",
+         "style": "textbesideicon",
+         "text": "Never",
+         "tooltip": "Never break errors into debugger"
+        },
+        {
+         "tag": "addaction",
+         "type": "radio",
+         "name": "breakOnAllScriptErrorsAction",
+         "style": "textbesideicon",
+         "text": "On All Exceptions",
+         "tooltip": "Break all exceptions into debugger"
+        },
+        {
+         "tag": "addaction",
+         "type": "radio",
+         "name": "breakOnUnhandledScriptErrorsAction",
+         "style": "textbesideicon",
+         "text": "On Unhandled Exceptions",
+         "tooltip": "Break unhandled exceptions into debugger"
+        }
+       ]
+      },
+      {
+       "tag": "Group",
+       "name": "Script Actions",
+       "children": [
+        {
+         "tag": "addaction",
+         "name": "goToScriptErrorAction",
+         "tooltip": "Focus view on script error",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addaction",
+         "name": "reloadScriptAction",
+         "tooltip": "Reload the script after modifying it, while playing",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addseparator"
+        },
+        {
+         "tag": "addaction",
+         "name": "commentSelectionAction",
+         "tooltip": "Comment out the selected text",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addaction",
+         "name": "uncommentSelectionAction",
+         "tooltip": "Uncomment out the selected text",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addaction",
+         "name": "toggleCommentAction",
+         "tooltip": "Toggle the commented status of the selected text",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addseparator"
+        },
+        {
+         "tag": "addaction",
+         "name": "expandAllFoldsAction",
+         "tooltip": "Expand all collapsed folds in the script",
+         "style": "textbesideicon"
+        },
+        {
+         "tag": "addaction",
+         "name": "collapseAllFoldsAction",
+         "tooltip": "Collapse all collapsable sections of scripts",
+         "style": "textbesideicon"
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

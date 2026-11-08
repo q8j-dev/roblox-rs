@@ -1,0 +1,833 @@
+{
+ "aboutRobloxAction": {
+  "text": "About Roblox..."
+ },
+ "actionFillColor": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/paintcan.png",
+  "text": "Fill",
+  "tooltip": "Fill With Color"
+ },
+ "actionFullScreen": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/fullscreen.png",
+  "shortcut": "F11",
+  "text": "Full Screen"
+ },
+ "actionMaterial": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/material_picker_16.png",
+  "text": "Material",
+  "tooltip": "Change Material"
+ },
+ "actionStartPage": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/world.png",
+  "text": "Start Page"
+ },
+ "addWatchAction": {
+  "text": "Add Watch",
+  "tooltip": "Add Watch"
+ },
+ "advArrowToolAction": {
+  "checkable": true,
+  "icon": "images/t_drag_old.png",
+  "shortcut": "Ctrl+1",
+  "text": "Arrow Tool",
+  "tooltip": "Drag"
+ },
+ "advRotateAction": {
+  "checkable": true,
+  "icon": "images/advT_rotateGrid_old.png",
+  "shortcut": "Ctrl+4",
+  "text": "Rotate Tool",
+  "tooltip": "Rotate Parts"
+ },
+ "advTranslateAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/move-parts.png",
+  "shortcut": "Ctrl+2",
+  "text": "Move Tool",
+  "tooltip": "Move Parts"
+ },
+ "advanceJointCreationManualAction": {
+  "checkable": true,
+  "icon": "images/advT_jointManual_old.png",
+  "text": "Automatically Create Joints",
+  "tooltip": "Automatically create joints between parts..."
+ },
+ "anchorAction": {
+  "checkable": true,
+  "icon": "images/t_anchor_old.png",
+  "shortcut": "Alt+A",
+  "text": "Anchor",
+  "tooltip": "Anchor - prevent moving"
+ },
+ "audioToggleAction": {
+  "icon": "images/RibbonIcons/Test/Audio-Disabled.png",
+  "text": "Toggle Game Audio",
+  "tooltip": "Toggle Game Audio"
+ },
+ "breakOnAllScriptErrorsAction": {
+  "checkable": true,
+  "text": "On All Exceptions",
+  "tooltip": "Break all exceptions into debugger"
+ },
+ "breakOnUnhandledScriptErrorsAction": {
+  "checkable": true,
+  "text": "On Unhandled Exceptions",
+  "tooltip": "Break unhandled exceptions into debugger"
+ },
+ "cleanupServersAndPlayersAction": {
+  "icon": "images/Studio 2.0 icons/32x32/delete_x_32.png",
+  "text": "Cleans up all clients and servers",
+  "tooltip": "Cleans up all clients and servers"
+ },
+ "collapseAllFoldsAction": {
+  "shortcut": "Ctrl+Shift+E",
+  "text": "Collapse All Folds",
+  "tooltip": "Collapses all folds"
+ },
+ "commentSelectionAction": {
+  "text": "Comment Selection",
+  "tooltip": "Comment out selected text"
+ },
+ "copyAction": {
+  "icon": "images/Studio 2.0 icons/16x16/copy_clipboard_16_h.png",
+  "shortcut": "Ctrl+C",
+  "text": "Copy",
+  "tooltip": "Copy"
+ },
+ "createNewLinkedSourceAction": {
+  "text": "Create new LinkedSource...",
+  "tooltip": "Store this script in the cloud so that you can easily re-use it"
+ },
+ "customizeQuickAccessAction": {
+  "text": "Customize...",
+  "tooltip": "Customize Quick Access"
+ },
+ "cutAction": {
+  "icon": "images/Studio 2.0 icons/16x16/cut_clipboard_16_h.png",
+  "shortcut": "Ctrl+X",
+  "text": "Cut",
+  "tooltip": "Cut"
+ },
+ "deleteBreakpointAction": {
+  "text": "Delete Breakpoint",
+  "tooltip": "Delete Breakpoint"
+ },
+ "deleteSelectedAction": {
+  "icon": "images/Studio 2.0 icons/16x16/delete_x_16_h.png",
+  "shortcut": "Del",
+  "text": "Delete",
+  "tooltip": "Delete"
+ },
+ "downloadPlaceCopyAction": {
+  "icon": "images/Studio 2.0 icons/16x16/download_copy.png",
+  "text": "Download a Copy...",
+  "tooltip": "Download a copy of the active document"
+ },
+ "dropperAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/color-picker.png",
+  "text": "Dropper",
+  "tooltip": "Pick Color"
+ },
+ "duplicateSelectionAction": {
+  "icon": "images/Studio 2.0 icons/16x16/copy_clipboard_16_h.png",
+  "shortcut": "Ctrl+D",
+  "text": "Duplicate",
+  "tooltip": "Duplicates current selection"
+ },
+ "emulateDeviceAction": {
+  "text": "Emulate Device",
+  "tooltip": "Emulate a mobile device "
+ },
+ "executeScriptAction": {
+  "icon": "images/Studio 2.0 icons/16x16/script_go.png",
+  "text": "Execute Script...",
+  "tooltip": "Execute Script"
+ },
+ "expandAllFoldsAction": {
+  "shortcut": "Ctrl+E",
+  "text": "Expand All Folds",
+  "tooltip": "Expands all folds"
+ },
+ "explorerFilterAction": {
+  "shortcut": "Ctrl+Shift+X",
+  "text": "Explorer Filter"
+ },
+ "exportPlaceAction": {
+  "text": "Export as Obj",
+  "tooltip": "Export as Obj"
+ },
+ "exportSelectionAction": {
+  "text": "Export Selection...",
+  "tooltip": "Export Selection"
+ },
+ "fastLogDumpAction": {
+  "icon": "images/Studio 2.0 icons/16x16/bug_error.png",
+  "shortcut": "Shift+F8",
+  "text": "Upload Log Files",
+  "tooltip": "Upload Log Files"
+ },
+ "fileCloseAction": {
+  "text": "Close"
+ },
+ "fileExitAction": {
+  "shortcut": "Alt+F4",
+  "text": "Exit"
+ },
+ "fileNewAction": {
+  "icon": "images/Studio 2.0 icons/16x16/new_document_16_h.png",
+  "shortcut": "Ctrl+N",
+  "text": "New"
+ },
+ "fileOpenAction": {
+  "icon": "images/Studio 2.0 icons/16x16/open_document_16_h.png",
+  "shortcut": "Ctrl+O",
+  "text": "Open...",
+  "tooltip": "Open"
+ },
+ "fileOpenRecentSavesAction": {
+  "icon": "images/Studio 2.0 icons/16x16/open_document_16_h.png",
+  "text": "Open Recent Saves",
+  "tooltip": "Open Recent Saves Folder"
+ },
+ "filePublishedProjectsAction": {
+  "icon": "images/Studio 2.0 icons/16x16/open_document_16_h.png",
+  "shortcut": "Ctrl+Shift+O",
+  "text": "Published Projects...",
+  "tooltip": "Open and Configure Published Projects"
+ },
+ "fileSaveAction": {
+  "icon": "images/Studio 2.0 icons/16x16/save_16_h.png",
+  "shortcut": "Ctrl+S",
+  "text": "Save",
+  "tooltip": "Save"
+ },
+ "fileSaveAsAction": {
+  "icon": "images/Studio 2.0 icons/16x16/save_green_16_h.png",
+  "shortcut": "Ctrl+Shift+S",
+  "text": "Save As..."
+ },
+ "findAction": {
+  "shortcut": "Ctrl+F",
+  "text": "Find...",
+  "tooltip": "Find"
+ },
+ "findInScriptsAction": {
+  "shortcut": "Ctrl+Shift+F",
+  "text": "Find All"
+ },
+ "findNextAction": {
+  "shortcut": "F3",
+  "text": "Find Next",
+  "tooltip": "Find Next"
+ },
+ "findPreviousAction": {
+  "shortcut": "Shift+F3",
+  "text": "Find Previous",
+  "tooltip": "Find previous item"
+ },
+ "gameExplorerAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/output.png",
+  "text": "Game Explorer",
+  "tooltip": "View Game Explorer..."
+ },
+ "glueSurfaceAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/glue-surface.png",
+  "text": "Glue Surface",
+  "tooltip": "Glue Surface"
+ },
+ "goToLineAction": {
+  "icon": "images/Studio 2.0 icons/16x16/goToLine.png",
+  "shortcut": "Ctrl+G",
+  "text": "Go to line...",
+  "tooltip": "Go to line"
+ },
+ "goToScriptErrorAction": {
+  "text": "Go to Script Error"
+ },
+ "gridSizeToFourAction": {
+  "icon": "images/Studio 2.0 icons/16x16/grid.png",
+  "text": "Grid Size - 4 Studs",
+  "tooltip": "Set Grid Size to 4 Studs"
+ },
+ "gridSizeToSixteenAction": {
+  "icon": "images/Studio 2.0 icons/16x16/grid_sixteen.png",
+  "text": "Grid Size - 16 Studs",
+  "tooltip": "Set Grid Size to 16 Studs"
+ },
+ "gridSizeToTwoAction": {
+  "icon": "images/Studio 2.0 icons/16x16/grid_one.png",
+  "text": "Grid Size - 2 studs",
+  "tooltip": "Set Grid Size to 2 Studs"
+ },
+ "gridToOffAction": {
+  "checkable": true,
+  "icon": "images/advT_gridOff_old.png",
+  "text": "Grid Off",
+  "tooltip": "Grid Off"
+ },
+ "gridToOneAction": {
+  "checkable": true,
+  "icon": "images/advT_gridToOne_old.png",
+  "text": "One Stud Grid",
+  "tooltip": "One Stud Grid"
+ },
+ "gridToOneFifthAction": {
+  "checkable": true,
+  "icon": "images/advT_gridToOneFifth_old.png",
+  "text": "1/5 Stud Grid",
+  "tooltip": "1/5 Stud Grid"
+ },
+ "groupSelectionAction": {
+  "icon": "images/Studio 2.0 icons/16x16/group_16.png",
+  "shortcut": "Ctrl+G",
+  "text": "Group",
+  "tooltip": "Group"
+ },
+ "hingeAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/hinge-surface.png",
+  "text": "Hinge on Surface",
+  "tooltip": "Hinge on Surface"
+ },
+ "inletAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/indents-surface.png",
+  "text": "Indents on Surface",
+  "tooltip": "Indents on Surface"
+ },
+ "insertBreakpointAction": {
+  "text": "Insert Breakpoint",
+  "tooltip": "Insert Breakpoint"
+ },
+ "insertIntoFileAction": {
+  "text": "Insert from File...",
+  "tooltip": "Insert from File..."
+ },
+ "insertModelAction": {
+  "text": "Model...",
+  "tooltip": "Insert Models"
+ },
+ "insertServiceAction": {
+  "text": "Service...",
+  "tooltip": "Insert Services."
+ },
+ "instanceDumpAction": {
+  "text": "Instance Dump"
+ },
+ "launchHelpForSelectionAction": {
+  "icon": "images/Studio Ribbon Icons/help.png",
+  "text": "Help",
+  "tooltip": "Show help for selected object"
+ },
+ "lockAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/lock.png",
+  "shortcut": "Alt+L",
+  "text": "Lock",
+  "tooltip": "Lock - prevent selection"
+ },
+ "manageEmulationDeviceAction": {
+  "icon": "images/Studio 2.0 icons/16x16/emulate_device_16.png",
+  "text": "Manage Devices...",
+  "tooltip": "Manage emulated devices"
+ },
+ "managePluginsAction": {
+  "text": "Manage Plugins",
+  "tooltip": "Enable, Disable, and Uninstall Plugins"
+ },
+ "motorRightAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/motor-surface.png",
+  "text": "Right Motor",
+  "tooltip": "Motor on Surface"
+ },
+ "moveDownBrickAction": {
+  "icon": "images/s_moveDown_old.png",
+  "text": "Move Down",
+  "tooltip": "Move Down"
+ },
+ "moveUpBrickAction": {
+  "icon": "images/s_moveUp_old.png",
+  "text": "Move Up Brick",
+  "tooltip": "Move Up"
+ },
+ "negateSelectionAction": {
+  "icon": "images/Studio 2.0 icons/16x16/negate_16.png",
+  "shortcut": "Ctrl+Shift+N",
+  "text": "Negate",
+  "tooltip": "Negate Selection"
+ },
+ "neverBreakOnScriptErrorsAction": {
+  "checkable": true,
+  "text": "Never",
+  "tooltip": "Never break errors into debugger"
+ },
+ "objectBrowserAction": {
+  "checkable": true,
+  "icon": "images/TA_ObjectBrowser.png",
+  "text": "Object Browser"
+ },
+ "onlineHelpAction": {
+  "shortcut": "F1",
+  "text": "Online Help..."
+ },
+ "openPluginsFolderAction": {
+  "icon": "images/Studio 2.0 icons/16x16/open_document_16_h.png",
+  "text": "Open Plugins Folder",
+  "tooltip": "Open Plugins Folder"
+ },
+ "pairRbxDeviceAction": {
+  "icon": "images/Studio 2.0 icons/16x16/pair_device_16.png",
+  "text": "Pair Developer Device",
+  "tooltip": "Pair a device for testing"
+ },
+ "panLeftAction": {
+  "icon": "images/c_panLeft_old.png",
+  "text": "Pan Left"
+ },
+ "panRightAction": {
+  "icon": "images/c_panRight_old.png",
+  "text": "Pan Right"
+ },
+ "pasteAction": {
+  "icon": "images/Studio 2.0 icons/16x16/paste_clipboard_16_h.png",
+  "shortcut": "Ctrl+V",
+  "text": "Paste",
+  "tooltip": "Paste"
+ },
+ "pasteIntoAction": {
+  "shortcut": "Ctrl+Shift+V",
+  "text": "Paste Into",
+  "tooltip": "Paste Into"
+ },
+ "playRbxDeviceAction": {
+  "shortcut": "Ctrl+F7",
+  "text": "Play on RBX Dev Device",
+  "tooltip": "Starts a server and your connected Roblox Developer iOS Device"
+ },
+ "playSoloAction": {
+  "shortcut": "F6",
+  "text": "Play Solo",
+  "tooltip": "Play in Solo Mode"
+ },
+ "publishAsPluginAction": {
+  "text": "Publish as Plugin...",
+  "tooltip": "Publish the Selection to Roblox as a Plugin"
+ },
+ "publishGameAction": {
+  "text": "Publish Whole Game...",
+  "tooltip": "Publish all places, developer products, and other parts of your game to Roblox"
+ },
+ "publishSelectionToRobloxAction": {
+  "text": "Publish Selection to ROBLOX..."
+ },
+ "publishToRobloxAction": {
+  "shortcut": "Alt+P",
+  "text": "Publish to ROBLOX",
+  "tooltip": "Publish Active Document to Roblox"
+ },
+ "publishToRobloxAsAction": {
+  "shortcut": "Alt+Shift+P",
+  "text": "Publish to ROBLOX As...",
+  "tooltip": "Publish Active Document to Roblox As"
+ },
+ "quickInsertAction": {
+  "shortcut": "Ctrl+I",
+  "text": "Quick Insert",
+  "tooltip": "Temporarily set focus to the basic objects widget"
+ },
+ "redoAction": {
+  "icon": "images/Studio 2.0 icons/16x16/redo_16_h.png",
+  "shortcut": "Ctrl+Shift+Z",
+  "text": "Redo",
+  "tooltip": "Redo"
+ },
+ "reloadScriptAction": {
+  "shortcut": "Ctrl+R",
+  "text": "Reload Script"
+ },
+ "renameObjectAction": {
+  "text": "Rename",
+  "tooltip": "Renames selected object"
+ },
+ "replaceAction": {
+  "shortcut": "Ctrl+H",
+  "text": "Replace...",
+  "tooltip": "Replace"
+ },
+ "resetScriptZoomAction": {
+  "shortcut": "Ctrl+0",
+  "text": "Reset Script Zoom",
+  "tooltip": "Resets font size"
+ },
+ "resetViewAction": {
+  "icon": "images/Studio 2.0 icons/16x16/reset_layout.png",
+  "text": "Reset View",
+  "tooltip": "Resets Widget and Toolbar position"
+ },
+ "resizeAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/resize.png",
+  "shortcut": "Ctrl+3",
+  "text": "Resize Tool",
+  "tooltip": "Resize"
+ },
+ "rotateSelectionAction": {
+  "icon": "images/s_rotate_old.png",
+  "shortcut": "Ctrl+R",
+  "text": "Rotate",
+  "tooltip": "Rotate objects"
+ },
+ "saveToRobloxAction": {
+  "text": "Save to Roblox...",
+  "tooltip": "Publish the Selection to Roblox"
+ },
+ "screenShotAction": {
+  "icon": "images/Studio 2.0 icons/16x16/picture-icon.png",
+  "text": "Take Screenshot",
+  "tooltip": "Take Screenshot"
+ },
+ "selectAllAction": {
+  "shortcut": "Ctrl+A",
+  "text": "Select All",
+  "tooltip": "Select All"
+ },
+ "selectChildrenAction": {
+  "text": "Select Children",
+  "tooltip": "Select Children"
+ },
+ "selectionSaveToFileAction": {
+  "text": "Save to File...",
+  "tooltip": "Save selection to file..."
+ },
+ "separateSelectionAction": {
+  "icon": "images/Studio 2.0 icons/16x16/separate_16.png",
+  "text": "Separate",
+  "tooltip": "Separate parts from a fused selection"
+ },
+ "settingsAction": {
+  "shortcut": "Alt+S",
+  "text": "Settings..."
+ },
+ "shortcutHelpAction": {
+  "text": "Customize Shortcuts...",
+  "tooltip": "Show list of shortcut commands"
+ },
+ "simulationPlayAction": {
+  "checkable": false,
+  "icon": "images/Studio 2.0 icons/16x16/playsolo.png",
+  "shortcut": "F5",
+  "text": "Play",
+  "tooltip": "Play"
+ },
+ "simulationResetAction": {
+  "icon": "images/Studio 2.0 icons/16x16/reset.png",
+  "shortcut": "Shift+F5",
+  "text": "Stop",
+  "tooltip": "Stop"
+ },
+ "simulationRunAction": {
+  "checkable": false,
+  "icon": "images/Studio 2.0 icons/16x16/play.png",
+  "text": "Run",
+  "tooltip": "Run"
+ },
+ "simulationStopAction": {
+  "checkable": false,
+  "icon": "images/Studio 2.0 icons/16x16/pause.png",
+  "shortcut": "F5",
+  "text": "Pause",
+  "tooltip": "Pause"
+ },
+ "smoothNoOutlinesAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/smooth-no-outlines-surface.png",
+  "text": "Smooth Surface without Outlines",
+  "tooltip": "Smooth Surface without Outlines"
+ },
+ "smoothSurfaceAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/smooth-surface.png",
+  "text": "Smooth Surface",
+  "tooltip": "Smooth Surface"
+ },
+ "startPlayerAction": {
+  "shortcut": "Alt+F7",
+  "text": "Start Player",
+  "tooltip": "Start Player"
+ },
+ "startServerAction": {
+  "shortcut": "F7",
+  "text": "Start Server",
+  "tooltip": "Start Server"
+ },
+ "stepIntoAction": {
+  "icon": "images/Studio 2.0 icons/16x16/stepInto.png",
+  "shortcut": "F11",
+  "text": "Step Into",
+  "tooltip": "Step Into"
+ },
+ "stepOutAction": {
+  "icon": "images/Studio 2.0 icons/16x16/stepOut.png",
+  "shortcut": "Shift+F11",
+  "text": "Step Out",
+  "tooltip": "Step Out"
+ },
+ "stepOverAction": {
+  "icon": "images/Studio 2.0 icons/16x16/stepOver.png",
+  "shortcut": "F10",
+  "text": "Step Over",
+  "tooltip": "Step Over"
+ },
+ "studsAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/connector-surface.png",
+  "text": "Connectors On Surface",
+  "tooltip": "Connectors on Surface"
+ },
+ "testClearStatsAction": {
+  "text": "Clear Stats"
+ },
+ "testCustomStatsAction": {
+  "checkable": true,
+  "shortcut": "Ctrl+Shift+F6",
+  "text": "Custom Stats"
+ },
+ "testNetworkStatsAction": {
+  "checkable": true,
+  "shortcut": "Ctrl+Shift+F3",
+  "text": "Network Stats"
+ },
+ "testPhysicsStatsAction": {
+  "checkable": true,
+  "shortcut": "Ctrl+Shift+F4",
+  "text": "Physics Stats"
+ },
+ "testRenderStatsAction": {
+  "checkable": true,
+  "shortcut": "Ctrl+Shift+F2",
+  "text": "Render Stats"
+ },
+ "testStatsAction": {
+  "checkable": true,
+  "shortcut": "Ctrl+Shift+F1",
+  "text": "Stats",
+  "tooltip": "Render Stats"
+ },
+ "testSummaryStatsAction": {
+  "checkable": true,
+  "shortcut": "Ctrl+Shift+F5",
+  "text": "Summary Stats"
+ },
+ "tiltDownAction": {
+  "icon": "images/c_tiltDownCamera_old.png",
+  "text": "Tilt Down"
+ },
+ "tiltSelectionAction": {
+  "icon": "images/s_tilt_old.png",
+  "shortcut": "Ctrl+T",
+  "text": "Tilt",
+  "tooltip": "Tilt objects"
+ },
+ "tiltUpAction": {
+  "icon": "images/c_tiltUpCamera_old.png",
+  "text": "Tilt Up",
+  "tooltip": "Tilt Up"
+ },
+ "toggle3DGridAction": {
+  "checkable": true,
+  "shortcut": "Alt+G",
+  "text": "3D Grid",
+  "tooltip": "Shows/Hides 3D Grid"
+ },
+ "toggleAllBreakpointsStateAction": {
+  "text": "Toggle All Breakpoints",
+  "tooltip": "Enable/Disable All Breakpoints"
+ },
+ "toggleAxisWidgetAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/axis_widget.png",
+  "text": "Axis Widget",
+  "tooltip": "Shows/Hides Axis Widget"
+ },
+ "toggleBreakpointStateAction": {
+  "text": "Disable Breakpoint",
+  "tooltip": "Disable Breakpoint"
+ },
+ "toggleBuildModeAction": {
+  "shortcut": "Ctrl+Alt+Shift+B",
+  "text": "Toggle Build Mode",
+  "tooltip": "Toggle current build mode"
+ },
+ "toggleCollisionCheckAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/no-collision-dragger.png",
+  "text": "Collision Check",
+  "tooltip": "Collision Check"
+ },
+ "toggleCommentAction": {
+  "shortcut": "Ctrl+Shift+C",
+  "text": "Toggle Comment Selection",
+  "tooltip": "Toggle selection commenting"
+ },
+ "toggleLocalSpaceAction": {
+  "checkable": true,
+  "shortcut": "Ctrl+L",
+  "text": "Toggle Local Space",
+  "tooltip": "Toggles between local or world space dragging."
+ },
+ "toggleVideoRecordAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/Record-icon.png",
+  "shortcut": "F12",
+  "text": "Video Record",
+  "tooltip": "Toggles video record"
+ },
+ "uncommentSelectionAction": {
+  "text": "Uncomment Selection",
+  "tooltip": "Uncomment selected text"
+ },
+ "undoAction": {
+  "icon": "images/Studio 2.0 icons/16x16/undo_16_h.png",
+  "shortcut": "Ctrl+Z",
+  "text": "Undo",
+  "tooltip": "Undo"
+ },
+ "ungroupSelectionAction": {
+  "icon": "images/Studio 2.0 icons/16x16/ungroup_16.png",
+  "shortcut": "Ctrl+U",
+  "text": "Ungroup",
+  "tooltip": "Ungroup"
+ },
+ "unionSelectionAction": {
+  "icon": "images/Studio 2.0 icons/16x16/union_16.png",
+  "shortcut": "Ctrl+Shift+G",
+  "text": "Union",
+  "tooltip": "Union Selection"
+ },
+ "universalsAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/universals-surface.png",
+  "text": "Universals for surface",
+  "tooltip": "Universals for Surface"
+ },
+ "unlockAllAction": {
+  "icon": "images/Studio 2.0 icons/16x16/lock_open.png",
+  "text": "Unlock All",
+  "tooltip": "Unlock All"
+ },
+ "viewBasicObjectsAction": {
+  "checkable": true,
+  "icon": "images/TA_BasicObjects.png",
+  "text": "Basic Objects",
+  "tooltip": "Insert Basic Objects"
+ },
+ "viewCommandBarAction": {
+  "checkable": true,
+  "icon": "images/RibbonIcons/View/Output.png",
+  "text": "Command Bar",
+  "tooltip": "Command Bar"
+ },
+ "viewContextualHelpAction": {
+  "checkable": true,
+  "icon": "images/Studio Ribbon Icons/help.png",
+  "text": "Context Help",
+  "tooltip": "View Context-sensitive Help"
+ },
+ "viewDiagnosticsAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/report.png",
+  "text": "Diagnostics",
+  "tooltip": "View Diagnostics..."
+ },
+ "viewFindResultsWindowAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/find.png",
+  "text": "Find Results",
+  "tooltip": "View Find Results"
+ },
+ "viewObjectExplorerAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/explorer.png",
+  "shortcut": "Alt+X",
+  "text": "Explorer",
+  "tooltip": "View Object Explorer"
+ },
+ "viewOutputWindowAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/output.png",
+  "text": "Output Window",
+  "tooltip": "View Output Window..."
+ },
+ "viewPropertiesAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/table.png",
+  "text": "Properties",
+  "tooltip": "View Properties..."
+ },
+ "viewScriptAnalysisAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/output.png",
+  "text": "Script Analysis",
+  "tooltip": "View Script Analysis..."
+ },
+ "viewScriptPerformanceAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/jobs.png",
+  "text": "Script Performance",
+  "tooltip": "View Script Performance..."
+ },
+ "viewTaskSchedulerAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/Task-Scheduler-color.png",
+  "text": "Task Scheduler",
+  "tooltip": "View Task Scheduler..."
+ },
+ "viewTeamCreateAction": {
+  "checkable": true,
+  "icon": "images/RibbonIcons/View/TeamCreate.png",
+  "text": "Team Create",
+  "tooltip": "View Team Create Window"
+ },
+ "viewToolboxAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/toolbox.png",
+  "text": "Toolbox Objects",
+  "tooltip": "Insert Objects from Web"
+ },
+ "viewTutorialsAction": {
+  "checkable": true,
+  "icon": "images/RibbonIcons/View/Tutorials.png",
+  "text": "Tutorials",
+  "tooltip": "View tutorials"
+ },
+ "weldSurfaceAction": {
+  "checkable": true,
+  "icon": "images/Studio 2.0 icons/16x16/weld-surface.png",
+  "text": "Weld Surface",
+  "tooltip": "Weld Surface"
+ },
+ "zoomExtentsAction": {
+  "icon": "images/c_zoomExtent_old.png",
+  "shortcut": "F",
+  "text": "Zoom to",
+  "tooltip": "Zoom to"
+ },
+ "zoomInAction": {
+  "icon": "images/c_zoomIn_old.png",
+  "text": "Zoom In",
+  "tooltip": "Zoom In"
+ },
+ "zoomOutAction": {
+  "icon": "images/c_zoomOut_old.png",
+  "text": "Zoom Out",
+  "tooltip": "Zoom Out"
+ }
+}

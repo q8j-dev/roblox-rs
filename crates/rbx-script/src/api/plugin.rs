@@ -16,12 +16,13 @@ pub struct PluginButton {
     pub tooltip: String,
     pub icon: Option<PathBuf>,
     pub active: bool,
+    pub builtin: bool,
 }
 
 #[derive(Default)]
 pub struct PluginState {
     pub manager: Option<InstanceId>,
-    pub plugins: Vec<(InstanceId, Option<PathBuf>)>,
+    pub plugins: Vec<(InstanceId, Option<PathBuf>, bool)>,
     pub toolbars: Vec<(InstanceId, String)>,
     pub buttons: Vec<PluginButton>,
     pub active: Option<InstanceId>,
@@ -29,6 +30,8 @@ pub struct PluginState {
     pub settings: HashMap<String, RegistryKey>,
     pub open_requests: Vec<InstanceId>,
     pub current_dir: Option<PathBuf>,
+    pub loading_builtin: bool,
+    pub model_plugins: HashMap<InstanceId, InstanceId>,
 }
 
 impl PluginState {
@@ -39,8 +42,8 @@ impl PluginState {
     fn dir_of(&self, plugin: InstanceId) -> Option<PathBuf> {
         self.plugins
             .iter()
-            .find(|(p, _)| *p == plugin)
-            .and_then(|(_, d)| d.clone())
+            .find(|(p, _, _)| *p == plugin)
+            .and_then(|(_, d, _)| d.clone())
     }
 }
 
@@ -61,10 +64,40 @@ fn create_plugin(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
         let mut e = eng.lock();
         let id = e.dm.create_internal("Plugin").map_err(|err| rt(err.to_string()))?;
         let dir = e.plugins.current_dir.clone();
-        e.plugins.plugins.push((id, dir));
+        let builtin = e.plugins.loading_builtin;
+        e.plugins.plugins.push((id, dir, builtin));
         id
     };
     ret(lua, push_instance(lua, id)?)
+}
+
+pub fn create_model_plugin(lua: &Lua, roots: &[InstanceId]) -> Result<InstanceId> {
+    let eng = engine(lua);
+    let mut e = eng.lock();
+    let id = e.dm.create_internal("Plugin").map_err(|err| rt(err.to_string()))?;
+    let dir = e.plugins.current_dir.clone();
+    let builtin = e.plugins.loading_builtin;
+    e.plugins.plugins.push((id, dir, builtin));
+    for r in roots {
+        e.plugins.model_plugins.insert(*r, id);
+    }
+    Ok(id)
+}
+
+pub fn plugin_for_script(lua: &Lua, script: InstanceId) -> Option<InstanceId> {
+    let eng = engine(lua);
+    let e = eng.lock();
+    if e.plugins.model_plugins.is_empty() {
+        return None;
+    }
+    let mut cur = Some(script);
+    while let Some(c) = cur {
+        if let Some(p) = e.plugins.model_plugins.get(&c) {
+            return Some(*p);
+        }
+        cur = e.dm.parent_of(c);
+    }
+    None
 }
 
 fn create_toolbar(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
@@ -102,10 +135,18 @@ fn create_button(lua: &Lua, toolbar: InstanceId, args: &[Value]) -> Result<Ret> 
         let b = e.dm.create_internal("Button").map_err(|err| rt(err.to_string()))?;
         e.dm.set_name(b, if text.is_empty() { &tooltip } else { &text });
         let dir = e.plugins.current_dir.clone();
-        let icon = icon.map(|i| match &dir {
-            Some(d) => d.join(i),
-            None => PathBuf::from(i),
+        let content = e.content_root.clone();
+        let icon = icon.map(|i| {
+            if let Some(rest) = i.strip_prefix("rbxasset://") {
+                content.clone().unwrap_or_default().join(rest)
+            } else {
+                match &dir {
+                    Some(d) => d.join(i),
+                    None => PathBuf::from(i),
+                }
+            }
         });
+        let builtin = e.plugins.loading_builtin;
         e.plugins.buttons.push(PluginButton {
             id: b,
             toolbar: toolbar_name,
@@ -113,6 +154,7 @@ fn create_button(lua: &Lua, toolbar: InstanceId, args: &[Value]) -> Result<Ret> 
             tooltip,
             icon,
             active: false,
+            builtin,
         });
         b
     };

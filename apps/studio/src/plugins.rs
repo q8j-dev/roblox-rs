@@ -10,26 +10,32 @@ pub struct Plugins {
     buttons: Vec<PluginButton>,
 }
 
+fn is_plugin_file(p: &Path) -> bool {
+    p.extension()
+        .and_then(|e| e.to_str())
+        .is_some_and(|e| matches!(e, "lua" | "rbxm" | "rbxmx"))
+}
+
 fn plugin_files(dir: &Path) -> Vec<PathBuf> {
     let mut out = Vec::new();
-    let Ok(groups) = std::fs::read_dir(dir) else {
+    let Ok(entries) = std::fs::read_dir(dir) else {
         return out;
     };
-    let mut groups: Vec<PathBuf> = groups.filter_map(|e| e.ok().map(|e| e.path())).collect();
-    groups.sort();
-    for g in groups {
-        if g.is_file() {
-            if g.extension().is_some_and(|e| e == "lua") {
-                out.push(g);
+    let mut entries: Vec<PathBuf> = entries.filter_map(|e| e.ok().map(|e| e.path())).collect();
+    entries.sort();
+    for e in entries {
+        if e.is_file() {
+            if is_plugin_file(&e) {
+                out.push(e);
             }
             continue;
         }
-        let Ok(files) = std::fs::read_dir(&g) else {
+        let Ok(files) = std::fs::read_dir(&e) else {
             continue;
         };
         let mut files: Vec<PathBuf> = files
-            .filter_map(|e| e.ok().map(|e| e.path()))
-            .filter(|p| p.extension().is_some_and(|e| e == "lua"))
+            .filter_map(|f| f.ok().map(|f| f.path()))
+            .filter(|p| p.is_file() && is_plugin_file(p))
             .collect();
         files.sort();
         out.extend(files);
@@ -38,26 +44,30 @@ fn plugin_files(dir: &Path) -> Vec<PathBuf> {
 }
 
 impl Plugins {
-    pub fn load(doc: &Document, dir: &Path) -> Plugins {
+    pub fn load(doc: &Document, builtin_dir: &Path, user_dir: &Path) -> Plugins {
         let mut p = Plugins::default();
-        for file in plugin_files(dir) {
-            let name = file
-                .file_name()
-                .map(|n| n.to_string_lossy().to_string())
-                .unwrap_or_default();
-            let source = match std::fs::read_to_string(&file) {
-                Ok(s) => s,
-                Err(e) => {
-                    p.errors.push(format!("{name}: {e}"));
-                    continue;
+        for (dir, builtin) in [(builtin_dir, true), (user_dir, false)] {
+            for file in plugin_files(dir) {
+                let name = file
+                    .file_name()
+                    .map(|n| n.to_string_lossy().to_string())
+                    .unwrap_or_default();
+                let folder = file
+                    .parent()
+                    .map(|d| std::fs::canonicalize(d).unwrap_or_else(|_| d.to_path_buf()));
+                let result = if file.extension().is_some_and(|e| e == "lua") {
+                    std::fs::read_to_string(&file)
+                        .map_err(|e| e.to_string())
+                        .and_then(|src| doc.runtime.run_plugin(&src, &name, folder, builtin))
+                } else {
+                    std::fs::read(&file)
+                        .map_err(|e| e.to_string())
+                        .and_then(|data| doc.runtime.run_plugin_model(&data, folder, builtin))
+                };
+                match result {
+                    Ok(()) => p.loaded.push(name),
+                    Err(e) => p.errors.push(format!("{name}: {e}")),
                 }
-            };
-            match doc
-                .runtime
-                .run_plugin(&source, &name, file.parent().map(|d| std::fs::canonicalize(d).unwrap_or_else(|_| d.to_path_buf())))
-            {
-                Ok(()) => p.loaded.push(name),
-                Err(e) => p.errors.push(format!("{name}: {e}")),
             }
         }
         p.refresh(doc);
@@ -69,16 +79,22 @@ impl Plugins {
     }
 
     pub fn find(&self, label: &str) -> Option<InstanceId> {
+        self.proxy(label).map(|b| b.id)
+    }
+
+    pub fn proxy(&self, action: &str) -> Option<&PluginButton> {
+        let mut parts = action.split('.');
+        let text = parts.next().unwrap_or(action);
+        let toolbar = parts.next().filter(|t| !t.is_empty());
         self.buttons
             .iter()
-            .find(|b| b.text == label || b.tooltip == label)
-            .map(|b| b.id)
+            .filter(|b| toolbar.is_none_or(|t| b.toolbar == t))
+            .find(|b| b.text == text)
+            .or_else(|| self.buttons.iter().find(|b| toolbar.is_none() && b.tooltip == text))
     }
 
     pub fn click(&mut self, doc: &Document, button: InstanceId) {
         doc.runtime.click_plugin_button(button);
         self.refresh(doc);
     }
-
 }
-

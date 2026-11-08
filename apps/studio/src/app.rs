@@ -144,7 +144,7 @@ impl ribbon::State for RibbonState<'_> {
             "viewOutputWindowAction" => s.dock.find_tab(&Tab::Output).is_some(),
             "viewCommandBarAction" => s.dock.find_tab(&Tab::Command).is_some(),
             "actionInsertAdvancedObject" => s.dock.find_tab(&Tab::AdvancedObjects).is_some(),
-            _ => false,
+            other => s.plugins.proxy(other).is_some_and(|b| b.active),
         }
     }
 
@@ -206,8 +206,9 @@ impl Studio {
     }
 
     pub fn load_plugins(&mut self) {
-        let dir = self.assets.join("plugins").join("studio");
-        self.plugins = Plugins::load(&self.doc, &dir);
+        let builtin = self.assets.join("plugins").join("builtin");
+        let user = self.assets.join("plugins").join("studio");
+        self.plugins = Plugins::load(&self.doc, &builtin, &user);
         for e in self.plugins.errors.clone() {
             self.log(MessageType::Error, e);
         }
@@ -604,8 +605,7 @@ impl Studio {
                 self.log(MessageType::Warning, "solid modeling is not available in this build")
             }
             other => {
-                let label = other.split('.').next().unwrap_or(other).to_string();
-                if let Some(b) = self.plugins.find(&label) {
+                if let Some(b) = self.plugins.find(other) {
                     self.plugins.click(&self.doc, b);
                 }
             }
@@ -712,7 +712,7 @@ impl Studio {
     fn sync_plugin_groups(&mut self) {
         let buttons = self.doc.runtime.engine.lock().plugins.buttons.clone();
         let mut groups: Vec<(String, Vec<PluginItem>)> = Vec::new();
-        for b in buttons {
+        for b in buttons.into_iter().filter(|b| !b.builtin) {
             let item = PluginItem {
                 id: b.id.raw(),
                 text: b.text.clone(),

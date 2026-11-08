@@ -775,11 +775,47 @@ impl ScriptRuntime {
         result
     }
 
-    pub fn run_plugin(&self, source: &str, name: &str, dir: Option<std::path::PathBuf>) -> Result<(), String> {
-        self.engine.lock().plugins.current_dir = dir;
+    pub fn run_plugin(&self, source: &str, name: &str, dir: Option<std::path::PathBuf>, builtin: bool) -> Result<(), String> {
+        {
+            let mut e = self.engine.lock();
+            e.plugins.current_dir = dir;
+            e.plugins.loading_builtin = builtin;
+        }
         let r = self.execute_named(source, name, Identity::StudioPlugin, MultiValue::new());
-        self.engine.lock().plugins.current_dir = None;
+        {
+            let mut e = self.engine.lock();
+            e.plugins.current_dir = None;
+            e.plugins.loading_builtin = false;
+        }
         r.map(|_| ())
+    }
+
+    pub fn run_plugin_model(&self, data: &[u8], dir: Option<std::path::PathBuf>, builtin: bool) -> Result<(), String> {
+        let roots = {
+            let mut e = self.engine.lock();
+            e.plugins.current_dir = dir;
+            e.plugins.loading_builtin = builtin;
+            e.dm.load_model(data).map_err(|err| err.to_string())?.0
+        };
+        let result = crate::api::plugin::create_model_plugin(&self.lua, &roots).map_err(|e| e.to_string());
+        if result.is_ok() {
+            let scripts: Vec<InstanceId> = {
+                let e = self.engine.lock();
+                roots
+                    .iter()
+                    .flat_map(|r| std::iter::once(*r).chain(e.dm.descendants(*r)))
+                    .filter(|d| e.dm.class_of(*d) == Some("Script") && !e.dm.get_bool(*d, "Disabled"))
+                    .collect()
+            };
+            for s in scripts {
+                crate::scripts::start_script(&self.lua, s, Identity::StudioPlugin);
+            }
+            pump(&self.lua);
+        }
+        let mut e = self.engine.lock();
+        e.plugins.current_dir = None;
+        e.plugins.loading_builtin = false;
+        result.map(|_| ())
     }
 
     pub fn click_plugin_button(&self, button: InstanceId) {
@@ -1178,7 +1214,12 @@ pub fn new_environment(lua: &Lua, script: Option<InstanceId>) -> mlua::Result<Ta
     mt.set("__index", globals)?;
     env.set_metatable(Some(mt))?;
     match script {
-        Some(id) => env.set("script", push_instance(lua, id)?)?,
+        Some(id) => {
+            env.set("script", push_instance(lua, id)?)?;
+            if let Some(p) = crate::api::plugin::plugin_for_script(lua, id) {
+                env.set("plugin", push_instance(lua, p)?)?;
+            }
+        }
         None => env.set("script", Value::Nil)?,
     }
     Ok(env)

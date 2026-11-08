@@ -4407,6 +4407,7 @@ dependencies = [
  "rbx-audio",
  "rbx-base",
  "rbx-dom",
+ "rbx-format",
  "rbx-math",
  "rbx-platform",
  "rbx-reflection",
@@ -4417,6 +4418,7 @@ dependencies = [
  "serde_json",
  "tracing",
  "tracing-subscriber",
+ "ureq",
 ]
 
 [[package]]

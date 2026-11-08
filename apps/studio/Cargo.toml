@@ -17,6 +17,7 @@ egui_stack = "0.25.3"
 image = { version = "0.25.10", default-features = false, features = ["png"] }
 parking_lot = "0.13.0"
 pollster = "1.0.1"
+rbx-audio = { version = "0.1.0", path = "../../crates/rbx-audio" }
 rbx-base = { version = "0.1.0", path = "../../crates/rbx-base" }
 rbx-dom = { version = "0.1.0", path = "../../crates/rbx-dom" }
 rbx-math = { version = "0.1.0", path = "../../crates/rbx-math" }

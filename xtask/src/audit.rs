@@ -4,6 +4,8 @@ use std::path::{Path, PathBuf};
 
 const SKIP_DIRS: &[&str] = &[".git", "target", "docs", "dist", "node_modules"];
 
+const SKIP_FILES: &[&str] = &["README.md"];
+
 const WORD_ANY_CASE: &[&str] = &[
     "NetPmc",
     "VMProtect",
@@ -92,7 +94,7 @@ fn walk(dir: &Path, root: &Path, out: &mut Vec<PathBuf>) {
                 continue;
             }
             walk(&path, root, out);
-        } else if kind.is_file() {
+        } else if kind.is_file() && !(dir == root && SKIP_FILES.contains(&name.as_ref())) {
             out.push(path);
         }
     }

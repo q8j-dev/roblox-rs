@@ -403,6 +403,7 @@ enum HandleType {
     Rotate,
 }
 
+#[allow(clippy::too_many_arguments)]
 fn handles(
     ctx: &mut Ctx,
     size: Vec3,
@@ -410,6 +411,9 @@ fn handles(
     kind: HandleType,
     color: [f32; 4],
     mask: u8,
+    use_axis_color: bool,
+    highlight: Option<usize>,
+    highlight_color: [f32; 4],
 ) {
     let half = size / 2.0;
     let mut used_axes = 0u8;
@@ -434,15 +438,22 @@ fn handles(
             };
             let radius = scale_to_camera(ctx.camera, world, min_angle, expected);
             ctx.cframe = CFrame::new(position.rotation, world);
-            ctx.material = Material::SelfLit;
-            let mut handle_color = if kind == HandleType::Rotate {
+            let lit = highlight == Some(id);
+            ctx.material = if lit { Material::SelfLitHighlight } else { Material::SelfLit };
+            let mut handle_color = if use_axis_color || kind == HandleType::Rotate {
                 alpha(AXIS_COLORS[id % 3], color[3])
             } else {
                 color
             };
-            handle_color[3] *= HANDLE_TRANSPARENCY;
+            if lit {
+                handle_color = highlight_color;
+            } else {
+                handle_color[3] *= HANDLE_TRANSPARENCY;
+            }
             match kind {
-                HandleType::Resize => ctx.sphere(Vec3::ZERO, radius, handle_color),
+                HandleType::Resize => {
+                    ctx.sphere(Vec3::ZERO, if lit { radius + 0.08 } else { radius }, handle_color)
+                }
                 HandleType::Move => ctx.ray(Vec3::ZERO, normal_vector(id) * radius, handle_color),
                 HandleType::Rotate => {
                     let flag = 1u8 << (id % 3);
@@ -455,7 +466,9 @@ fn handles(
                             TORUS_THICKNESS,
                         );
                         let mut axis_color = handle_color;
-                        axis_color[3] = AXIS_TRANSPARENCY;
+                        if !lit {
+                            axis_color[3] = AXIS_TRANSPARENCY;
+                        }
                         let x = uvw_to_object(Vec3::X, id);
                         let y = uvw_to_object(Vec3::Y, id);
                         let points: Vec<Vec3> = (0..32)
@@ -623,7 +636,7 @@ fn adornment(dm: &DataModel, id: InstanceId, ctx: &mut Ctx) {
                 };
                 (kind, faces)
             };
-            handles(ctx, size, cf, kind, rgba, mask);
+            handles(ctx, size, cf, kind, rgba, mask, false, None, rgba);
         }
         "BoxHandleAdornment"
         | "ConeHandleAdornment"
@@ -763,4 +776,100 @@ pub fn extract(dm: &DataModel, camera: Vec3) -> Adorns {
         adornment(dm, id, &mut ctx);
     }
     out
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum OverlayHandle {
+    Resize,
+    Move,
+    Rotate,
+}
+
+impl OverlayHandle {
+    fn kind(self) -> HandleType {
+        match self {
+            OverlayHandle::Resize => HandleType::Resize,
+            OverlayHandle::Move => HandleType::Move,
+            OverlayHandle::Rotate => HandleType::Rotate,
+        }
+    }
+}
+
+pub fn overlay_selection_box(out: &mut Adorns, camera: Vec3, cf: CFrame, size: Vec3, color: [f32; 4], thickness: f32) {
+    let mut ctx = Ctx {
+        out,
+        camera,
+        cframe: cf,
+        material: Material::Lit,
+    };
+    selection_box(&mut ctx, cf, size, color, thickness);
+}
+
+pub fn overlay_outline_box(out: &mut Adorns, camera: Vec3, lo: Vec3, hi: Vec3, color: [f32; 4]) {
+    let mut ctx = Ctx {
+        out,
+        camera,
+        cframe: CFrame::IDENTITY,
+        material: Material::Lit,
+    };
+    ctx.outline_box(lo, hi, color);
+}
+
+#[allow(clippy::too_many_arguments)]
+pub fn overlay_handles(
+    out: &mut Adorns,
+    camera: Vec3,
+    size: Vec3,
+    position: CFrame,
+    kind: OverlayHandle,
+    color: [f32; 4],
+    use_axis_color: bool,
+    mask: u8,
+    highlight: Option<usize>,
+    highlight_color: [f32; 4],
+) {
+    let mut ctx = Ctx {
+        out,
+        camera,
+        cframe: position,
+        material: Material::SelfLit,
+    };
+    handles(&mut ctx, size, position, kind.kind(), color, mask, use_axis_color, highlight, highlight_color);
+}
+
+pub fn overlay_star(out: &mut Adorns, camera: Vec3, center: Vec3, radius: f32, color: [f32; 4]) {
+    let mut ctx = Ctx {
+        out,
+        camera,
+        cframe: CFrame::from_translation(center),
+        material: Material::SelfLit,
+    };
+    for axis in [Vec3::X, Vec3::Y, Vec3::Z] {
+        ctx.ray(-axis * radius, axis * radius * 2.0, color);
+    }
+}
+
+pub fn handle_position(camera: Vec3, size: Vec3, kind: OverlayHandle, id: usize) -> Vec3 {
+    let half = size / 2.0;
+    let _ = camera;
+    match kind {
+        OverlayHandle::Rotate => normal_vector(normal_to_u(id)) * (half.length() + HANDLE_OFFSET * 4.0),
+        OverlayHandle::Resize => normal_vector(id) * (half + Vec3::splat(HANDLE_OFFSET * 4.0)),
+        OverlayHandle::Move => normal_vector(id) * (half + Vec3::splat(HANDLE_OFFSET)),
+    }
+}
+
+pub fn handle_radius(camera: Vec3, kind: OverlayHandle, world: Vec3) -> f32 {
+    match kind {
+        OverlayHandle::Move => scale_to_camera(camera, world, ARROW_MIN_ANGLE, ARROW_LENGTH),
+        _ => scale_to_camera(camera, world, SPHERE_MIN_ANGLE, SPHERE_RADIUS),
+    }
+}
+
+pub fn handle_tip_radius(camera: Vec3, world: Vec3) -> f32 {
+    scale_to_camera(camera, world, ARROW_MIN_ANGLE, ARROW_LENGTH - 0.5)
+}
+
+pub fn normal_vector_of(id: usize) -> Vec3 {
+    normal_vector(id)
 }

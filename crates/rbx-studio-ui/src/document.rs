@@ -79,6 +79,17 @@ impl Document {
         })
     }
 
+    pub fn from_runtime(runtime: ScriptRuntime, content_root: &Path) -> Document {
+        Document {
+            runtime,
+            path: None,
+            content_root: content_root.to_path_buf(),
+            dirty: false,
+            undo: Vec::new(),
+            redo: Vec::new(),
+        }
+    }
+
     pub fn open(path: &Path, content_root: &Path) -> Result<Document, String> {
         let data = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
         let dm = load(&data)?;

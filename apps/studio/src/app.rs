@@ -1,11 +1,12 @@
 use crate::explorer::{self, Explorer};
 use crate::icons::Icons;
 use crate::metadata::ClassMetadata;
+use crate::play::{self, Mode, PlaySession};
 use crate::plugins::Plugins;
 use crate::properties::Properties;
 use crate::ribbon::{self, Event, PluginItem, Ribbon};
 use crate::theme;
-use crate::viewport::{self, Drag, FlyCamera, Tool};
+use crate::viewport::{self, FlyCamera, Tool, Tools};
 use egui::{Align2, Color32, FontId, Rect, Sense, Stroke, Ui, pos2, vec2};
 use egui_stack::{DockArea, DockState, NodeIndex, TabStyle, TabViewer};
 use rbx_dom::{InstanceId, Variant};
@@ -31,7 +32,6 @@ pub struct ViewportState {
     pub rect: Rect,
     pub pixels: (u32, u32),
     pub texture: Option<egui::TextureId>,
-    pub drag: Option<Drag>,
 }
 
 pub struct Studio {
@@ -53,6 +53,10 @@ pub struct Studio {
     pub grid: f32,
     pub object_filter: String,
     pub context: Option<(InstanceId, egui::Pos2)>,
+    pub tools: Tools,
+    pub overlay: rbx_render::adorn::Adorns,
+    pub play: Option<PlaySession>,
+    pub viewport_focus: bool,
 }
 
 fn layout() -> DockState<Tab> {
@@ -65,7 +69,7 @@ fn layout() -> DockState<Tab> {
     dock
 }
 
-fn camera_for(doc: &Document) -> FlyCamera {
+pub fn camera_for(doc: &Document) -> FlyCamera {
     let e = doc.runtime.engine.lock();
     let dm = &e.dm;
     let cam = dm.find_service("Workspace").and_then(|ws| {
@@ -108,13 +112,17 @@ impl ribbon::State for RibbonState<'_> {
 
     fn enabled(&self, action: &str) -> bool {
         let selected = !self.studio.doc.selection().is_empty();
+        let playing = self.studio.play.is_some();
         match action {
+            "simulationPlayAction" | "simulationRunAction" | "playGameActionGroup" | "fileSaveAction"
+            | "fileSaveAsAction" | "fileOpenAction" | "fileNewAction" | "undoAction" | "redoAction" => !playing,
+            "simulationResetAction" | "simulationStopAction" => playing,
             "copyAction" | "cutAction" | "duplicateSelectionAction" | "groupSelectionAction"
             | "ungroupSelectionAction" | "anchorAction" | "actionMaterialSelector"
             | "actionColorSelector" | "actionSurface" => selected,
             "unionSelectionAction" | "negateSelectionAction" | "separateSelectionAction"
             | "publishToRobloxAction" | "publishToRobloxAsAction" | "publishSelectionToRobloxAction"
-            | "pairRbxDevDeviceAction" | "startServerAndPlayersAction" | "simulationStopAction"
+            | "pairRbxDevDeviceAction" | "startServerAndPlayersAction"
             | "toggleVideoRecordAction" | "filePublishedProjectsAction" | "downloadPlaceCopyAction"
             | "publishGameAction" | "viewTeamCreateAction" => false,
             _ => true,
@@ -135,7 +143,6 @@ impl Studio {
                 rect: Rect::NOTHING,
                 pixels: (1, 1),
                 texture: None,
-                drag: None,
             },
             scripts: Vec::new(),
             command: String::new(),
@@ -150,6 +157,10 @@ impl Studio {
             grid: 1.0,
             object_filter: String::new(),
             context: None,
+            tools: Tools::default(),
+            overlay: rbx_render::adorn::Adorns::default(),
+            play: None,
+            viewport_focus: false,
             assets,
         };
         studio.load_plugins();
@@ -197,7 +208,8 @@ impl Studio {
     }
 
     pub fn place_name(&self) -> String {
-        self.doc
+        let doc = self.play.as_ref().map(|p| &p.edit).unwrap_or(&self.doc);
+        doc
             .path
             .as_ref()
             .and_then(|p| p.file_name())
@@ -253,31 +265,32 @@ impl Studio {
         }
     }
 
-    pub fn play_solo(&mut self) {
-        let tmp = std::env::temp_dir().join(format!("studio-play-{}.rbxl", std::process::id()));
-        let bytes = match self.doc.bytes() {
-            Ok(b) => b,
-            Err(e) => return self.log(MessageType::Error, e),
-        };
-        if let Err(e) = std::fs::write(&tmp, bytes) {
-            return self.log(MessageType::Error, format!("{}: {e}", tmp.display()));
+    pub fn start_play(&mut self, mode: Mode) {
+        if self.play.is_some() {
+            return;
         }
-        let exe = std::env::current_exe()
-            .ok()
-            .and_then(|e| e.parent().map(|d| d.join(format!("player{}", std::env::consts::EXE_SUFFIX))))
-            .filter(|p| p.is_file());
-        let Some(exe) = exe else {
-            return self.log(MessageType::Error, "the player executable is not next to studio");
-        };
-        match std::process::Command::new(&exe)
-            .arg(&tmp)
-            .arg("--assets")
-            .arg(&self.assets)
-            .spawn()
-        {
-            Ok(_) => self.log(MessageType::Info, "started play solo"),
-            Err(e) => self.log(MessageType::Error, format!("{}: {e}", exe.display())),
+        self.tools.end(&mut self.doc);
+        match play::start(&self.doc, &self.assets, mode) {
+            Ok(live) => {
+                let edit = std::mem::replace(&mut self.doc, live);
+                self.play = Some(PlaySession::new(edit, mode));
+                self.viewport_focus = mode == Mode::Play;
+                self.explorer = Explorer::default();
+            }
+            Err(e) => self.log(MessageType::Error, e),
         }
+    }
+
+    pub fn stop_play(&mut self) {
+        let Some(mut session) = self.play.take() else { return };
+        session.release_keys(&self.doc);
+        self.doc = session.edit;
+        self.explorer = Explorer::default();
+        self.scripts.retain(|(id, _)| self.doc.runtime.engine.lock().dm.contains(*id));
+    }
+
+    pub fn playing_game(&self) -> bool {
+        matches!(&self.play, Some(p) if p.mode == Mode::Play)
     }
 
     fn insert_part(&mut self, class: &str, shape: Option<u32>) {
@@ -526,7 +539,14 @@ impl Studio {
                     let _ = e.dm.set(p, "Locked", Variant::Bool(false));
                 }
             }
-            "simulationPlayAction" | "simulationRunAction" | "playGameActionGroup" => self.play_solo(),
+            "simulationPlayAction" | "playGameActionGroup" => self.start_play(Mode::Play),
+            "simulationRunAction" => self.start_play(Mode::Run),
+            "simulationResetAction" => self.stop_play(),
+            "simulationStopAction" => {
+                if let Some(p) = &mut self.play {
+                    p.paused = !p.paused;
+                }
+            }
             "viewObjectExplorerAction" => self.toggle_tab(Tab::Explorer),
             "viewPropertiesAction" => self.toggle_tab(Tab::Properties),
             "viewOutputWindowAction" => self.toggle_tab(Tab::Output),
@@ -585,6 +605,20 @@ impl Studio {
 
     pub fn shortcuts(&mut self, ctx: &egui::Context) {
         let wants_text = ctx.egui_wants_keyboard_input();
+        if self.play.is_some() {
+            if ctx.input(|i| i.modifiers.shift && i.key_pressed(egui::Key::F5)) {
+                self.stop_play();
+            }
+            if self.playing_game() {
+                return;
+            }
+        } else if ctx.input(|i| i.key_pressed(egui::Key::F5) && !i.modifiers.shift) {
+            self.start_play(Mode::Play);
+            return;
+        } else if ctx.input(|i| i.key_pressed(egui::Key::F8)) {
+            self.start_play(Mode::Run);
+            return;
+        }
         let keys = ctx.input(|i| {
             let cmd = i.modifiers.command;
             [
@@ -790,10 +824,60 @@ impl Studio {
             ui.painter().image(tex, rect, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
         }
         self.viewport_input(ui, &response, rect);
-        viewport::draw_selection(&ui.painter_at(rect), rect, &self.view.camera, &self.doc);
+        if self.playing_game() {
+            self.overlay = rbx_render::adorn::Adorns::default();
+            return;
+        }
+        let sel = self.doc.selection();
+        let e = self.doc.runtime.engine.lock();
+        self.overlay = self.tools.overlay(&e.dm, self.tool, &sel, self.view.camera.position);
+        self.tools.draw_2d(&ui.painter_at(rect), rect, &self.view.camera, &e.dm, self.tool, &sel);
+    }
+
+    fn game_input(&mut self, ui: &mut Ui, response: &egui::Response, rect: Rect) {
+        let Some(session) = self.play.as_mut() else { return };
+        let (delta, scroll, events) = ui.input(|i| {
+            (
+                i.pointer.delta(),
+                i.smooth_scroll_delta.y,
+                i.events.iter().filter_map(|e| match e {
+                    egui::Event::PointerButton { pos, button, pressed, .. } => Some((*pos, *button, *pressed)),
+                    _ => None,
+                }).collect::<Vec<_>>(),
+            )
+        });
+        let local = |p: egui::Pos2| (p.x - rect.left(), p.y - rect.top());
+        if let Some(pos) = response.hover_pos().or(response.interact_pointer_pos()) {
+            if delta != egui::Vec2::ZERO {
+                session.mouse(&self.doc, InputKind::Changed, user_input::MOUSE_MOVEMENT, local(pos), (delta.x, delta.y));
+            }
+            if scroll != 0.0 && response.hovered() {
+                session.wheel(&self.doc, local(pos), scroll.signum());
+            }
+        }
+        for (pos, button, pressed) in events {
+            if !rect.contains(pos) && pressed {
+                continue;
+            }
+            let input_type = match button {
+                egui::PointerButton::Primary => user_input::MOUSE_BUTTON1,
+                egui::PointerButton::Secondary => user_input::MOUSE_BUTTON2,
+                egui::PointerButton::Middle => user_input::MOUSE_BUTTON3,
+                _ => continue,
+            };
+            let kind = if pressed { InputKind::Began } else { InputKind::Ended };
+            session.mouse(&self.doc, kind, input_type, local(pos), (0.0, 0.0));
+        }
     }
 
     fn viewport_input(&mut self, ui: &mut Ui, response: &egui::Response, rect: Rect) {
+        if ui.input(|i| i.pointer.any_pressed()) {
+            self.viewport_focus = response.hovered();
+        }
+        if self.playing_game() {
+            self.game_input(ui, response, rect);
+            return;
+        }
         let (dt, secondary, delta, scroll, keys) = ui.input(|i| {
             (
                 i.stable_dt.min(0.1),
@@ -848,34 +932,26 @@ impl Studio {
             self.send_input(InputKind::Ended, user_input::MOUSE_BUTTON1, pos, egui::Vec2::ZERO);
         }
         let (origin, dir) = self.view.camera.ray(rect, pos);
+        {
+            let sel = self.doc.selection();
+            let e = self.doc.runtime.engine.lock();
+            self.tools.update_hover(&e.dm, self.tool, &sel, &self.view.camera, origin, dir);
+        }
         if response.drag_started_by(egui::PointerButton::Primary) {
-            let hit = {
-                let e = self.doc.runtime.engine.lock();
-                viewport::pick(&e.dm, origin, dir, false)
-            };
-            if let Some(hit) = hit {
-                let target = {
-                    let e = self.doc.runtime.engine.lock();
-                    viewport::selectable(&e.dm, hit.part)
-                };
-                if !self.doc.selection().contains(&target) {
-                    self.doc.select(vec![target]);
-                }
-                self.view.drag = viewport::begin_drag(self.tool, &mut self.doc, &hit, pos.x);
-            }
+            self.tools.begin(&mut self.doc, self.tool, self.collisions, &self.view.camera, origin, dir);
         } else if response.dragged_by(egui::PointerButton::Primary) {
-            if let Some(mut drag) = self.view.drag.take() {
-                viewport::update_drag(&mut drag, &mut self.doc, origin, dir, pos.x, self.grid);
-                self.view.drag = Some(drag);
-            }
+            self.tools.update(&mut self.doc, origin, dir, self.grid);
         } else if response.drag_stopped() {
-            self.view.drag = None;
+            self.tools.end(&mut self.doc);
         } else if response.clicked() {
+            if self.tools.over_handle.is_some() {
+                return;
+            }
             let hit = {
                 let e = self.doc.runtime.engine.lock();
-                viewport::pick(&e.dm, origin, dir, false).map(|h| viewport::selectable(&e.dm, h.part))
+                viewport::pick(&e.dm, origin, dir, false, &[]).map(|h| viewport::selectable(&e.dm, h.part))
             };
-            let additive = ui.input(|i| i.modifiers.shift || i.modifiers.command);
+            let additive = ui.input(|i| i.modifiers.shift || i.modifiers.command || i.modifiers.ctrl);
             match hit {
                 Some(id) if additive => {
                     let mut sel = self.doc.selection();

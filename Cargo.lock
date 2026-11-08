@@ -4404,6 +4404,7 @@ dependencies = [
  "image",
  "parking_lot 0.13.0",
  "pollster",
+ "rbx-audio",
  "rbx-base",
  "rbx-dom",
  "rbx-math",

@@ -2,6 +2,7 @@ mod app;
 mod explorer;
 mod icons;
 mod metadata;
+mod play;
 mod plugins;
 mod properties;
 mod ribbon;
@@ -36,6 +37,12 @@ struct Args {
     page: Option<usize>,
     #[arg(long)]
     script: Option<String>,
+    #[arg(long)]
+    tool: Option<String>,
+    #[arg(long)]
+    run: Option<String>,
+    #[arg(long)]
+    play: bool,
 }
 
 fn find_assets(explicit: Option<PathBuf>) -> PathBuf {
@@ -71,6 +78,7 @@ struct Host {
     screenshot: Option<(PathBuf, u32)>,
     frames: u32,
     last: rbx_base::time::Instant,
+    behavior: u32,
 }
 
 fn create_gpu(window: Arc<Window>, assets: &std::path::Path) -> Result<Gpu, String> {
@@ -126,6 +134,24 @@ fn create_gpu(window: Arc<Window>, assets: &std::path::Path) -> Result<Gpu, Stri
 }
 
 impl Host {
+    fn apply_mouse_behavior(&mut self) {
+        let behavior = if self.studio.playing_game() { self.studio.doc.runtime.mouse_behavior() } else { 0 };
+        if behavior == self.behavior {
+            return;
+        }
+        self.behavior = behavior;
+        let Some(w) = self.window.clone() else { return };
+        if behavior == 0 {
+            let _ = w.set_cursor_grab(winit::window::CursorGrabMode::None);
+            w.set_cursor_visible(true);
+            return;
+        }
+        if w.set_cursor_grab(winit::window::CursorGrabMode::Locked).is_err() {
+            let _ = w.set_cursor_grab(winit::window::CursorGrabMode::Confined);
+        }
+        w.set_cursor_visible(behavior != 1);
+    }
+
     fn ensure_viewport(&mut self) {
         let Some(gpu) = &mut self.gpu else { return };
         let want = self.studio.view.pixels;
@@ -168,7 +194,6 @@ impl Host {
         let now = rbx_base::time::Instant::now();
         let dt = now.duration_since(self.last).as_secs_f64().min(0.1);
         self.last = now;
-        self.studio.doc.runtime.step(dt);
         let Some(state) = &mut self.egui_state else { return };
         let raw = state.take_egui_input(&window);
         let studio = &mut self.studio;
@@ -177,18 +202,26 @@ impl Host {
             state.handle_platform_output(&window, output.platform_output.clone());
         }
         self.ensure_viewport();
+        self.apply_mouse_behavior();
         let ppp = output.pixels_per_point;
         let paint = self.egui_ctx.tessellate(output.shapes, ppp);
         let Some(gpu) = &mut self.gpu else { return };
-        {
+        let screen = (
+            self.studio.view.rect.width().max(1.0),
+            self.studio.view.rect.height().max(1.0),
+        );
+        if let Some(session) = &mut self.studio.play {
+            session.frame(&self.studio.doc, dt, screen);
+        } else {
+            self.studio.doc.runtime.step(dt);
+        }
+        if !self.studio.playing_game() {
             let mut e = self.studio.doc.runtime.engine.lock();
             self.studio.view.camera.apply(&mut e.dm);
-            e.dm.gui_view.screen = rbx_math::Vec2::new(
-                self.studio.view.rect.width().max(1.0),
-                self.studio.view.rect.height().max(1.0),
-            );
+            e.dm.gui_view.screen = rbx_math::Vec2::new(screen.0, screen.1);
         }
         gpu.renderer.gui_scale = ppp;
+        gpu.renderer.overlay = std::mem::take(&mut self.studio.overlay);
         gpu.renderer.frame_dt = dt as f32;
         if let Some((_, view, (w, h))) = &gpu.viewport {
             let e = self.studio.doc.runtime.engine.lock();
@@ -388,7 +421,46 @@ impl ApplicationHandler for Host {
         self.window = Some(window);
     }
 
+    fn device_event(&mut self, _event_loop: &ActiveEventLoop, _id: winit::event::DeviceId, event: winit::event::DeviceEvent) {
+        if self.behavior != 0
+            && let winit::event::DeviceEvent::MouseMotion { delta } = event
+            && let Some(session) = &mut self.studio.play
+        {
+            let cursor = session.cursor;
+            session.mouse(
+                &self.studio.doc,
+                rbx_script::api::user_input::InputKind::Changed,
+                rbx_script::api::user_input::MOUSE_MOVEMENT,
+                cursor,
+                (delta.0 as f32, delta.1 as f32),
+            );
+        }
+    }
+
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
+        let game_keys = self.studio.playing_game() && self.studio.viewport_focus && !self.egui_ctx.egui_wants_keyboard_input();
+        if game_keys
+            && let WindowEvent::KeyboardInput { event: key, .. } = &event
+            && let winit::keyboard::PhysicalKey::Code(code) = key.physical_key
+            && !key.repeat
+        {
+            let shift_f5 = code == winit::keyboard::KeyCode::F5;
+            if !shift_f5 {
+                let rc = rbx_platform::roblox_keycode(code);
+                if rc != 0
+                    && let Some(session) = &mut self.studio.play
+                {
+                    let text = key.text.as_ref().map(|t| t.to_string());
+                    session.key(&self.studio.doc, rc, key.state == winit::event::ElementState::Pressed, text);
+                }
+                return;
+            }
+        }
+        if let WindowEvent::Focused(false) = &event
+            && let Some(session) = &mut self.studio.play
+        {
+            session.release_keys(&self.studio.doc);
+        }
         if let (Some(state), Some(window)) = (&mut self.egui_state, &self.window) {
             let _ = state.on_window_event(window, &event);
         }
@@ -436,6 +508,20 @@ fn main() {
         }
     };
     let mut studio = Studio::new(doc, assets);
+    if let Some(src) = &args.run {
+        let _ = studio.doc.runtime.execute(src, "CommandBar", rbx_script::Identity::CmdLine);
+        studio.doc.runtime.pump();
+        studio.view.camera = app::camera_for(&studio.doc);
+    }
+    studio.tool = match args.tool.as_deref() {
+        Some("move") => viewport::Tool::Move,
+        Some("scale") => viewport::Tool::Scale,
+        Some("rotate") => viewport::Tool::Rotate,
+        _ => viewport::Tool::Select,
+    };
+    if args.play {
+        studio.start_play(play::Mode::Play);
+    }
     if let Some(p) = args.page {
         studio.ribbon.page = p;
     }
@@ -483,6 +569,7 @@ fn main() {
         screenshot: args.screenshot.map(|p| (p, args.screenshot_frames.max(2))),
         frames: 0,
         last: rbx_base::time::Instant::now(),
+        behavior: 0,
     };
     if let Err(e) = event_loop.run_app(&mut host) {
         eprintln!("{e}");

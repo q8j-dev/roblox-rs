@@ -102,6 +102,7 @@ pub struct Renderer {
     file_meshes: HashMap<String, Option<crate::filemesh::FileMesh>>,
     pub asset_dirs: Vec<PathBuf>,
     pub async_loads: bool,
+    pub overlay: crate::adorn::Adorns,
     load_tx: std::sync::mpsc::Sender<(Shading, Option<Image>)>,
     load_rx: std::sync::mpsc::Receiver<(Shading, Option<Image>)>,
     pub gui_scale: f32,
@@ -562,6 +563,7 @@ impl Renderer {
             file_meshes: HashMap::new(),
             asset_dirs: Vec::new(),
             async_loads: false,
+            overlay: crate::adorn::Adorns::default(),
             load_tx,
             load_rx,
             gui_scale: 1.0,
@@ -1134,7 +1136,9 @@ impl Renderer {
     pub fn render(&mut self, dm: &DataModel, target: &wgpu::TextureView, width: u32, height: u32) {
         self.poll_texture_loads();
         let aspect = width.max(1) as f32 / height.max(1) as f32;
-        let scene = scene::extract(dm, aspect);
+        let mut scene = scene::extract(dm, aspect);
+        scene.adorns.meshes.extend(self.overlay.meshes.iter().cloned());
+        scene.adorns.lines.extend(self.overlay.lines.iter().copied());
         self.update_terrain(dm);
         self.update_lightgrid(dm, &scene);
         self.render_scene(&scene, target, width, height);

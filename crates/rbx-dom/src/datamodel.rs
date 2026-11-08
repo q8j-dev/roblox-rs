@@ -929,9 +929,9 @@ impl DataModel {
                 }
             }
             if let Some(d) = layout.descriptor(name)
-                && let Some(t) = d.ty.variant_type()
+                && d.ty.variant_type().is_some()
             {
-                return Ok(Variant::default_for(t));
+                return Ok(default_value(inst.class, d));
             }
             return Err(DomError::UnknownProperty(
                 name.to_string(),

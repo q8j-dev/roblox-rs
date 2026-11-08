@@ -651,6 +651,75 @@ fn mouse_events(lua: &Lua, ev: &InputEvent) {
     }
 }
 
+fn gui_service_keys(lua: &Lua, ev: &InputEvent) -> bool {
+    if ev.input_type != KEYBOARD || ev.kind != InputKind::Began {
+        return false;
+    }
+    let (gui, special, character) = {
+        let eng = engine(lua);
+        let e = eng.lock();
+        let held = |codes: &[u32]| codes.iter().any(|c| e.input.keys_down.contains(c));
+        if held(&[305, 306, 307, 308]) {
+            return false;
+        }
+        let Some(gui) = e.dm.find_service("GuiService") else {
+            return false;
+        };
+        let special = match ev.key_code {
+            47 => Some(5),
+            277 => Some(0),
+            278 => Some(1),
+            279 => Some(2),
+            280 => Some(3),
+            281 => Some(4),
+            _ => None,
+        }
+        .filter(|k| e.gui.special_keys.contains(k));
+        let character = if special.is_none() && ev.key_code != 47 {
+            ev.text
+                .as_ref()
+                .and_then(|t| t.chars().next())
+                .map(|c| c.to_ascii_lowercase().to_string())
+                .filter(|c| e.gui.keys.contains(c))
+        } else {
+            None
+        };
+        (gui, special, character)
+    };
+    if let Some(k) = special {
+        let Ok(v) = crate::convert::variant_to_lua(
+            lua,
+            &Variant::Enum(k),
+            Some(&rbx_reflection::ValueType::Enum("SpecialKey".into())),
+        ) else {
+            return false;
+        };
+        let Ok(m) = lua.create_string("") else {
+            return false;
+        };
+        fire_lua(
+            lua,
+            gui,
+            "SpecialKeyPressed",
+            MultiValue::from_vec(vec![v, Value::String(m)]),
+        );
+        return true;
+    }
+    if let Some(c) = character {
+        let (Ok(k), Ok(m)) = (lua.create_string(c), lua.create_string("")) else {
+            return false;
+        };
+        fire_lua(
+            lua,
+            gui,
+            "KeyPressed",
+            MultiValue::from_vec(vec![Value::String(k), Value::String(m)]),
+        );
+        return true;
+    }
+    false
+}
+
 fn update_state(lua: &Lua, ev: &InputEvent) {
     let changed = {
         let eng = engine(lua);
@@ -726,6 +795,9 @@ pub fn process(lua: &Lua, ev: InputEvent) {
     };
     let menu_open = engine(lua).lock().gui.menu_open;
     let mut sunk = text_input(lua, &ev);
+    if !sunk {
+        sunk = gui_service_keys(lua, &ev);
+    }
     if !sunk && is_mouse(ev.input_type) {
         sunk = gui_mouse(lua, &ev);
     }

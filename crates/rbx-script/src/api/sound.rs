@@ -248,9 +248,12 @@ pub fn play(lua: &Lua, id: InstanceId) {
             .filter(|s| s.voice.is_none())
             .map(|s| s.position)
             .unwrap_or(0.0);
-        start_voice(&mut e, id, start);
+        let keep = looped_voice_playing(&e, id);
+        if !keep {
+            start_voice(&mut e, id, start);
+        }
         set_play_count(&mut e, id, (req + 1).max(1));
-        if let Some(s) = e.audio_state.sounds.get_mut(&id) {
+        if !keep && let Some(s) = e.audio_state.sounds.get_mut(&id) {
             s.position = start;
             s.loops = 0;
         }
@@ -292,6 +295,16 @@ fn is_paused(e: &Engine, id: InstanceId) -> bool {
         Some(v) => e.audio.state(v) != VoiceState::Playing,
         None => s.play_count <= 0,
     }
+}
+
+fn looped_voice_playing(e: &Engine, id: InstanceId) -> bool {
+    e.dm.get_bool(id, "Looped")
+        && e
+            .audio_state
+            .sounds
+            .get(&id)
+            .and_then(|s| s.voice)
+            .is_some_and(|v| e.audio.state(v) == VoiceState::Playing)
 }
 
 fn is_playing(e: &Engine, id: InstanceId) -> bool {
@@ -423,7 +436,9 @@ pub fn on_play_count_changed(lua: &Lua, id: InstanceId) {
             {
                 let eng = engine(lua);
                 let mut e = eng.lock();
-                start_voice(&mut e, id, 0.0);
+                if !looped_voice_playing(&e, id) {
+                    start_voice(&mut e, id, 0.0);
+                }
                 set_play_count(&mut e, id, v);
             }
             emit(lua, id, "Played", None);

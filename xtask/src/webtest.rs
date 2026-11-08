@@ -68,6 +68,9 @@ pub fn run(root: &Path, options: &[String]) -> Result<(), String> {
         "threaded build uses shared memory",
     )?;
     println!("<== web test: output ok");
+    if options.iter().any(|o| o == "--no-browser") {
+        return Ok(());
+    }
     match chrome::find() {
         Some(browser) => {
             let place = options

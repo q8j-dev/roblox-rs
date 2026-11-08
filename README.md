@@ -2,7 +2,7 @@
 
 ## technical info
 
-v- mprotect, netpmc, and the golden hash checker are completely stripped out.
+- vmprotect, netpmc, and the golden hash checker are completely stripped out.
 - wgpu is used for graphics, so it can run on vulkan, dx12, metal, opengl es, and webgpu/webgl.
 - egui is used for the studio ui.
 

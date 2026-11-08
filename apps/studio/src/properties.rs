@@ -15,6 +15,7 @@ pub struct Properties {
     editing: Option<(InstanceId, String, String)>,
     popup: Option<(InstanceId, String, Rect)>,
     pub split: f32,
+    pub filter: String,
 }
 
 struct Prop {
@@ -215,9 +216,27 @@ impl Properties {
             self.split = 0.45;
             self.initialized = true;
         }
+        let selection = doc.selection();
+        let label = selection_label(doc, &selection);
+        let (bar, _) = ui.allocate_exact_size(vec2(ui.available_width(), 20.0), Sense::hover());
+        ui.painter().rect_filled(bar, 0.0, theme::WINDOW);
+        ui.painter().rect_stroke(bar, 0.0, Stroke::new(1.0, theme::EDIT_BORDER), egui::StrokeKind::Inside);
+        ui.painter().with_clip_rect(bar.shrink(2.0)).text(
+            pos2(bar.left() + 9.0, bar.center().y),
+            Align2::LEFT_CENTER,
+            label,
+            FontId::proportional(theme::FONT_SIZE),
+            Color32::BLACK,
+        );
+        ui.add_space(4.0);
+        ui.add_sized(
+            vec2(ui.available_width(), 22.0),
+            egui::TextEdit::singleline(&mut self.filter).hint_text("Search Properties").margin(vec2(4.0, 3.0)),
+        );
+        ui.add_space(4.0);
         let full = ui.available_rect_before_wrap();
         ui.painter().rect_filled(full, 0.0, Color32::WHITE);
-        let selection = doc.selection();
+        ui.painter().rect_stroke(full, 0.0, Stroke::new(1.0, theme::VIEW_BORDER), egui::StrokeKind::Inside);
         let Some(&id) = selection.last() else {
             return;
         };
@@ -228,7 +247,14 @@ impl Properties {
             }
             e.dm.class_of(id).unwrap_or("Instance").to_string()
         };
-        let groups = Properties::gather(&class);
+        let needle = self.filter.trim().to_lowercase();
+        let mut groups = Properties::gather(&class);
+        if !needle.is_empty() {
+            for (_, props) in &mut groups {
+                props.retain(|p| p.name.to_lowercase().contains(&needle));
+            }
+            groups.retain(|(_, props)| !props.is_empty());
+        }
         let font = FontId::proportional(theme::FONT_SIZE);
         let bold = theme::bold(theme::FONT_SIZE);
         egui::ScrollArea::vertical()
@@ -457,5 +483,25 @@ impl Properties {
         } else if ui.input(|i| i.pointer.any_pressed()) && !area.response.contains_pointer() && !ui.rect_contains_pointer(anchor) {
             self.popup = None;
         }
+    }
+}
+
+fn selection_label(doc: &Document, selection: &[InstanceId]) -> String {
+    let e = doc.runtime.engine.lock();
+    let items: Vec<InstanceId> = selection.iter().copied().filter(|i| e.dm.contains(*i)).collect();
+    let Some(&first) = items.first() else {
+        return String::new();
+    };
+    let name = e.dm.name_of(first).to_string();
+    let class = e.dm.class_of(first).unwrap_or("").to_string();
+    if items.len() == 1 {
+        return format!("{class} \"{name}\"");
+    }
+    let same_name = items.iter().all(|i| e.dm.name_of(*i) == name);
+    let same_class = items.iter().all(|i| e.dm.class_of(*i) == Some(class.as_str()));
+    match (same_class, same_name) {
+        (true, true) => format!("{class} \"{name}\" - {} items", items.len()),
+        (true, false) => format!("{class} - {} items", items.len()),
+        _ => format!("{} items", items.len()),
     }
 }

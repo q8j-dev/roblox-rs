@@ -69,6 +69,44 @@ fn layout() -> DockState<Tab> {
     dock
 }
 
+fn is_document(tab: &Tab) -> bool {
+    matches!(tab, Tab::Viewport | Tab::Script(_))
+}
+
+fn hide_dock_tab_bars(dock: &mut DockState<Tab>) {
+    for (_, leaf) in dock.iter_leaves_mut() {
+        leaf.tab_bar_hidden = !leaf.tabs.iter().any(is_document);
+    }
+}
+
+fn dock_title(ui: &mut Ui, title: &str) -> bool {
+    let full = ui.available_rect_before_wrap();
+    let bar = Rect::from_min_size(full.min, vec2(full.width(), 20.0));
+    ui.allocate_rect(bar, Sense::hover());
+    let p = ui.painter();
+    p.rect_filled(bar, 0.0, theme::DOCK_TITLE);
+    p.text(bar.center(), Align2::CENTER_CENTER, title, FontId::proportional(theme::FONT_SIZE), Color32::BLACK);
+    let close = Rect::from_center_size(egui::pos2(bar.right() - 10.0, bar.center().y), vec2(14.0, 14.0));
+    let float = Rect::from_center_size(egui::pos2(bar.right() - 26.0, bar.center().y), vec2(14.0, 14.0));
+    let cr = ui.interact(close, ui.scope_id().with(("dock-close", title)), Sense::click());
+    let fr = ui.interact(float, ui.scope_id().with(("dock-float", title)), Sense::click());
+    for (r, hovered) in [(close, cr.hovered()), (float, fr.hovered())] {
+        if hovered {
+            ui.painter().rect_filled(r, 0.0, theme::HIGHLIGHT);
+            ui.painter().rect_stroke(r, 0.0, Stroke::new(1.0, theme::ACCENT_HILIGHT), egui::StrokeKind::Inside);
+        }
+    }
+    let ink = Stroke::new(1.0, Color32::from_gray(40));
+    let c = close.shrink(4.0);
+    ui.painter().line_segment([c.left_top(), c.right_bottom()], ink);
+    ui.painter().line_segment([c.right_top(), c.left_bottom()], ink);
+    let f = float.shrink(4.0);
+    ui.painter().rect_stroke(Rect::from_min_max(f.min + vec2(2.0, 0.0), f.max - vec2(0.0, 2.0)), 0.0, ink, egui::StrokeKind::Inside);
+    ui.painter().rect_filled(Rect::from_min_max(f.min + vec2(0.0, 2.0), f.max - vec2(2.0, 0.0)), 0.0, theme::DOCK_TITLE);
+    ui.painter().rect_stroke(Rect::from_min_max(f.min + vec2(0.0, 2.0), f.max - vec2(2.0, 0.0)), 0.0, ink, egui::StrokeKind::Inside);
+    cr.clicked()
+}
+
 pub fn camera_for(doc: &Document) -> FlyCamera {
     let e = doc.runtime.engine.lock();
     let dm = &e.dm;
@@ -711,8 +749,9 @@ impl Studio {
             self.handle(ev);
         }
         let mut dock = std::mem::replace(&mut self.dock, DockState::new(Vec::new()));
+        hide_dock_tab_bars(&mut dock);
         let style = dock_style(ui.style());
-        let mut viewer = Viewer { studio: self, open: None, context: None };
+        let mut viewer = Viewer { studio: self, open: None, context: None, close: None };
         egui::CentralPanel::default()
             .frame(egui::Frame::new().fill(theme::WINDOW).inner_margin(2.0))
             .show(ui, |ui| {
@@ -720,11 +759,16 @@ impl Studio {
                     .style(style)
                     .show_leaf_close_all_buttons(false)
                     .show_leaf_collapse_buttons(false)
+                    .hidable_tab_bars(true)
                     .show_inside(ui, &mut viewer);
             });
         let open = viewer.open;
         let context = viewer.context;
+        let close = viewer.close;
         self.dock = dock;
+        if let Some(tab) = close {
+            self.toggle_tab(tab);
+        }
         if let Some(id) = open {
             self.open_script(id);
         }
@@ -1014,7 +1058,7 @@ impl Studio {
         ui.painter().rect_filled(full, 0.0, Color32::WHITE);
         ui.add_sized(
             vec2(full.width(), 22.0),
-            egui::TextEdit::singleline(&mut self.object_filter).hint_text("Search object").margin(vec2(4.0, 3.0)),
+            egui::TextEdit::singleline(&mut self.object_filter).hint_text("Search object (Ctrl+I)").margin(vec2(4.0, 3.0)),
         );
         let filter = self.object_filter.to_lowercase();
         let mut classes: Vec<String> = rbx_reflection::database()
@@ -1069,6 +1113,12 @@ fn dock_style(base: &egui::Style) -> egui_stack::Style {
     s.tab.tab_body.stroke = Stroke::new(1.0, theme::VIEW_BORDER);
     s.tab.tab_body.corner_radius = egui::CornerRadius::ZERO;
     s.tab.tab_body.inner_margin = egui::Margin::ZERO;
+    s.tab.tab_body.hidden_tab_bar_drag_height = Some(0.0);
+    s.buttons.show_tab_bar_size = 0.0;
+    s.buttons.show_tab_bar_color = Color32::TRANSPARENT;
+    s.buttons.show_tab_bar_active_color = Color32::TRANSPARENT;
+    s.tab_bar.bg_fill = theme::DOC_TAB_BAR;
+    s.tab_bar.hline_color = theme::VIEW_BORDER;
     s.buttons.close_tab_color = Color32::from_gray(90);
     s.buttons.close_tab_active_color = Color32::BLACK;
     s.buttons.close_tab_bg_fill = theme::HIGHLIGHT;
@@ -1092,6 +1142,7 @@ struct Viewer<'a> {
     studio: &'a mut Studio,
     open: Option<InstanceId>,
     context: Option<(InstanceId, egui::Pos2)>,
+    close: Option<Tab>,
 }
 
 impl TabViewer for Viewer<'_> {
@@ -1114,6 +1165,13 @@ impl TabViewer for Viewer<'_> {
     }
 
     fn ui(&mut self, ui: &mut Ui, tab: &mut Tab) {
+        if !is_document(tab) {
+            let title = self.title(tab).text().to_string();
+            if dock_title(ui, &title) {
+                self.close = Some(tab.clone());
+            }
+            ui.add_space(1.0);
+        }
         match tab {
             Tab::Viewport => self.studio.viewport_ui(ui),
             Tab::Explorer => {

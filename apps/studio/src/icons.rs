@@ -5,6 +5,7 @@ use std::path::{Path, PathBuf};
 pub struct Icons {
     root: PathBuf,
     cache: HashMap<PathBuf, Option<TextureHandle>>,
+    disabled: HashMap<PathBuf, Option<TextureHandle>>,
     classes: Option<(TextureHandle, usize)>,
 }
 
@@ -19,6 +20,7 @@ impl Icons {
         Icons {
             root: root.to_path_buf(),
             cache: HashMap::new(),
+            disabled: HashMap::new(),
             classes: None,
         }
     }
@@ -41,6 +43,28 @@ impl Icons {
 
     pub fn studio(&mut self, ctx: &egui::Context, rel: &str) -> Option<TextureHandle> {
         self.get(ctx, Path::new(rel))
+    }
+
+    pub fn studio_disabled(&mut self, ctx: &egui::Context, rel: &str) -> Option<TextureHandle> {
+        let full = self.root.join(rel);
+        self.disabled
+            .entry(full.clone())
+            .or_insert_with(|| {
+                let bytes = std::fs::read(&full).ok()?;
+                let img = image::load_from_memory(&bytes).ok()?.to_rgba8();
+                let size = [img.width() as usize, img.height() as usize];
+                let mut px = img.into_raw();
+                for p in px.chunks_exact_mut(4) {
+                    let g = (p[0] as u32 * 11 + p[1] as u32 * 16 + p[2] as u32 * 5) / 32;
+                    let v = (128 + g / 2).min(255) as u8;
+                    p[0] = v;
+                    p[1] = v;
+                    p[2] = v;
+                }
+                let img = egui::ColorImage::from_rgba_unmultiplied(size, &px);
+                Some(ctx.load_texture(format!("{}#disabled", full.display()), img, egui::TextureOptions::LINEAR))
+            })
+            .clone()
     }
 
     pub fn class(&mut self, ctx: &egui::Context, index: usize) -> Option<(TextureId, Rect)> {

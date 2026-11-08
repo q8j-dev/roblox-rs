@@ -12,6 +12,7 @@ pub const RIBBON_BACK: Color32 = Color32::from_rgb(243, 243, 243);
 pub const RIBBON_FACE: Color32 = Color32::WHITE;
 pub const RIBBON_SEPARATOR: Color32 = Color32::from_rgb(212, 212, 212);
 pub const DOCK_TITLE: Color32 = Color32::from_rgb(208, 208, 208);
+pub const DOC_TAB_BAR: Color32 = Color32::from_rgb(196, 196, 196);
 pub const DOC_TAB: Color32 = Color32::from_rgb(242, 242, 242);
 pub const VIEW_BORDER: Color32 = Color32::from_rgb(196, 196, 196);
 pub const GRID_LINE: Color32 = Color32::from_rgb(238, 238, 238);

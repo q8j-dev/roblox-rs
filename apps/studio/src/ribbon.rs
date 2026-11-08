@@ -220,13 +220,13 @@ impl Ribbon {
             if resp.hovered() {
                 ui.painter().rect_filled(r, 0.0, theme::HIGHLIGHT);
             }
-            if let Some(tex) = self.icon_of(a).and_then(|i| icons.studio(ui.ctx(), &i)) {
-                let tint = if state.enabled(&name) { Color32::WHITE } else { Color32::from_white_alpha(90) };
+            let enabled = state.enabled(&name);
+            if let Some(tex) = self.icon_of(a).and_then(|i| if enabled { icons.studio(ui.ctx(), &i) } else { icons.studio_disabled(ui.ctx(), &i) }) {
                 ui.painter().image(
                     tex.id(),
                     Rect::from_center_size(r.center(), vec2(16.0, 16.0)),
                     Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
-                    tint,
+                    Color32::WHITE,
                 );
             }
             let resp = match self.tooltip_of(a).or_else(|| Some(self.text_of(a))) {
@@ -421,10 +421,9 @@ impl Ribbon {
         let enabled = state.enabled(&name);
         let open = matches!(&self.open_menu, Some((m, _)) if *m == name);
         paint_button(ui, r, resp.hovered() && enabled, resp.is_pointer_button_down_on() || open, state.checked(&name));
-        if let Some(tex) = self.icon_of(n).and_then(|i| icons.studio(ui.ctx(), &i)) {
+        if let Some(tex) = self.icon_of(n).and_then(|i| if enabled { icons.studio(ui.ctx(), &i) } else { icons.studio_disabled(ui.ctx(), &i) }) {
             let ir = Rect::from_min_size(pos2(r.center().x - 16.0, r.top() + 4.0), vec2(32.0, 32.0));
-            let tint = if enabled { Color32::WHITE } else { Color32::from_white_alpha(90) };
-            ui.painter().image(tex.id(), ir, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), tint);
+            ui.painter().image(tex.id(), ir, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
         }
         let color = if enabled { theme::TEXT } else { theme::DISABLED_TEXT };
         let font = FontId::proportional(theme::FONT_SIZE);
@@ -490,10 +489,9 @@ impl Ribbon {
         let open = matches!(&self.open_menu, Some((m, _)) if *m == name);
         paint_button(ui, r, resp.hovered() && enabled, resp.is_pointer_button_down_on() || open, state.checked(&name));
         let color = if enabled { theme::TEXT } else { theme::DISABLED_TEXT };
-        if let Some(tex) = self.icon_of(n).and_then(|i| icons.studio(ui.ctx(), &i)) {
+        if let Some(tex) = self.icon_of(n).and_then(|i| if enabled { icons.studio(ui.ctx(), &i) } else { icons.studio_disabled(ui.ctx(), &i) }) {
             let ir = Rect::from_min_size(pos2(r.left() + 3.0, r.center().y - 8.0), vec2(16.0, 16.0));
-            let tint = if enabled { Color32::WHITE } else { Color32::from_white_alpha(90) };
-            ui.painter().image(tex.id(), ir, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), tint);
+            ui.painter().image(tex.id(), ir, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
         }
         let label = self.text_of(n);
         ui.painter().text(pos2(r.left() + 23.0, r.center().y), Align2::LEFT_CENTER, &label, font, color);

@@ -15,6 +15,7 @@ pub struct Explorer {
     anchor: Option<InstanceId>,
     renaming: Option<(InstanceId, String)>,
     last_selection: Vec<InstanceId>,
+    pub filter: String,
 }
 
 pub enum Request {
@@ -56,7 +57,13 @@ pub fn visible_children(dm: &DataModel, meta: &ClassMetadata, id: InstanceId) ->
 }
 
 impl Explorer {
+    fn matches(&self, dm: &DataModel, meta: &ClassMetadata, id: InstanceId, needle: &str) -> bool {
+        dm.name_of(id).to_lowercase().contains(needle)
+            || visible_children(dm, meta, id).into_iter().any(|c| self.matches(dm, meta, c, needle))
+    }
+
     fn rows(&self, dm: &DataModel, meta: &ClassMetadata) -> Vec<Row> {
+        let needle = self.filter.trim().to_lowercase();
         let mut out = Vec::new();
         let mut stack: Vec<(InstanceId, usize)> = visible_children(dm, meta, dm.root())
             .into_iter()
@@ -64,8 +71,11 @@ impl Explorer {
             .map(|c| (c, 0))
             .collect();
         while let Some((id, depth)) = stack.pop() {
+            if !needle.is_empty() && !self.matches(dm, meta, id, &needle) {
+                continue;
+            }
             let kids = visible_children(dm, meta, id);
-            let expanded = self.expanded.contains(&id);
+            let expanded = self.expanded.contains(&id) || !needle.is_empty();
             out.push(Row {
                 id,
                 depth,
@@ -108,8 +118,16 @@ impl Explorer {
             let e = doc.runtime.engine.lock();
             self.rows(&e.dm, meta)
         };
+        ui.add_sized(
+            vec2(ui.available_width(), 22.0),
+            egui::TextEdit::singleline(&mut self.filter)
+                .hint_text("Filter workspace (Ctrl+Shift+X)")
+                .margin(vec2(4.0, 3.0)),
+        );
+        ui.add_space(4.0);
         let full = ui.available_rect_before_wrap();
         ui.painter().rect_filled(full, 0.0, Color32::WHITE);
+        ui.painter().rect_stroke(full, 0.0, Stroke::new(1.0, theme::VIEW_BORDER), egui::StrokeKind::Inside);
         let mut request = None;
         let mut toggle = None;
         let mut new_selection: Option<Vec<InstanceId>> = None;

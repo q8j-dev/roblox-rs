@@ -1268,8 +1268,15 @@ impl Studio {
             let e = self.doc.runtime.engine.lock();
             self.tools.update_hover(&e.dm, self.tool, &sel, &self.view.camera, origin, dir);
         }
+        if pressed && response.hovered() {
+            self.tools.press = Some((origin, dir, self.tools.over_handle));
+        }
         if response.drag_started_by(egui::PointerButton::Primary) && !matches!(self.tool, Tool::Lock | Tool::Paint) {
-            self.tools.begin(&mut self.doc, self.tool, self.collisions, &self.view.camera, origin, dir);
+            let (o, d, handle) = self.tools.press.take().unwrap_or((origin, dir, self.tools.over_handle));
+            self.tools.over_handle = handle;
+            if self.tools.begin(&mut self.doc, self.tool, self.collisions, &self.view.camera, o, d) {
+                self.tools.update(&mut self.doc, origin, dir, self.grid);
+            }
         } else if response.dragged_by(egui::PointerButton::Primary) {
             self.tools.update(&mut self.doc, origin, dir, self.grid);
         } else if response.drag_stopped() {

@@ -338,6 +338,7 @@ pub struct Tools {
     pub drag: Option<Drag>,
     pub rotation_frame: Mat3,
     pub saved_transparency: Vec<(InstanceId, f32)>,
+    pub press: Option<(Vec3, Vec3, Option<(Option<InstanceId>, usize)>)>,
 }
 
 impl Default for Tools {
@@ -348,6 +349,7 @@ impl Default for Tools {
             drag: None,
             rotation_frame: Mat3::IDENTITY,
             saved_transparency: Vec::new(),
+            press: None,
         }
     }
 }

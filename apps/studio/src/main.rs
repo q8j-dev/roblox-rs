@@ -1,4 +1,6 @@
 mod app;
+#[cfg(test)]
+mod drag_test;
 mod explorer;
 mod extras;
 mod icons;
@@ -248,7 +250,11 @@ impl Host {
         let frame = match gpu.surface.get_current_texture() {
             wgpu::CurrentSurfaceTexture::Success(f) | wgpu::CurrentSurfaceTexture::Suboptimal(f) => f,
             _ => {
+                let size = window.inner_size();
+                gpu.config.width = size.width.max(1);
+                gpu.config.height = size.height.max(1);
                 gpu.surface.configure(&gpu.renderer.device, &gpu.config);
+                window.request_redraw();
                 return;
             }
         };
@@ -412,6 +418,12 @@ fn save_texture(gpu: &Gpu, tex: &wgpu::Texture, path: &std::path::Path) -> Resul
 }
 
 impl ApplicationHandler for Host {
+    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+        if let Some(w) = &self.window {
+            w.request_redraw();
+        }
+    }
+
     fn resumed(&mut self, event_loop: &ActiveEventLoop) {
         if self.window.is_some() {
             return;

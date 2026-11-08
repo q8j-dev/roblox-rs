@@ -100,6 +100,9 @@ pub struct Renderer {
     image_index: HashMap<String, u32>,
     file_meshes: HashMap<String, Option<crate::filemesh::FileMesh>>,
     pub asset_dirs: Vec<PathBuf>,
+    pub async_loads: bool,
+    load_tx: std::sync::mpsc::Sender<(Shading, Option<Image>)>,
+    load_rx: std::sync::mpsc::Receiver<(Shading, Option<Image>)>,
     pub gui_scale: f32,
     terrain_meshes: Vec<GpuMesh>,
     terrain_generation: Option<u64>,
@@ -539,6 +542,7 @@ impl Renderer {
             .create_view(&wgpu::TextureViewDescriptor::default());
         let adorn_pass =
             crate::adorn_pass::AdornPass::new(&device, &globals_layout, format, &white);
+        let (load_tx, load_rx) = std::sync::mpsc::channel();
         Renderer {
             device,
             queue,
@@ -556,6 +560,9 @@ impl Renderer {
             image_index: HashMap::new(),
             file_meshes: HashMap::new(),
             asset_dirs: Vec::new(),
+            async_loads: false,
+            load_tx,
+            load_rx,
             gui_scale: 1.0,
             terrain_meshes: Vec::new(),
             terrain_generation: None,
@@ -586,7 +593,69 @@ impl Renderer {
         }
     }
 
+    fn texture_job(&self, shading: Shading) -> Option<Box<dyn FnOnce() -> Option<Image> + Send>> {
+        let compressed = self.compressed();
+        let textures = self.platform_dir.join("textures");
+        match shading {
+            Shading::Textured(m) => {
+                let folder = scene::material_folder(m)?;
+                let path = textures.join(folder).join("diffuse.dds");
+                Some(Box::new(move || read_texture_gpu(&path, compressed)))
+            }
+            Shading::Terrain => {
+                let path = textures.join("terrain").join("diffuse.dds");
+                Some(Box::new(move || read_texture_gpu(&path, compressed)))
+            }
+            Shading::Image(i) => {
+                let url = self.image_names.get(i as usize)?.clone();
+                let content = self.content_dir.clone();
+                let platform = self.platform_dir.clone();
+                let assets = self.asset_dirs.clone();
+                Some(Box::new(move || {
+                    read_content_in(&content, &platform, &assets, &url)
+                        .and_then(|b| texture::decode_for_gpu(&b, compressed).ok())
+                }))
+            }
+            _ => None,
+        }
+    }
+
+    fn texture_bind_group(&self, view: &wgpu::TextureView) -> wgpu::BindGroup {
+        self.device.create_bind_group(&wgpu::BindGroupDescriptor {
+            label: Some("material"),
+            layout: &self.material_layout,
+            entries: &[wgpu::BindGroupEntry {
+                binding: 0,
+                resource: wgpu::BindingResource::TextureView(view),
+            }],
+        })
+    }
+
+    fn poll_texture_loads(&mut self) {
+        while let Ok((shading, image)) = self.load_rx.try_recv() {
+            let view = image
+                .map(|img| {
+                    img.upload(&self.device, &self.queue, "material", false)
+                        .create_view(&wgpu::TextureViewDescriptor::default())
+                })
+                .unwrap_or_else(|| self.white.clone());
+            let bg = self.texture_bind_group(&view);
+            self.materials.insert(shading, bg);
+        }
+    }
+
     fn material_group(&mut self, shading: Shading) -> &wgpu::BindGroup {
+        if self.async_loads
+            && !self.materials.contains_key(&shading)
+            && let Some(job) = self.texture_job(shading)
+        {
+            let tx = self.load_tx.clone();
+            rbx_base::jobs::spawn(move || {
+                let _ = tx.send((shading, job()));
+            });
+            let placeholder = self.texture_bind_group(&self.white.clone());
+            self.materials.insert(shading, placeholder);
+        }
         if !self.materials.contains_key(&shading) {
             let view = match shading {
                 Shading::Textured(m) => scene::material_folder(m)
@@ -777,24 +846,7 @@ impl Renderer {
     }
 
     fn read_content(&self, url: &str) -> Option<Vec<u8>> {
-        if let Some(p) = self.resolve_content(url) {
-            return rbx_base::vfs::read(p).ok();
-        }
-        let lower = url.trim().to_ascii_lowercase();
-        let id: u64 = if let Some(rest) = lower.strip_prefix("rbxassetid://") {
-            rest.trim().parse().ok()?
-        } else {
-            let at = lower.find("id=")?;
-            lower[at + 3..]
-                .chars()
-                .take_while(|c| c.is_ascii_digit())
-                .collect::<String>()
-                .parse()
-                .ok()?
-        };
-        self.asset_dirs
-            .iter()
-            .find_map(|d| rbx_base::vfs::read(d.join(id.to_string())).ok())
+        read_content_in(&self.content_dir, &self.platform_dir, &self.asset_dirs, url)
     }
 
     fn file_mesh(&mut self, url: &str) -> Option<&crate::filemesh::FileMesh> {
@@ -856,27 +908,7 @@ impl Renderer {
     }
 
     fn resolve_content(&self, url: &str) -> Option<PathBuf> {
-        let lower = url.to_ascii_lowercase();
-        let rest = lower.strip_prefix("rbxasset://")?;
-        let rel = &url[url.len() - rest.len()..];
-        let mut path = self.content_dir.clone();
-        for part in rel
-            .split(['/', '\\'])
-            .filter(|s| !s.is_empty() && *s != "..")
-        {
-            path.push(part);
-        }
-        if rbx_base::vfs::is_file(&path) {
-            return Some(path);
-        }
-        let mut alt = self.platform_dir.clone();
-        for part in rel
-            .split(['/', '\\'])
-            .filter(|s| !s.is_empty() && *s != "..")
-        {
-            alt.push(part);
-        }
-        rbx_base::vfs::is_file(&alt).then_some(alt)
+        resolve_content_in(&self.content_dir, &self.platform_dir, url)
     }
 
     fn sky_group(&mut self, faces: Option<&[String; 6]>) -> &wgpu::BindGroup {
@@ -1079,6 +1111,7 @@ impl Renderer {
     }
 
     pub fn render(&mut self, dm: &DataModel, target: &wgpu::TextureView, width: u32, height: u32) {
+        self.poll_texture_loads();
         let aspect = width.max(1) as f32 / height.max(1) as f32;
         let scene = scene::extract(dm, aspect);
         self.update_terrain(dm);
@@ -1689,4 +1722,54 @@ fn mat_mul(a: &[[f32; 4]; 4], b: &[[f32; 4]; 4]) -> [[f32; 4]; 4] {
         }
     }
     out
+}
+
+fn resolve_content_in(content_dir: &Path, platform_dir: &Path, url: &str) -> Option<PathBuf> {
+    let lower = url.to_ascii_lowercase();
+    let rest = lower.strip_prefix("rbxasset://")?;
+    let rel = &url[url.len() - rest.len()..];
+    let mut path = content_dir.to_path_buf();
+    for part in rel
+        .split(['/', '\\'])
+        .filter(|s| !s.is_empty() && *s != "..")
+    {
+        path.push(part);
+    }
+    if rbx_base::vfs::is_file(&path) {
+        return Some(path);
+    }
+    let mut alt = platform_dir.to_path_buf();
+    for part in rel
+        .split(['/', '\\'])
+        .filter(|s| !s.is_empty() && *s != "..")
+    {
+        alt.push(part);
+    }
+    rbx_base::vfs::is_file(&alt).then_some(alt)
+}
+
+fn read_content_in(
+    content_dir: &Path,
+    platform_dir: &Path,
+    asset_dirs: &[PathBuf],
+    url: &str,
+) -> Option<Vec<u8>> {
+    if let Some(p) = resolve_content_in(content_dir, platform_dir, url) {
+        return rbx_base::vfs::read(p).ok();
+    }
+    let lower = url.trim().to_ascii_lowercase();
+    let id: u64 = if let Some(rest) = lower.strip_prefix("rbxassetid://") {
+        rest.trim().parse().ok()?
+    } else {
+        let at = lower.find("id=")?;
+        lower[at + 3..]
+            .chars()
+            .take_while(|c| c.is_ascii_digit())
+            .collect::<String>()
+            .parse()
+            .ok()?
+    };
+    asset_dirs
+        .iter()
+        .find_map(|d| rbx_base::vfs::read(d.join(id.to_string())).ok())
 }

@@ -118,9 +118,13 @@ pub fn run(root: &Path, options: &[String]) -> Result<(), String> {
         .unwrap_or(8080);
     let listener = TcpListener::bind(("127.0.0.1", port)).map_err(|e| e.to_string())?;
     println!("serving http://127.0.0.1:{port}/ (cross-origin isolated)");
+    serve(root, listener);
+    Ok(())
+}
+
+pub fn serve(root: &Path, listener: TcpListener) {
     for stream in listener.incoming().flatten() {
         let root = root.to_path_buf();
         std::thread::spawn(move || handle(&root, stream));
     }
-    Ok(())
 }

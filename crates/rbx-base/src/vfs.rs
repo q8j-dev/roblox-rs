@@ -40,6 +40,22 @@ mod imp {
     }
 
     static INDEX: OnceLock<Option<Index>> = OnceLock::new();
+    static BASE: OnceLock<String> = OnceLock::new();
+
+    fn base() -> &'static str {
+        BASE.get_or_init(|| {
+            web_sys::window()
+                .and_then(|w| w.location().href().ok())
+                .map(|href| {
+                    let href = href.split(['?', '#']).next().unwrap_or("").to_string();
+                    match href.rfind('/') {
+                        Some(i) => href[..=i].to_string(),
+                        None => href,
+                    }
+                })
+                .unwrap_or_default()
+        })
+    }
 
     fn key(path: &Path) -> String {
         let s = path.to_string_lossy().replace('\\', "/");
@@ -56,9 +72,10 @@ mod imp {
         parts.join("/")
     }
 
-    fn fetch(url: &str) -> Option<Vec<u8>> {
+    fn fetch(path: &str) -> Option<Vec<u8>> {
+        let url = format!("{}{path}", base());
         let xhr = web_sys::XmlHttpRequest::new().ok()?;
-        xhr.open_with_async("GET", url, false).ok()?;
+        xhr.open_with_async("GET", &url, false).ok()?;
         xhr.override_mime_type("text/plain; charset=x-user-defined")
             .ok()?;
         xhr.send().ok()?;

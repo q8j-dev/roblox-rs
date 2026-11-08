@@ -2,7 +2,6 @@ use std::path::{Path, PathBuf};
 use std::process::Command;
 
 pub const WASI_SDK_VERSION: &str = "34";
-pub const C_TARGET: &str = "wasm32-wasip1-threads";
 
 fn host_archive() -> Result<String, String> {
     let arch = match std::env::consts::ARCH {
@@ -70,7 +69,8 @@ fn tool(sdk: &Path, name: &str) -> String {
     sdk.join("bin").join(exe).to_string_lossy().into_owned()
 }
 
-pub fn env(sdk: &Path) -> Vec<(String, String)> {
+pub fn env(sdk: &Path, c_target: &str, threads: bool) -> Vec<(String, String)> {
+    let pthread = if threads { " -pthread" } else { "" };
     vec![
         ("CC_wasm32_unknown_unknown".into(), tool(sdk, "clang")),
         ("CXX_wasm32_unknown_unknown".into(), tool(sdk, "clang++")),
@@ -78,23 +78,23 @@ pub fn env(sdk: &Path) -> Vec<(String, String)> {
         ("CXXSTDLIB_wasm32_unknown_unknown".into(), "c++".into()),
         (
             "CFLAGS_wasm32_unknown_unknown".into(),
-            format!("--target={C_TARGET} -pthread"),
+            format!("--target={c_target}{pthread}"),
         ),
         (
             "LUAU_CXXFLAGS".into(),
             format!(
-                "--target={C_TARGET} -pthread -fexceptions -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false"
+                "--target={c_target}{pthread} -fexceptions -fwasm-exceptions -mllvm -wasm-use-legacy-eh=false"
             ),
         ),
     ]
 }
 
-pub fn link_flags(sdk: &Path) -> Vec<String> {
+pub fn link_flags(sdk: &Path, c_target: &str) -> Vec<String> {
     let lib = sdk
         .join("share")
         .join("wasi-sysroot")
         .join("lib")
-        .join(C_TARGET);
+        .join(c_target);
     vec![
         format!("-Lnative={}", lib.join("eh").display()),
         format!("-Lnative={}", lib.display()),

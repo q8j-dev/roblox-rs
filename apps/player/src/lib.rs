@@ -231,13 +231,14 @@ async fn create_gpu(window: Arc<Window>, assets: PathBuf) -> Result<Gpu, String>
         color_space: wgpu::SurfaceColorSpace::Auto,
     };
     surface.configure(&device, &config);
-    let renderer = Renderer::new(
+    let mut renderer = Renderer::new(
         device,
         queue,
         format,
         &assets.join("content"),
         &assets.join("platform-content").join("pc"),
     );
+    renderer.async_loads = true;
     Ok(Gpu {
         surface,
         config,
@@ -620,6 +621,10 @@ impl App for Player {
         self.runtime.render_step(dt);
         self.render();
         self.frames += 1;
+        #[cfg(target_arch = "wasm32")]
+        if self.frames % 30 == 0 {
+            web::report_frames(self.frames);
+        }
         #[cfg(not(target_arch = "wasm32"))]
         let due: Vec<ScriptedInput> = self
             .scripted
@@ -824,12 +829,29 @@ mod web {
         Some((width, height))
     }
 
+    pub fn report_frames(frames: u32) {
+        if let Some(root) = web_sys::window()
+            .and_then(|w| w.document())
+            .and_then(|d| d.document_element())
+        {
+            let _ = root.set_attribute("data-frames", &frames.to_string());
+        }
+    }
+
     fn touch_capable() -> bool {
         web_sys::window().is_some_and(|w| w.navigator().max_touch_points() > 0)
     }
 
-    #[wasm_bindgen::prelude::wasm_bindgen(start)]
-    pub fn start() {
+    #[cfg(target_feature = "atomics")]
+    pub use wasm_bindgen_rayon::init_thread_pool;
+
+    #[wasm_bindgen::prelude::wasm_bindgen]
+    pub fn threaded() -> bool {
+        rbx_base::jobs::threaded()
+    }
+
+    #[wasm_bindgen::prelude::wasm_bindgen]
+    pub fn run() {
         rbx_script::init_c_runtime();
         console_error_panic_hook::set_once();
         init_logging();

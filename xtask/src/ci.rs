@@ -49,8 +49,12 @@ pub const WEB_RUSTFLAGS: &[&str] = &[
     "-Clink-arg=--export=__tls_base",
 ];
 
-pub fn build_web(root: &Path, release: bool) -> Result<(), String> {
-    let sdk = crate::wasi::ensure_sdk(root)?;
+fn build_web_variant(root: &Path, sdk: &Path, release: bool, threads: bool) -> Result<(), String> {
+    let (name, c_target, target_dir) = if threads {
+        ("mt", "wasm32-wasip1-threads", "target/web")
+    } else {
+        ("st", "wasm32-wasip1", "target/web-st")
+    };
     let mut args = vec![
         "build",
         "-p",
@@ -58,23 +62,36 @@ pub fn build_web(root: &Path, release: bool) -> Result<(), String> {
         "--lib",
         "--target",
         "wasm32-unknown-unknown",
-        "-Z",
-        "build-std=std,panic_abort",
     ];
+    if threads {
+        args.extend(["-Z", "build-std=std,panic_abort"]);
+    }
     if release {
         args.push("--release");
     }
-    let mut flags: Vec<String> = WEB_RUSTFLAGS.iter().map(|s| s.to_string()).collect();
-    flags.extend(crate::wasi::link_flags(&sdk));
-    let encoded = flags.join("\u{1f}");
-    let mut env: Vec<(String, String)> = crate::wasi::env(&sdk);
-    env.push(("CARGO_ENCODED_RUSTFLAGS".into(), encoded));
-    env.push(("RUSTC_BOOTSTRAP".into(), "1".into()));
-    env.push(("CARGO_TARGET_DIR".into(), "target/web".into()));
+    let mut flags: Vec<String> = if threads {
+        WEB_RUSTFLAGS.iter().map(|s| s.to_string()).collect()
+    } else {
+        Vec::new()
+    };
+    flags.extend(crate::wasi::link_flags(sdk, c_target));
+    let mut env: Vec<(String, String)> = crate::wasi::env(sdk, c_target, threads);
+    env.push(("CARGO_ENCODED_RUSTFLAGS".into(), flags.join("\u{1f}")));
+    if threads {
+        env.push(("RUSTC_BOOTSTRAP".into(), "1".into()));
+    }
+    env.push(("CARGO_TARGET_DIR".into(), target_dir.into()));
     let env_refs: Vec<(&str, &str)> = env.iter().map(|(k, v)| (k.as_str(), v.as_str())).collect();
-    step_env("web build", root, "cargo", &args, &env_refs)?;
+    step_env(
+        &format!("web build ({name})"),
+        root,
+        "cargo",
+        &args,
+        &env_refs,
+    )?;
     let profile = if release { "release" } else { "debug" };
-    let wasm = format!("target/web/wasm32-unknown-unknown/{profile}/player.wasm");
+    let wasm = format!("{target_dir}/wasm32-unknown-unknown/{profile}/player.wasm");
+    let out = format!("dist/web/{name}");
     step(
         "wasm-bindgen",
         root,
@@ -82,12 +99,38 @@ pub fn build_web(root: &Path, release: bool) -> Result<(), String> {
         &[
             &wasm,
             "--out-dir",
-            "dist/web",
+            &out,
             "--target",
             "web",
             "--no-typescript",
         ],
     )?;
+    fix_worker_imports(&root.join(&out).join("snippets"))
+}
+
+fn fix_worker_imports(dir: &Path) -> Result<(), String> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
+        return Ok(());
+    };
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            fix_worker_imports(&path)?;
+        } else if path.extension().is_some_and(|e| e == "js") {
+            let text = std::fs::read_to_string(&path).map_err(|e| e.to_string())?;
+            if text.contains("import('../../..')") {
+                let fixed = text.replace("import('../../..')", "import('../../../player.js')");
+                std::fs::write(&path, fixed).map_err(|e| e.to_string())?;
+            }
+        }
+    }
+    Ok(())
+}
+
+pub fn build_web(root: &Path, release: bool) -> Result<(), String> {
+    let sdk = crate::wasi::ensure_sdk(root)?;
+    build_web_variant(root, &sdk, release, true)?;
+    build_web_variant(root, &sdk, release, false)?;
     write_content_index(root)?;
     let page = root.join("apps/player/web");
     if page.is_dir() {

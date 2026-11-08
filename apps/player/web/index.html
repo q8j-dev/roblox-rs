@@ -18,8 +18,15 @@ if (!navigator.gpu) {
   status.textContent = "This browser has no WebGPU support.";
 } else {
   try {
-    const mod = await import("./player.js");
+    const threaded = self.crossOriginIsolated === true;
+    const mod = await import(threaded ? "./mt/player.js" : "./st/player.js");
     await mod.default();
+    if (threaded && mod.initThreadPool) {
+      const workers = Math.max(1, Math.min((navigator.hardwareConcurrency || 2) - 1, 8));
+      await mod.initThreadPool(workers);
+    }
+    mod.run();
+    document.documentElement.dataset.threads = String(mod.threaded());
     status.remove();
   } catch (e) {
     status.textContent = "Failed to start: " + e;

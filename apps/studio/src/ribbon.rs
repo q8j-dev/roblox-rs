@@ -15,8 +15,8 @@ pub struct ActionInfo {
 #[derive(Clone, Debug)]
 pub enum Event {
     Action(String),
-    Combo,
-    Check,
+    Combo(String, usize),
+    Check(String, bool),
     Color(u16),
 }
 
@@ -27,6 +27,7 @@ pub struct Ribbon {
     open_menu: Option<(String, Rect)>,
     pub plugin_groups: Vec<(String, Vec<PluginItem>)>,
     combos: HashMap<String, usize>,
+    pub script_menu: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -97,6 +98,7 @@ impl Ribbon {
             open_menu: None,
             plugin_groups: Vec::new(),
             combos: HashMap::new(),
+            script_menu: false,
         }
     }
 
@@ -108,7 +110,25 @@ impl Ribbon {
             open_menu: None,
             plugin_groups: Vec::new(),
             combos: HashMap::new(),
+            script_menu: false,
         }
+    }
+
+    pub fn set_script_menu(&mut self, on: bool) {
+        let count = self.pages().len();
+        self.script_menu = on;
+        if !on && self.page + 1 >= count {
+            self.page = 0;
+        }
+    }
+
+    pub fn select_script_menu(&mut self) {
+        self.script_menu = true;
+        self.page = self.pages().len().saturating_sub(1);
+    }
+
+    pub fn set_combo(&mut self, name: &str, index: usize) {
+        self.combos.insert(name.to_string(), index);
     }
 
     pub fn height() -> f32 {
@@ -124,7 +144,7 @@ impl Ribbon {
             .map(|r| {
                 children(r)
                     .iter()
-                    .filter(|p| attr(p, "tag") == Some("TabPage") && attr(p, "name") != Some("scriptMenu"))
+                    .filter(|p| attr(p, "tag") == Some("TabPage") && (self.script_menu || attr(p, "name") != Some("scriptMenu")))
                     .collect()
             })
             .unwrap_or_default()
@@ -456,8 +476,7 @@ impl Ribbon {
                 }
                 ui.painter().text(pos2(b.right() + 5.0, r.center().y), Align2::LEFT_CENTER, self.text_of(n), font, theme::TEXT);
                 if resp.clicked() {
-                    let _ = name;
-                    events.push(Event::Check);
+                    events.push(Event::Check(name, !on));
                 }
                 return;
             }
@@ -478,7 +497,7 @@ impl Ribbon {
                 });
                 if sel != cur {
                     self.combos.insert(name.clone(), sel);
-                    events.push(Event::Combo);
+                    events.push(Event::Combo(name, sel));
                 }
                 return;
             }

@@ -7,6 +7,7 @@ pub struct Icons {
     cache: HashMap<PathBuf, Option<TextureHandle>>,
     disabled: HashMap<PathBuf, Option<TextureHandle>>,
     classes: Option<(TextureHandle, usize)>,
+    strips: HashMap<String, Option<(TextureHandle, usize)>>,
 }
 
 fn decode(bytes: &[u8]) -> Option<egui::ColorImage> {
@@ -22,6 +23,7 @@ impl Icons {
             cache: HashMap::new(),
             disabled: HashMap::new(),
             classes: None,
+            strips: HashMap::new(),
         }
     }
 
@@ -78,6 +80,38 @@ impl Icons {
         let (tex, count) = self.classes.as_ref()?;
         let i = index.min(count - 1) as f32;
         let w = 1.0 / *count as f32;
+        Some((tex.id(), Rect::from_min_max(pos2(i * w, 0.0), pos2((i + 1.0) * w, 1.0))))
+    }
+
+    pub fn strip(&mut self, ctx: &egui::Context, rel: &str, index: usize, size: usize) -> Option<(TextureId, Rect)> {
+        let root = self.root.clone();
+        let entry = self
+            .strips
+            .entry(rel.to_string())
+            .or_insert_with(|| {
+                let bytes = std::fs::read(root.join(rel)).ok()?;
+                let img = image::load_from_memory(&bytes).ok()?.to_rgba8();
+                let (w, h) = (img.width() as usize, img.height() as usize);
+                let mut px = img.into_raw();
+                let count = (w / size.max(1)).max(1);
+                for i in 0..count {
+                    let key = [px[i * size * 4], px[i * size * 4 + 1], px[i * size * 4 + 2]];
+                    for y in 0..h.min(size) {
+                        for x in i * size..((i + 1) * size).min(w) {
+                            let o = (y * w + x) * 4;
+                            if px[o] == key[0] && px[o + 1] == key[1] && px[o + 2] == key[2] {
+                                px[o + 3] = 0;
+                            }
+                        }
+                    }
+                }
+                let image = egui::ColorImage::from_rgba_unmultiplied([w, h], &px);
+                Some((ctx.load_texture(rel.to_string(), image, egui::TextureOptions::NEAREST), count))
+            })
+            .clone();
+        let (tex, count) = entry?;
+        let i = index.min(count - 1) as f32;
+        let w = 1.0 / count as f32;
         Some((tex.id(), Rect::from_min_max(pos2(i * w, 0.0), pos2((i + 1.0) * w, 1.0))))
     }
 }

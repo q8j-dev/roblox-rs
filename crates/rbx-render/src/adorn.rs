@@ -873,3 +873,13 @@ pub fn handle_tip_radius(camera: Vec3, world: Vec3) -> f32 {
 pub fn normal_vector_of(id: usize) -> Vec3 {
     normal_vector(id)
 }
+
+pub fn overlay_ray(out: &mut Adorns, camera: Vec3, origin: Vec3, direction: Vec3, color: [f32; 4]) {
+    let mut ctx = Ctx {
+        out,
+        camera,
+        cframe: CFrame::IDENTITY,
+        material: Material::SelfLitHighlight,
+    };
+    ctx.ray(origin, direction, color);
+}

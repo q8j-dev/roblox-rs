@@ -1,4 +1,8 @@
 use crate::explorer::{self, Explorer};
+use crate::extras::Extras;
+use crate::views::Views;
+use crate::scripteditor::EditorState;
+use std::collections::HashMap;
 use crate::icons::Icons;
 use crate::metadata::ClassMetadata;
 use crate::play::{self, Mode, PlaySession};
@@ -12,7 +16,7 @@ use egui_stack::{DockArea, DockState, NodeIndex, TabStyle, TabViewer};
 use rbx_dom::{InstanceId, Variant};
 use rbx_script::api::user_input::{self, InputEvent, InputKind};
 use rbx_script::{Identity, MessageType};
-use rbx_studio_ui::{Document, panels};
+use rbx_studio_ui::Document;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -24,6 +28,12 @@ pub enum Tab {
     Output,
     Command,
     AdvancedObjects,
+    ScriptAnalysis,
+    Diagnostics,
+    TaskScheduler,
+    ScriptPerformance,
+    FindResults,
+    ObjectBrowser,
     Script(InstanceId),
 }
 
@@ -57,6 +67,11 @@ pub struct Studio {
     pub overlay: rbx_render::adorn::Adorns,
     pub play: Option<PlaySession>,
     pub viewport_focus: bool,
+    pub extras: Extras,
+    pub views: Views,
+    pub editors: HashMap<InstanceId, EditorState>,
+    pub active_doc: Option<InstanceId>,
+    pub ctx: Option<egui::Context>,
 }
 
 fn layout() -> DockState<Tab> {
@@ -70,12 +85,12 @@ fn layout() -> DockState<Tab> {
 }
 
 fn is_document(tab: &Tab) -> bool {
-    matches!(tab, Tab::Viewport | Tab::Script(_))
+    matches!(tab, Tab::Viewport | Tab::Script(_) | Tab::ObjectBrowser)
 }
 
 fn hide_dock_tab_bars(dock: &mut DockState<Tab>) {
     for (_, leaf) in dock.iter_leaves_mut() {
-        leaf.tab_bar_hidden = !leaf.tabs.iter().any(is_document);
+        leaf.tab_bar_hidden = leaf.tabs.len() == 1 && !leaf.tabs.iter().any(is_document);
     }
 }
 
@@ -130,6 +145,9 @@ struct RibbonState<'a> {
 impl ribbon::State for RibbonState<'_> {
     fn checked(&self, action: &str) -> bool {
         let s = self.studio;
+        if let Some(c) = s.extra_checked(action) {
+            return c;
+        }
         match action {
             "advArrowToolAction" => s.tool == Tool::Select,
             "advTranslateAction" => s.tool == Tool::Move,
@@ -144,6 +162,12 @@ impl ribbon::State for RibbonState<'_> {
             "viewOutputWindowAction" => s.dock.find_tab(&Tab::Output).is_some(),
             "viewCommandBarAction" => s.dock.find_tab(&Tab::Command).is_some(),
             "actionInsertAdvancedObject" => s.dock.find_tab(&Tab::AdvancedObjects).is_some(),
+            "viewScriptAnalysisAction" => s.dock.find_tab(&Tab::ScriptAnalysis).is_some(),
+            "viewDiagnosticsAction" => s.dock.find_tab(&Tab::Diagnostics).is_some(),
+            "viewTaskSchedulerAction" => s.dock.find_tab(&Tab::TaskScheduler).is_some(),
+            "viewScriptPerformanceAction" => s.dock.find_tab(&Tab::ScriptPerformance).is_some(),
+            "viewFindResultsWindowAction" => s.dock.find_tab(&Tab::FindResults).is_some(),
+            "objectBrowserAction" => s.dock.find_tab(&Tab::ObjectBrowser).is_some(),
             other => s.plugins.proxy(other).is_some_and(|b| b.active),
         }
     }
@@ -160,9 +184,14 @@ impl ribbon::State for RibbonState<'_> {
             | "actionColorSelector" | "actionSurface" => selected,
             "unionSelectionAction" | "negateSelectionAction" | "separateSelectionAction"
             | "publishToRobloxAction" | "publishToRobloxAsAction" | "publishSelectionToRobloxAction"
-            | "pairRbxDevDeviceAction" | "startServerAndPlayersAction"
+            | "pairRbxDevDeviceAction"
             | "toggleVideoRecordAction" | "filePublishedProjectsAction" | "downloadPlaceCopyAction"
-            | "publishGameAction" | "viewTeamCreateAction" => false,
+            | "publishGameAction" | "viewTeamCreateAction" | "breakpointsDockWidgetAction"
+            | "callStackDockWidgetAction" | "watchDockWidgetAction" | "actionStartPage" | "gameExplorerAction"
+            | "viewContextualHelpAction" | "viewTutorialsAction" | "emulateDeviceAction"
+            | "manageEmulationDeviceAction" | "onlineHelpAction" | "fastLogDumpAction" | "stepIntoAction"
+            | "stepOverAction" | "stepOutAction" | "addWatchAction" | "neverBreakOnScriptErrorsAction"
+            | "breakOnAllScriptErrorsAction" | "breakOnUnhandledScriptErrorsAction" => false,
             _ => true,
         }
     }
@@ -199,8 +228,14 @@ impl Studio {
             overlay: rbx_render::adorn::Adorns::default(),
             play: None,
             viewport_focus: false,
+            extras: Extras::default(),
+            views: Views::default(),
+            editors: HashMap::new(),
+            active_doc: None,
+            ctx: None,
             assets,
         };
+        studio.ribbon.set_combo("playersMode", studio.extras.players);
         studio.load_plugins();
         studio
     }
@@ -377,7 +412,7 @@ impl Studio {
         }
     }
 
-    fn selected_parts(&self) -> Vec<InstanceId> {
+    pub fn selected_parts(&self) -> Vec<InstanceId> {
         let sel = self.doc.selection();
         let e = self.doc.runtime.engine.lock();
         let mut out = Vec::new();
@@ -466,12 +501,20 @@ impl Studio {
         if let Some(path) = self.dock.find_tab(&tab) {
             let _ = self.dock.remove_tab(path);
         } else {
-            let surface = self.dock.main_surface_mut();
-            match tab {
-                Tab::Explorer | Tab::Properties | Tab::AdvancedObjects => {
+            let side = matches!(tab, Tab::Explorer | Tab::Properties | Tab::AdvancedObjects);
+            let neighbours: &[Tab] = if side {
+                &[Tab::Properties, Tab::Explorer, Tab::AdvancedObjects]
+            } else {
+                &[Tab::Output, Tab::ScriptAnalysis, Tab::FindResults, Tab::Diagnostics, Tab::TaskScheduler, Tab::ScriptPerformance, Tab::Command]
+            };
+            if let Some(path) = neighbours.iter().find_map(|t| self.dock.find_tab(t)) {
+                self.dock.set_focused_node_and_surface(path.node_path());
+                self.dock.main_surface_mut().push_to_focused_leaf(tab);
+            } else {
+                let surface = self.dock.main_surface_mut();
+                if side {
                     surface.split_right(NodeIndex::root(), 0.80, vec![tab]);
-                }
-                _ => {
+                } else {
                     surface.split_below(NodeIndex::root(), 0.80, vec![tab]);
                 }
             }
@@ -481,12 +524,33 @@ impl Studio {
     fn handle(&mut self, ev: Event) {
         match ev {
             Event::Color(n) => self.set_on_parts("BrickColor", Variant::BrickColor(rbx_math::BrickColor::new(n as i64))),
-            Event::Check | Event::Combo => {}
+            Event::Check(name, on) => {
+                if name == "startServerCB" {
+                    self.extras.start_server = on;
+                }
+            }
+            Event::Combo(name, idx) => {
+                if name == "playersMode" {
+                    self.extras.players = idx;
+                }
+            }
             Event::Action(name) => self.action(&name),
         }
     }
 
+    pub fn run_action(&mut self, name: &str) {
+        self.action(name);
+    }
+
     fn action(&mut self, name: &str) {
+        if self.extra_action(name) {
+            return;
+        }
+        if let Some(ctx) = self.ctx.clone()
+            && self.script_command(&ctx, name)
+        {
+            return;
+        }
         if let Some(id) = name.strip_prefix("#plugin:").and_then(|s| s.parse::<u64>().ok()) {
             if let Some(b) = InstanceId::from_raw(id) {
                 self.plugins.click(&self.doc, b);
@@ -590,6 +654,21 @@ impl Studio {
             "viewPropertiesAction" => self.toggle_tab(Tab::Properties),
             "viewOutputWindowAction" => self.toggle_tab(Tab::Output),
             "viewCommandBarAction" => self.toggle_tab(Tab::Command),
+            "viewScriptAnalysisAction" => self.toggle_tab(Tab::ScriptAnalysis),
+            "viewDiagnosticsAction" => self.toggle_tab(Tab::Diagnostics),
+            "viewTaskSchedulerAction" => self.toggle_tab(Tab::TaskScheduler),
+            "viewScriptPerformanceAction" => self.toggle_tab(Tab::ScriptPerformance),
+            "viewFindResultsWindowAction" => self.toggle_tab(Tab::FindResults),
+            "objectBrowserAction" => {
+                if let Some(t) = self.dock.find_tab(&Tab::ObjectBrowser) {
+                    let _ = self.dock.remove_tab(t);
+                } else {
+                    if let Some(vp) = self.dock.find_tab(&Tab::Viewport) {
+                        self.dock.set_focused_node_and_surface(vp.node_path());
+                    }
+                    self.dock.main_surface_mut().push_to_focused_leaf(Tab::ObjectBrowser);
+                }
+            }
             "actionInsertAdvancedObject" | "viewToolboxAction" => self.toggle_tab(Tab::AdvancedObjects),
             "insertServiceAction" => {
                 let mut e = self.doc.runtime.engine.lock();
@@ -626,6 +705,7 @@ impl Studio {
     }
 
     pub fn open_script(&mut self, id: InstanceId) {
+        self.ribbon.select_script_menu();
         if !self.scripts.iter().any(|(s, _)| *s == id) {
             let src = self.doc.script_source(id).unwrap_or_default();
             self.scripts.push((id, src));
@@ -643,6 +723,25 @@ impl Studio {
 
     pub fn shortcuts(&mut self, ctx: &egui::Context) {
         let wants_text = ctx.egui_wants_keyboard_input();
+        if self.active_doc.is_some() {
+            let keys = ctx.input(|i| {
+                let cmd = i.modifiers.command;
+                let shift = i.modifiers.shift;
+                [
+                    (cmd && !shift && i.key_pressed(egui::Key::F), "findAction"),
+                    (cmd && shift && i.key_pressed(egui::Key::F), "findInScriptsAction"),
+                    (cmd && i.key_pressed(egui::Key::H), "replaceAction"),
+                    (cmd && i.key_pressed(egui::Key::G), "goToLineAction"),
+                    (!shift && i.key_pressed(egui::Key::F3), "findNextAction"),
+                    (shift && i.key_pressed(egui::Key::F3), "findPreviousAction"),
+                ]
+            });
+            for (pressed, action) in keys {
+                if pressed {
+                    self.script_command(ctx, action);
+                }
+            }
+        }
         if self.play.is_some() {
             if ctx.input(|i| i.modifiers.shift && i.key_pressed(egui::Key::F5)) {
                 self.stop_play();
@@ -734,6 +833,8 @@ impl Studio {
 
     pub fn ui(&mut self, ui: &mut Ui) {
         let ctx = ui.ctx().clone();
+        self.ctx = Some(ctx.clone());
+        self.poll_launch();
         self.shortcuts(&ctx);
         self.sync_plugin_groups();
         let mut ribbon = std::mem::replace(&mut self.ribbon, Ribbon::empty());
@@ -766,6 +867,10 @@ impl Studio {
         let context = viewer.context;
         let close = viewer.close;
         self.dock = dock;
+        let script_menu = self.active_doc.is_some();
+        if script_menu != self.ribbon.script_menu {
+            self.ribbon.set_script_menu(script_menu);
+        }
         if let Some(tab) = close {
             self.toggle_tab(tab);
         }
@@ -870,12 +975,24 @@ impl Studio {
         self.viewport_input(ui, &response, rect);
         if self.playing_game() {
             self.overlay = rbx_render::adorn::Adorns::default();
+            let fps = 1.0 / ui.input(|i| i.stable_dt).max(1e-4);
+            crate::extras::stats_overlay(&ui.painter_at(rect), rect, self, fps);
             return;
         }
         let sel = self.doc.selection();
-        let e = self.doc.runtime.engine.lock();
-        self.overlay = self.tools.overlay(&e.dm, self.tool, &sel, self.view.camera.position);
-        self.tools.draw_2d(&ui.painter_at(rect), rect, &self.view.camera, &e.dm, self.tool, &sel);
+        let fps = 1.0 / ui.input(|i| i.stable_dt).max(1e-4);
+        {
+            let e = self.doc.runtime.engine.lock();
+            self.overlay = self.tools.overlay(&e.dm, self.tool, &sel, self.view.camera.position);
+            if self.extras.show_grid {
+                crate::extras::zero_plane_grid(&mut self.overlay, self.view.camera.position, self.extras.grid_studs);
+            }
+            self.tools.draw_2d(&ui.painter_at(rect), rect, &self.view.camera, &e.dm, self.tool, &sel);
+        }
+        if self.extras.axis_widget {
+            crate::extras::axis_widget(&ui.painter_at(rect), rect, &self.view.camera);
+        }
+        crate::extras::stats_overlay(&ui.painter_at(rect), rect, self, fps);
     }
 
     fn game_input(&mut self, ui: &mut Ui, response: &egui::Response, rect: Rect) {
@@ -1160,11 +1277,21 @@ impl TabViewer for Viewer<'_> {
             }
             Tab::Viewport => self.studio.place_name().into(),
             Tab::AdvancedObjects => "Advanced Objects".into(),
+            Tab::ScriptAnalysis => "Script Analysis".into(),
+            Tab::TaskScheduler => "Task Scheduler".into(),
+            Tab::ScriptPerformance => "Script Performance".into(),
+            Tab::FindResults => "Find Results".into(),
+            Tab::ObjectBrowser => "Object Browser".into(),
             other => format!("{other:?}").into(),
         }
     }
 
     fn ui(&mut self, ui: &mut Ui, tab: &mut Tab) {
+        match tab {
+            Tab::Script(id) => self.studio.active_doc = Some(*id),
+            Tab::Viewport | Tab::ObjectBrowser => self.studio.active_doc = None,
+            _ => {}
+        }
         if !is_document(tab) {
             let title = self.title(tab).text().to_string();
             if dock_title(ui, &title) {
@@ -1192,14 +1319,15 @@ impl TabViewer for Viewer<'_> {
             Tab::Output => self.studio.output_ui(ui),
             Tab::Command => self.studio.command_ui(ui),
             Tab::AdvancedObjects => self.studio.advanced_objects_ui(ui),
+            Tab::ScriptAnalysis => self.studio.script_analysis_ui(ui),
+            Tab::Diagnostics => self.studio.diagnostics_ui(ui),
+            Tab::TaskScheduler => self.studio.task_scheduler_ui(ui),
+            Tab::ScriptPerformance => self.studio.script_performance_ui(ui),
+            Tab::FindResults => self.studio.find_results_ui(ui),
+            Tab::ObjectBrowser => self.studio.object_browser_ui(ui),
             Tab::Script(id) => {
                 let id = *id;
-                let s = &mut *self.studio;
-                if let Some(i) = s.scripts.iter().position(|(sid, _)| *sid == id) {
-                    let mut buffer = std::mem::take(&mut s.scripts[i].1);
-                    panels::script_editor(ui, &mut s.doc, id, &mut buffer);
-                    s.scripts[i].1 = buffer;
-                }
+                self.studio.script_editor_ui(ui, id);
             }
         }
     }
@@ -1209,6 +1337,6 @@ impl TabViewer for Viewer<'_> {
     }
 
     fn tab_style_override(&self, tab: &Tab, global: &TabStyle) -> Option<TabStyle> {
-        matches!(tab, Tab::Viewport | Tab::Script(_)).then(|| document_tab_style(global))
+        is_document(tab).then(|| document_tab_style(global))
     }
 }

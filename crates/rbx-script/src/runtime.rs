@@ -395,6 +395,7 @@ pub struct State {
     pub threads: HashMap<usize, ThreadInfo>,
     pub script_threads: HashMap<InstanceId, Vec<Thread>>,
     pub running_scripts: HashMap<InstanceId, bool>,
+    pub script_activity: HashMap<InstanceId, (f64, u64)>,
     pub modules: HashMap<InstanceId, RegistryKey>,
     pub module_threads: HashMap<usize, InstanceId>,
     pub module_waiters: HashMap<InstanceId, Vec<Thread>>,
@@ -574,6 +575,7 @@ impl ScriptRuntime {
             threads: HashMap::new(),
             script_threads: HashMap::new(),
             running_scripts: HashMap::new(),
+            script_activity: HashMap::new(),
             modules: HashMap::new(),
             module_threads: HashMap::new(),
             module_waiters: HashMap::new(),
@@ -1192,6 +1194,19 @@ impl ScriptRuntime {
         pump(&self.lua);
     }
 
+    pub fn script_activity(&self) -> Vec<(InstanceId, f64, u64)> {
+        with_state(&self.lua, |s| {
+            s.running_scripts
+                .iter()
+                .filter(|(_, alive)| **alive)
+                .map(|(id, _)| {
+                    let (t, n) = s.script_activity.get(id).copied().unwrap_or((0.0, 0));
+                    (*id, t, n)
+                })
+                .collect()
+        })
+    }
+
     pub fn running_thread_count(&self) -> usize {
         with_state(&self.lua, |s| s.threads.len())
     }
@@ -1293,7 +1308,16 @@ pub fn resume_thread_result(
         w.depth += 1;
         prev
     };
+    let resume_started = rbx_base::time::Instant::now();
     let result = thread.resume::<MultiValue>(args);
+    if let Some(script) = info.as_ref().and_then(|i| i.script) {
+        let spent = resume_started.elapsed().as_secs_f64();
+        with_state(lua, |s| {
+            let entry = s.script_activity.entry(script).or_insert((0.0, 0));
+            entry.0 += spent;
+            entry.1 += 1;
+        });
+    }
     {
         let mut w = wd.lock();
         w.depth = w.depth.saturating_sub(1);

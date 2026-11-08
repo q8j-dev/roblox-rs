@@ -1,12 +1,15 @@
 mod app;
 mod explorer;
+mod extras;
 mod icons;
 mod metadata;
 mod play;
 mod plugins;
 mod properties;
 mod ribbon;
+mod scripteditor;
 mod theme;
+mod views;
 mod viewport;
 
 use app::Studio;
@@ -43,6 +46,8 @@ struct Args {
     run: Option<String>,
     #[arg(long)]
     play: bool,
+    #[arg(long, num_args = 0..)]
+    action: Vec<String>,
 }
 
 fn find_assets(explicit: Option<PathBuf>) -> PathBuf {
@@ -170,7 +175,7 @@ impl Host {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: gpu.renderer.format,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_SRC,
             view_formats: &[],
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
@@ -210,11 +215,14 @@ impl Host {
             self.studio.view.rect.width().max(1.0),
             self.studio.view.rect.height().max(1.0),
         );
+        let step_started = rbx_base::time::Instant::now();
         if let Some(session) = &mut self.studio.play {
             session.frame(&self.studio.doc, dt, screen);
         } else {
             self.studio.doc.runtime.step(dt);
         }
+        self.studio.views.step_ms = step_started.elapsed().as_secs_f64() * 1000.0;
+        self.studio.views.frame_ms = dt * 1000.0;
         if !self.studio.playing_game() {
             let mut e = self.studio.doc.runtime.engine.lock();
             self.studio.view.camera.apply(&mut e.dm);
@@ -224,8 +232,11 @@ impl Host {
         gpu.renderer.overlay = std::mem::take(&mut self.studio.overlay);
         gpu.renderer.frame_dt = dt as f32;
         if let Some((_, view, (w, h))) = &gpu.viewport {
+            let render_started = rbx_base::time::Instant::now();
             let e = self.studio.doc.runtime.engine.lock();
             gpu.renderer.render(&e.dm, view, *w, *h);
+            drop(e);
+            self.studio.views.render_ms = render_started.elapsed().as_secs_f64() * 1000.0;
         }
         for (id, deltas) in &output.textures_delta.set {
             for delta in deltas {
@@ -301,6 +312,19 @@ impl Host {
         for id in &output.textures_delta.free {
             gpu.egui.free_texture(id);
         }
+        if std::mem::take(&mut self.studio.extras.pending_screenshot)
+            && let Some((tex, _, _)) = &gpu.viewport
+        {
+            let path = Studio::screenshot_path();
+            match save_texture(gpu, tex, &path) {
+                Ok(()) => self.studio.status.push((rbx_script::MessageType::Info, format!("Screenshot saved to {}", path.display()))),
+                Err(e) => self.studio.status.push((rbx_script::MessageType::Error, e)),
+            }
+        }
+        if std::mem::take(&mut self.studio.extras.pending_fullscreen) {
+            let full = window.fullscreen().is_some();
+            window.set_fullscreen(if full { None } else { Some(winit::window::Fullscreen::Borderless(None)) });
+        }
         if let (Some(tex), Some((path, _))) = (capture, &self.screenshot) {
             match save_texture(gpu, &tex, path) {
                 Ok(()) => tracing::info!("saved {}", path.display()),
@@ -330,7 +354,7 @@ fn capture_texture(gpu: &Gpu) -> wgpu::Texture {
 }
 
 fn save_texture(gpu: &Gpu, tex: &wgpu::Texture, path: &std::path::Path) -> Result<(), String> {
-    let (w, h) = (gpu.config.width, gpu.config.height);
+    let (w, h) = (tex.width(), tex.height());
     let row = (w * 4).div_ceil(256) * 256;
     let device = &gpu.renderer.device;
     let buffer = device.create_buffer(&wgpu::BufferDescriptor {
@@ -465,7 +489,10 @@ impl ApplicationHandler for Host {
             let _ = state.on_window_event(window, &event);
         }
         match event {
-            WindowEvent::CloseRequested => event_loop.exit(),
+            WindowEvent::CloseRequested => {
+                self.studio.cleanup_servers();
+                event_loop.exit();
+            }
             WindowEvent::Resized(size) => {
                 if let Some(gpu) = &mut self.gpu {
                     gpu.config.width = size.width.max(1);
@@ -549,6 +576,9 @@ fn main() {
                 .unwrap_or_default()
         };
         studio.doc.select(picked);
+    }
+    for a in &args.action {
+        studio.run_action(a);
     }
     let event_loop = match EventLoop::new() {
         Ok(l) => l,

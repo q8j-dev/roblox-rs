@@ -78,6 +78,14 @@
   "text": "On Unhandled Exceptions",
   "tooltip": "Break unhandled exceptions into debugger"
  },
+ "breakpointsDockWidgetAction": {
+  "checkable": true,
+  "text": "Breakpoints"
+ },
+ "callStackDockWidgetAction": {
+  "checkable": true,
+  "text": "Call Stack"
+ },
  "cleanupServersAndPlayersAction": {
   "icon": "images/Studio 2.0 icons/32x32/delete_x_32.png",
   "text": "Cleans up all clients and servers",
@@ -807,6 +815,10 @@
   "icon": "images/RibbonIcons/View/Tutorials.png",
   "text": "Tutorials",
   "tooltip": "View tutorials"
+ },
+ "watchDockWidgetAction": {
+  "checkable": true,
+  "text": "Watch"
  },
  "weldSurfaceAction": {
   "checkable": true,

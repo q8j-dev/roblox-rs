@@ -7,9 +7,11 @@ use std::collections::HashMap;
 
 const ROW: f32 = 19.0;
 
+pub type ScriptMessages = (InstanceId, String, Vec<(usize, String)>);
+
 #[derive(Default)]
 pub struct Views {
-    pub analysis: Vec<(InstanceId, String, Vec<(usize, String)>)>,
+    pub analysis: Vec<ScriptMessages>,
     pub analysis_age: f64,
     pub find_results: Vec<(InstanceId, usize, String)>,
     pub find_query: String,

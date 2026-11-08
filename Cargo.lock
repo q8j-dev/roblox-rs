@@ -3231,6 +3231,7 @@ dependencies = [
 name = "rbx-audio"
 version = "0.1.0"
 dependencies = [
+ "js-sys",
  "kira",
  "send_wrapper",
  "tracing",

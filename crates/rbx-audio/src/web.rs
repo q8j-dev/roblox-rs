@@ -21,6 +21,23 @@ pub fn resume() {
     });
 }
 
+fn write_channel(buffer: &web_sys::AudioBuffer, channel: u32, samples: &[f32]) {
+    let Ok(get) = js_sys::Reflect::get(buffer, &"getChannelData".into()) else {
+        return;
+    };
+    let Ok(get) = get.dyn_into::<js_sys::Function>() else {
+        return;
+    };
+    let Ok(data) = get.call1(buffer, &channel.into()) else {
+        return;
+    };
+    let Ok(data) = data.dyn_into::<js_sys::Float32Array>() else {
+        return;
+    };
+    let n = (data.length() as usize).min(samples.len());
+    data.subarray(0, n as u32).copy_from(&samples[..n]);
+}
+
 struct Output {
     ctx: AudioContext,
     node: Option<ScriptProcessorNode>,
@@ -80,8 +97,8 @@ impl Backend for WebBackend {
                     left[i] = interleaved[i * 2];
                     right[i] = interleaved[i * 2 + 1];
                 }
-                let _ = buffer.copy_to_channel(&left, 0);
-                let _ = buffer.copy_to_channel(&right, 1);
+                write_channel(&buffer, 0, &left);
+                write_channel(&buffer, 1, &right);
             })
                 as Box<dyn FnMut(AudioProcessingEvent)>);
         node.set_onaudioprocess(Some(callback.as_ref().unchecked_ref()));

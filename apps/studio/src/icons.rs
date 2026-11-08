@@ -54,7 +54,7 @@ impl Icons {
                 let img = image::load_from_memory(&bytes).ok()?.to_rgba8();
                 let size = [img.width() as usize, img.height() as usize];
                 let mut px = img.into_raw();
-                for p in px.chunks_exact_mut(4) {
+                for p in px.as_chunks_mut::<4>().0 {
                     let g = (p[0] as u32 * 11 + p[1] as u32 * 16 + p[2] as u32 * 5) / 32;
                     let v = (128 + g / 2).min(255) as u8;
                     p[0] = v;

@@ -28,6 +28,7 @@ pub struct Ribbon {
     pub plugin_groups: Vec<(String, Vec<PluginItem>)>,
     combos: HashMap<String, usize>,
     pub script_menu: bool,
+    pub dynamic: HashMap<String, Vec<(String, String)>>,
 }
 
 #[derive(Clone, Debug)]
@@ -99,6 +100,7 @@ impl Ribbon {
             plugin_groups: Vec::new(),
             combos: HashMap::new(),
             script_menu: false,
+            dynamic: HashMap::new(),
         }
     }
 
@@ -111,6 +113,7 @@ impl Ribbon {
             plugin_groups: Vec::new(),
             combos: HashMap::new(),
             script_menu: false,
+            dynamic: HashMap::new(),
         }
     }
 
@@ -567,6 +570,14 @@ impl Ribbon {
                                 let popup = children(&sb).first().cloned().unwrap_or(Value::Null);
                                 close |= self.menu_items(ui, icons, state, children(&popup), events);
                             }
+                            return;
+                        }
+                        if let Some(entries) = self.dynamic.get(&name).cloned() {
+                            let items: Vec<Value> = entries
+                                .iter()
+                                .map(|(text, action)| serde_json::json!({ "tag": "addaction", "name": action, "text": text }))
+                                .collect();
+                            close |= self.menu_items(ui, icons, state, &items, events);
                             return;
                         }
                         let Some(menu) = self.find_menu(&name) else {

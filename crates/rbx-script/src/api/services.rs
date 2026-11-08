@@ -28,6 +28,7 @@ pub fn settings_root(lua: &Lua, class: &str) -> Result<InstanceId> {
                 ("DebugSettings", "Diagnostics"),
                 ("GameSettings", "Game Options"),
                 ("TaskScheduler", "Task Scheduler"),
+                ("Studio", "Studio"),
             ] {
                 if let Ok(child) = e.dm.create_internal(item) {
                     e.dm.set_name(child, name);

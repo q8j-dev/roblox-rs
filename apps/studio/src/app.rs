@@ -152,6 +152,7 @@ impl ribbon::State for RibbonState<'_> {
             "advArrowToolAction" => s.tool == Tool::Select,
             "advTranslateAction" => s.tool == Tool::Move,
             "resizeAction" => s.tool == Tool::Scale,
+            "lockAction" => s.tool == Tool::Lock,
             "advRotateAction" => s.tool == Tool::Rotate,
             "toggleCollisionCheckAction" => s.collisions,
             "gridToOneAction" => s.grid == 1.0,
@@ -189,7 +190,7 @@ impl ribbon::State for RibbonState<'_> {
             | "publishGameAction" | "viewTeamCreateAction" | "breakpointsDockWidgetAction"
             | "callStackDockWidgetAction" | "watchDockWidgetAction" | "actionStartPage" | "gameExplorerAction"
             | "viewContextualHelpAction" | "viewTutorialsAction" | "emulateDeviceAction"
-            | "manageEmulationDeviceAction" | "onlineHelpAction" | "fastLogDumpAction" | "stepIntoAction"
+            | "manageEmulationDeviceAction" | "onlineHelpAction" | "fastLogDumpAction" | "fileOpenRecentSavesAction" | "stepIntoAction"
             | "stepOverAction" | "stepOutAction" | "addWatchAction" | "neverBreakOnScriptErrorsAction"
             | "breakOnAllScriptErrorsAction" | "breakOnUnhandledScriptErrorsAction" => false,
             _ => true,
@@ -523,7 +524,15 @@ impl Studio {
 
     fn handle(&mut self, ev: Event) {
         match ev {
-            Event::Color(n) => self.set_on_parts("BrickColor", Variant::BrickColor(rbx_math::BrickColor::new(n as i64))),
+            Event::Color(n) => {
+                if self.extras.color_as_tool {
+                    self.extras.paint_color = Some(n);
+                    self.extras.paint_material = None;
+                    self.tool = Tool::Paint;
+                } else {
+                    self.set_on_parts("BrickColor", Variant::BrickColor(rbx_math::BrickColor::new(n as i64)));
+                }
+            }
             Event::Check(name, on) => {
                 if name == "startServerCB" {
                     self.extras.start_server = on;
@@ -557,12 +566,29 @@ impl Studio {
             }
             return;
         }
+        if let Some(target) = name.strip_prefix("#focus:") {
+            let tab = if target == "viewport" {
+                Some(Tab::Viewport)
+            } else {
+                target.parse::<u64>().ok().and_then(InstanceId::from_raw).map(Tab::Script)
+            };
+            if let Some(path) = tab.and_then(|t| self.dock.find_tab(&t)) {
+                let _ = self.dock.set_active_tab(path);
+            }
+            return;
+        }
         if let Some(mat) = name.strip_prefix("ms_") {
             let value = rbx_reflection::database()
                 .enum_desc("Material")
                 .and_then(|d| d.items.iter().find(|i| i.name == mat).map(|i| i.value));
             if let Some(v) = value {
-                self.set_on_parts("Material", Variant::Enum(v));
+                if self.extras.material_as_tool {
+                    self.extras.paint_material = Some(v);
+                    self.extras.paint_color = None;
+                    self.tool = Tool::Paint;
+                } else {
+                    self.set_on_parts("Material", Variant::Enum(v));
+                }
             }
             return;
         }
@@ -585,6 +611,7 @@ impl Studio {
                 }
             }
             "fileSaveAction" => self.save(),
+            "fileCloseAction" => self.run_action("fileNewAction"),
             "fileSaveAsAction" => self.save_dialog(),
             "undoAction" => self.undo(),
             "redoAction" => self.redo(),
@@ -599,6 +626,22 @@ impl Studio {
             }
             "duplicateSelectionAction" => {
                 self.doc.run_verb("Duplicate");
+            }
+            "deleteSelectedAction" => self.doc.delete_selection(),
+            "pasteIntoAction" => {
+                self.doc.run_verb("PasteInto");
+            }
+            "zoomExtentsAction" => self.zoom_to_selection(),
+            "selectionSaveToFileAction" => self.save_selection_to_file(),
+            "exportSelectionAction" => self.export_selection_obj(),
+            "insertIntoFileAction" => self.import_model(),
+            "selectChildrenAction" => {
+                let sel = self.doc.selection();
+                let kids: Vec<InstanceId> = {
+                    let e = self.doc.runtime.engine.lock();
+                    sel.iter().flat_map(|s| e.dm.children_of(*s).to_vec()).collect()
+                };
+                self.doc.select(kids);
             }
             "advArrowToolAction" => self.tool = Tool::Select,
             "advTranslateAction" => self.tool = Tool::Move,
@@ -628,7 +671,7 @@ impl Studio {
             "hingeAction" => self.surface(6),
             "motorRightAction" => self.surface(7),
             "smoothNoOutlinesAction" => self.surface(10),
-            "lockAction" => self.set_on_parts("Locked", Variant::Bool(true)),
+            "lockAction" => self.tool = if self.tool == Tool::Lock { Tool::Select } else { Tool::Lock },
             "unlockAllAction" => {
                 let parts = {
                     let e = self.doc.runtime.engine.lock();
@@ -768,7 +811,7 @@ impl Studio {
                 cmd && i.key_pressed(egui::Key::V),
                 cmd && i.key_pressed(egui::Key::X),
                 cmd && !i.modifiers.shift && i.key_pressed(egui::Key::G),
-                cmd && i.modifiers.shift && i.key_pressed(egui::Key::G),
+                cmd && i.key_pressed(egui::Key::U),
                 !cmd && i.key_pressed(egui::Key::R),
                 !cmd && i.key_pressed(egui::Key::T),
             ]
@@ -799,6 +842,12 @@ impl Studio {
                     self.action(a);
                 }
             }
+        }
+        if ctx.input(|i| i.key_pressed(egui::Key::F) && !i.modifiers.command) {
+            self.zoom_to_selection();
+        }
+        if ctx.input(|i| i.modifiers.command && i.modifiers.shift && i.key_pressed(egui::Key::V)) {
+            self.doc.run_verb("PasteInto");
         }
         let sel = self.doc.selection();
         if (keys[10] || keys[11]) && !sel.is_empty() {
@@ -837,6 +886,17 @@ impl Studio {
         self.poll_launch();
         self.shortcuts(&ctx);
         self.sync_plugin_groups();
+        let windows: Vec<(String, String)> = {
+            let mut out = vec![(self.place_name(), "#focus:viewport".to_string())];
+            let e = self.doc.runtime.engine.lock();
+            for (id, _) in &self.scripts {
+                if e.dm.contains(*id) {
+                    out.push((e.dm.name_of(*id).to_string(), format!("#focus:{}", id.raw())));
+                }
+            }
+            out
+        };
+        self.ribbon.dynamic.insert("switchWindowsMenu".into(), windows);
         let mut ribbon = std::mem::replace(&mut self.ribbon, Ribbon::empty());
         let mut icons = std::mem::replace(&mut self.icons, Icons::new(Path::new("")));
         let events = egui::Panel::top("ribbon")
@@ -888,75 +948,185 @@ impl Studio {
             .collect();
         self.scripts.retain(|(id, _)| open_ids.contains(id));
         self.context_menu(&ctx);
+        self.dialogs(&ctx);
     }
 
     fn context_menu(&mut self, ctx: &egui::Context) {
         let Some((id, at)) = self.context else { return };
-        let mut close = false;
-        let mut action: Option<&'static str> = None;
-        let area = egui::Area::new(egui::Id::unique("explorer-context"))
-            .order(egui::Order::Foreground)
-            .fixed_pos(at)
-            .show(ctx, |ui| {
-                egui::Frame::new()
-                    .fill(Color32::WHITE)
-                    .stroke(Stroke::new(1.0, theme::RIBBON_SEPARATOR))
-                    .inner_margin(2.0)
-                    .show(ui, |ui| {
-                        ui.set_min_width(170.0);
-                        for (label, act) in [
-                            ("Cut", "cutAction"),
-                            ("Copy", "copyAction"),
-                            ("Paste Into", "#pasteinto"),
-                            ("Duplicate", "duplicateSelectionAction"),
-                            ("Delete", "#delete"),
-                            ("Rename", "#rename"),
-                            ("", ""),
-                            ("Group", "groupSelectionAction"),
-                            ("Ungroup", "ungroupSelectionAction"),
-                            ("", ""),
-                            ("Insert Part", "placePartAction"),
-                            ("Insert Script", "ScriptLargeAction"),
-                        ] {
-                            if label.is_empty() {
-                                let (r, _) = ui.allocate_exact_size(vec2(ui.available_width(), 5.0), Sense::hover());
-                                ui.painter().line_segment(
-                                    [pos2(r.left() + 4.0, r.center().y), pos2(r.right() - 4.0, r.center().y)],
-                                    Stroke::new(1.0, theme::RIBBON_SEPARATOR),
-                                );
-                                continue;
-                            }
-                            let (r, resp) = ui.allocate_exact_size(vec2(ui.available_width(), 22.0), Sense::click());
-                            if resp.hovered() {
-                                ui.painter().rect_filled(r, 0.0, theme::HIGHLIGHT);
-                                ui.painter().rect_stroke(r, 0.0, Stroke::new(1.0, theme::ACCENT_HILIGHT), egui::StrokeKind::Inside);
-                            }
-                            ui.painter().text(
-                                pos2(r.left() + 26.0, r.center().y),
-                                Align2::LEFT_CENTER,
-                                label,
-                                FontId::proportional(theme::FONT_SIZE),
-                                theme::TEXT,
-                            );
-                            if resp.clicked() {
-                                action = Some(act);
-                                close = true;
-                            }
-                        }
-                    });
-            });
-        if let Some(a) = action {
-            match a {
-                "#delete" => self.doc.delete_selection(),
-                "#rename" => self.explorer.start_rename(&self.doc, id),
-                "#pasteinto" => {
-                    self.doc.run_verb("PasteInto");
+        use crate::menus::{Entry, item};
+        let selected = !self.doc.selection().is_empty();
+        let classes: Vec<Entry> = {
+            let mut names: Vec<String> = rbx_reflection::database()
+                .classes()
+                .filter(|c| c.creatable && self.meta.insertable(&c.name) && self.meta.order(&c.name) >= 0)
+                .map(|c| c.name.clone())
+                .collect();
+            names.sort();
+            names
+                .into_iter()
+                .map(|n| Entry::Item {
+                    id: format!("#insert:{n}"),
+                    class_icon: Some(self.meta.image(&n)),
+                    text: n,
+                    shortcut: String::new(),
+                    icon: None,
+                    enabled: true,
+                    checked: false,
+                })
+                .collect()
+        };
+        let entries = vec![
+            item("cutAction", "Cut", "Ctrl+X", Some("images/Studio 2.0 icons/16x16/cut_clipboard_16_h.png"), selected),
+            item("copyAction", "Copy", "Ctrl+C", Some("images/Studio 2.0 icons/16x16/copy_clipboard_16_h.png"), selected),
+            item("pasteIntoAction", "Paste Into", "Ctrl+Shift+V", None, true),
+            item("duplicateSelectionAction", "Duplicate", "Ctrl+D", Some("images/Studio 2.0 icons/16x16/copy_clipboard_16_h.png"), selected),
+            item("deleteSelectedAction", "Delete", "Del", Some("images/Studio 2.0 icons/16x16/delete_x_16_h.png"), selected),
+            item("renameObjectAction", "Rename", "", None, selected),
+            Entry::Separator,
+            item("groupSelectionAction", "Group", "Ctrl+G", Some("images/Studio 2.0 icons/16x16/group_16.png"), selected),
+            item("ungroupSelectionAction", "Ungroup", "Ctrl+U", Some("images/Studio 2.0 icons/16x16/ungroup_16.png"), selected),
+            item("selectChildrenAction", "Select Children", "", None, selected),
+            item("zoomExtentsAction", "Zoom to", "F", Some("images/c_zoomExtent_old.png"), selected),
+            Entry::Separator,
+            Entry::Item {
+                id: "#insertpart".into(),
+                text: "Insert Part".into(),
+                shortcut: String::new(),
+                icon: None,
+                class_icon: Some(1),
+                enabled: true,
+                checked: false,
+            },
+            Entry::Sub { text: "Insert Object".into(), items: classes },
+            item("insertIntoFileAction", "Insert from File...", "", None, true),
+            Entry::Separator,
+            item("selectionSaveToFileAction", "Save to File...", "", None, selected),
+            item("saveToRobloxAction", "Save to Roblox...", "", None, false),
+            item("createNewLinkedSourceAction", "Create new LinkedSource...", "", None, false),
+            item("publishAsPluginAction", "Publish as Plugin...", "", None, false),
+            item("exportSelectionAction", "Export Selection...", "", None, selected),
+            Entry::Separator,
+            item("launchHelpForSelectionAction", "Help", "", Some("images/Studio Ribbon Icons/help.png"), false),
+        ];
+        let mut icons = std::mem::replace(&mut self.icons, Icons::new(Path::new("")));
+        let (chosen, outside) = crate::menus::show(ctx, egui::Id::unique("explorer-context"), at, &entries, &mut icons);
+        self.icons = icons;
+        if let Some(a) = chosen {
+            self.context = None;
+            match a.as_str() {
+                "renameObjectAction" => self.explorer.start_rename(&self.doc, id),
+                "#insertpart" => {
+                    let parent = self.doc.selection().first().copied().unwrap_or(id);
+                    if let Ok(p) = self.doc.insert("Part", parent) {
+                        self.doc.select(vec![p]);
+                    }
                 }
-                other => self.action(other),
+                other => {
+                    if let Some(class) = other.strip_prefix("#insert:") {
+                        self.insert_into_selection(class);
+                    } else {
+                        self.action(other);
+                    }
+                }
+            }
+        } else if outside {
+            self.context = None;
+        }
+    }
+
+    pub fn zoom_to_selection(&mut self) {
+        let sel = self.doc.selection();
+        let e = self.doc.runtime.engine.lock();
+        let parts: Vec<InstanceId> = sel
+            .iter()
+            .flat_map(|s| std::iter::once(*s).chain(e.dm.descendants(*s)))
+            .filter(|d| e.dm.is_a(*d, "BasePart"))
+            .collect();
+        let mut lo = rbx_math::Vec3::splat(f32::INFINITY);
+        let mut hi = rbx_math::Vec3::splat(f32::NEG_INFINITY);
+        for p in parts {
+            if let Some((cf, size)) = viewport::part_box(&e.dm, p) {
+                let h = size * 0.5;
+                for i in 0..8 {
+                    let c = rbx_math::Vec3::new(
+                        if i & 1 == 0 { -h.x } else { h.x },
+                        if i & 2 == 0 { -h.y } else { h.y },
+                        if i & 4 == 0 { -h.z } else { h.z },
+                    );
+                    let w = cf.point_to_world_space(c);
+                    lo = lo.min(w);
+                    hi = hi.max(w);
+                }
             }
         }
-        if close || (ctx.input(|i| i.pointer.any_pressed()) && !area.response.contains_pointer()) {
-            self.context = None;
+        drop(e);
+        if !lo.is_finite() {
+            return;
+        }
+        let center = (lo + hi) * 0.5;
+        let radius = ((hi - lo).length() * 0.5).max(1.0);
+        let distance = radius / (self.view.camera.fov_y.to_radians() * 0.5).tan() * 1.1;
+        let dir = self.view.camera.cframe().look_vector();
+        let fov = self.view.camera.fov_y;
+        self.view.camera = FlyCamera::looking_at(center - dir * distance, center);
+        self.view.camera.fov_y = fov;
+    }
+
+    pub fn save_selection_to_file(&mut self) {
+        let sel = self.doc.selection();
+        if sel.is_empty() {
+            return;
+        }
+        let Some(path) = rfd::FileDialog::new()
+            .add_filter("Roblox Model Files", &["rbxm"])
+            .add_filter("Roblox XML Model Files", &["rbxmx"])
+            .set_file_name("Model.rbxm")
+            .save_file()
+        else {
+            return;
+        };
+        let tree = self.doc.runtime.engine.lock().dm.save_tree(&sel, rbx_dom::SaveOptions::default());
+        let data = if path.extension().is_some_and(|e| e == "rbxmx") {
+            Ok(rbx_format::write_xml(&tree).into_bytes())
+        } else {
+            rbx_format::write_binary(&tree, rbx_format::BinaryWriteOptions::default()).map_err(|e| e.to_string())
+        };
+        match data.and_then(|d| std::fs::write(&path, d).map_err(|e| e.to_string())) {
+            Ok(()) => self.log(MessageType::Info, format!("saved {}", path.display())),
+            Err(e) => self.log(MessageType::Error, e),
+        }
+    }
+
+    pub fn export_selection_obj(&mut self) {
+        let Some(path) = rfd::FileDialog::new().add_filter("Wavefront OBJ", &["obj"]).set_file_name("Selection.obj").save_file() else {
+            return;
+        };
+        let parts = self.selected_parts();
+        let e = self.doc.runtime.engine.lock();
+        let mut out = String::from("# exported by Roblox Studio\n");
+        let mut base = 1;
+        for p in parts {
+            let Some((cf, size)) = viewport::part_box(&e.dm, p) else { continue };
+            out.push_str(&format!("o {}\n", e.dm.name_of(p)));
+            let h = size * 0.5;
+            for i in 0..8 {
+                let c = rbx_math::Vec3::new(
+                    if i & 1 == 0 { -h.x } else { h.x },
+                    if i & 2 == 0 { -h.y } else { h.y },
+                    if i & 4 == 0 { -h.z } else { h.z },
+                );
+                let w = cf.point_to_world_space(c);
+                out.push_str(&format!("v {} {} {}\n", w.x, w.y, w.z));
+            }
+            for f in [[0, 2, 3, 1], [4, 5, 7, 6], [0, 1, 5, 4], [2, 6, 7, 3], [0, 4, 6, 2], [1, 3, 7, 5]] {
+                out.push_str(&format!("f {} {} {} {}\n", base + f[0], base + f[1], base + f[2], base + f[3]));
+            }
+            base += 8;
+        }
+        drop(e);
+        match std::fs::write(&path, out) {
+            Ok(()) => self.log(MessageType::Info, format!("exported {}", path.display())),
+            Err(err) => self.log(MessageType::Error, err.to_string()),
         }
     }
 
@@ -1098,12 +1268,35 @@ impl Studio {
             let e = self.doc.runtime.engine.lock();
             self.tools.update_hover(&e.dm, self.tool, &sel, &self.view.camera, origin, dir);
         }
-        if response.drag_started_by(egui::PointerButton::Primary) {
+        if response.drag_started_by(egui::PointerButton::Primary) && !matches!(self.tool, Tool::Lock | Tool::Paint) {
             self.tools.begin(&mut self.doc, self.tool, self.collisions, &self.view.camera, origin, dir);
         } else if response.dragged_by(egui::PointerButton::Primary) {
             self.tools.update(&mut self.doc, origin, dir, self.grid);
         } else if response.drag_stopped() {
             self.tools.end(&mut self.doc);
+        } else if response.clicked() && matches!(self.tool, Tool::Lock | Tool::Paint) {
+            let hit = {
+                let e = self.doc.runtime.engine.lock();
+                viewport::pick(&e.dm, origin, dir, self.tool == Tool::Lock, &[]).map(|h| h.part)
+            };
+            if let Some(part) = hit {
+                self.doc.checkpoint();
+                let mut e = self.doc.runtime.engine.lock();
+                match self.tool {
+                    Tool::Lock => {
+                        let locked = e.dm.get_bool(part, "Locked");
+                        let _ = e.dm.set(part, "Locked", Variant::Bool(!locked));
+                    }
+                    _ => {
+                        if let Some(c) = self.extras.paint_color {
+                            let _ = e.dm.set(part, "BrickColor", Variant::BrickColor(rbx_math::BrickColor::new(c as i64)));
+                        }
+                        if let Some(m) = self.extras.paint_material {
+                            let _ = e.dm.set(part, "Material", Variant::Enum(m));
+                        }
+                    }
+                }
+            }
         } else if response.clicked() {
             if self.tools.over_handle.is_some() {
                 return;

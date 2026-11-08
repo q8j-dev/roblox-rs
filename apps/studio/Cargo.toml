@@ -20,6 +20,7 @@ pollster = "1.0.1"
 rbx-audio = { version = "0.1.0", path = "../../crates/rbx-audio" }
 rbx-base = { version = "0.1.0", path = "../../crates/rbx-base" }
 rbx-dom = { version = "0.1.0", path = "../../crates/rbx-dom" }
+rbx-format = { version = "0.1.0", path = "../../crates/rbx-format" }
 rbx-math = { version = "0.1.0", path = "../../crates/rbx-math" }
 rbx-platform = { version = "0.1.0", path = "../../crates/rbx-platform" }
 rbx-reflection = { version = "0.1.0", path = "../../crates/rbx-reflection" }

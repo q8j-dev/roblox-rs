@@ -18,6 +18,8 @@ pub enum Tool {
     Move,
     Scale,
     Rotate,
+    Lock,
+    Paint,
 }
 
 pub struct FlyCamera {
@@ -365,7 +367,7 @@ impl Tools {
             return Vec::new();
         }
         match tool {
-            Tool::Select => Vec::new(),
+            Tool::Select | Tool::Lock | Tool::Paint => Vec::new(),
             Tool::Scale => selection
                 .iter()
                 .filter(|id| dm.is_a(**id, "BasePart"))

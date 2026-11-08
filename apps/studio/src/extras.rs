@@ -36,6 +36,13 @@ pub struct Extras {
     pub pending_fullscreen: bool,
     pub pending_screenshot: bool,
     pub launch: Option<mpsc::Receiver<Result<String, String>>>,
+    pub show_about: bool,
+    pub show_shortcuts: bool,
+    pub show_settings: bool,
+    pub settings_selected: Option<InstanceId>,
+    pub settings_props: crate::properties::Properties,
+    pub paint_color: Option<u16>,
+    pub paint_material: Option<u32>,
 }
 
 impl Default for Extras {
@@ -56,6 +63,13 @@ impl Default for Extras {
             pending_fullscreen: false,
             pending_screenshot: false,
             launch: None,
+            show_about: false,
+            show_shortcuts: false,
+            show_settings: false,
+            settings_selected: None,
+            settings_props: crate::properties::Properties::default(),
+            paint_color: None,
+            paint_material: None,
         }
     }
 }
@@ -442,6 +456,19 @@ impl Studio {
             "testSummaryStatsAction" => self.extras.stats[4] = !self.extras.stats[4],
             "testCustomStatsAction" => self.extras.stats[5] = !self.extras.stats[5],
             "testClearStatsAction" => self.extras.stats = [false; 6],
+            "aboutRobloxAction" => self.extras.show_about = true,
+            "shortcutHelpAction" => self.extras.show_shortcuts = true,
+            "settingsAction" => self.extras.show_settings = true,
+            "exportPlaceAction" => {
+                let all: Vec<InstanceId> = {
+                    let e = self.doc.runtime.engine.lock();
+                    e.dm.find_service("Workspace").map(|w| vec![w]).unwrap_or_default()
+                };
+                let prev = self.doc.selection();
+                self.doc.select(all);
+                self.export_selection_obj();
+                self.doc.select(prev);
+            }
             _ => return false,
         }
         true
@@ -456,5 +483,133 @@ impl Studio {
         let _ = std::fs::create_dir_all(&dir);
         let stamp = rbx_base::time::unix_seconds() as u64;
         dir.join(format!("RobloxScreenShot{stamp}.png"))
+    }
+
+    pub fn dialogs(&mut self, ctx: &egui::Context) {
+        if self.extras.show_about {
+            let mut open = true;
+            egui::Window::new("Welcome to ROBLOX!")
+                .collapsible(false)
+                .resizable(false)
+                .open(&mut open)
+                .anchor(Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
+                .show(ctx, |ui| {
+                    ui.set_width(380.0);
+                    ui.vertical_centered(|ui| {
+                        ui.label(egui::RichText::new(format!("ROBLOX Studio Version {}", env!("CARGO_PKG_VERSION"))).font(crate::theme::bold(crate::theme::FONT_SIZE)));
+                        ui.add_space(8.0);
+                        ui.label("ROBLOX, \"Online Building Toy\", characters, logos, names, and all related indicia are trademarks of ROBLOX Corporation \u{a9}2014. US Patents 7,874,921. Patents pending.");
+                        ui.add_space(8.0);
+                        ui.label("Contact us at info@roblox.com.");
+                        ui.add_space(8.0);
+                        if ui.button("   OK   ").clicked() {
+                            self.extras.show_about = false;
+                        }
+                    });
+                });
+            if !open {
+                self.extras.show_about = false;
+            }
+        }
+        if self.extras.show_shortcuts {
+            let mut open = true;
+            let mut rows: Vec<(String, String)> = Vec::new();
+            if let Ok(text) = std::fs::read_to_string(self.assets.join("studio").join("actions.json"))
+                && let Ok(Value::Object(map)) = serde_json::from_str::<Value>(&text)
+            {
+                for (_, v) in map {
+                    if let (Some(t), Some(k)) = (v.get("text").and_then(Value::as_str), v.get("shortcut").and_then(Value::as_str)) {
+                        rows.push((t.to_string(), k.to_string()));
+                    }
+                }
+            }
+            rows.sort();
+            egui::Window::new("Customize Shortcuts")
+                .collapsible(false)
+                .open(&mut open)
+                .default_size(egui::vec2(420.0, 480.0))
+                .show(ctx, |ui| {
+                    let xs = crate::views::header(ui, &[("Action", 2.0), ("Shortcut", 1.0)]);
+                    egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
+                        for (t, k) in &rows {
+                            crate::views::row(ui, &xs, &[t.clone(), k.clone()], Color32::BLACK);
+                        }
+                    });
+                });
+            if !open {
+                self.extras.show_shortcuts = false;
+            }
+        }
+        if self.extras.show_settings {
+            let mut open = true;
+            let root = rbx_script::api::services::settings_root(&self.doc.runtime.lua, "GlobalSettings").ok();
+            let categories: Vec<(InstanceId, String)> = {
+                let e = self.doc.runtime.engine.lock();
+                root.map(|r| e.dm.children_of(r).iter().map(|c| (*c, e.dm.name_of(*c).to_string())).collect())
+                    .unwrap_or_default()
+            };
+            egui::Window::new("Settings")
+                .collapsible(false)
+                .resizable(false)
+                .open(&mut open)
+                .fixed_size(egui::vec2(640.0, 420.0))
+                .anchor(Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
+                .show(ctx, |ui| {
+                    let area = ui.available_rect_before_wrap();
+                    let body = Rect::from_min_max(area.min, egui::pos2(area.right(), area.bottom() - 32.0));
+                    let left = Rect::from_min_max(body.min, egui::pos2(body.left() + 200.0, body.bottom()));
+                    let right = Rect::from_min_max(egui::pos2(left.right() + 6.0, body.top()), body.max);
+                    let buttons = Rect::from_min_max(egui::pos2(area.left(), body.bottom() + 6.0), area.max);
+                    ui.painter().rect_filled(left, 0.0, Color32::WHITE);
+                    ui.painter().rect_stroke(left, 0.0, Stroke::new(1.0, crate::theme::VIEW_BORDER), egui::StrokeKind::Inside);
+                    ui.scope_builder(egui::UiBuilder::new().max_rect(left.shrink(1.0)), |ui| {
+                        ui.spacing_mut().item_spacing = egui::vec2(0.0, 0.0);
+                        crate::views::header(ui, &[("Names", 1.0)]);
+                        for (i, (id, name)) in categories.iter().enumerate() {
+                            let (r, resp) = ui.allocate_exact_size(egui::vec2(ui.available_width(), 19.0), egui::Sense::click());
+                            let selected = self.extras.settings_selected == Some(*id);
+                            if selected {
+                                crate::theme::selected_row(ui.painter(), r);
+                            } else if i % 2 == 1 {
+                                ui.painter().rect_filled(r, 0.0, Color32::from_rgb(249, 249, 249));
+                            }
+                            ui.painter().text(
+                                r.left_center() + egui::vec2(6.0, 0.0),
+                                Align2::LEFT_CENTER,
+                                name,
+                                FontId::proportional(crate::theme::FONT_SIZE),
+                                if selected { Color32::WHITE } else { Color32::BLACK },
+                            );
+                            if resp.clicked() {
+                                self.extras.settings_selected = Some(*id);
+                            }
+                        }
+                    });
+                    ui.scope_builder(egui::UiBuilder::new().max_rect(right), |ui| {
+                        if let Some(sel) = self.extras.settings_selected {
+                            let mut props = std::mem::take(&mut self.extras.settings_props);
+                            props.grid(ui, &mut self.doc, &[sel]);
+                            self.extras.settings_props = props;
+                        } else {
+                            ui.painter().rect_filled(right, 0.0, Color32::WHITE);
+                            ui.painter().rect_stroke(right, 0.0, Stroke::new(1.0, crate::theme::VIEW_BORDER), egui::StrokeKind::Inside);
+                        }
+                    });
+                    ui.scope_builder(egui::UiBuilder::new().max_rect(buttons), |ui| {
+                        ui.horizontal(|ui| {
+                            let _ = ui.button("Reset All Settings");
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                if ui.button("Close").clicked() {
+                                    self.extras.show_settings = false;
+                                }
+                            });
+                        });
+                    });
+                    ui.allocate_rect(area, egui::Sense::hover());
+                });
+            if !open {
+                self.extras.show_settings = false;
+            }
+        }
     }
 }

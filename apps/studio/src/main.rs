@@ -2,6 +2,7 @@ mod app;
 mod explorer;
 mod extras;
 mod icons;
+mod menus;
 mod metadata;
 mod play;
 mod plugins;

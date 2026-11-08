@@ -210,12 +210,6 @@ impl Properties {
     }
 
     pub fn show(&mut self, ui: &mut Ui, doc: &mut Document) {
-        if !self.initialized {
-            self.collapsed.insert("Surface".into());
-            self.collapsed.insert("Surface Inputs".into());
-            self.split = 0.45;
-            self.initialized = true;
-        }
         let selection = doc.selection();
         let label = selection_label(doc, &selection);
         let (bar, _) = ui.allocate_exact_size(vec2(ui.available_width(), 20.0), Sense::hover());
@@ -234,6 +228,16 @@ impl Properties {
             egui::TextEdit::singleline(&mut self.filter).hint_text("Search Properties").margin(vec2(4.0, 3.0)),
         );
         ui.add_space(4.0);
+        self.grid(ui, doc, &selection);
+    }
+
+    pub fn grid(&mut self, ui: &mut Ui, doc: &mut Document, selection: &[InstanceId]) {
+        if !self.initialized {
+            self.collapsed.insert("Surface".into());
+            self.collapsed.insert("Surface Inputs".into());
+            self.split = 0.45;
+            self.initialized = true;
+        }
         let full = ui.available_rect_before_wrap();
         ui.painter().rect_filled(full, 0.0, Color32::WHITE);
         ui.painter().rect_stroke(full, 0.0, Stroke::new(1.0, theme::VIEW_BORDER), egui::StrokeKind::Inside);

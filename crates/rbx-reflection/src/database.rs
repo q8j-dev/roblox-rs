@@ -1,6 +1,5 @@
 use crate::variant::VariantType;
 use serde::Deserialize;
-use std::collections::HashMap;
 use std::sync::LazyLock;
 
 pub const XML_PUBLIC: u32 = 1;
@@ -375,9 +374,10 @@ fn class_functionality(flags: &[String]) -> ClassFunctionality {
 }
 
 pub struct ReflectionDatabase {
-    classes: HashMap<String, ClassDescriptor>,
-    enums: HashMap<String, EnumDescriptor>,
+    classes: rustc_hash::FxHashMap<String, ClassDescriptor>,
+    enums: rustc_hash::FxHashMap<String, EnumDescriptor>,
     class_order: Vec<String>,
+    ancestry: rustc_hash::FxHashMap<String, Vec<String>>,
 }
 
 fn convert_params(params: &[RawParam]) -> Vec<ParamDescriptor> {
@@ -397,7 +397,7 @@ impl ReflectionDatabase {
             Ok(raw) => raw,
             Err(e) => panic!("embedded reflection database is invalid: {e}"),
         };
-        let mut classes = HashMap::new();
+        let mut classes: rustc_hash::FxHashMap<String, ClassDescriptor> = Default::default();
         let mut class_order = Vec::new();
         for c in raw.classes {
             let name = c.name.clone();
@@ -477,6 +477,19 @@ impl ReflectionDatabase {
                 c.depth = depth;
             }
         }
+        let mut ancestry: rustc_hash::FxHashMap<String, Vec<String>> = Default::default();
+        for n in classes.keys() {
+            let mut chain = Vec::new();
+            let mut cur = Some(n.clone());
+            while let Some(c) = cur {
+                if chain.len() > 64 || chain.contains(&c) {
+                    break;
+                }
+                cur = classes.get(&c).and_then(|d| d.superclass.clone());
+                chain.push(c);
+            }
+            ancestry.insert(n.clone(), chain);
+        }
         let enums = raw
             .enums
             .into_iter()
@@ -506,6 +519,7 @@ impl ReflectionDatabase {
             classes,
             enums,
             class_order,
+            ancestry,
         }
     }
 
@@ -550,7 +564,9 @@ impl ReflectionDatabase {
         if class == ancestor || ancestor == "Instance" {
             return self.classes.contains_key(class) || class == ancestor;
         }
-        self.superclasses(class).any(|c| c.name == ancestor)
+        self.ancestry
+            .get(class)
+            .is_some_and(|chain| chain.iter().any(|c| c == ancestor))
     }
 
     pub fn find_property(&self, class: &str, name: &str) -> Option<&PropertyDescriptor> {

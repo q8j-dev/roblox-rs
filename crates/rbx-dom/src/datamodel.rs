@@ -38,6 +38,7 @@ pub struct Instance {
     pub external_refs: u32,
     pub(crate) values: Vec<Variant>,
     setting_parent: bool,
+    revision: u64,
 }
 
 impl Instance {
@@ -75,7 +76,7 @@ pub enum MessageLevel {
 }
 
 pub struct DataModel {
-    instances: HashMap<InstanceId, Instance>,
+    instances: rustc_hash::FxHashMap<InstanceId, Instance>,
     next_id: u64,
     root: InstanceId,
     pub events: EventLog,
@@ -96,6 +97,7 @@ pub struct DataModel {
     deliveries: Vec<crate::remote::RemoteDelivery>,
     pub gui_view: crate::gui::GuiView,
     pub particle_emits: HashMap<InstanceId, u64>,
+    clock: u64,
 }
 
 impl Default for DataModel {
@@ -115,7 +117,7 @@ impl DataModel {
 
     pub fn with_root_class(class: &str) -> DataModel {
         let mut dm = DataModel {
-            instances: HashMap::new(),
+            instances: Default::default(),
             next_id: 1,
             root: match InstanceId::from_raw(1) {
                 Some(id) => id,
@@ -139,6 +141,7 @@ impl DataModel {
             deliveries: Vec::new(),
             gui_view: crate::gui::GuiView::default(),
             particle_emits: HashMap::new(),
+            clock: 0,
         };
         let root = match dm.create_internal(class) {
             Ok(id) => id,
@@ -234,6 +237,31 @@ impl DataModel {
 
     pub fn contains(&self, id: InstanceId) -> bool {
         self.instances.contains_key(&id)
+    }
+
+    pub fn revision(&self, id: InstanceId) -> u64 {
+        self.instances.get(&id).map_or(0, |i| i.revision)
+    }
+
+    pub fn clock(&self) -> u64 {
+        self.clock
+    }
+
+    fn touch(&mut self, id: InstanceId) {
+        self.clock += 1;
+        let c = self.clock;
+        let parent = match self.instances.get_mut(&id) {
+            Some(i) => {
+                i.revision = c;
+                i.parent
+            }
+            None => None,
+        };
+        if let Some(p) = parent
+            && let Some(pi) = self.instances.get_mut(&p)
+        {
+            pi.revision = c;
+        }
     }
 
     pub fn instance(&self, id: InstanceId) -> Option<&Instance> {
@@ -438,8 +466,10 @@ impl DataModel {
                 external_refs: 0,
                 values,
                 setting_parent: false,
+                revision: self.clock + 1,
             },
         );
+        self.clock += 1;
         for b in behaviors_for(class).iter().rev() {
             b.init(self, id);
         }
@@ -619,6 +649,7 @@ impl DataModel {
         if let Some(i) = self.instances.get_mut(&id) {
             i.setting_parent = true;
         }
+        self.touch(id);
         if let Some(op) = old_parent {
             if !self.contains_or_is(op, new_parent) {
                 self.signal_descendant_removing(id, Some(op), new_parent);
@@ -637,6 +668,7 @@ impl DataModel {
         if let Some(i) = self.instances.get_mut(&id) {
             i.parent = new_parent;
         }
+        self.touch(id);
         self.history.record(crate::history::Change::Parent {
             id,
             old: old_parent,
@@ -879,6 +911,7 @@ impl DataModel {
         };
         if inst.name != truncated {
             let old = std::mem::replace(&mut inst.name, truncated.clone());
+            self.touch(id);
             self.history.record(crate::history::Change::Name {
                 id,
                 old,
@@ -1112,6 +1145,7 @@ impl DataModel {
         } else {
             inst.values[slot] = value;
         }
+        self.touch(id);
         let Some(inst) = self.instances.get(&id) else {
             return;
         };
@@ -1133,6 +1167,7 @@ impl DataModel {
         let layout = inst.layout;
         if let Some(slot) = layout.slot(layout.canonical(name)) {
             inst.values[slot] = value;
+            self.touch(id);
         }
     }
 

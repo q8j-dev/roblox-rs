@@ -100,7 +100,7 @@ pub trait Behavior: Sync + Send {
 static REGISTRY: LazyLock<HashMap<&'static str, &'static dyn Behavior>> =
     LazyLock::new(crate::classes::registry);
 
-static CHAINS: LazyLock<HashMap<&'static str, Vec<&'static dyn Behavior>>> = LazyLock::new(|| {
+static CHAINS: LazyLock<rustc_hash::FxHashMap<&'static str, Vec<&'static dyn Behavior>>> = LazyLock::new(|| {
     let db = database();
     db.classes()
         .map(|c| {

@@ -18,8 +18,8 @@ pub const CORE_PROPERTIES: &[&str] = &[
 pub struct ClassLayout {
     pub class: &'static str,
     pub slots: Vec<&'static PropertyDescriptor>,
-    pub index: HashMap<&'static str, usize>,
-    pub aliases: HashMap<&'static str, &'static str>,
+    pub index: rustc_hash::FxHashMap<&'static str, usize>,
+    pub aliases: rustc_hash::FxHashMap<&'static str, &'static str>,
     pub computed: HashSet<&'static str>,
     pub all: Vec<&'static PropertyDescriptor>,
 }
@@ -50,7 +50,7 @@ fn build(class: &'static str) -> ClassLayout {
     let all: Vec<&'static PropertyDescriptor> = db.properties(class);
     let by_name: HashMap<&'static str, &'static PropertyDescriptor> =
         all.iter().map(|p| (p.name.as_str(), *p)).collect();
-    let mut aliases: HashMap<&'static str, &'static str> = HashMap::new();
+    let mut aliases: rustc_hash::FxHashMap<&'static str, &'static str> = Default::default();
     let mut computed: HashSet<&'static str> = HashSet::new();
     for b in behaviors_for(class) {
         for (alias, target) in b.aliases() {
@@ -127,7 +127,7 @@ fn build(class: &'static str) -> ClassLayout {
             aliases.insert(name, t.name.as_str());
         }
     }
-    let resolve = |mut n: &'static str, aliases: &HashMap<&'static str, &'static str>| {
+    let resolve = |mut n: &'static str, aliases: &rustc_hash::FxHashMap<&'static str, &'static str>| {
         let mut guard = 0;
         while let Some(t) = aliases.get(n) {
             if *t == n || guard > 8 {
@@ -149,7 +149,7 @@ fn build(class: &'static str) -> ClassLayout {
         }
     }
     let mut slots = Vec::new();
-    let mut index = HashMap::new();
+    let mut index = rustc_hash::FxHashMap::default();
     for p in &all {
         let name = p.name.as_str();
         if CORE_PROPERTIES.contains(&name) || aliases.contains_key(name) || computed.contains(name)
@@ -178,7 +178,7 @@ fn build(class: &'static str) -> ClassLayout {
     }
 }
 
-static LAYOUTS: LazyLock<HashMap<&'static str, ClassLayout>> = LazyLock::new(|| {
+static LAYOUTS: LazyLock<rustc_hash::FxHashMap<&'static str, ClassLayout>> = LazyLock::new(|| {
     database()
         .classes()
         .map(|c| (c.name.as_str(), build(c.name.as_str())))

@@ -154,3 +154,42 @@ fn inserted_part_moves_with_handles_in_real_place() {
     assert!(after.y > before.y + 0.5, "part did not move up: {before:?} -> {after:?}");
 }
 
+
+#[test]
+#[ignore]
+fn ui_frame_cost() {
+    let place = std::env::var("STUDIO_BENCH_PLACE").expect("place");
+    let assets = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../assets");
+    let doc = Document::open(&PathBuf::from(place), &assets.join("content")).expect("open");
+    let mut studio = Studio::new(doc, assets);
+    studio.view.camera = crate::app::camera_for(&studio.doc);
+    let mut h = Harness { ctx: egui::Context::default(), studio, time: 0.0 };
+    let mut ui = Vec::new();
+    let mut step = Vec::new();
+    for i in 0..330 {
+        h.time += 1.0 / 60.0;
+        let raw = RawInput {
+            screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1600.0, 1000.0))),
+            time: Some(h.time),
+            events: vec![Event::PointerMoved(Pos2::new(800.0 + (i as f32).sin() * 50.0, 500.0))],
+            ..Default::default()
+        };
+        let t = std::time::Instant::now();
+        let studio = &mut h.studio;
+        let out = h.ctx.run_ui(raw, |ui| studio.ui(ui));
+        let _ = h.ctx.tessellate(out.shapes, out.pixels_per_point);
+        let a = t.elapsed().as_secs_f64() * 1000.0;
+        let t = std::time::Instant::now();
+        h.studio.doc.runtime.step(1.0 / 60.0);
+        let b = t.elapsed().as_secs_f64() * 1000.0;
+        if i >= 30 {
+            ui.push(a);
+            step.push(b);
+        }
+    }
+    for (name, mut v) in [("ui", ui), ("step", step)] {
+        v.sort_by(|a, b| a.total_cmp(b));
+        let avg = v.iter().sum::<f64>() / v.len() as f64;
+        eprintln!("{name} avg {avg:.2} median {:.2} p99 {:.2} max {:.2}", v[v.len() / 2], v[v.len() * 99 / 100], v[v.len() - 1]);
+    }
+}

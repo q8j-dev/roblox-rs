@@ -87,6 +87,7 @@ struct Host {
     frames: u32,
     last: rbx_base::time::Instant,
     behavior: u32,
+    occluded: bool,
 }
 
 fn create_gpu(window: Arc<Window>, assets: &std::path::Path) -> Result<Gpu, String> {
@@ -249,6 +250,14 @@ impl Host {
         }
         let frame = match gpu.surface.get_current_texture() {
             wgpu::CurrentSurfaceTexture::Success(f) | wgpu::CurrentSurfaceTexture::Suboptimal(f) => f,
+            wgpu::CurrentSurfaceTexture::Occluded => {
+                self.occluded = true;
+                return;
+            }
+            wgpu::CurrentSurfaceTexture::Timeout => {
+                window.request_redraw();
+                return;
+            }
             _ => {
                 let size = window.inner_size();
                 gpu.config.width = size.width.max(1);
@@ -418,7 +427,15 @@ fn save_texture(gpu: &Gpu, tex: &wgpu::Texture, path: &std::path::Path) -> Resul
 }
 
 impl ApplicationHandler for Host {
-    fn about_to_wait(&mut self, _event_loop: &ActiveEventLoop) {
+    fn about_to_wait(&mut self, event_loop: &ActiveEventLoop) {
+        if self.occluded {
+            event_loop.set_control_flow(ControlFlow::WaitUntil(
+                std::time::Instant::now() + std::time::Duration::from_millis(100),
+            ));
+            self.studio.doc.runtime.step(0.1);
+            return;
+        }
+        event_loop.set_control_flow(ControlFlow::Poll);
         if let Some(w) = &self.window {
             w.request_redraw();
         }
@@ -509,6 +526,18 @@ impl ApplicationHandler for Host {
             WindowEvent::CloseRequested => {
                 self.studio.cleanup_servers();
                 event_loop.exit();
+            }
+            WindowEvent::Occluded(hidden) => {
+                self.occluded = hidden;
+                if !hidden && let Some(w) = &self.window {
+                    w.request_redraw();
+                }
+            }
+            WindowEvent::Focused(true) => {
+                self.occluded = false;
+                if let Some(w) = &self.window {
+                    w.request_redraw();
+                }
             }
             WindowEvent::Resized(size) => {
                 if let Some(gpu) = &mut self.gpu {
@@ -617,6 +646,7 @@ fn main() {
         frames: 0,
         last: rbx_base::time::Instant::now(),
         behavior: 0,
+        occluded: false,
     };
     if let Err(e) = event_loop.run_app(&mut host) {
         eprintln!("{e}");

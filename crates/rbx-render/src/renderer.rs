@@ -122,6 +122,7 @@ pub struct Renderer {
     particle_pass: crate::particle_pass::ParticlePass,
     adorn_pass: crate::adorn_pass::AdornPass,
     pub frame_dt: f32,
+    part_cache: scene::PartCache,
     lgrid_texture: wgpu::Texture,
     lgrid_active: bool,
     pub lighting_budget: usize,
@@ -583,6 +584,7 @@ impl Renderer {
             particle_pass,
             adorn_pass,
             frame_dt: 0.0,
+            part_cache: Default::default(),
             lgrid_texture,
             lgrid_active: false,
             lighting_budget: 24,
@@ -1136,7 +1138,7 @@ impl Renderer {
     pub fn render(&mut self, dm: &DataModel, target: &wgpu::TextureView, width: u32, height: u32) {
         self.poll_texture_loads();
         let aspect = width.max(1) as f32 / height.max(1) as f32;
-        let mut scene = scene::extract(dm, aspect);
+        let mut scene = scene::extract_cached(dm, aspect, &mut self.part_cache);
         scene.adorns.meshes.extend(self.overlay.meshes.iter().cloned());
         scene.adorns.lines.extend(self.overlay.lines.iter().copied());
         self.update_terrain(dm);

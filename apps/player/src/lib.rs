@@ -405,6 +405,7 @@ impl Player {
         let frame = match gpu.surface.get_current_texture() {
             wgpu::CurrentSurfaceTexture::Success(f)
             | wgpu::CurrentSurfaceTexture::Suboptimal(f) => f,
+            wgpu::CurrentSurfaceTexture::Timeout | wgpu::CurrentSurfaceTexture::Occluded => return,
             _ => {
                 gpu.surface.configure(&gpu.renderer.device, &gpu.config);
                 return;

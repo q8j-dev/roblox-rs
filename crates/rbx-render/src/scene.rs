@@ -359,17 +359,42 @@ pub fn randomize_color(c: Color3, seed: u32) -> Color3 {
     Color3::new(q(c.r), q(c.g), q(c.b))
 }
 
+type PartKey = (u64, u64, u64, bool);
+
+struct CachedPart {
+    key: PartKey,
+    frame: u64,
+    draw: Option<PartDraw>,
+    composite: Option<crate::character::CompositeDesc>,
+}
+
+#[derive(Default)]
+pub struct PartCache {
+    entries: rustc_hash::FxHashMap<InstanceId, CachedPart>,
+    frame: u64,
+}
+
 fn collect_parts(
     dm: &DataModel,
     root: InstanceId,
     out: &mut Vec<PartDraw>,
     composites: &mut Vec<crate::character::CompositeDesc>,
+    cache: &mut PartCache,
 ) {
+    cache.frame += 1;
+    let frame = cache.frame;
     use crate::character::{BodyPart, Character};
-    let mut characters: std::collections::HashMap<
+    let mut characters: rustc_hash::FxHashMap<
         InstanceId,
         Option<(Character, crate::character::CompositeDesc)>,
-    > = std::collections::HashMap::new();
+    > = Default::default();
+    let mut humanoid_parents: rustc_hash::FxHashMap<InstanceId, bool> = Default::default();
+    let mut part_classes: rustc_hash::FxHashMap<&'static str, bool> = Default::default();
+    let mut has_humanoid = |p: InstanceId| {
+        *humanoid_parents
+            .entry(p)
+            .or_insert_with(|| dm.find_first_child_of_class(p, "Humanoid").is_some())
+    };
     let outlines = dm
         .find_service("Lighting")
         .is_none_or(|l| dm.get_bool(l, "Outlines"));
@@ -377,16 +402,38 @@ fn collect_parts(
         let Some(class) = dm.class_of(id) else {
             continue;
         };
-        if !dm.is_a(id, "BasePart") || class == "Terrain" {
+        let is_part = *part_classes.entry(class).or_insert_with(|| dm.is_a(id, "BasePart") && class != "Terrain");
+        if !is_part {
+            continue;
+        }
+        let parent = dm.parent_of(id);
+        let grandparent = parent.and_then(|p| dm.parent_of(p));
+        let container_rev = |c: Option<InstanceId>| match c {
+            Some(c) if c != root && c != dm.root() => dm.revision(c),
+            _ => 0,
+        };
+        let key: PartKey = (dm.revision(id), container_rev(parent), container_rev(grandparent), outlines);
+        if let Some(c) = cache.entries.get_mut(&id)
+            && c.key == key
+        {
+            c.frame = frame;
+            if let Some(d) = &c.draw {
+                out.push(d.clone());
+            }
+            if let Some(desc) = &c.composite
+                && !composites.iter().any(|d| d.url == desc.url)
+            {
+                composites.push(desc.clone());
+            }
             continue;
         }
         let transparency = get_f32(dm, id, "Transparency", 0.0).clamp(0.0, 1.0);
-        if transparency >= 1.0 {
-            continue;
-        }
-        let Some(cframe) = dm.get_raw(id, "CFrame").and_then(|v| v.as_cframe()) else {
+        let cframe = dm.get_raw(id, "CFrame").and_then(|v| v.as_cframe());
+        let Some(cframe) = cframe.filter(|_| transparency < 1.0) else {
+            cache.entries.insert(id, CachedPart { key, frame, draw: None, composite: None });
             continue;
         };
+        let mut part_composite = None;
         let size = dm
             .get(id, "Size")
             .ok()
@@ -437,10 +484,8 @@ fn collect_parts(
         }
         let mut decals = Vec::new();
         collect_decals(dm, id, &mut decals);
-        let humanoid_part = dm.parent_of(id).is_some_and(|p| {
-            dm.class_of(p) != Some("Workspace")
-                && dm.find_first_child_of_class(p, "Humanoid").is_some()
-        });
+        let parent_humanoid = parent.is_some_and(&mut has_humanoid);
+        let humanoid_part = parent.is_some_and(|p| dm.class_of(p) != Some("Workspace")) && parent_humanoid;
         let (voxel, voxel_transparency) = if humanoid_part {
             (None, transparency)
         } else {
@@ -455,13 +500,8 @@ fn collect_parts(
             .children_of(id)
             .iter()
             .any(|c| dm.is_a(*c, "DataModelMesh"));
-        let caster = dm.parent_of(id).is_some_and(|p| {
-            dm.find_first_child_of_class(p, "Humanoid").is_some()
-                || (dm.is_a(p, "Accoutrement")
-                    && dm
-                        .parent_of(p)
-                        .is_some_and(|g| dm.find_first_child_of_class(g, "Humanoid").is_some()))
-        });
+        let caster = parent_humanoid
+            || parent.is_some_and(|p| dm.is_a(p, "Accoutrement") && dm.parent_of(p).is_some_and(&mut has_humanoid));
         if let Some(model) = dm.parent_of(id) {
             let entry = characters.entry(model).or_insert_with(|| {
                 crate::character::identify(dm, model).map(|ch| {
@@ -499,6 +539,7 @@ fn collect_parts(
                     if !composites.iter().any(|d| d.url == desc.url) {
                         composites.push(desc.clone());
                     }
+                    part_composite = Some(desc.clone());
                 }
             }
         }
@@ -508,7 +549,7 @@ fn collect_parts(
         if randomize && shape != Shape::File {
             c = randomize_color(c, seed);
         }
-        out.push(PartDraw {
+        let draw = PartDraw {
             id,
             shape,
             size,
@@ -528,7 +569,12 @@ fn collect_parts(
             caster,
             seed,
             randomize,
-        });
+        };
+        out.push(draw.clone());
+        cache.entries.insert(id, CachedPart { key, frame, draw: Some(draw), composite: part_composite });
+    }
+    if frame % 120 == 0 {
+        cache.entries.retain(|_, c| frame - c.frame < 120);
     }
 }
 
@@ -788,12 +834,16 @@ fn voxel_shape(
 }
 
 pub fn extract(dm: &DataModel, aspect: f32) -> Scene {
+    extract_cached(dm, aspect, &mut PartCache::default())
+}
+
+pub fn extract_cached(dm: &DataModel, aspect: f32, cache: &mut PartCache) -> Scene {
     let _ = aspect;
     let mut parts = Vec::new();
     let mut composites = Vec::new();
     let ws = dm.find_service("Workspace");
     if let Some(ws) = ws {
-        collect_parts(dm, ws, &mut parts, &mut composites);
+        collect_parts(dm, ws, &mut parts, &mut composites, cache);
     }
     let mut camera = Camera::default();
     let mut focus = None;

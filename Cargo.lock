@@ -3522,6 +3522,7 @@ dependencies = [
  "rbx-math",
  "rbx-reflection",
  "rbx-terrain",
+ "rustc-hash 2.1.3",
  "serde",
  "serde_json",
  "thiserror 2.0.21",
@@ -3596,6 +3597,7 @@ name = "rbx-reflection"
 version = "0.1.0"
 dependencies = [
  "rbx-math",
+ "rustc-hash 2.1.3",
  "serde",
  "serde_json",
 ]
@@ -3614,6 +3616,7 @@ dependencies = [
  "rbx-reflection",
  "rbx-terrain",
  "rbx-text",
+ "rustc-hash 2.1.3",
  "texture2ddecoder",
  "thiserror 2.0.21",
  "tracing",

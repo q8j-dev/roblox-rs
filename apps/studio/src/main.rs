@@ -332,6 +332,10 @@ impl Host {
                 Err(e) => tracing::error!("{e}"),
             }
         }
+        let title = format!("{} - Roblox Studio", self.studio.place_name());
+        if window.title() != title {
+            window.set_title(&title);
+        }
         self.frames += 1;
         window.request_redraw();
     }

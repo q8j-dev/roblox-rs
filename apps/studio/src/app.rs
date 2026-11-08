@@ -900,7 +900,7 @@ impl Studio {
         let mut ribbon = std::mem::replace(&mut self.ribbon, Ribbon::empty());
         let mut icons = std::mem::replace(&mut self.icons, Icons::new(Path::new("")));
         let events = egui::Panel::top("ribbon")
-            .exact_size(Ribbon::height())
+            .exact_size(self.ribbon.height())
             .frame(egui::Frame::new())
             .show(ui, |ui| ribbon.show(ui, &mut icons, &RibbonState { studio: self }))
             .inner;

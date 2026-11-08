@@ -29,6 +29,7 @@ pub struct Ribbon {
     combos: HashMap<String, usize>,
     pub script_menu: bool,
     pub dynamic: HashMap<String, Vec<(String, String)>>,
+    pub minimized: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -101,6 +102,7 @@ impl Ribbon {
             combos: HashMap::new(),
             script_menu: false,
             dynamic: HashMap::new(),
+            minimized: false,
         }
     }
 
@@ -114,6 +116,7 @@ impl Ribbon {
             combos: HashMap::new(),
             script_menu: false,
             dynamic: HashMap::new(),
+            minimized: false,
         }
     }
 
@@ -134,8 +137,8 @@ impl Ribbon {
         self.combos.insert(name.to_string(), index);
     }
 
-    pub fn height() -> f32 {
-        QAT_ROW + TAB_ROW + BODY
+    pub fn height(&self) -> f32 {
+        if self.minimized { QAT_ROW + TAB_ROW } else { QAT_ROW + TAB_ROW + BODY }
     }
 
     fn section(&self, tag: &str) -> Option<&Value> {
@@ -183,7 +186,7 @@ impl Ribbon {
     pub fn show(&mut self, ui: &mut Ui, icons: &mut Icons, state: &dyn State) -> Vec<Event> {
         let mut events = Vec::new();
         let full = ui.available_rect_before_wrap();
-        let rect = Rect::from_min_size(full.min, vec2(full.width(), Ribbon::height()));
+        let rect = Rect::from_min_size(full.min, vec2(full.width(), self.height()));
         ui.allocate_rect(rect, Sense::hover());
         let painter = ui.painter_at(rect);
         painter.rect_filled(rect, 0.0, theme::RIBBON_BACK);
@@ -195,6 +198,27 @@ impl Ribbon {
         let body = Rect::from_min_max(pos2(rect.left(), tabs.bottom()), rect.max);
         let active_tab = self.tabs(ui, tabs, &mut events);
 
+        let mr = Rect::from_center_size(pos2(tabs.right() - 14.0, tabs.center().y), vec2(18.0, 18.0));
+        let mresp = ui.interact(mr, ui.scope_id().with("ribbon-minimize"), Sense::click());
+        if mresp.hovered() {
+            ui.painter().rect_filled(mr, 0.0, theme::HIGHLIGHT);
+        }
+        let c = mr.center();
+        let pts = if self.minimized {
+            vec![c + vec2(-4.0, -2.0), c + vec2(4.0, -2.0), c + vec2(0.0, 2.0)]
+        } else {
+            vec![c + vec2(-4.0, 2.0), c + vec2(4.0, 2.0), c + vec2(0.0, -2.0)]
+        };
+        ui.painter().add(egui::Shape::convex_polygon(pts, theme::TEXT, Stroke::NONE));
+        let mresp = mresp.on_hover_text(if self.minimized { "Expand the Ribbon" } else { "Minimize the Ribbon" });
+        if mresp.clicked() {
+            self.minimized = !self.minimized;
+        }
+        if self.minimized {
+            painter.line_segment([pos2(rect.left(), rect.bottom() - 0.5), pos2(rect.right(), rect.bottom() - 0.5)], Stroke::new(1.0, theme::RIBBON_SEPARATOR));
+            self.menu_popup(ui, icons, state, &mut events);
+            return events;
+        }
         painter.rect_filled(body, 0.0, theme::RIBBON_FACE);
         let sep = Stroke::new(1.0, theme::RIBBON_SEPARATOR);
         painter.line_segment([pos2(body.left(), body.top()), pos2(active_tab.left(), body.top())], sep);
@@ -261,6 +285,15 @@ impl Ribbon {
             }
             x += 23.0;
         }
+        let ar = Rect::from_min_size(pos2(x, row.top() + 2.0), vec2(14.0, 20.0));
+        let aresp = ui.interact(ar, ui.scope_id().with("qat-customize"), Sense::click());
+        if aresp.hovered() {
+            ui.painter().rect_filled(ar, 0.0, theme::HIGHLIGHT);
+        }
+        let c = ar.center();
+        ui.painter().line_segment([c + vec2(-3.0, -4.0), c + vec2(3.0, -4.0)], Stroke::new(1.0, theme::TEXT));
+        arrow(ui, c + vec2(0.0, 1.0), theme::TEXT);
+        let _ = aresp.on_hover_text("Customize Quick Access Bar");
     }
 
     fn tabs(&mut self, ui: &mut Ui, row: Rect, events: &mut Vec<Event>) -> Rect {

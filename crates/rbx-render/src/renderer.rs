@@ -1423,6 +1423,11 @@ impl Renderer {
                 [moon_color, moon_color, moon_color, 1.0],
                 &mut sun_moon,
             );
+            for v in &mut sun_moon[moon_start as usize..] {
+                let t = v.position[1] / 1700.0;
+                let c = sun_color + (moon_color - sun_color) * t;
+                v.color = [c, c, c, 1.0];
+            }
         }
         self.stars.update(cel.stars, cel.shown, l.moon_naive.y);
         let world_per_pixel = 2.0 * tan_y * 2500.0 / height as f32;

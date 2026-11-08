@@ -75,6 +75,7 @@ struct MeshKey {
     tiling: u32,
     file: u64,
     decal: u8,
+    variant: u32,
 }
 
 struct GpuMesh {
@@ -899,6 +900,7 @@ impl Renderer {
             tiling: tile.map_or(0, |t| t.0.to_bits() ^ t.1.to_bits().rotate_left(7)),
             file: 0,
             decal: face as u8 + 1,
+            variant: 0,
         };
         if !self.meshes.contains_key(&key) {
             let mesh = Mesh::decal(size, face, tile);
@@ -1022,6 +1024,14 @@ impl Renderer {
             f.uv.map(|r| r.map(f32::to_bits)).hash(&mut h);
             h.finish() | 1
         });
+        let randomized_block = part.randomize && part.shape == Shape::Block;
+        let textured = matches!(part.shading, Shading::Textured(_));
+        let normal_variant = if randomized_block {
+            ((part.seed >> 3) & 31) + 1
+        } else {
+            0
+        };
+        let offset_variant = if textured { ((part.seed >> 3) & 4095) + 1 } else { 0 };
         let key = MeshKey {
             shape: part.shape,
             size: [size.x.to_bits(), size.y.to_bits(), size.z.to_bits()],
@@ -1030,6 +1040,16 @@ impl Renderer {
             tiling: tiling.to_bits(),
             file: file_hash,
             decal: 0,
+            variant: normal_variant | (offset_variant << 8),
+        };
+        let normal_offset = if randomized_block {
+            crate::geometry::normal_offset(part.seed)
+        } else {
+            Vec3::ZERO
+        };
+        let surface_offset = match part.shading {
+            Shading::Textured(m) => crate::geometry::surface_offset(size, part.seed, m == 848 || m == 528),
+            _ => Vec2::ZERO,
         };
         if !self.meshes.contains_key(&key) {
             let file_mesh = match &part.file {
@@ -1054,8 +1074,9 @@ impl Renderer {
                     size,
                     surfaces: part.surfaces,
                     ignore_studs,
-                    surface_offset: Vec2::ZERO,
+                    surface_offset,
                     tiling,
+                    normal_offset,
                 })
             };
             let mesh = match part.shape {

@@ -42,6 +42,8 @@ pub struct PartDraw {
     pub voxel: Option<crate::lightgrid::VoxelShape>,
     pub voxel_transparency: f32,
     pub caster: bool,
+    pub seed: u32,
+    pub randomize: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -340,6 +342,23 @@ fn collect_decals(dm: &DataModel, part: InstanceId, out: &mut Vec<DecalDraw>) {
     }
 }
 
+pub fn appearance_seed(id: InstanceId) -> u32 {
+    let mut z = id.0.get().wrapping_add(0x9e37_79b9_7f4a_7c15);
+    z = (z ^ (z >> 30)).wrapping_mul(0xbf58_476d_1ce4_e5b9);
+    z = (z ^ (z >> 27)).wrapping_mul(0x94d0_49bb_1331_11eb);
+    z ^= z >> 31;
+    let address = (z & 0x0000_7fff_ffff_fff0) as usize;
+    address.wrapping_add(address >> 3) as u32
+}
+
+pub fn randomize_color(c: Color3, seed: u32) -> Color3 {
+    let q = |v: f32| {
+        let b = (v.clamp(0.0, 1.0) * 255.0).round() as u32;
+        ((b & 0xf8) | (seed & 7)) as f32 / 255.0
+    };
+    Color3::new(q(c.r), q(c.g), q(c.b))
+}
+
 fn collect_parts(
     dm: &DataModel,
     root: InstanceId,
@@ -351,6 +370,9 @@ fn collect_parts(
         InstanceId,
         Option<(Character, crate::character::CompositeDesc)>,
     > = std::collections::HashMap::new();
+    let outlines = dm
+        .find_service("Lighting")
+        .is_none_or(|l| dm.get_bool(l, "Outlines"));
     for id in dm.descendants(root) {
         let Some(class) = dm.class_of(id) else {
             continue;
@@ -480,6 +502,12 @@ fn collect_parts(
                 }
             }
         }
+        let seed = appearance_seed(id);
+        let randomize =
+            outlines && surfaces.iter().any(|s| *s != Surface::SmoothNoOutlines);
+        if randomize && shape != Shape::File {
+            c = randomize_color(c, seed);
+        }
         out.push(PartDraw {
             id,
             shape,
@@ -498,6 +526,8 @@ fn collect_parts(
             voxel,
             voxel_transparency,
             caster,
+            seed,
+            randomize,
         });
     }
 }

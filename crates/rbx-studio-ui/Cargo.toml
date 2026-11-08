@@ -9,3 +9,9 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+egui = "0.37.0"
+parking_lot = "0.13.0"
+rbx-dom = { version = "0.1.0", path = "../rbx-dom" }
+rbx-math = { version = "0.1.0", path = "../rbx-math" }
+rbx-reflection = { version = "0.1.0", path = "../rbx-reflection" }
+rbx-script = { version = "0.1.0", path = "../rbx-script" }

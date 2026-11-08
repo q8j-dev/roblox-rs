@@ -814,13 +814,20 @@ fn write_property(out: &mut String, depth: usize, name: &str, value: &Variant) {
                 ],
             )
         }
-        Variant::Color3(c) => simple(
+        Variant::Color3(c) if c.to_u8().to_color3() == *c => simple(
             out,
             depth,
             "Color3",
             name,
             &c.to_u8().to_argb().to_string(),
             false,
+        ),
+        Variant::Color3(c) => compound(
+            out,
+            depth,
+            "Color3",
+            name,
+            &[("R", f(c.r)), ("G", f(c.g)), ("B", f(c.b))],
         ),
         Variant::BrickColor(b) => simple(out, depth, "int", name, &b.number().to_string(), false),
         Variant::UDim(u) => compound(

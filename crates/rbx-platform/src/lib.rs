@@ -298,8 +298,59 @@ impl<A: App> ApplicationHandler for Runner<A> {
     }
 }
 
+#[cfg(target_os = "android")]
+pub use winit::platform::android::activity::AndroidApp;
+
+#[cfg(target_os = "android")]
+static ANDROID_APP: std::sync::OnceLock<AndroidApp> = std::sync::OnceLock::new();
+
+#[cfg(target_os = "android")]
+pub fn set_android_app(app: AndroidApp) {
+    let _ = ANDROID_APP.set(app);
+}
+
+#[cfg(target_os = "android")]
+pub fn android_app() -> Option<&'static AndroidApp> {
+    ANDROID_APP.get()
+}
+
+#[macro_export]
+macro_rules! android_entry {
+    ($start:path) => {
+        #[cfg(target_os = "android")]
+        #[unsafe(no_mangle)]
+        fn android_main(app: $crate::AndroidApp) {
+            $crate::set_android_app(app.clone());
+            $start(app);
+        }
+    };
+}
+
+fn new_event_loop() -> Result<EventLoop<()>, String> {
+    #[cfg(target_os = "android")]
+    {
+        use winit::platform::android::EventLoopBuilderExtAndroid;
+        let app = ANDROID_APP
+            .get()
+            .cloned()
+            .ok_or("android_main must call set_android_app first")?;
+        EventLoop::builder()
+            .with_android_app(app)
+            .build()
+            .map_err(|e| e.to_string())
+    }
+    #[cfg(not(target_os = "android"))]
+    {
+        EventLoop::new().map_err(|e| e.to_string())
+    }
+}
+
+pub fn is_mobile() -> bool {
+    cfg!(any(target_os = "ios", target_os = "android"))
+}
+
 pub fn run(title: &str, size: (u32, u32), app: impl App + 'static) -> Result<(), String> {
-    let event_loop = EventLoop::new().map_err(|e| e.to_string())?;
+    let event_loop = new_event_loop()?;
     event_loop.set_control_flow(ControlFlow::Poll);
     #[allow(unused_mut)]
     let mut runner = Runner {
@@ -323,6 +374,10 @@ pub fn run(title: &str, size: (u32, u32), app: impl App + 'static) -> Result<(),
 }
 
 pub fn user_data_dir(app: &str) -> std::path::PathBuf {
+    #[cfg(target_os = "android")]
+    if let Some(dir) = ANDROID_APP.get().and_then(|a| a.internal_data_path()) {
+        return dir.join(app);
+    }
     let home = std::env::var_os("HOME")
         .or_else(|| std::env::var_os("USERPROFILE"))
         .map(std::path::PathBuf::from)

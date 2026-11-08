@@ -193,6 +193,16 @@ fn spawn_local_player(
     Ok(player)
 }
 
+fn platform_content() -> &'static str {
+    if cfg!(target_os = "ios") {
+        "ios"
+    } else if cfg!(target_os = "android") {
+        "android"
+    } else {
+        "pc"
+    }
+}
+
 async fn create_gpu(window: Arc<Window>, assets: PathBuf) -> Result<Gpu, String> {
     let size = window.inner_size();
     let instance = rbx_render::create_instance();
@@ -236,7 +246,7 @@ async fn create_gpu(window: Arc<Window>, assets: PathBuf) -> Result<Gpu, String>
         queue,
         format,
         &assets.join("content"),
-        &assets.join("platform-content").join("pc"),
+        &assets.join("platform-content").join(platform_content()),
     );
     renderer.async_loads = true;
     Ok(Gpu {
@@ -660,7 +670,7 @@ impl App for Player {
     }
 }
 
-#[cfg(not(target_arch = "wasm32"))]
+#[cfg(not(any(target_arch = "wasm32", target_os = "ios", target_os = "android")))]
 pub fn desktop_main() {
     let args = Args::parse();
     rbx_base::log::init(&args.log);
@@ -908,3 +918,107 @@ mod web {
         }
     }
 }
+
+#[cfg(any(target_os = "ios", target_os = "android"))]
+pub mod mobile {
+    use super::*;
+
+    fn startup_place(assets: &Path) -> DataModel {
+        let mut dm = DataModel::new();
+        let place = assets.join("startup.rbxl");
+        match rbx_base::vfs::read(&place) {
+            Ok(data) => {
+                if let Err(e) = dm.load_place(&data) {
+                    tracing::error!("{}: {e}", place.display());
+                }
+            }
+            Err(_) => {
+                if let Ok(ws) = dm.get_service("Workspace")
+                    && let Ok(base) = dm.create("Part")
+                {
+                    dm.set_name(base, "BasePlate");
+                    let _ = dm.set(base, "Anchored", Variant::Bool(true));
+                    let _ = dm.set(
+                        base,
+                        "Size",
+                        Variant::Vector3(Vec3::new(512.0, 20.0, 512.0)),
+                    );
+                    let _ = dm.set(
+                        base,
+                        "CFrame",
+                        Variant::CFrame(rbx_math::CFrame::from_translation(Vec3::new(
+                            0.0, -10.0, 0.0,
+                        ))),
+                    );
+                    let _ = dm.set_parent(base, Some(ws));
+                }
+            }
+        }
+        dm.ensure_terrain();
+        dm
+    }
+
+    pub fn start(assets: PathBuf) {
+        rbx_base::log::init("info");
+        let runtime = match make_runtime(startup_place(&assets), &assets) {
+            Ok(r) => r,
+            Err(e) => {
+                tracing::error!("{e}");
+                return;
+            }
+        };
+        runtime.set_touch_enabled(true);
+        if let Err(e) = spawn_local_player(&runtime, "Player1", true) {
+            tracing::error!("{e}");
+        }
+        runtime.scan_scripts();
+        if let Err(e) = runtime.start_server_core_scripts() {
+            tracing::error!("{e}");
+        }
+        if let Err(e) = runtime.start_core_scripts("StarterScript") {
+            tracing::error!("{e}");
+        }
+        let player = Player {
+            runtime,
+            net: None,
+            window: None,
+            gpu: None,
+            pending_gpu: Arc::new(Mutex::new(None)),
+            surface_size: None,
+            assets,
+            accumulator: 0.0,
+            keys: HashSet::new(),
+            cursor: (0.0, 0.0),
+            behavior: 0,
+            lock_point: None,
+            screenshot: None,
+            scripted: Vec::new(),
+            dump_gui: None,
+            frames: 0,
+            done: false,
+        };
+        if let Err(e) = rbx_platform::run("Roblox", (1280, 720), player) {
+            tracing::error!("{e}");
+        }
+    }
+
+    #[cfg(target_os = "ios")]
+    pub fn ios_main() {
+        let assets = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(|d| d.join("assets")))
+            .unwrap_or_else(|| PathBuf::from("assets"));
+        start(assets);
+    }
+}
+
+#[cfg(target_os = "android")]
+fn android_start(app: rbx_platform::AndroidApp) {
+    let assets = app
+        .internal_data_path()
+        .map(|p| p.join("assets"))
+        .unwrap_or_else(|| PathBuf::from("assets"));
+    mobile::start(assets);
+}
+
+rbx_platform::android_entry!(android_start);

@@ -49,6 +49,7 @@ impl Harness {
         };
         let studio = &mut self.studio;
         let _ = self.ctx.run_ui(raw, |ui| studio.ui(ui));
+        self.studio.doc.runtime.step(1.0 / 60.0);
     }
 
     fn handle_screen(&self, part: InstanceId, kind: OverlayHandle, id: usize) -> Pos2 {
@@ -130,3 +131,26 @@ fn select_tool_drags_part_on_surface() {
     let (moved, _) = h.part(part);
     assert!((moved.translation - cf.translation).length() > 0.5, "part did not move: {:?}", moved.translation);
 }
+
+#[test]
+fn inserted_part_moves_with_handles_in_real_place() {
+    let assets = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../assets");
+    let place = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/places/RobloxStudio/content/FirstPlaceBasePlate.rbxl");
+    let doc = Document::open(&place, &assets.join("content")).expect("open");
+    let mut studio = Studio::new(doc, assets);
+    studio.view.camera = crate::app::camera_for(&studio.doc);
+    let mut h = Harness { ctx: egui::Context::default(), studio, time: 0.0 };
+    for _ in 0..3 {
+        h.frame(vec![]);
+    }
+    h.studio.run_action("placePartAction");
+    h.studio.run_action("advTranslateAction");
+    h.frame(vec![]);
+    let part = h.studio.doc.selection()[0];
+    let before = h.part(part).0.translation;
+    let from = h.handle_screen(part, OverlayHandle::Move, 1);
+    h.drag(from, from - vec2(0.0, 60.0));
+    let after = h.part(part).0.translation;
+    assert!(after.y > before.y + 0.5, "part did not move up: {before:?} -> {after:?}");
+}
+

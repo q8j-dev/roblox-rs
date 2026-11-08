@@ -1000,7 +1000,7 @@ impl PhysicsWorld {
     fn hit_filter_assembly(&self, own: usize) -> impl Fn(InstanceId) -> bool + '_ {
         move |pid| match self.part(pid) {
             Some(p) => p.can_collide && p.assembly != own,
-            None => false,
+            None => self.terrain.id == Some(pid),
         }
     }
 
@@ -1086,6 +1086,9 @@ impl PhysicsWorld {
 
     fn floor_part_valid(&self, h: &HumanoidSim) -> Option<Floor> {
         let f = h.floor?;
+        if self.terrain.id == Some(f.part) {
+            return Some(f);
+        }
         let own = h.app.torso_slow().and_then(|t| self.assembly_index(t))?;
         let fa = self.assembly_index(f.part)?;
         if fa != own { Some(f) } else { None }

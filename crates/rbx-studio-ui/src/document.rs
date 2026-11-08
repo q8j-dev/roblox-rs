@@ -25,6 +25,7 @@ fn is_xml(path: &Path) -> bool {
 fn runtime_for(dm: DataModel, content_root: &Path) -> Result<ScriptRuntime, String> {
     let mut engine = Engine::new(dm);
     engine.content_root = Some(content_root.to_path_buf());
+    engine.host_selection = true;
     engine.process_after_load();
     ScriptRuntime::new(Arc::new(Mutex::new(engine))).map_err(|e| e.to_string())
 }
@@ -80,6 +81,7 @@ impl Document {
     }
 
     pub fn from_runtime(runtime: ScriptRuntime, content_root: &Path) -> Document {
+        runtime.engine.lock().host_selection = true;
         Document {
             runtime,
             path: None,

@@ -261,3 +261,48 @@ fn resting_humanoid_stays_kinematic_across_assembly_rebuilds() {
     );
     assert!(world.assembly_of(torso).expect("assembly").kinematic);
 }
+
+#[test]
+fn humanoid_stands_on_smooth_terrain() {
+    use rbx_dom::rbx_terrain::SmoothGrid;
+    use rbx_dom::rbx_terrain::smooth::{Cell, CellBox, Region};
+    use rbx_math::IVec3;
+    let mut dm = DataModel::new();
+    let ws = dm.get_service("Workspace").expect("ws");
+    let t = dm.create("Terrain").expect("terrain");
+    dm.set_parent(t, Some(ws)).expect("parent");
+    let mut g = SmoothGrid::new();
+    let region = Region::new(IVec3::new(-8, -4, -8), IVec3::new(8, 0, 8));
+    let mut b = CellBox::sized(region.size());
+    let s = region.size();
+    for y in 0..s.y {
+        for z in 0..s.z {
+            for x in 0..s.x {
+                b.set(x, y, z, Cell::new(2, 255));
+            }
+        }
+    }
+    g.write(&region, &b);
+    let data = dm.terrain_mut(t);
+    data.legacy = None;
+    data.smooth = Some(g);
+    let (_, h, torso) = character(&mut dm, ws, 2.0);
+    let mut world = PhysicsWorld::new();
+    world.attach(&mut dm);
+    for _ in 0..240 {
+        world.step(&mut dm, 1.0 / 60.0);
+    }
+    let y = dm
+        .get(torso, "CFrame")
+        .ok()
+        .and_then(|v| v.as_cframe())
+        .expect("cf")
+        .translation
+        .y;
+    let state = world.humanoid(h).expect("sim").state;
+    assert!(
+        matches!(state, HState::Running | HState::RunningNoPhysics),
+        "state {state:?} at torso height {y}"
+    );
+    assert!((y - 5.2).abs() < 0.4, "torso height {y}");
+}

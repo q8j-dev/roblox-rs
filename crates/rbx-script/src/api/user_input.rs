@@ -568,8 +568,15 @@ fn workspace_input(lua: &Lua, ev: &InputEvent) {
     if ev.input_type != MOUSE_BUTTON1 || ev.kind == InputKind::Changed {
         return;
     }
-    let studio_arrow = engine(lua).lock().dm.local_player.is_none();
+    let (studio_arrow, host_selection) = {
+        let eng = engine(lua);
+        let e = eng.lock();
+        (e.dm.local_player.is_none(), e.host_selection)
+    };
     if studio_arrow {
+        if host_selection {
+            return;
+        }
         if ev.kind == InputKind::Began {
             arrow_tool_click(lua);
         }

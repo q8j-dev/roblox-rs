@@ -101,6 +101,7 @@ pub struct Engine {
     pub selection: Vec<InstanceId>,
     pub clipboard: Vec<InstanceId>,
     pub animate_fallback: bool,
+    pub host_selection: bool,
 }
 
 #[derive(Clone, Debug, Default, PartialEq)]
@@ -227,6 +228,7 @@ impl Engine {
             selection: Vec::new(),
             clipboard: Vec::new(),
             animate_fallback: false,
+            host_selection: false,
         }
     }
 

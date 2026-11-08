@@ -567,7 +567,7 @@ impl Studio {
         self.doc.runtime.pump();
     }
 
-    fn open_script(&mut self, id: InstanceId) {
+    pub fn open_script(&mut self, id: InstanceId) {
         if !self.scripts.iter().any(|(s, _)| *s == id) {
             let src = self.doc.script_source(id).unwrap_or_default();
             self.scripts.push((id, src));
@@ -577,7 +577,7 @@ impl Studio {
             let _ = self.dock.set_active_tab(found);
         } else {
             if let Some(vp) = self.dock.find_tab(&Tab::Viewport) {
-                let _ = self.dock.set_active_tab(vp);
+                self.dock.set_focused_node_and_surface(vp.node_path());
             }
             self.dock.main_surface_mut().push_to_focused_leaf(tab);
         }

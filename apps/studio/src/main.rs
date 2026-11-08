@@ -32,6 +32,10 @@ struct Args {
     screenshot_frames: u32,
     #[arg(long, num_args = 0..)]
     select: Vec<String>,
+    #[arg(long)]
+    page: Option<usize>,
+    #[arg(long)]
+    script: Option<String>,
 }
 
 fn find_assets(explicit: Option<PathBuf>) -> PathBuf {
@@ -431,7 +435,21 @@ fn main() {
             std::process::exit(1);
         }
     };
-    let studio = Studio::new(doc, assets);
+    let mut studio = Studio::new(doc, assets);
+    if let Some(p) = args.page {
+        studio.ribbon.page = p;
+    }
+    if let Some(name) = &args.script {
+        let found = {
+            let e = studio.doc.runtime.engine.lock();
+            e.dm.descendants(e.dm.root())
+                .into_iter()
+                .find(|d| e.dm.name_of(*d) == name && e.dm.is_a(*d, "LuaSourceContainer"))
+        };
+        if let Some(id) = found {
+            studio.open_script(id);
+        }
+    }
     if !args.select.is_empty() {
         let picked: Vec<_> = {
             let e = studio.doc.runtime.engine.lock();

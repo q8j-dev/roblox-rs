@@ -54,7 +54,7 @@ impl Plugins {
             };
             match doc
                 .runtime
-                .run_plugin(&source, &name, file.parent().map(Path::to_path_buf))
+                .run_plugin(&source, &name, file.parent().map(|d| std::fs::canonicalize(d).unwrap_or_else(|_| d.to_path_buf())))
             {
                 Ok(()) => p.loaded.push(name),
                 Err(e) => p.errors.push(format!("{name}: {e}")),

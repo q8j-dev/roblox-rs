@@ -334,4 +334,13 @@ impl Document {
             Variant::ProtectedString(source.to_string()),
         );
     }
+
+    pub fn write_script_source(&mut self, id: InstanceId, source: &str) {
+        let _ = self.runtime.engine.lock().dm.set(
+            id,
+            "Source",
+            Variant::ProtectedString(source.to_string()),
+        );
+        self.dirty = true;
+    }
 }

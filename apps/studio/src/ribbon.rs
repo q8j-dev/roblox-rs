@@ -360,7 +360,8 @@ impl Ribbon {
                 }
                 Item::Plugin(p) => {
                     flush(self, ui, icons, &mut col, &mut x, events);
-                    let text = if p.text.is_empty() { String::new() } else { p.text.clone() };
+                    let has_icon = p.icon.as_ref().is_some_and(|i| i.is_file());
+                    let text = if p.text.is_empty() && !has_icon { p.tooltip.clone() } else { p.text.clone() };
                     let tw = ui.fonts_mut(|f| f.layout_no_wrap(text.clone(), font.clone(), Color32::BLACK).size().x);
                     let w = (tw + 10.0).max(42.0);
                     let r = Rect::from_min_size(pos2(x, top), vec2(w, LARGE_H));

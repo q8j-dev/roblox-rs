@@ -336,32 +336,60 @@ fn edit_value(
 }
 
 pub fn script_editor(ui: &mut Ui, doc: &mut Document, id: InstanceId, buffer: &mut String) -> bool {
-    let mut keep_open = true;
-    ui.horizontal(|ui| {
-        if ui.button("Apply").clicked() {
-            doc.set_script_source(id, buffer);
-        }
-        if ui.button("Close").clicked() {
-            doc.set_script_source(id, buffer);
-            keep_open = false;
-        }
-    });
-    egui::ScrollArea::vertical().show(ui, |ui| {
-        let mut layouter = |ui: &Ui, text: &dyn egui::TextBuffer, wrap: f32| {
-            let mut job = luau_layout(text.as_str());
-            job.wrap.max_width = wrap;
-            ui.fonts_mut(|f| f.layout_job(job))
-        };
-        ui.add(
-            egui::TextEdit::multiline(buffer)
-                .font(egui::TextStyle::Monospace)
-                .code_editor()
-                .desired_width(f32::INFINITY)
-                .desired_rows(30)
-                .layouter(&mut layouter),
-        );
-    });
-    keep_open
+    let full = ui.available_rect_before_wrap();
+    ui.painter().rect_filled(full, 0.0, Color32::WHITE);
+    let font = egui::FontId::monospace(13.0);
+    let row = ui.fonts_mut(|f| f.row_height(&font));
+    let lines = buffer.lines().count().max(1) + usize::from(buffer.ends_with('\n'));
+    let digits = lines.to_string().len().max(2) as f32;
+    let char_w = ui.fonts_mut(|f| f.glyph_width(&font, '0'));
+    let margin = digits * char_w + 26.0;
+    egui::ScrollArea::both()
+        .auto_shrink([false, false])
+        .show(ui, |ui| {
+            ui.horizontal_top(|ui| {
+                ui.spacing_mut().item_spacing = egui::vec2(0.0, 0.0);
+                let height = (lines as f32 * row + 8.0).max(full.height());
+                let (gutter, _) = ui.allocate_exact_size(egui::vec2(margin, height), egui::Sense::hover());
+                ui.painter().rect_filled(gutter, 0.0, Color32::from_rgb(221, 221, 221));
+                ui.painter().rect_filled(
+                    egui::Rect::from_min_max(egui::pos2(gutter.right() - 12.0, gutter.top()), gutter.right_bottom()),
+                    0.0,
+                    Color32::from_rgb(249, 249, 249),
+                );
+                for n in 0..lines {
+                    ui.painter().text(
+                        egui::pos2(gutter.right() - 16.0, gutter.top() + 2.0 + n as f32 * row),
+                        egui::Align2::RIGHT_TOP,
+                        (n + 1).to_string(),
+                        font.clone(),
+                        Color32::BLACK,
+                    );
+                }
+                let mut layouter = |ui: &Ui, text: &dyn egui::TextBuffer, wrap: f32| {
+                    let mut job = luau_layout(text.as_str());
+                    job.wrap.max_width = wrap;
+                    ui.fonts_mut(|f| f.layout_job(job))
+                };
+                let response = ui.add(
+                    egui::TextEdit::multiline(buffer)
+                        .font(egui::TextStyle::Monospace)
+                        .code_editor()
+                        .frame(egui::Frame::new())
+                        .margin(egui::vec2(4.0, 2.0))
+                        .desired_width(f32::INFINITY)
+                        .min_size(egui::vec2(0.0, height))
+                        .layouter(&mut layouter),
+                );
+                if response.gained_focus() {
+                    doc.checkpoint();
+                }
+                if response.changed() {
+                    doc.write_script_source(id, buffer);
+                }
+            });
+        });
+    true
 }
 
 const LUAU_KEYWORDS: &[&str] = &[
@@ -378,6 +406,7 @@ pub enum Token {
     Number,
     Str,
     Comment,
+    Operator,
 }
 
 fn long_bracket_level(b: &[u8], i: usize) -> Option<usize> {
@@ -461,6 +490,9 @@ pub fn luau_tokens(src: &str) -> Vec<(std::ops::Range<usize>, Token)> {
             } else {
                 Token::Plain
             }
+        } else if b"+-*/%^#=~<>(){}[];:,.".contains(&c) {
+            i += 1;
+            Token::Operator
         } else {
             i += src[i..].chars().next().map_or(1, char::len_utf8);
             Token::Plain
@@ -478,9 +510,9 @@ pub fn luau_layout(src: &str) -> egui::text::LayoutJob {
     let font = egui::FontId::monospace(13.0);
     for (range, kind) in luau_tokens(src) {
         let color = match kind {
-            Token::Plain => Color32::from_rgb(30, 30, 30),
-            Token::Keyword => Color32::from_rgb(0, 0, 160),
-            Token::Builtin => Color32::from_rgb(0, 0, 127),
+            Token::Plain | Token::Builtin => Color32::BLACK,
+            Token::Keyword => Color32::from_rgb(0, 0, 127),
+            Token::Operator => Color32::from_rgb(127, 127, 0),
             Token::Number => Color32::from_rgb(0, 127, 127),
             Token::Str => Color32::from_rgb(127, 0, 127),
             Token::Comment => Color32::from_rgb(0, 127, 0),

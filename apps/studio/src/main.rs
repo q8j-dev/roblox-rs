@@ -632,6 +632,7 @@ impl ApplicationHandler for Host {
         match event {
             WindowEvent::CloseRequested => {
                 self.studio.cleanup_servers();
+                self.studio.remove_autosave();
                 event_loop.exit();
             }
             WindowEvent::Occluded(hidden) => {

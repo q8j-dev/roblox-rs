@@ -255,11 +255,7 @@ impl ribbon::State for RibbonState<'_> {
             | "gameExplorerAction"
             | "viewContextualHelpAction"
             | "viewTutorialsAction"
-            | "emulateDeviceAction"
-            | "manageEmulationDeviceAction"
             | "onlineHelpAction"
-            | "fastLogDumpAction"
-            | "fileOpenRecentSavesAction"
             | "stepIntoAction"
             | "stepOverAction"
             | "stepOutAction"
@@ -360,7 +356,7 @@ impl Studio {
         });
     }
 
-    fn log(&mut self, kind: MessageType, text: impl Into<String>) {
+    pub fn log(&mut self, kind: MessageType, text: impl Into<String>) {
         self.status.push((kind, text.into()));
     }
 
@@ -376,6 +372,7 @@ impl Studio {
     pub fn open(&mut self, path: &Path) {
         match Document::open(path, &self.assets.join("content")) {
             Ok(doc) => {
+                self.remove_autosave();
                 self.doc = doc;
                 self.view.camera = camera_for(&self.doc);
                 self.scripts.clear();
@@ -436,6 +433,7 @@ impl Studio {
                 self.play = Some(PlaySession::new(edit, mode));
                 self.viewport_focus = mode == Mode::Play;
                 self.explorer = Explorer::default();
+                self.apply_device();
             }
             Err(e) => self.log(MessageType::Error, e),
         }
@@ -720,6 +718,7 @@ impl Studio {
         match name {
             "fileNewAction" => match Document::new_baseplate(&self.assets.join("content")) {
                 Ok(doc) => {
+                    self.remove_autosave();
                     self.doc = doc;
                     self.view.camera = camera_for(&self.doc);
                     self.explorer = Explorer::default();
@@ -1069,9 +1068,14 @@ impl Studio {
             }
             out
         };
+        self.autosave_tick();
         self.ribbon
             .dynamic
             .insert("switchWindowsMenu".into(), windows);
+        let devices = self.device_menu();
+        self.ribbon
+            .dynamic
+            .insert("emulateDeviceAction".into(), devices);
         let mut ribbon = std::mem::replace(&mut self.ribbon, Ribbon::empty());
         let mut icons = std::mem::replace(&mut self.icons, Icons::new(Path::new("")));
         let events = egui::Panel::top("ribbon")
@@ -1434,8 +1438,19 @@ impl Studio {
     }
 
     fn viewport_ui(&mut self, ui: &mut Ui) {
-        let rect = ui.available_rect_before_wrap();
+        let full = ui.available_rect_before_wrap();
         let ppp = ui.ctx().pixels_per_point();
+        let rect = match self.emulated_device() {
+            Some(d) if d.width > 0 && d.height > 0 => {
+                ui.painter()
+                    .rect_filled(full, 0.0, Color32::from_rgb(40, 40, 40));
+                let want = egui::vec2(d.width as f32, d.height as f32) / ppp;
+                let fit = (full.width() / want.x).min(full.height() / want.y).min(1.0);
+                Rect::from_center_size(full.center(), want * fit)
+            }
+            _ => full,
+        };
+        ui.allocate_rect(full, Sense::hover());
         self.view.rect = rect;
         self.view.pixels = (
             (rect.width() * ppp).round().max(1.0) as u32,
@@ -1487,10 +1502,11 @@ impl Studio {
     }
 
     fn game_input(&mut self, ui: &mut Ui, response: &egui::Response, rect: Rect) {
+        let touch = self.emulated_device().is_some_and(|d| d.mobile);
         let Some(session) = self.play.as_mut() else {
             return;
         };
-        let (delta, scroll, events) = ui.input(|i| {
+        let (delta, scroll, events, primary_down) = ui.input(|i| {
             (
                 i.pointer.delta(),
                 i.smooth_scroll_delta.y,
@@ -1506,9 +1522,36 @@ impl Studio {
                         _ => None,
                     })
                     .collect::<Vec<_>>(),
+                i.pointer.primary_down(),
             )
         });
         let local = |p: egui::Pos2| (p.x - rect.left(), p.y - rect.top());
+        if touch {
+            if let Some(pos) = response.interact_pointer_pos().or(response.hover_pos())
+                && primary_down
+                && delta != egui::Vec2::ZERO
+            {
+                session.mouse(
+                    &self.doc,
+                    InputKind::Changed,
+                    user_input::TOUCH,
+                    local(pos),
+                    (delta.x, delta.y),
+                );
+            }
+            for (pos, button, pressed) in events {
+                if button != egui::PointerButton::Primary || (!rect.contains(pos) && pressed) {
+                    continue;
+                }
+                let kind = if pressed {
+                    InputKind::Began
+                } else {
+                    InputKind::Ended
+                };
+                session.mouse(&self.doc, kind, user_input::TOUCH, local(pos), (0.0, 0.0));
+            }
+            return;
+        }
         if let Some(pos) = response.hover_pos().or(response.interact_pointer_pos()) {
             if delta != egui::Vec2::ZERO {
                 session.mouse(

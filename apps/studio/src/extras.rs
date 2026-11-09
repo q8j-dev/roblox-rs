@@ -20,6 +20,36 @@ pub enum JoinMode {
     Never,
 }
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct EmulationDevice {
+    pub name: String,
+    pub width: u32,
+    pub height: u32,
+    pub mobile: bool,
+}
+
+pub fn default_devices() -> Vec<EmulationDevice> {
+    [
+        ("IPad Mini", 960, 640, true),
+        ("IPad 2", 960, 640, true),
+        ("IPhone 4S", 960, 640, true),
+        ("Nexus 7", 1280, 800, true),
+        ("Average Laptop", 1366, 768, false),
+        ("HD 720", 1280, 720, false),
+        ("HD 1080", 1920, 1080, false),
+        ("VGA", 640, 480, false),
+        ("Default", 0, 0, false),
+    ]
+    .into_iter()
+    .map(|(name, width, height, mobile)| EmulationDevice {
+        name: name.into(),
+        width,
+        height,
+        mobile,
+    })
+    .collect()
+}
+
 pub struct Extras {
     pub show_grid: bool,
     pub grid_studs: i32,
@@ -39,6 +69,12 @@ pub struct Extras {
     pub recording: bool,
     pub launch: Option<mpsc::Receiver<Result<String, String>>>,
     pub show_about: bool,
+    pub devices: Vec<EmulationDevice>,
+    pub device: usize,
+    pub show_devices: bool,
+    pub last_autosave: rbx_base::time::Instant,
+    pub autosave_path: Option<PathBuf>,
+    pub new_device: (String, String, String, bool),
     pub show_shortcuts: bool,
     pub show_settings: bool,
     pub settings_selected: Option<InstanceId>,
@@ -68,6 +104,12 @@ impl Default for Extras {
             recording: false,
             launch: None,
             show_about: false,
+            devices: default_devices(),
+            device: default_devices().len() - 1,
+            show_devices: false,
+            last_autosave: rbx_base::time::Instant::now(),
+            autosave_path: None,
+            new_device: (String::new(), "1280".into(), "720".into(), false),
             show_shortcuts: false,
             show_settings: false,
             settings_selected: None,
@@ -482,6 +524,12 @@ impl Studio {
 
     pub fn extra_checked(&self, action: &str) -> Option<bool> {
         let x = &self.extras;
+        if let Some(i) = action
+            .strip_prefix("#device:")
+            .and_then(|i| i.parse::<usize>().ok())
+        {
+            return Some(x.device == i);
+        }
         Some(match action {
             "toggle3DGridAction" => x.show_grid,
             "toggleVideoRecordAction" => x.recording,
@@ -507,8 +555,145 @@ impl Studio {
         })
     }
 
+    pub fn autosave_dir() -> PathBuf {
+        let home = std::env::var_os("USERPROFILE")
+            .or_else(|| std::env::var_os("HOME"))
+            .map(PathBuf::from)
+            .unwrap_or_else(std::env::temp_dir);
+        home.join("Documents").join("ROBLOX").join("AutoSaves")
+    }
+
+    pub fn autosave_tick(&mut self) {
+        if self.play.is_some() || !self.doc.dirty {
+            return;
+        }
+        if self.extras.last_autosave.elapsed() < std::time::Duration::from_secs(300) {
+            return;
+        }
+        self.extras.last_autosave = rbx_base::time::Instant::now();
+        let dir = Self::autosave_dir();
+        if std::fs::create_dir_all(&dir).is_err() {
+            return;
+        }
+        let path = match &self.extras.autosave_path {
+            Some(p) => p.clone(),
+            None => {
+                let base = self
+                    .doc
+                    .path
+                    .as_ref()
+                    .filter(|p| p.exists())
+                    .and_then(|p| p.file_stem())
+                    .map(|s| s.to_string_lossy().into_owned())
+                    .unwrap_or_else(|| "Place".into());
+                let mut n = 0;
+                while dir.join(format!("{base}_AutoSave_{n}.rbxl")).exists() && n < 100 {
+                    n += 1;
+                }
+                let p = dir.join(format!("{base}_AutoSave_{n}.rbxl"));
+                self.extras.autosave_path = Some(p.clone());
+                p
+            }
+        };
+        if let Ok(bytes) = self.doc.bytes() {
+            let _ = std::fs::write(&path, bytes);
+        }
+    }
+
+    pub fn remove_autosave(&mut self) {
+        if let Some(p) = self.extras.autosave_path.take() {
+            let _ = std::fs::remove_file(p);
+        }
+        self.extras.last_autosave = rbx_base::time::Instant::now();
+    }
+
+    fn fast_log_dump(&mut self) {
+        let dir = std::env::temp_dir().join("Roblox").join("logs");
+        let _ = std::fs::create_dir_all(&dir);
+        let stamp = rbx_base::time::unix_seconds() as u64;
+        let path = dir.join(format!("StudioLogDump_{stamp}.txt"));
+        let mut text = String::new();
+        {
+            let e = self.doc.runtime.engine.lock();
+            for m in &e.output {
+                text.push_str(&format!("{:?}: {}\n", m.kind, m.text));
+            }
+        }
+        for (kind, line) in &self.status {
+            text.push_str(&format!("{kind:?}: {line}\n"));
+        }
+        self.log(rbx_script::MessageType::Info, "Log Dumps");
+        match std::fs::write(&path, text) {
+            Ok(()) => self.log(
+                rbx_script::MessageType::Info,
+                format!("log written to {}", path.display()),
+            ),
+            Err(e) => self.log(
+                rbx_script::MessageType::Error,
+                format!("{}: {e}", path.display()),
+            ),
+        }
+    }
+
+    pub fn emulated_device(&self) -> Option<&EmulationDevice> {
+        self.play.as_ref()?;
+        self.extras
+            .devices
+            .get(self.extras.device)
+            .filter(|d| d.width > 0 && d.height > 0 || d.mobile)
+    }
+
+    pub fn apply_device(&self) {
+        if self.play.is_some() {
+            let mobile = self
+                .extras
+                .devices
+                .get(self.extras.device)
+                .is_some_and(|d| d.mobile);
+            self.doc.runtime.set_touch_enabled(mobile);
+        }
+    }
+
+    pub fn device_menu(&self) -> Vec<(String, String)> {
+        let mut out: Vec<(String, String)> = self
+            .extras
+            .devices
+            .iter()
+            .enumerate()
+            .map(|(i, d)| (d.name.clone(), format!("#device:{i}")))
+            .collect();
+        out.push((
+            "Manage Devices...".into(),
+            "manageEmulationDeviceAction".into(),
+        ));
+        out
+    }
+
     pub fn extra_action(&mut self, action: &str) -> bool {
+        if let Some(i) = action
+            .strip_prefix("#device:")
+            .and_then(|i| i.parse::<usize>().ok())
+        {
+            if i < self.extras.devices.len() {
+                self.extras.device = i;
+                self.apply_device();
+            }
+            return true;
+        }
         match action {
+            "manageEmulationDeviceAction" => self.extras.show_devices = true,
+            "fastLogDumpAction" => self.fast_log_dump(),
+            "fileOpenRecentSavesAction" => {
+                let dir = Self::autosave_dir();
+                let _ = std::fs::create_dir_all(&dir);
+                if let Some(p) = rfd::FileDialog::new()
+                    .set_directory(&dir)
+                    .add_filter("Roblox Place Files", &["rbxl", "rbxlx"])
+                    .pick_file()
+                {
+                    self.open(&p);
+                }
+            }
             "toggle3DGridAction" => self.extras.show_grid = !self.extras.show_grid,
             "toggleAxisWidgetAction" => self.extras.axis_widget = !self.extras.axis_widget,
             "gridSizeToTwoAction" => self.extras.grid_studs = 2,
@@ -571,6 +756,78 @@ impl Studio {
     }
 
     pub fn dialogs(&mut self, ctx: &egui::Context) {
+        if self.extras.show_devices {
+            let mut open = true;
+            let mut remove = None;
+            egui::Window::new("Manage Devices")
+                .collapsible(false)
+                .resizable(false)
+                .open(&mut open)
+                .anchor(Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
+                .show(ctx, |ui| {
+                    ui.set_width(360.0);
+                    egui::Grid::new("emulation-devices")
+                        .striped(true)
+                        .show(ui, |ui| {
+                            for (i, d) in self.extras.devices.iter().enumerate() {
+                                ui.label(&d.name);
+                                ui.label(if d.width > 0 {
+                                    format!("{} x {}", d.width, d.height)
+                                } else {
+                                    "Window size".into()
+                                });
+                                ui.label(if d.mobile { "Touch" } else { "Mouse" });
+                                if d.name != "Default" && ui.button("Remove").clicked() {
+                                    remove = Some(i);
+                                }
+                                ui.end_row();
+                            }
+                        });
+                    ui.separator();
+                    let nd = &mut self.extras.new_device;
+                    ui.horizontal(|ui| {
+                        ui.label("Name");
+                        ui.add(egui::TextEdit::singleline(&mut nd.0).desired_width(120.0));
+                        ui.label("Width");
+                        ui.add(egui::TextEdit::singleline(&mut nd.1).desired_width(44.0));
+                        ui.label("Height");
+                        ui.add(egui::TextEdit::singleline(&mut nd.2).desired_width(44.0));
+                    });
+                    ui.checkbox(&mut nd.3, "Mobile device (touch input)");
+                    let valid = !nd.0.trim().is_empty()
+                        && nd.1.parse::<u32>().is_ok()
+                        && nd.2.parse::<u32>().is_ok();
+                    if ui
+                        .add_enabled(valid, egui::Button::new("Add Device"))
+                        .clicked()
+                    {
+                        let device = EmulationDevice {
+                            name: nd.0.trim().to_string(),
+                            width: nd.1.parse().unwrap_or(0),
+                            height: nd.2.parse().unwrap_or(0),
+                            mobile: nd.3,
+                        };
+                        let default = self.extras.devices.len() - 1;
+                        self.extras.devices.insert(default, device);
+                        if self.extras.device >= default {
+                            self.extras.device += 1;
+                        }
+                        self.extras.new_device.0.clear();
+                    }
+                });
+            if let Some(i) = remove {
+                self.extras.devices.remove(i);
+                if self.extras.device == i {
+                    self.extras.device = self.extras.devices.len() - 1;
+                } else if self.extras.device > i {
+                    self.extras.device -= 1;
+                }
+                self.apply_device();
+            }
+            if !open {
+                self.extras.show_devices = false;
+            }
+        }
         if self.extras.show_about {
             let mut open = true;
             egui::Window::new("Welcome to ROBLOX!")

@@ -1108,6 +1108,15 @@ impl PhysicsWorld {
                         let p = self.read_part(dm, id);
                         self.parts[i].surfaces = p.surfaces;
                         self.parts[i].surface_inputs = p.surface_inputs;
+                        let attached: Vec<InstanceId> = self
+                            .joints
+                            .iter()
+                            .filter(|(_, j)| j.part0 == Some(id) || j.part1 == Some(id))
+                            .map(|(jid, _)| *jid)
+                            .collect();
+                        for jid in attached {
+                            self.wake_joint(jid);
+                        }
                     }
                 }
             }

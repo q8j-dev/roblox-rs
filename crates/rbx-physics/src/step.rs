@@ -185,8 +185,11 @@ impl PhysicsWorld {
         let active = self.narrowphase(pairs);
         self.release_touched_kinematic(&active);
         let terrain_active = self.terrain_narrowphase();
+        if !self.recursive_wake.is_empty() {
+            self.wake_step(true);
+        }
         self.solve_step(&active, &terrain_active);
-        let neighbors = self.wake_step();
+        let neighbors = self.wake_step(false);
         self.sleep_step(&neighbors);
         self.fallen_check();
         self.flush_spatial();
@@ -1277,16 +1280,20 @@ impl PhysicsWorld {
         }
     }
 
-    fn wake_step(&mut self) -> Vec<Vec<(usize, bool)>> {
+    fn wake_step(&mut self, contact_only: bool) -> Vec<Vec<(usize, bool)>> {
         let neighbors = self.sleep_neighbors();
-        let mut external = std::mem::take(&mut self.external_wake);
-        for p in std::mem::take(&mut self.tickled_parts) {
-            if let Some(&i) = self.index.get(&p) {
-                external.push(self.parts[i].assembly);
+        let mut external = Vec::new();
+        let mut plain = Vec::new();
+        if !contact_only {
+            external = std::mem::take(&mut self.external_wake);
+            for p in std::mem::take(&mut self.tickled_parts) {
+                if let Some(&i) = self.index.get(&p) {
+                    external.push(self.parts[i].assembly);
+                }
             }
+            plain = std::mem::take(&mut self.plain_wake);
         }
         let contact = std::mem::take(&mut self.recursive_wake);
-        let plain = std::mem::take(&mut self.plain_wake);
         for (pending, through_awake, max_depth) in
             [(external, true, 8), (contact, false, 8), (plain, false, 0)]
         {
@@ -1306,7 +1313,9 @@ impl PhysicsWorld {
             }
             while let Some(a) = queue.pop_front() {
                 let d = depth[&a];
-                self.assemblies[a].wake_from_sleep();
+                if !contact_only || self.assemblies[a].sleeping {
+                    self.assemblies[a].wake_from_sleep();
+                }
                 for &(o, joint) in &neighbors[a] {
                     if depth.contains_key(&o) {
                         continue;

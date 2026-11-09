@@ -8,6 +8,7 @@ pub mod humanoid;
 pub mod joins;
 pub mod manual_joints;
 pub mod math;
+mod poly_join;
 pub mod queries;
 pub mod shape;
 pub mod solver;

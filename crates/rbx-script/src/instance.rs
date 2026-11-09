@@ -179,6 +179,16 @@ pub fn index(lua: &Lua, id: InstanceId, key: Value) -> Result<Value> {
                     desc.security,
                 ));
             }
+            if matches!(
+                name.as_str(),
+                "CFrame" | "Position" | "Rotation" | "position"
+            ) {
+                let mut e = eng.lock();
+                let world = e.world.clone();
+                if let Some(mut w) = world.try_lock() {
+                    w.settle_topology(&mut e.dm);
+                }
+            }
             if let Some(v) = api::get_property(lua, id, class, &name)? {
                 return Ok(v);
             }

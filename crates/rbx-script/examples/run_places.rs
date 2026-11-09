@@ -1,4 +1,4 @@
-use rbx_script::harness::{PlaceRun, run_place_file};
+use rbx_script::harness::{PlaceRun, is_performance_place, run_place_file};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::Mutex;
@@ -50,11 +50,32 @@ fn main() {
         files.retain(|f| f.to_string_lossy().contains(&filter));
     }
     let counts: Mutex<[usize; 4]> = Mutex::new([0; 4]);
-    let next = AtomicUsize::new(0);
     let threads = std::env::var("RBX_PLACE_THREADS")
         .ok()
         .and_then(|v| v.parse().ok())
         .unwrap_or_else(|| std::thread::available_parallelism().map_or(4, |n| n.get()));
+    let (timed, files): (Vec<PathBuf>, Vec<PathBuf>) =
+        files.into_iter().partition(|f| is_performance_place(f));
+    run_batch(&files, threads, &root, &content, &counts);
+    run_batch(&timed, 1, &root, &content, &counts);
+    let c = counts.into_inner().unwrap_or_default();
+    println!(
+        "test places: {}/{} passed; places without tests: {}/{} ran",
+        c[0],
+        c[0] + c[1],
+        c[2],
+        c[2] + c[3]
+    );
+}
+
+fn run_batch(
+    files: &[PathBuf],
+    threads: usize,
+    root: &Path,
+    content: &Path,
+    counts: &Mutex<[usize; 4]>,
+) {
+    let next = AtomicUsize::new(0);
     std::thread::scope(|s| {
         for _ in 0..threads {
             s.spawn(|| {
@@ -64,7 +85,7 @@ fn main() {
                         break;
                     };
                     let f2 = f.clone();
-                    let content = content.clone();
+                    let content = content.to_path_buf();
                     let started = std::time::Instant::now();
                     let r = std::thread::Builder::new()
                         .stack_size(64 << 20)
@@ -73,7 +94,7 @@ fn main() {
                         .and_then(|h| h.join().map_err(|_| "panicked".to_string()))
                         .and_then(|r| r);
                     eprintln!("{:6.1}s {}", started.elapsed().as_secs_f64(), f.display());
-                    let name = f.strip_prefix(&root).unwrap_or(f).display().to_string();
+                    let name = f.strip_prefix(root).unwrap_or(f).display().to_string();
                     let (line, slot) = report(&name, &r);
                     if let Ok(mut c) = counts.lock() {
                         c[slot] += 1;
@@ -85,14 +106,6 @@ fn main() {
             });
         }
     });
-    let c = counts.into_inner().unwrap_or_default();
-    println!(
-        "test places: {}/{} passed; places without tests: {}/{} ran",
-        c[0],
-        c[0] + c[1],
-        c[2],
-        c[2] + c[3]
-    );
 }
 
 fn report(name: &str, r: &Result<PlaceRun, String>) -> (String, usize) {

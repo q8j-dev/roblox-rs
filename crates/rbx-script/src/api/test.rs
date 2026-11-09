@@ -21,6 +21,7 @@ pub struct TestState {
     pub failures: Vec<String>,
     pub warnings: Vec<String>,
     pub messages: Vec<String>,
+    pub restore_sleep: Option<bool>,
 }
 
 fn test_service(lua: &Lua) -> Option<InstanceId> {
@@ -161,6 +162,9 @@ pub fn finish(lua: &Lua) {
         let was = e.test.running;
         e.test.running = false;
         e.test.done = true;
+        if let Some(allow) = e.test.restore_sleep.take() {
+            e.world.lock().allow_sleep = allow;
+        }
         (was, e.test.tests, e.test.warns, e.test.errors)
     };
     if !was {
@@ -301,10 +305,20 @@ pub fn start(lua: &Lua, identity: Identity) -> Result<()> {
                 .unwrap_or(10.0);
         let now = e.game_time;
         let run_count = e.test.run_count + 1;
+        let allow_sleep =
+            e.dm.get(ts, "IsSleepAllowed")
+                .ok()
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true);
+        let previous = {
+            let mut w = e.world.lock();
+            std::mem::replace(&mut w.allow_sleep, allow_sleep)
+        };
         e.test = TestState {
             running: true,
             run_count,
             deadline: now + timeout,
+            restore_sleep: Some(previous),
             ..Default::default()
         };
         let scripts: Vec<InstanceId> =

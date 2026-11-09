@@ -1266,6 +1266,9 @@ impl PhysicsWorld {
     }
 
     fn state_from_neighbors(&self, ai: usize, neighbors: &[Vec<(usize, bool)>]) -> SleepVerdict {
+        if !self.allow_sleep {
+            return SleepVerdict::Awake;
+        }
         let mut all_sleeping = true;
         for &(n, _) in &neighbors[ai] {
             let o = &self.assemblies[n];

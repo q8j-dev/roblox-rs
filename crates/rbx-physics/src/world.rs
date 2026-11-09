@@ -430,6 +430,9 @@ pub struct PhysicsWorld {
     pub accoutrement_parts: HashSet<InstanceId>,
     pub recursive_wake: Vec<usize>,
     pub external_wake: Vec<usize>,
+    pub allow_sleep: bool,
+    pub pending_snaps: Vec<InstanceId>,
+    pub snapped_roots: HashMap<usize, usize>,
     pub tickled_parts: Vec<InstanceId>,
     pub plain_wake: Vec<usize>,
     pub vehicle_seats: std::collections::BTreeSet<InstanceId>,
@@ -594,6 +597,9 @@ impl PhysicsWorld {
             accoutrement_parts: HashSet::default(),
             recursive_wake: Vec::new(),
             external_wake: Vec::new(),
+            allow_sleep: true,
+            pending_snaps: Vec::new(),
+            snapped_roots: HashMap::default(),
             tickled_parts: Vec::new(),
             plain_wake: Vec::new(),
             vehicle_seats: Default::default(),
@@ -656,7 +662,7 @@ impl PhysicsWorld {
         self.assemblies.get(p.assembly)
     }
 
-    fn in_workspace(&self, dm: &DataModel, id: InstanceId) -> bool {
+    pub(crate) fn in_workspace(&self, dm: &DataModel, id: InstanceId) -> bool {
         match self.workspace {
             Some(ws) => dm.is_descendant_of(id, ws),
             None => false,
@@ -851,6 +857,9 @@ impl PhysicsWorld {
         }
         if changed {
             self.topology_dirty = true;
+            if in_world && kind.is_rigid() {
+                self.pending_snaps.push(id);
+            }
             let new_parts = [part0, part1];
             for p in old_parts.into_iter().flatten() {
                 if !new_parts.contains(&Some(p))
@@ -1486,6 +1495,8 @@ impl PhysicsWorld {
             return;
         }
         self.topology_dirty = false;
+        self.pending_snaps.clear();
+        self.snapped_roots.clear();
         self.plain_wake.clear();
         let n = self.parts.len();
         let mut old_vel: Vec<(Vec3, Vec3, bool)> = vec![(Vec3::ZERO, Vec3::ZERO, false); n];
@@ -1713,7 +1724,86 @@ impl PhysicsWorld {
         asm.moved = true;
     }
 
+    pub fn settle_topology(&mut self, dm: &mut DataModel) {
+        self.sync(dm);
+        if !self.topology_dirty || self.pending_snaps.is_empty() {
+            return;
+        }
+        let pending = std::mem::take(&mut self.pending_snaps);
+        if pending.iter().all(|&j| self.quick_snap(dm, j)) {
+            return;
+        }
+        self.rebuild_assemblies();
+        for p in &mut self.parts {
+            if p.moved {
+                dm.store_silent(p.id, "CFrame", Variant::CFrame(p.cframe));
+                p.moved = false;
+            }
+        }
+    }
+
+    fn root_key(&self, i: usize) -> (bool, u64, std::cmp::Reverse<InstanceId>) {
+        let p = &self.parts[i];
+        (p.anchored, p.sort_size, std::cmp::Reverse(p.id))
+    }
+
+    fn logical_root(&self, i: usize) -> Option<usize> {
+        if let Some(&r) = self.snapped_roots.get(&i) {
+            return Some(r);
+        }
+        let a = self.parts[i].assembly;
+        let asm = self.assemblies.get(a)?;
+        asm.parts.contains(&i).then_some(asm.root)
+    }
+
+    fn is_lone(&self, i: usize, joint: InstanceId) -> bool {
+        !self.parts[i].anchored
+            && !self.snapped_roots.contains_key(&i)
+            && self.part_joints.get(&self.parts[i].id).is_none_or(|js| {
+                js.iter()
+                    .all(|&o| o == joint || self.joints.get(&o).is_none_or(|j| !j.in_world))
+            })
+    }
+
+    fn quick_snap(&mut self, dm: &mut DataModel, jid: InstanceId) -> bool {
+        let Some(j) = self.joints.get(&jid) else {
+            return true;
+        };
+        if !j.in_world || !j.kind.is_rigid() {
+            return true;
+        }
+        let (Some(&i0), Some(&i1)) = (
+            j.part0.and_then(|p| self.index.get(&p)),
+            j.part1.and_then(|p| self.index.get(&p)),
+        ) else {
+            return true;
+        };
+        let (child, parent, parent_is_part0) = if self.is_lone(i1, jid) {
+            (i1, i0, true)
+        } else if self.is_lone(i0, jid) {
+            (i0, i1, false)
+        } else {
+            return false;
+        };
+        let Some(root) = self.logical_root(parent) else {
+            return false;
+        };
+        if self.root_key(child) > self.root_key(root) {
+            return false;
+        }
+        let rel = j.child_in_parent(parent_is_part0);
+        let cf = self.parts[parent].cframe * rel;
+        self.parts[child].cframe = cf;
+        self.spatial_dirty.push(self.parts[child].id);
+        self.snapped_roots.insert(child, root);
+        dm.store_silent(self.parts[child].id, "CFrame", Variant::CFrame(cf));
+        true
+    }
+
     pub fn joint_frames_changed(&mut self, dm: &mut DataModel, id: InstanceId) {
+        if !self.joints.contains_key(&id) && !self.in_workspace(dm, id) {
+            return;
+        }
         self.sync(dm);
         let Some(j) = self.joints.get(&id) else {
             return;

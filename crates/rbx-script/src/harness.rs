@@ -55,6 +55,22 @@ fn load_file(path: &Path) -> Result<(DataModel, Vec<String>), String> {
     Ok((dm, load_warnings))
 }
 
+pub fn is_performance_test(dm: &DataModel) -> bool {
+    dm.find_service("TestService").is_some_and(|t| {
+        let flag = |name: &str| {
+            dm.get(t, name)
+                .ok()
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true)
+        };
+        !flag("Is30FpsThrottleEnabled") || !flag("IsPhysicsEnvironmentalThrottled")
+    })
+}
+
+pub fn is_performance_place(path: &Path) -> bool {
+    load_file(path).is_ok_and(|(dm, _)| is_performance_test(&dm))
+}
+
 pub fn run_place_file(path: &Path, content_root: Option<&Path>) -> Result<PlaceRun, String> {
     let (dm, load_warnings) = load_file(path)?;
     run_datamodel(dm, path, content_root, load_warnings)
@@ -88,18 +104,7 @@ fn prepare(
         engine.asset_dirs.push(tests.join("assets"));
     }
     engine.process_after_load();
-    let performance_test = engine.dm.find_service("TestService").is_some_and(|t| {
-        let flag = |name: &str| {
-            engine
-                .dm
-                .get(t, name)
-                .ok()
-                .and_then(|v| v.as_bool())
-                .unwrap_or(true)
-        };
-        !flag("Is30FpsThrottleEnabled") || !flag("IsPhysicsEnvironmentalThrottled")
-    });
-    if !performance_test {
+    if !is_performance_test(&engine.dm) {
         engine.virtual_clock = Some(
             rbx_base::time::SystemTime::now()
                 .duration_since(rbx_base::time::UNIX_EPOCH)

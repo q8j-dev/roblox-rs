@@ -151,6 +151,11 @@ fn is_rotate(t: u32) -> bool {
 }
 
 fn can_build(p0: &Part, p1: &Part, n0: NormalId, n1: NormalId, angle: f32, planar: f32) -> bool {
+    if crate::poly_join::is_non_orthogonal(p0.shape.kind)
+        || crate::poly_join::is_non_orthogonal(p1.shape.kind)
+    {
+        return crate::poly_join::can_build_poly(p0, p1, n0, n1, angle, planar);
+    }
     if !fuzzy_axis_aligned(&p0.cframe.rotation, &p1.cframe.rotation, angle) {
         return false;
     }
@@ -379,6 +384,9 @@ impl PhysicsWorld {
     }
 
     pub fn destroy_joints(&mut self, dm: &mut DataModel, id: InstanceId) {
+        if !self.index.contains_key(&id) && !self.in_workspace(dm, id) {
+            return;
+        }
         self.sync(dm);
         for j in self.joints_of(id) {
             if dm.contains(j) {
@@ -431,6 +439,9 @@ impl PhysicsWorld {
         id: InstanceId,
         allow: impl Fn(InstanceId) -> bool,
     ) -> Vec<InstanceId> {
+        if !self.index.contains_key(&id) && !self.in_workspace(dm, id) {
+            return Vec::new();
+        }
         self.sync(dm);
         let Some(&pi) = self.index.get(&id) else {
             return Vec::new();
@@ -444,6 +455,7 @@ impl PhysicsWorld {
             crate::math::to_parry_vec(lo),
             crate::math::to_parry_vec(hi),
         );
+        self.flush_spatial();
         let mut candidates: Vec<usize> = self
             .candidates(&query)
             .into_iter()
@@ -598,6 +610,9 @@ impl PhysicsWorld {
     }
 
     pub fn safe_move(&mut self, dm: &mut DataModel, id: InstanceId) {
+        if !self.index.contains_key(&id) && !self.in_workspace(dm, id) {
+            return;
+        }
         self.sync(dm);
         let Some(&pi) = self.index.get(&id) else {
             return;

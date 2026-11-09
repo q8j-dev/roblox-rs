@@ -1,9 +1,8 @@
 <roblox xmlns:xmime="http://www.w3.org/2005/05/xmlmime" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.roblox.com/roblox.xsd" version="4">
 	<External>null</External>
 	<External>nil</External>
-	<Item class="Workspace" referent="RBX0">
+	<Item class="Workspace" referent="RBX00000000">
 		<Properties>
-			<Ref name="CurrentCamera">RBX1</Ref>
 			<double name="DistributedGameTime">0</double>
 			<CoordinateFrame name="ModelInPrimary">
 				<X>0</X>
@@ -20,31 +19,31 @@
 				<R22>1</R22>
 			</CoordinateFrame>
 			<string name="Name">Workspace</string>
+			<Ref name="CurrentCamera">RBX00000001</Ref>
 			<Ref name="PrimaryPart">null</Ref>
 		</Properties>
-		<Item class="Camera" referent="RBX1">
+		<Item class="Camera" referent="RBX00000001">
 			<Properties>
-				<Ref name="CameraSubject">null</Ref>
 				<token name="CameraType">0</token>
 				<CoordinateFrame name="CoordinateFrame">
-					<X>68.5921326</X>
-					<Y>30.9607868</Y>
-					<Z>0.148669302</Z>
-					<R00>-9.34668424e-006</R00>
+					<X>68.59213</X>
+					<Y>30.960787</Y>
+					<Z>0.1486693</Z>
+					<R00>-0.000009346684</R00>
 					<R01>-0.16160965</R01>
-					<R02>0.986854732</R02>
+					<R02>0.98685473</R02>
 					<R10>-0</R10>
-					<R11>0.986854732</R11>
+					<R11>0.98685473</R11>
 					<R12>0.16160965</R12>
 					<R20>-1</R20>
-					<R21>1.51051438e-006</R21>
-					<R22>-9.22381878e-006</R22>
+					<R21>0.0000015105144</R21>
+					<R22>-0.000009223819</R22>
 				</CoordinateFrame>
 				<float name="FieldOfView">70</float>
 				<CoordinateFrame name="Focus">
-					<X>48.8550377</X>
-					<Y>27.7285938</Y>
-					<Z>0.148853779</Z>
+					<X>48.855038</X>
+					<Y>27.728594</Y>
+					<Z>0.14885378</Z>
 					<R00>1</R00>
 					<R01>0</R01>
 					<R02>0</R02>
@@ -56,9 +55,10 @@
 					<R22>1</R22>
 				</CoordinateFrame>
 				<string name="Name">Camera</string>
+				<Ref name="CameraSubject">null</Ref>
 			</Properties>
 		</Item>
-		<Item class="Terrain" referent="RBX2">
+		<Item class="Terrain" referent="RBX00000002">
 			<Properties>
 				<bool name="Anchored">true</bool>
 				<bool name="Archivable">true</bool>
@@ -88,7 +88,7 @@
 				<bool name="CanCollide">true</bool>
 				<string name="ClusterGridV2"></string>
 				<float name="Elasticity">0.5</float>
-				<float name="Friction">0.300000012</float>
+				<float name="Friction">0.3</float>
 				<float name="FrontParamA">-0.5</float>
 				<float name="FrontParamB">0.5</float>
 				<token name="FrontSurface">0</token>
@@ -127,32 +127,32 @@
 				</Vector3>
 			</Properties>
 		</Item>
-		<Item class="Script" referent="RBX3">
+		<Item class="Script" referent="RBX00000003">
 			<Properties>
 				<bool name="Disabled">true</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">ClockMaker</string>
-				<ProtectedString name="Source">-- goal is to create (recursively) a planet-system..
+				<ProtectedString name="Source"><![CDATA[-- goal is to create (recursively) a planet-system..
 local numRings = 14
 local numPartsPerRing = 2
 
-local ClockModel = Instance.new(&quot;Model&quot;, game.Workspace)
-ClockModel.Name = &quot;ClockModel&quot;
+local ClockModel = Instance.new("Model", game.Workspace)
+ClockModel.Name = "ClockModel"
 
 
 local rotationBases = {CFrame.new(), CFrame.Angles(0, math.pi/2, 0), CFrame.Angles(0, 0, -math.pi/2), CFrame.Angles(math.pi/2, 0, 0)}
 
-local keyPart = Instance.new(&quot;Part&quot;)
-keyPart.formFactor = &quot;Custom&quot;
+local keyPart = Instance.new("Part")
+keyPart.formFactor = "Custom"
 keyPart.Size = Vector3.new(numRings + 2, numRings + 2, numRings + 2)
 keyPart.Anchored = false
 --keyPart.Anchored = true
 keyPart.CanCollide = false
 keyPart.CFrame = CFrame.new(Vector3.new(0, 300, 0))
 --keyPart.Parent = game.Workspace
-keyPart.Name = &quot;Torso&quot;
+keyPart.Name = "Torso"
 
---local newBP = Instance.new(&quot;BodyPosition&quot;)
+--local newBP = Instance.new("BodyPosition")
 --newBP.P = 900000
 --newBP.maxForce = Vector3.new(newBP.P, newBP.P, newBP.P)
 --newBP.position = keyPart.CFrame.p
@@ -164,90 +164,91 @@ keyPart.Name = &quot;Torso&quot;
 local totalMass = (numRings+2)*(numRings+2)*(numRings+2)
 local multiplier = numPartsPerRing
 for i = numRings, 1, -1 do
-&#9;totalMass = totalMass + multiplier*i*i*i
-&#9;multiplier = multiplier * numPartsPerRing
+	totalMass = totalMass + multiplier*i*i*i
+	multiplier = multiplier * numPartsPerRing
 end
 
-local newBF = Instance.new(&quot;BodyForce&quot;)
+local newBF = Instance.new("BodyForce")
 newBF.force = Vector3.new(0, totalMass*196.2, 0)
 newBF.Parent = keyPart
 
 keyPart.Parent = ClockModel
 
---Instance.new(&quot;Humanoid&quot;, ClockModel)
+--Instance.new("Humanoid", ClockModel)
 
-local colorTable = {BrickColor.new(&quot;Really red&quot;), BrickColor.new(&quot;Really blue&quot;), BrickColor.new(&quot;Camo&quot;), BrickColor.new(&quot;Lime green&quot;), BrickColor.new(&quot;Black&quot;), BrickColor.new(&quot;New Yeller&quot;), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random()}
+local colorTable = {BrickColor.new("Really red"), BrickColor.new("Really blue"), BrickColor.new("Camo"), BrickColor.new("Lime green"), BrickColor.new("Black"), BrickColor.new("New Yeller"), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random(), BrickColor.random()}
 
 function createSystem(mainPart, numLevels, numPartsPerLevel)
-&#9;if numLevels &lt;= 0 then return end
+	if numLevels <= 0 then return end
 
-&#9;for i = 1, numPartsPerLevel do
-&#9;&#9;-- figure out where to put slave part
-&#9;&#9;local alpha = math.pi*2*i/numPartsPerLevel
-&#9;&#9;--local slaveRadius = math.pow(4, numLevels)
-&#9;&#9;local slaveRadius = 5*math.pow(1.4, numLevels) -- was 2.5
-&#9;&#9;local slavePartLocation = mainPart.CFrame.p + slaveRadius * Vector3.new(math.cos(alpha), 0, math.sin(alpha))
+	for i = 1, numPartsPerLevel do
+		-- figure out where to put slave part
+		local alpha = math.pi*2*i/numPartsPerLevel
+		--local slaveRadius = math.pow(4, numLevels)
+		local slaveRadius = 5*math.pow(1.4, numLevels) -- was 2.5
+		local slavePartLocation = mainPart.CFrame.p + slaveRadius * Vector3.new(math.cos(alpha), 0, math.sin(alpha))
 
-&#9;&#9;-- create the slave part
-&#9;&#9;local slavePart = mainPart:Clone()
+		-- create the slave part
+		local slavePart = mainPart:Clone()
 
-&#9;&#9;--local slaveBP = slavePart:FindFirstChild(&quot;BodyPosition&quot;)
-&#9;&#9;--if slaveBP then slaveBP:Remove() end
+		--local slaveBP = slavePart:FindFirstChild("BodyPosition")
+		--if slaveBP then slaveBP:Remove() end
 
-&#9;&#9;local slaveBF = slavePart:FindFirstChild(&quot;BodyForce&quot;)
-&#9;&#9;if slaveBF then slaveBF:Remove() end
+		local slaveBF = slavePart:FindFirstChild("BodyForce")
+		if slaveBF then slaveBF:Remove() end
+		slavePart:ClearAllChildren()
 
-&#9;&#9;slavePart.Name = &quot;ClockPart&quot;
-&#9;&#9;slavePart.Size = Vector3.new(numLevels, numLevels, numLevels)
-&#9;&#9;slavePart.Anchored = false
+		slavePart.Name = "ClockPart"
+		slavePart.Size = Vector3.new(numLevels, numLevels, numLevels)
+		slavePart.Anchored = false
 
-&#9;&#9;--local slaveBF = slavePart:FindFirstChild(&quot;BodyForce&quot;)
-&#9;&#9;--if slaveBF then slaveBF.force = Vector3.new(0, slavePart:GetMass()*196.1, 0) end
+		--local slaveBF = slavePart:FindFirstChild("BodyForce")
+		--if slaveBF then slaveBF.force = Vector3.new(0, slavePart:GetMass()*196.1, 0) end
 
-&#9;&#9;--slavePart.Anchored = true
-&#9;&#9;slavePart.CFrame = CFrame.new(slavePartLocation)
-&#9;&#9;slavePart.BrickColor = colorTable[numLevels]
+		--slavePart.Anchored = true
+		slavePart.CFrame = CFrame.new(slavePartLocation)
+		slavePart.BrickColor = colorTable[numLevels]
 
-&#9;&#9;-- create a motor so main part swings around slave part
-&#9;&#9;local newMotor = Instance.new(&quot;Motor6D&quot;)
-&#9;&#9;newMotor.Part0 = mainPart
-&#9;&#9;newMotor.Part1 = slavePart
-&#9;&#9;--newMotor.C0 = CFrame.new()
-&#9;&#9;newMotor.C0 = rotationBases[numLevels % (#rotationBases) + 1]
-&#9;&#9;newMotor.C1 = slavePart.CFrame:inverse()*mainPart.CFrame
-&#9;&#9;newMotor.MaxVelocity = .02 * (numRings + 1 - numLevels)
-&#9;&#9;newMotor.DesiredAngle = 2*math.pi*( numRings + 1 - numLevels)
+		-- create a motor so main part swings around slave part
+		local newMotor = Instance.new("Motor6D")
+		newMotor.Part0 = mainPart
+		newMotor.Part1 = slavePart
+		--newMotor.C0 = CFrame.new()
+		newMotor.C0 = rotationBases[numLevels % (#rotationBases) + 1]
+		newMotor.C1 = slavePart.CFrame:inverse()*mainPart.CFrame
+		newMotor.MaxVelocity = .02 * (numRings + 1 - numLevels)
+		newMotor.DesiredAngle = 2*math.pi*( numRings + 1 - numLevels)
 
-&#9;&#9;--newMotor.Parent = slavePart
-&#9;&#9;newMotor.Parent = keyPart
-&#9;&#9;--slavePart.Parent = game.Workspace
-&#9;&#9;--local newHumanoid = Instance.new(&quot;Humanoid&quot;, slavePart)
-&#9;&#9;slavePart.Parent = ClockModel
+		--newMotor.Parent = slavePart
+		newMotor.Parent = keyPart
+		--slavePart.Parent = game.Workspace
+		--local newHumanoid = Instance.new("Humanoid", slavePart)
+		slavePart.Parent = ClockModel
 
-&#9;&#9;-- keep going!
-&#9;&#9;createSystem(slavePart, numLevels - 1, numPartsPerLevel)
-&#9;end
+		-- keep going!
+		createSystem(slavePart, numLevels - 1, numPartsPerLevel)
+	end
 end
 
 createSystem(keyPart, numRings, numPartsPerRing)
 
 
-</ProtectedString>
+]]></ProtectedString>
 			</Properties>
 		</Item>
 	</Item>
-	<Item class="StarterPack" referent="RBX4">
+	<Item class="StarterPack" referent="RBX00000004">
 		<Properties>
 			<string name="Name">StarterPack</string>
 		</Properties>
 	</Item>
-	<Item class="StarterGui" referent="RBX5">
+	<Item class="StarterGui" referent="RBX00000005">
 		<Properties>
 			<string name="Name">StarterGui</string>
 			<bool name="ShowDevelopmentGui">true</bool>
 		</Properties>
 	</Item>
-	<Item class="SoundService" referent="RBX6">
+	<Item class="SoundService" referent="RBX00000006">
 		<Properties>
 			<token name="AmbientReverb">0</token>
 			<float name="DistanceFactor">10</float>
@@ -256,74 +257,74 @@ createSystem(keyPart, numRings, numPartsPerRing)
 			<float name="RolloffScale">1</float>
 		</Properties>
 	</Item>
-	<Item class="CollectionService" referent="RBX7">
+	<Item class="CollectionService" referent="RBX00000007">
 		<Properties>
 			<string name="Name">CollectionService</string>
 		</Properties>
 	</Item>
-	<Item class="PhysicsService" referent="RBX8">
+	<Item class="PhysicsService" referent="RBX00000008">
 		<Properties>
 			<string name="Name">PhysicsService</string>
 		</Properties>
 	</Item>
-	<Item class="BadgeService" referent="RBX9">
+	<Item class="BadgeService" referent="RBX00000009">
 		<Properties>
 			<string name="Name">BadgeService</string>
 		</Properties>
 	</Item>
-	<Item class="Geometry" referent="RBX10">
+	<Item class="Geometry" referent="RBX0000000A">
 		<Properties>
 			<string name="Name">Geometry</string>
 		</Properties>
 	</Item>
-	<Item class="RenderHooksService" referent="RBX11">
+	<Item class="RenderHooksService" referent="RBX0000000B">
 		<Properties>
 			<string name="Name">RenderHooksService</string>
 		</Properties>
 	</Item>
-	<Item class="SocialService" referent="RBX12">
+	<Item class="SocialService" referent="RBX0000000C">
 		<Properties>
 			<string name="Name">SocialService</string>
 		</Properties>
 	</Item>
-	<Item class="Debris" referent="RBX13">
+	<Item class="Debris" referent="RBX0000000D">
 		<Properties>
 			<int name="MaxItems">1000</int>
 			<string name="Name">Debris</string>
 		</Properties>
 	</Item>
-	<Item class="TimerService" referent="RBX14">
+	<Item class="TimerService" referent="RBX0000000E">
 		<Properties>
 			<string name="Name">Instance</string>
 		</Properties>
 	</Item>
-	<Item class="ScriptInformationProvider" referent="RBX15">
+	<Item class="ScriptInformationProvider" referent="RBX0000000F">
 		<Properties>
 			<string name="Name">Instance</string>
 		</Properties>
 	</Item>
-	<Item class="CookiesService" referent="RBX16">
+	<Item class="CookiesService" referent="RBX00000010">
 		<Properties>
 			<string name="Name">CookiesService</string>
 		</Properties>
 	</Item>
-	<Item class="TeleportService" referent="RBX17">
+	<Item class="TeleportService" referent="RBX00000011">
 		<Properties>
 			<string name="Name">Teleport Service</string>
 		</Properties>
 	</Item>
-	<Item class="Players" referent="RBX18">
+	<Item class="Players" referent="RBX00000012">
 		<Properties>
 			<bool name="CharacterAutoLoads">true</bool>
 			<string name="Name">Players</string>
 		</Properties>
 	</Item>
-	<Item class="Selection" referent="RBX19">
+	<Item class="Selection" referent="RBX00000013">
 		<Properties>
 			<string name="Name">Selection</string>
 		</Properties>
 	</Item>
-	<Item class="Lighting" referent="RBX20">
+	<Item class="Lighting" referent="RBX00000014">
 		<Properties>
 			<Color3 name="Ambient">4286611584</Color3>
 			<float name="Brightness">1</float>
@@ -332,18 +333,18 @@ createSystem(keyPart, numRings, numPartsPerRing)
 			<Color3 name="FogColor">4290822336</Color3>
 			<float name="FogEnd">100000</float>
 			<float name="FogStart">0</float>
-			<float name="GeographicLatitude">41.7332993</float>
+			<float name="GeographicLatitude">41.7333</float>
 			<string name="Name">Lighting</string>
 			<Color3 name="ShadowColor">4289967032</Color3>
 			<string name="TimeOfDay">14:00:00</string>
 		</Properties>
 	</Item>
-	<Item class="ChangeHistoryService" referent="RBX21">
+	<Item class="ChangeHistoryService" referent="RBX00000015">
 		<Properties>
 			<string name="Name">ChangeHistoryService</string>
 		</Properties>
 	</Item>
-	<Item class="TestService" referent="RBX22">
+	<Item class="TestService" referent="RBX00000016">
 		<Properties>
 			<bool name="AutoRuns">true</bool>
 			<string name="Description"></string>
@@ -353,19 +354,19 @@ createSystem(keyPart, numRings, numPartsPerRing)
 			<string name="Name">TestService</string>
 			<double name="Timeout">600</double>
 		</Properties>
-		<Item class="Script" referent="RBX23">
+		<Item class="Script" referent="RBX00000017">
 			<Properties>
 				<bool name="Disabled">false</bool>
 				<Content name="LinkedSource"><null></null></Content>
 				<string name="Name">TestScript</string>
-				<ProtectedString name="Source">local numSecondsToRunFor = 11  -- number of physics seconds to run for (for stress tests, could take much longer in realtime)
+				<ProtectedString name="Source"><![CDATA[local numSecondsToRunFor = 11  -- number of physics seconds to run for (for stress tests, could take much longer in realtime)
 
 game.Workspace.ClockMaker.Disabled = false
-r = game:GetService(&quot;RunService&quot;)
+r = game:GetService("RunService")
 r:Pause()
 
-local clockModel = game.Workspace:FindFirstChild(&quot;ClockModel&quot;)
-while not clockModel do game.Workspace.ChildAdded:wait() clockModel = game.Workspace:FindFirstChild(&quot;ClockModel&quot;) end
+local clockModel = game.Workspace:FindFirstChild("ClockModel")
+while not clockModel do game.Workspace.ChildAdded:wait() clockModel = game.Workspace:FindFirstChild("ClockModel") end
 
 local numRings = 14
 local numPartsPerRing = 2
@@ -376,45 +377,45 @@ local numClockParts = (math.pow(numPartsPerRing, numRings+1) - 1) / (numPartsPer
 --[[local multiplier = numPartsPerRing
 local numClockParts = 1
 for i = numRings, 1, -1 do
-&#9;numClockParts = numClockParts + multiplier
-&#9;multiplier = multiplier * numPartsPerRing
+	numClockParts = numClockParts + multiplier
+	multiplier = multiplier * numPartsPerRing
 end]]
 
 local numClockChildren = #(clockModel:GetChildren())
-while numClockChildren &lt; numClockParts do wait() numClockChildren = #(clockModel:GetChildren()) end
+while numClockChildren < numClockParts do wait() numClockChildren = #(clockModel:GetChildren()) end
 
 local cframeCheckTable = {}
 local clockParts = clockModel:GetChildren()
 for i = 1, #clockParts do
-&#9;table.insert(cframeCheckTable, clockParts[i].CFrame)
+	table.insert(cframeCheckTable, clockParts[i].CFrame)
 end
 
 r:Run()
 
 start = tick()
---r = game:service(&quot;RunService&quot;)
+--r = game:service("RunService")
 t = r.Stepped:wait()
 local startT = t
 
-while (t - startT) &lt; numSecondsToRunFor do
-&#9;t = r.Stepped:wait()
+while (t - startT) < numSecondsToRunFor do
+	t = r.Stepped:wait()
 end
 
 stop = tick() - start
 
 -- just making it here without getting timed out is the win
-print(script.Parent.Name .. &quot; passed in &quot; .. stop .. &quot; seconds.&quot;)
-script.Parent:Check(true, &quot;passed in &quot; .. stop .. &quot; seconds.&quot;)
+print(script.Parent.Name .. " passed in " .. stop .. " seconds.")
+script.Parent:Check(true, "passed in " .. stop .. " seconds.")
 
 local errorSq = 0
 for i = 1, #clockParts do
-&#9;local miniError = (cframeCheckTable[i].p - clockParts[i].CFrame.p)
-&#9;errorSq = errorSq + miniError:Dot(miniError)
+	local miniError = (cframeCheckTable[i].p - clockParts[i].CFrame.p)
+	errorSq = errorSq + miniError:Dot(miniError)
 end
 
-print(&quot;Accuracy check (MSE): &quot;, errorSq)
-script.Parent:Check(errorSq &lt; .1, &quot;passed accuracy test.&quot;)
-</ProtectedString>
+print("Accuracy check (MSE): ", errorSq)
+script.Parent:Check(errorSq < .1, "passed accuracy test.")
+]]></ProtectedString>
 			</Properties>
 		</Item>
 	</Item>

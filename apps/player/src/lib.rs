@@ -46,6 +46,8 @@ struct Args {
     dump_gui: Option<PathBuf>,
     #[arg(long, default_value = "info")]
     log: String,
+    #[arg(long)]
+    new_ui: bool,
 }
 
 struct Gpu {
@@ -862,7 +864,11 @@ pub fn desktop_main() {
         if let Err(e) = spawn_local_player(&runtime, &args.name, false) {
             eprintln!("{e}");
         }
-        if let Err(e) = runtime.start_core_scripts("StarterScript") {
+        if let Err(e) = runtime.start_core_scripts(if args.new_ui {
+            "ExperimentalStarterScript"
+        } else {
+            "StarterScript"
+        }) {
             eprintln!("{e}");
         }
         (runtime, Some(net))
@@ -896,7 +902,11 @@ pub fn desktop_main() {
         if let Err(e) = runtime.start_server_core_scripts() {
             eprintln!("{e}");
         }
-        if let Err(e) = runtime.start_core_scripts("StarterScript") {
+        if let Err(e) = runtime.start_core_scripts(if args.new_ui {
+            "ExperimentalStarterScript"
+        } else {
+            "StarterScript"
+        }) {
             eprintln!("{e}");
         }
         (runtime, None)

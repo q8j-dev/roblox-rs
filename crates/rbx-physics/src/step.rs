@@ -331,6 +331,7 @@ impl PhysicsWorld {
             if !self.assemblies[a].anchored {
                 self.assemblies[a].sleeping = false;
                 self.assemblies[a].history.wake();
+                self.external_wake.push(a);
             }
         }
     }
@@ -739,8 +740,7 @@ impl PhysicsWorld {
                 wake.push(pb.assembly);
             }
             if overlapping {
-                if pair.last_long_step < 0 {
-                    touched.push(key);
+                if !was_overlapping {
                     let ai = pa.assembly;
                     let bi = pb.assembly;
                     let high = [ai, bi]
@@ -753,6 +753,9 @@ impl PhysicsWorld {
                         wake.push(ai);
                         wake.push(bi);
                     }
+                }
+                if pair.last_long_step < 0 {
+                    touched.push(key);
                 }
                 pair.last_long_step = long_step;
                 if pa.can_collide && pb.can_collide {

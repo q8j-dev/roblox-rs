@@ -1922,11 +1922,7 @@ impl PhysicsWorld {
     }
 
     pub fn num_awake_parts(&self) -> usize {
-        self.assemblies
-            .iter()
-            .filter(|a| a.is_moving())
-            .map(|a| a.parts.len())
-            .sum()
+        self.assemblies.iter().filter(|a| a.is_moving()).count()
     }
 
     pub fn surface_normal_id(c: &CFrame) -> NormalId {

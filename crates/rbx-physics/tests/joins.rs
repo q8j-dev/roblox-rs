@@ -72,4 +72,3 @@ fn rotated_wedges_do_not_weld_across_the_slope() {
         "a wedge's front is its slope, so a block behind it has nothing to weld to"
     );
 }
-

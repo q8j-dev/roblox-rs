@@ -94,6 +94,7 @@ fn prepare(
     path: &Path,
     content_root: Option<&Path>,
 ) -> Result<ScriptRuntime, String> {
+    rbx_base::flags::set_flag("MaterialPropertiesEnabled", "false");
     let mut engine = Engine::new(dm);
     engine.content_root = content_root.map(Path::to_path_buf);
     if let Some(tests) = path

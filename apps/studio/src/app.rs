@@ -244,7 +244,6 @@ impl ribbon::State for RibbonState<'_> {
             | "publishToRobloxAsAction"
             | "publishSelectionToRobloxAction"
             | "pairRbxDevDeviceAction"
-            | "toggleVideoRecordAction"
             | "filePublishedProjectsAction"
             | "downloadPlaceCopyAction"
             | "publishGameAction"

@@ -3177,7 +3177,6 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "console_error_panic_hook",
- "image",
  "parking_lot 0.13.0",
  "pollster",
  "rbx-audio",

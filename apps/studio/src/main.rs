@@ -89,6 +89,7 @@ struct Host {
     last: rbx_base::time::Instant,
     behavior: u32,
     occluded: bool,
+    recorder: Option<rbx_render::video::VideoRecorder>,
 }
 
 fn create_gpu(window: Arc<Window>, assets: &std::path::Path) -> Result<Gpu, String> {
@@ -346,6 +347,70 @@ impl Host {
         gpu.renderer.queue.present(frame);
         for id in &output.textures_delta.free {
             gpu.egui.free_texture(id);
+        }
+        if std::mem::take(&mut self.studio.extras.pending_record_toggle) {
+            match self.recorder.take() {
+                Some(rec) => {
+                    let message = match rec.finish() {
+                        Ok((path, frames)) => (
+                            rbx_script::MessageType::Info,
+                            format!(
+                                "Video recording stopped: {frames} frames saved to {}",
+                                path.display()
+                            ),
+                        ),
+                        Err(e) => (
+                            rbx_script::MessageType::Error,
+                            format!("Video recording failed: {e}"),
+                        ),
+                    };
+                    self.studio.status.push(message);
+                }
+                None => {
+                    if let Some((tex, _, _)) = &gpu.viewport {
+                        let home = std::env::var_os("USERPROFILE")
+                            .or_else(|| std::env::var_os("HOME"))
+                            .map(PathBuf::from)
+                            .unwrap_or_else(std::env::temp_dir);
+                        let stamp = (rbx_base::time::unix_seconds() as u64).to_string();
+                        let bgra = matches!(
+                            gpu.renderer.format,
+                            wgpu::TextureFormat::Bgra8Unorm | wgpu::TextureFormat::Bgra8UnormSrgb
+                        );
+                        match rbx_render::video::VideoRecorder::start(
+                            rbx_render::video::video_path(&home, &stamp),
+                            tex.width(),
+                            tex.height(),
+                            30,
+                            80,
+                            bgra,
+                        ) {
+                            Ok(rec) => {
+                                self.recorder = Some(rec);
+                                self.studio.status.push((
+                                    rbx_script::MessageType::Info,
+                                    "Video recording started".to_string(),
+                                ));
+                            }
+                            Err(e) => self.studio.status.push((
+                                rbx_script::MessageType::Error,
+                                format!("Video recording failed: {e}"),
+                            )),
+                        }
+                    }
+                }
+            }
+            self.studio.extras.recording = self.recorder.is_some();
+        }
+        if let Some(rec) = &mut self.recorder
+            && let Some((tex, _, _)) = &gpu.viewport
+            && rec.width == tex.width()
+            && rec.height == tex.height()
+            && rec.wants_frame()
+            && let Some(pixels) =
+                rbx_render::video::read_texture(&gpu.renderer, tex, rec.width, rec.height)
+        {
+            rec.push(pixels);
         }
         if std::mem::take(&mut self.studio.extras.pending_screenshot)
             && let Some((tex, _, _)) = &gpu.viewport
@@ -692,6 +757,7 @@ fn main() {
         last: rbx_base::time::Instant::now(),
         behavior: 0,
         occluded: false,
+        recorder: None,
     };
     if let Err(e) = event_loop.run_app(&mut host) {
         eprintln!("{e}");

@@ -20,6 +20,8 @@ pub mod shadow;
 pub mod smooth;
 pub mod terrain;
 pub mod texture;
+#[cfg(not(target_arch = "wasm32"))]
+pub mod video;
 pub mod world_gui;
 
 pub use offscreen::Offscreen;

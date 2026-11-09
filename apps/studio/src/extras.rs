@@ -35,6 +35,8 @@ pub struct Extras {
     pub children: Vec<Child>,
     pub pending_fullscreen: bool,
     pub pending_screenshot: bool,
+    pub pending_record_toggle: bool,
+    pub recording: bool,
     pub launch: Option<mpsc::Receiver<Result<String, String>>>,
     pub show_about: bool,
     pub show_shortcuts: bool,
@@ -62,6 +64,8 @@ impl Default for Extras {
             children: Vec::new(),
             pending_fullscreen: false,
             pending_screenshot: false,
+            pending_record_toggle: false,
+            recording: false,
             launch: None,
             show_about: false,
             show_shortcuts: false,
@@ -480,6 +484,7 @@ impl Studio {
         let x = &self.extras;
         Some(match action {
             "toggle3DGridAction" => x.show_grid,
+            "toggleVideoRecordAction" => x.recording,
             "toggleAxisWidgetAction" => x.axis_widget,
             "gridSizeToTwoAction" => x.grid_studs == 2,
             "gridSizeToFourAction" => x.grid_studs == 4,
@@ -520,6 +525,7 @@ impl Studio {
             "colorFillActionAsTool" => self.extras.color_as_tool = !self.extras.color_as_tool,
             "actionFullScreen" => self.extras.pending_fullscreen = true,
             "screenShotAction" => self.extras.pending_screenshot = true,
+            "toggleVideoRecordAction" => self.extras.pending_record_toggle = true,
             "insertModelAction" => self.import_model(),
             "executeScriptAction" => self.execute_script_file(),
             "startServerAndPlayersAction" => self.start_servers(),

@@ -116,6 +116,11 @@ fn prepare(
     let engine = Arc::new(Mutex::new(engine));
     let runtime = ScriptRuntime::new(engine).map_err(|e| e.to_string())?;
     crate::runtime::set_script_timeout(&runtime.lua, SCRIPT_TIMEOUT);
+    if let Ok(math) = runtime.lua.globals().get::<mlua::Table>("math")
+        && let Ok(seed) = math.get::<mlua::Function>("randomseed")
+    {
+        let _ = seed.call::<()>(1);
+    }
     Ok(runtime)
 }
 

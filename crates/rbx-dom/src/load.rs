@@ -45,6 +45,16 @@ impl DataModel {
         parent: Option<InstanceId>,
         options: LoadOptions,
     ) -> Result<(Vec<InstanceId>, Vec<String>), DomError> {
+        self.load_tree_mapped(tree, parent, options)
+            .map(|(tops, warnings, _)| (tops, warnings))
+    }
+
+    pub fn load_tree_mapped(
+        &mut self,
+        tree: &Tree,
+        parent: Option<InstanceId>,
+        options: LoadOptions,
+    ) -> Result<(Vec<InstanceId>, Vec<String>, HashMap<usize, InstanceId>), DomError> {
         let mut warnings = Vec::new();
         let mut created: Vec<Created> = Vec::new();
         let mut map: HashMap<usize, InstanceId> = HashMap::new();
@@ -75,7 +85,7 @@ impl DataModel {
             let inst = &tree.instances[c.tree_index];
             self.apply_properties(c.id, inst, &map, true, &mut warnings);
         }
-        Ok((tops, warnings))
+        Ok((tops, warnings, map))
     }
 
     #[allow(clippy::too_many_arguments)]

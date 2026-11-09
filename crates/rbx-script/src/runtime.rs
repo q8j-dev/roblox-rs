@@ -62,6 +62,7 @@ pub struct Engine {
     pub load_string_enabled: bool,
     pub hooks: Vec<Box<dyn EngineHook>>,
     pub content_root: Option<std::path::PathBuf>,
+    pub core_package: Option<std::path::PathBuf>,
     pub asset_dirs: Vec<std::path::PathBuf>,
     pub test: crate::api::test::TestState,
     pub world: rbx_physics::SharedWorld,
@@ -189,6 +190,7 @@ impl Engine {
             load_string_enabled: false,
             hooks: Vec::new(),
             content_root: None,
+            core_package: None,
             asset_dirs: Vec::new(),
             test: Default::default(),
             world,
@@ -417,6 +419,8 @@ pub struct State {
     pub remote: crate::api::remote::RemoteState,
     pub http: crate::api::http::HttpState,
     pub core_sources: HashMap<InstanceId, String>,
+    pub core_bytecode: HashMap<InstanceId, Arc<Vec<u8>>>,
+    pub core_package_scripts: Option<HashMap<String, Arc<Vec<u8>>>>,
     pub actions: crate::api::actions::ActionState,
     pub tweens: crate::api::tween::TweenState,
     pub captures: HashMap<usize, Option<Result<MultiValue, String>>>,
@@ -597,6 +601,8 @@ impl ScriptRuntime {
             remote: Default::default(),
             http: Default::default(),
             core_sources: HashMap::default(),
+            core_bytecode: HashMap::default(),
+            core_package_scripts: None,
             actions: Default::default(),
             tweens: Default::default(),
             captures: HashMap::default(),
@@ -1202,7 +1208,11 @@ impl ScriptRuntime {
     }
 
     pub fn start_core_scripts(&self, starter: &str) -> mlua::Result<()> {
-        crate::api::core::load_core_modules(&self.lua)?;
+        let package = self.engine.lock().core_package.clone();
+        match package {
+            Some(path) => crate::api::core::load_core_package(&self.lua, &path)?,
+            None => crate::api::core::load_core_modules(&self.lua)?,
+        }
         crate::api::core::add_core_script(&self.lua, starter, None)?;
         pump(&self.lua);
         Ok(())
@@ -1561,24 +1571,34 @@ pub fn require_module(lua: &Lua, m: Value) -> mlua::Result<Value> {
     if let Some(e) = with_state(lua, |s| s.module_errors.get(&id).cloned()) {
         return Err(rt(e));
     }
+    let bytecode = with_state(lua, |s| s.core_bytecode.get(&id).cloned());
     let (class, source, name) = {
         let eng = engine(lua);
         let e = eng.lock();
         let class = e.dm.class_of(id).unwrap_or("");
-        let src =
-            e.dm.get(id, "Source")
-                .ok()
-                .and_then(|v| v.as_str().map(str::to_string))
-                .unwrap_or_default();
+        let src = match &bytecode {
+            Some(b) => b.to_vec(),
+            None => {
+                e.dm.get(id, "Source")
+                    .ok()
+                    .and_then(|v| v.as_str().map(|s| s.as_bytes().to_vec()))
+                    .unwrap_or_default()
+            }
+        };
         (class, src, e.dm.full_name(id))
     };
     if class != "ModuleScript" {
         return Err(rt("Attempted to call require with invalid argument(s)."));
     }
     let env = new_environment(lua, Some(id))?;
+    let mode = if bytecode.is_some() {
+        mlua::chunk::ChunkMode::Binary
+    } else {
+        mlua::chunk::ChunkMode::Text
+    };
     let func = match lua
         .load(&source)
-        .set_mode(mlua::chunk::ChunkMode::Text)
+        .set_mode(mode)
         .set_name(format!("={name}"))
         .set_environment(env)
         .into_function()

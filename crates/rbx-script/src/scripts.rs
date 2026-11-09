@@ -84,6 +84,7 @@ pub fn start_script(lua: &Lua, id: InstanceId, identity: Identity) {
     if already {
         return;
     }
+    let bytecode = with_state(lua, |s| s.core_bytecode.get(&id).cloned());
     let (source, name) = {
         let eng = engine(lua);
         let e = eng.lock();
@@ -93,16 +94,18 @@ pub fn start_script(lua: &Lua, id: InstanceId, identity: Identity) {
                 .and_then(|v| v.as_str().map(str::to_string))
                 .unwrap_or_default();
         let core = with_state(lua, |s| s.core_sources.get(&id).cloned());
-        let src = if let Some(core) = core {
-            core
+        let src: Vec<u8> = if let Some(b) = &bytecode {
+            b.to_vec()
+        } else if let Some(core) = core {
+            core.into_bytes()
         } else if linked.trim().is_empty() || e.dm.class_of(id) == Some("ModuleScript") {
             e.dm.get(id, "Source")
                 .ok()
-                .and_then(|v| v.as_str().map(str::to_string))
+                .and_then(|v| v.as_str().map(|s| s.as_bytes().to_vec()))
                 .unwrap_or_default()
         } else {
             crate::content::fetch(&e, &linked)
-                .map(|b| String::from_utf8_lossy(&b).into_owned())
+                .map(|b| String::from_utf8_lossy(&b).into_owned().into_bytes())
                 .unwrap_or_default()
         };
         (src, e.dm.full_name(id))
@@ -117,9 +120,14 @@ pub fn start_script(lua: &Lua, id: InstanceId, identity: Identity) {
             return;
         }
     };
+    let mode = if bytecode.is_some() {
+        mlua::chunk::ChunkMode::Binary
+    } else {
+        mlua::chunk::ChunkMode::Text
+    };
     let func = match lua
         .load(&source)
-        .set_mode(mlua::chunk::ChunkMode::Text)
+        .set_mode(mode)
         .set_name(format!("={name}"))
         .set_environment(env)
         .into_function()

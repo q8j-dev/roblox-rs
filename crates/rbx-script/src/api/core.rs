@@ -4,7 +4,9 @@ use crate::runtime::{engine, with_state};
 use crate::types::rt;
 use mlua::{Lua, Result, Value};
 use rbx_dom::{InstanceId, Variant};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 const COLLECTION_CLASSES: &[&str] = &[
     "Configuration",
@@ -148,10 +150,26 @@ fn read_core_source(dir: &Path, name: &str) -> Option<String> {
     rbx_base::vfs::read_to_string(path).ok()
 }
 
+enum CoreSource {
+    Text(String),
+    Bytecode(Arc<Vec<u8>>),
+}
+
+fn core_source(lua: &Lua, name: &str) -> Option<CoreSource> {
+    let packaged = with_state(lua, |s| {
+        s.core_package_scripts
+            .as_ref()
+            .map(|scripts| scripts.get(&name.replace('/', "_")).cloned())
+    });
+    match packaged {
+        Some(found) => found.map(CoreSource::Bytecode),
+        None => read_core_source(&scripts_dir(lua)?, name).map(CoreSource::Text),
+    }
+}
+
 pub fn add_core_script(lua: &Lua, name: &str, parent: Option<InstanceId>) -> Result<InstanceId> {
-    let dir = scripts_dir(lua).ok_or_else(|| rt(format!("Error loading core script {name}")))?;
-    let source = read_core_source(&dir, name)
-        .ok_or_else(|| rt(format!("Error loading core script {name}")))?;
+    let source =
+        core_source(lua, name).ok_or_else(|| rt(format!("Error loading core script {name}")))?;
     let id = {
         let eng = engine(lua);
         let mut e = eng.lock();
@@ -168,8 +186,13 @@ pub fn add_core_script(lua: &Lua, name: &str, parent: Option<InstanceId>) -> Res
         e.dm.set_name(id, name);
         (id, parent)
     };
-    with_state(lua, |s| {
-        s.core_sources.insert(id.0, source);
+    with_state(lua, |s| match source {
+        CoreSource::Text(text) => {
+            s.core_sources.insert(id.0, text);
+        }
+        CoreSource::Bytecode(code) => {
+            s.core_bytecode.insert(id.0, code);
+        }
     });
     {
         let eng = engine(lua);
@@ -217,6 +240,178 @@ pub fn load_core_modules(lua: &Lua) -> Result<()> {
     };
     let mut modules = Vec::new();
     collect_modules(&dir.join("Modules"), "", &mut modules);
+    let gui = ensure_robloxgui(lua)?;
+    let eng = engine(lua);
+    let mut e = eng.lock();
+    let folder = match e.dm.find_first_child(gui, "Modules", false) {
+        Some(f) => f,
+        None => {
+            let f =
+                e.dm.create_internal("Folder")
+                    .map_err(|err| rt(err.to_string()))?;
+            e.dm.set_name(f, "Modules");
+            let _ = e.dm.set_parent_ignore_lock(f, Some(gui));
+            f
+        }
+    };
+    for (path, source) in modules {
+        let mut parent = folder;
+        let parts: Vec<&str> = path.split('/').collect();
+        for part in &parts[..parts.len() - 1] {
+            parent = match e.dm.find_first_child(parent, part, false) {
+                Some(p) => p,
+                None => {
+                    let f =
+                        e.dm.create_internal("Folder")
+                            .map_err(|err| rt(err.to_string()))?;
+                    e.dm.set_name(f, part);
+                    let _ = e.dm.set_parent_ignore_lock(f, Some(parent));
+                    f
+                }
+            };
+        }
+        let m =
+            e.dm.create_internal("ModuleScript")
+                .map_err(|err| rt(err.to_string()))?;
+        e.dm.set_name(m, parts[parts.len() - 1]);
+        e.dm.set(m, "Source", Variant::String(source))
+            .map_err(|err| rt(err.to_string()))?;
+        let _ = e.dm.set_parent_ignore_lock(m, Some(parent));
+    }
+    Ok(())
+}
+
+fn package_bytecode(inst: &mut rbx_format::TreeInstance) -> Option<Arc<Vec<u8>>> {
+    let at = inst.properties.iter().position(|(n, _)| n == "Source")?;
+    let (_, value) = inst.properties.remove(at);
+    let Variant::BinaryString(raw) = value else {
+        return None;
+    };
+    match luau_bytecode::to_vm_bytecode(&raw) {
+        Ok(code) => Some(Arc::new(code)),
+        Err(err) => {
+            tracing::warn!("core package module has unreadable bytecode: {err}");
+            None
+        }
+    }
+}
+
+fn child_named(tree: &rbx_format::Tree, parent: usize, name: &str) -> Option<usize> {
+    tree.instances[parent]
+        .children
+        .iter()
+        .copied()
+        .find(|&c| tree.instances[c].get("Name").and_then(|v| v.as_str()) == Some(name))
+}
+
+pub fn load_core_package(lua: &Lua, path: &Path) -> Result<()> {
+    if with_state(lua, |s| s.core_package_scripts.is_some()) {
+        return Ok(());
+    }
+    let data = rbx_base::vfs::read(path).map_err(|err| {
+        rt(format!(
+            "Error loading core package {}: {err}",
+            path.display()
+        ))
+    })?;
+    let mut tree = rbx_format::read(&data).map_err(|err| rt(err.to_string()))?;
+    let root = *tree
+        .roots
+        .first()
+        .ok_or_else(|| rt("core package has no root"))?;
+    let mut code: HashMap<usize, Arc<Vec<u8>>> = HashMap::new();
+    for (i, inst) in tree.instances.iter_mut().enumerate() {
+        if inst.class == "ModuleScript"
+            && let Some(b) = package_bytecode(inst)
+        {
+            code.insert(i, b);
+        }
+    }
+    let mut scripts: rustc_hash::FxHashMap<String, Arc<Vec<u8>>> = Default::default();
+    if let Some(folder) = child_named(&tree, root, "CoreScripts") {
+        for &c in &tree.instances[folder].children {
+            if let (Some(b), Some(name)) = (
+                code.get(&c),
+                tree.instances[c].get("Name").and_then(|v| v.as_str()),
+            ) {
+                scripts.insert(name.to_string(), b.clone());
+            }
+        }
+    }
+    let mut bytecode: Vec<(InstanceId, Arc<Vec<u8>>)> = Vec::new();
+    ensure_robloxgui(lua)?;
+    if let Some(instances) = child_named(&tree, root, "DataModelInstances") {
+        let services: Vec<usize> = tree.instances[instances].children.clone();
+        for service_folder in services {
+            let Some(service_name) = tree.instances[service_folder]
+                .get("Name")
+                .and_then(|v| v.as_str())
+                .map(str::to_string)
+            else {
+                continue;
+            };
+            let service = engine(lua)
+                .lock()
+                .dm
+                .get_service(&service_name)
+                .map_err(|err| rt(err.to_string()))?;
+            merge_patch(lua, &tree, service_folder, service, &code, &mut bytecode)?;
+        }
+    }
+    with_state(lua, |s| {
+        s.core_bytecode.extend(bytecode);
+        s.core_package_scripts = Some(scripts);
+    });
+    Ok(())
+}
+
+fn merge_patch(
+    lua: &Lua,
+    tree: &rbx_format::Tree,
+    folder: usize,
+    target: InstanceId,
+    code: &HashMap<usize, Arc<Vec<u8>>>,
+    bytecode: &mut Vec<(InstanceId, Arc<Vec<u8>>)>,
+) -> Result<()> {
+    let mut fresh = Vec::new();
+    for &c in &tree.instances[folder].children {
+        let inst = &tree.instances[c];
+        let name = inst.get("Name").and_then(|v| v.as_str()).unwrap_or("");
+        let existing = if inst.class == "Folder" {
+            engine(lua).lock().dm.find_first_child(target, name, false)
+        } else {
+            None
+        };
+        match existing {
+            Some(id) => merge_patch(lua, tree, c, id, code, bytecode)?,
+            None => fresh.push(c),
+        }
+    }
+    if fresh.is_empty() {
+        return Ok(());
+    }
+    let mut sub = tree.clone();
+    sub.roots = fresh;
+    for &r in &sub.roots {
+        sub.instances[r].parent = None;
+    }
+    let eng = engine(lua);
+    let mut e = eng.lock();
+    let (_, warnings, map) =
+        e.dm.load_tree_mapped(&sub, Some(target), Default::default())
+            .map_err(|err| rt(err.to_string()))?;
+    for w in warnings.iter().take(20) {
+        tracing::debug!("core package: {w}");
+    }
+    for (index, id) in map {
+        if let Some(b) = code.get(&index) {
+            bytecode.push((id, b.clone()));
+        }
+    }
+    Ok(())
+}
+
+fn ensure_robloxgui(lua: &Lua) -> Result<InstanceId> {
     let eng = engine(lua);
     let mut e = eng.lock();
     let core =
@@ -280,40 +475,5 @@ pub fn load_core_modules(lua: &Lua) -> Result<()> {
             controls,
         )?;
     }
-    let folder = match e.dm.find_first_child(gui, "Modules", false) {
-        Some(f) => f,
-        None => {
-            let f =
-                e.dm.create_internal("Folder")
-                    .map_err(|err| rt(err.to_string()))?;
-            e.dm.set_name(f, "Modules");
-            let _ = e.dm.set_parent_ignore_lock(f, Some(gui));
-            f
-        }
-    };
-    for (path, source) in modules {
-        let mut parent = folder;
-        let parts: Vec<&str> = path.split('/').collect();
-        for part in &parts[..parts.len() - 1] {
-            parent = match e.dm.find_first_child(parent, part, false) {
-                Some(p) => p,
-                None => {
-                    let f =
-                        e.dm.create_internal("Folder")
-                            .map_err(|err| rt(err.to_string()))?;
-                    e.dm.set_name(f, part);
-                    let _ = e.dm.set_parent_ignore_lock(f, Some(parent));
-                    f
-                }
-            };
-        }
-        let m =
-            e.dm.create_internal("ModuleScript")
-                .map_err(|err| rt(err.to_string()))?;
-        e.dm.set_name(m, parts[parts.len() - 1]);
-        e.dm.set(m, "Source", Variant::String(source))
-            .map_err(|err| rt(err.to_string()))?;
-        let _ = e.dm.set_parent_ignore_lock(m, Some(parent));
-    }
-    Ok(())
+    Ok(gui)
 }

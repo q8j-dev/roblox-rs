@@ -1,0 +1,5 @@
+# Each line selects an entry from the 2026 Full API dump (version-67c8b1dedbb74fed), then cites
+# where InExperience.rbxm (version-f0ea5da9412f4e35) needs it. Regenerate backports.json with
+# python3 backports.py <path to Full-API-Dump.json>
+class CorePackages | StarterScript: game:GetService("CorePackages") at line 6; DataModelInstances/CorePackages in tree.txt
+class LocalizationTable | PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt

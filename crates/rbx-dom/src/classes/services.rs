@@ -97,6 +97,9 @@ pub const SERVICE_CLASSES: &[&str] = &[
 
 pub fn is_service_class(class: &str) -> bool {
     SERVICE_CLASSES.contains(&class)
+        || rbx_reflection::database()
+            .class(class)
+            .is_some_and(|c| c.service)
 }
 
 pub struct ServiceBehavior;

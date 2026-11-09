@@ -1,0 +1,338 @@
+{
+ "classes": [
+  {
+   "callbacks": [],
+   "creatable": false,
+   "events": [],
+   "evidence": "StarterScript: game:GetService(\"CorePackages\") at line 6; DataModelInstances/CorePackages in tree.txt",
+   "flags": [
+    "PERSISTENT_LOCAL"
+   ],
+   "functions": [],
+   "name": "CorePackages",
+   "properties": [],
+   "security": null,
+   "service": true,
+   "superclass": "Instance",
+   "yield_functions": []
+  },
+  {
+   "callbacks": [],
+   "creatable": true,
+   "events": [],
+   "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+   "flags": [],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "GetEntries",
+     "params": [],
+     "return": "Array",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "GetTranslator",
+     "params": [
+      {
+       "default": null,
+       "name": "localeId",
+       "type": "string"
+      }
+     ],
+     "return": "Instance:Instance",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "RemoveEntry",
+     "params": [
+      {
+       "default": null,
+       "name": "key",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "source",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "context",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "RemoveEntryValue",
+     "params": [
+      {
+       "default": null,
+       "name": "key",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "source",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "context",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "localeId",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "RemoveTargetLocale",
+     "params": [
+      {
+       "default": null,
+       "name": "localeId",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "SetEntries",
+     "params": [
+      {
+       "default": null,
+       "name": "entries",
+       "type": "Variant"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "SetEntryContext",
+     "params": [
+      {
+       "default": null,
+       "name": "key",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "source",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "context",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "newContext",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "SetEntryExample",
+     "params": [
+      {
+       "default": null,
+       "name": "key",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "source",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "context",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "example",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "SetEntryKey",
+     "params": [
+      {
+       "default": null,
+       "name": "key",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "source",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "context",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "newKey",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "SetEntrySource",
+     "params": [
+      {
+       "default": null,
+       "name": "key",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "source",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "context",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "newSource",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "SetEntryValue",
+     "params": [
+      {
+       "default": null,
+       "name": "key",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "source",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "context",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "localeId",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "text",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "name": "SetIsExemptFromUGCAnalytics",
+     "params": [
+      {
+       "default": null,
+       "name": "value",
+       "type": "bool"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    }
+   ],
+   "name": "LocalizationTable",
+   "properties": [
+    {
+     "category": "Behavior",
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "flags": 14,
+     "getter": null,
+     "name": "Contents",
+     "read_only": false,
+     "security": null,
+     "type": "string"
+    },
+    {
+     "category": "Localization",
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "flags": 2,
+     "getter": null,
+     "name": "IsExemptFromUGCAnalytics",
+     "read_only": false,
+     "security": null,
+     "type": "bool"
+    },
+    {
+     "category": "Localization",
+     "deprecated_by": null,
+     "evidence": "PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt",
+     "flags": 31,
+     "getter": null,
+     "name": "SourceLocaleId",
+     "read_only": false,
+     "security": null,
+     "type": "string"
+    }
+   ],
+   "security": null,
+   "service": false,
+   "superclass": "Instance",
+   "yield_functions": []
+  }
+ ],
+ "enums": [],
+ "source": "full-api-dump-67c8b1dedbb74fed.json"
+}

@@ -168,6 +168,8 @@ struct RawEvent {
 #[derive(Deserialize)]
 struct RawClass {
     name: String,
+    #[serde(default)]
+    service: bool,
     superclass: Option<String>,
     creatable: bool,
     flags: Vec<String>,
@@ -316,6 +318,7 @@ pub struct ClassDescriptor {
     pub functions: Vec<FunctionDescriptor>,
     pub events: Vec<EventDescriptor>,
     pub depth: usize,
+    pub service: bool,
 }
 
 #[derive(Clone, Debug)]
@@ -395,16 +398,54 @@ fn convert_params(params: &[RawParam]) -> Vec<ParamDescriptor> {
         .collect()
 }
 
+fn merge_named<T>(into: &mut Vec<T>, from: Vec<T>, name: impl Fn(&T) -> &str) {
+    for item in from {
+        if !into.iter().any(|x| name(x) == name(&item)) {
+            into.push(item);
+        }
+    }
+}
+
+fn merge_backports(raw: &mut RawDatabase, extra: RawDatabase) {
+    for c in extra.classes {
+        match raw.classes.iter_mut().find(|x| x.name == c.name) {
+            Some(existing) => {
+                existing.service |= c.service;
+                merge_named(&mut existing.properties, c.properties, |p| &p.name);
+                merge_named(&mut existing.functions, c.functions, |f| &f.name);
+                merge_named(&mut existing.yield_functions, c.yield_functions, |f| {
+                    &f.name
+                });
+                merge_named(&mut existing.callbacks, c.callbacks, |f| &f.name);
+                merge_named(&mut existing.events, c.events, |e| &e.name);
+            }
+            None => raw.classes.push(c),
+        }
+    }
+    for e in extra.enums {
+        match raw.enums.iter_mut().find(|x| x.name == e.name) {
+            Some(existing) => merge_named(&mut existing.items, e.items, |i| &i.name),
+            None => raw.enums.push(e),
+        }
+    }
+}
+
 impl ReflectionDatabase {
-    fn from_json(json: &str) -> ReflectionDatabase {
-        let raw: RawDatabase = match serde_json::from_str(json) {
+    fn from_json(json: &str, backports: &str) -> ReflectionDatabase {
+        let mut raw: RawDatabase = match serde_json::from_str(json) {
             Ok(raw) => raw,
             Err(e) => panic!("embedded reflection database is invalid: {e}"),
         };
+        let extra: RawDatabase = match serde_json::from_str(backports) {
+            Ok(raw) => raw,
+            Err(e) => panic!("embedded backport database is invalid: {e}"),
+        };
+        merge_backports(&mut raw, extra);
         let mut classes: rustc_hash::FxHashMap<String, ClassDescriptor> = Default::default();
         let mut class_order = Vec::new();
         for c in raw.classes {
             let name = c.name.clone();
+            let service = c.service;
             let properties = c
                 .properties
                 .into_iter()
@@ -463,6 +504,7 @@ impl ReflectionDatabase {
                     functions,
                     events,
                     depth: 0,
+                    service,
                 },
             );
         }
@@ -624,8 +666,12 @@ impl ReflectionDatabase {
     }
 }
 
-static DATABASE: LazyLock<ReflectionDatabase> =
-    LazyLock::new(|| ReflectionDatabase::from_json(include_str!("../data/api.json")));
+static DATABASE: LazyLock<ReflectionDatabase> = LazyLock::new(|| {
+    ReflectionDatabase::from_json(
+        include_str!("../data/api.json"),
+        include_str!("../data/backports.json"),
+    )
+});
 
 pub fn database() -> &'static ReflectionDatabase {
     &DATABASE

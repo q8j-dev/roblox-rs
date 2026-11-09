@@ -170,6 +170,7 @@ pub fn roblox_keycode(code: KeyCode) -> u32 {
         AltLeft => 308,
         SuperLeft => 311,
         SuperRight => 312,
+        PrintScreen => 316,
         _ => 0,
     }
 }

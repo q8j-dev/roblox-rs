@@ -1196,6 +1196,72 @@ impl ScriptRuntime {
         pump(&self.lua);
     }
 
+    pub fn take_verbs(&self) -> Vec<String> {
+        std::mem::take(&mut self.engine.lock().gui.requested_verbs)
+    }
+
+    pub fn show_on_screen_message(&self, slot: u32, text: &str, duration: f64) {
+        if slot >= 3 {
+            return;
+        }
+        let quoted: String = text
+            .chars()
+            .flat_map(|c| match c {
+                '\\' => vec!['\\', '\\'],
+                '"' => vec!['\\', '"'],
+                '\n' => vec!['\\', 'n'],
+                c => vec![c],
+            })
+            .collect();
+        let source = format!(
+            r#"local slot, duration = {slot}, {duration}
+local gui = game:GetService("CoreGui"):FindFirstChild("RobloxGui")
+if not gui then return end
+local corner = gui:FindFirstChild("BottomRightControl", true)
+local parent = corner or gui
+local name = "OnScreenMessage" .. slot
+local old = parent:FindFirstChild(name)
+if old then old:Destroy() end
+local label = Instance.new("TextLabel")
+label.Name = name
+label.FontSize = Enum.FontSize.Size12
+label.TextColor3 = Color3.new(1, 1, 1)
+label.Text = "{quoted}"
+label.BackgroundColor3 = Color3.new(0, 0, 0)
+label.BackgroundTransparency = 0.5
+label.BorderSizePixel = 0
+label.Parent = parent
+if corner then
+	local width = label.TextBounds.X
+	label.Size = UDim2.new(0, width, 1, 0)
+	label.Position = UDim2.new(1, -width, -1.05 + (-slot - 0.5), 0)
+else
+	label.Size = UDim2.new(0, 300, 0, 30)
+	label.Position = UDim2.new(1, -300, 1, -40 - 20 * slot)
+end
+if duration ~= 0 then
+	game:GetService("Debris"):AddItem(label, duration)
+end
+"#
+        );
+        if let Err(e) = self.execute(&source, "OnScreenMessage", Identity::CmdLine) {
+            tracing::warn!("on-screen message failed: {e}");
+        }
+    }
+
+    pub fn fire_video_recording_changed(&self, recording: bool) {
+        let Ok(root) = crate::api::services::settings_root(&self.lua, "GlobalSettings") else {
+            return;
+        };
+        let options = {
+            let e = self.engine.lock();
+            e.dm.find_first_child_of_class(root, "GameSettings")
+        };
+        if let Some(options) = options {
+            self.fire(options, "VideoRecordingChangeRequest", vec![Variant::Bool(recording)]);
+        }
+    }
+
     pub fn script_activity(&self) -> Vec<(InstanceId, f64, u64)> {
         with_state(&self.lua, |s| {
             s.running_scripts

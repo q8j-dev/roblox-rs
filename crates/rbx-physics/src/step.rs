@@ -8,7 +8,8 @@ use parry3d::bounding_volume::{Aabb, BoundingVolume};
 use parry3d::query::{DefaultQueryDispatcher, PersistentQueryDispatcher};
 use rbx_dom::{DataModel, InstanceId};
 use rbx_math::{CFrame, Mat3, NormalId, Vec3, normal_id_to_vector};
-use std::collections::{HashMap, HashSet, VecDeque};
+use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
+use std::collections::VecDeque;
 
 const PSCALE: f32 = 1.0 / 19.0;
 const GYRO_FITNESS_SENSITIVITY: f32 = 2.0;
@@ -196,7 +197,7 @@ impl PhysicsWorld {
     }
 
     fn apply_dirty_angles(&mut self) {
-        let mut dirty_assemblies = HashSet::new();
+        let mut dirty_assemblies = HashSet::default();
         for j in self.joints.values_mut() {
             if j.angle_dirty {
                 j.angle_dirty = false;
@@ -215,7 +216,7 @@ impl PhysicsWorld {
 
     fn ui_step(&mut self) {
         let t = self.time;
-        let mut changed = HashSet::new();
+        let mut changed = HashSet::default();
         let ids: Vec<InstanceId> = self.joints.keys().copied().collect();
         for id in ids {
             let (part0, part1, in_world) = {
@@ -308,7 +309,7 @@ impl PhysicsWorld {
                 _ => {}
             }
         }
-        let mut assemblies = HashSet::new();
+        let mut assemblies = HashSet::default();
         for (p0, p1) in changed {
             for p in [p0, p1].into_iter().flatten() {
                 if let Some(&i) = self.index.get(&p) {
@@ -815,7 +816,7 @@ impl PhysicsWorld {
         terrain_active: &[(InstanceId, rbx_math::IVec3)],
     ) {
         let mut bodies = vec![SolverBody::ground()];
-        let mut map: HashMap<usize, usize> = HashMap::new();
+        let mut map: HashMap<usize, usize> = HashMap::default();
         for (ai, a) in self.assemblies.iter().enumerate() {
             if a.is_moving() && !a.kinematic {
                 map.insert(ai, bodies.len());
@@ -1101,7 +1102,7 @@ impl PhysicsWorld {
         let mut refs: Vec<ConstraintRef<'_>> = Vec::new();
         let joints = &mut self.joints;
         let contacts = &mut self.contacts;
-        let mut joint_lookup: HashMap<InstanceId, (usize, usize, CFrame, CFrame)> = HashMap::new();
+        let mut joint_lookup: HashMap<InstanceId, (usize, usize, CFrame, CFrame)> = HashMap::default();
         for (jid, ba, bb, fa, fb) in joint_specs {
             joint_lookup.insert(jid, (ba, bb, fa, fb));
         }
@@ -1148,7 +1149,7 @@ impl PhysicsWorld {
             }
         }
         let mut col_lookup: HashMap<(InstanceId, InstanceId), (usize, usize, CFrame, CFrame)> =
-            HashMap::new();
+            HashMap::default();
         for (key, ba, bb, fa, fb) in collision_specs {
             col_lookup.insert(key, (ba, bb, fa, fb));
         }
@@ -1169,7 +1170,7 @@ impl PhysicsWorld {
                 });
             }
         }
-        let mut tlookup: HashMap<(InstanceId, rbx_math::IVec3), (usize, CFrame)> = HashMap::new();
+        let mut tlookup: HashMap<(InstanceId, rbx_math::IVec3), (usize, CFrame)> = HashMap::default();
         for (key, ba, fa) in terrain_specs {
             tlookup.insert(key, (ba, fa));
         }
@@ -1300,7 +1301,7 @@ impl PhysicsWorld {
             if pending.is_empty() {
                 continue;
             }
-            let mut depth: HashMap<usize, usize> = HashMap::new();
+            let mut depth: HashMap<usize, usize> = HashMap::default();
             let mut queue: VecDeque<usize> = VecDeque::new();
             for a in pending {
                 if a < self.assemblies.len()

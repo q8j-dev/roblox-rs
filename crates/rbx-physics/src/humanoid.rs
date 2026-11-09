@@ -3,7 +3,7 @@ use crate::step::joint_k;
 use crate::world::PhysicsWorld;
 use rbx_dom::{DataModel, InstanceId, Variant};
 use rbx_math::{CFrame, Mat3, Vec3};
-use std::collections::HashSet;
+use rustc_hash::FxHashSet as HashSet;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 #[repr(u8)]

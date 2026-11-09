@@ -3,7 +3,8 @@ use crate::world::PhysicsWorld;
 use parry3d::query::{Ray, RayCast, contact};
 use rbx_dom::{DataModel, InstanceId};
 use rbx_math::Vec3;
-use std::collections::{HashSet, VecDeque};
+use rustc_hash::FxHashSet as HashSet;
+use std::collections::VecDeque;
 
 #[derive(Clone, Copy, Debug)]
 pub struct RayHit {
@@ -173,7 +174,7 @@ impl PhysicsWorld {
         if !self.index.contains_key(&id) {
             return Vec::new();
         }
-        let mut seen = HashSet::new();
+        let mut seen = HashSet::default();
         let mut out = vec![id];
         seen.insert(id);
         let mut queue = VecDeque::from([id]);

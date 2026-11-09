@@ -492,7 +492,7 @@ impl PhysicsWorld {
     }
 
     fn group_intersecting(&self, group: &[usize], delta: Vec3, tolerance: f32) -> bool {
-        let members: std::collections::HashSet<usize> = group.iter().copied().collect();
+        let members: rustc_hash::FxHashSet<usize> = group.iter().copied().collect();
         for &pi in group {
             let p = &self.parts[pi];
             let mut cf = p.cframe;
@@ -609,7 +609,7 @@ impl PhysicsWorld {
 
     pub fn move_group(&mut self, dm: &mut DataModel, ids: &[InstanceId], delta: Vec3, join: bool) {
         self.sync(dm);
-        let group_ids: std::collections::HashSet<InstanceId> = ids.iter().copied().collect();
+        let group_ids: rustc_hash::FxHashSet<InstanceId> = ids.iter().copied().collect();
         for &id in ids {
             for j in self.joints_of(id) {
                 let other = self.joints.get(&j).and_then(|jj| {

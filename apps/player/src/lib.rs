@@ -17,6 +17,9 @@ use std::sync::Arc;
 const STEP: f64 = 1.0 / 60.0;
 
 #[cfg(not(target_arch = "wasm32"))]
+mod video;
+
+#[cfg(not(target_arch = "wasm32"))]
 #[derive(Parser, Debug)]
 #[command(
     name = "player",
@@ -49,6 +52,7 @@ struct Gpu {
     surface: wgpu::Surface<'static>,
     config: wgpu::SurfaceConfiguration,
     renderer: Renderer,
+    copy_src: bool,
 }
 
 struct Player {
@@ -70,15 +74,18 @@ struct Player {
     scripted: Vec<(u32, ScriptedInput)>,
     #[cfg(not(target_arch = "wasm32"))]
     dump_gui: Option<PathBuf>,
+    #[cfg(not(target_arch = "wasm32"))]
+    recorder: Option<video::VideoRecorder>,
     frames: u32,
     done: bool,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 enum ScriptedInput {
     Key(u32),
     Click(f32, f32),
+    Verb(String),
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -88,6 +95,7 @@ fn parse_input(spec: &str) -> Option<(u32, ScriptedInput)> {
     let (kind, value) = what.split_once(':')?;
     let input = match kind {
         "key" => ScriptedInput::Key(value.parse().ok()?),
+        "verb" => ScriptedInput::Verb(value.to_string()),
         "click" => {
             let (x, y) = value.split_once(',')?;
             ScriptedInput::Click(x.parse().ok()?, y.parse().ok()?)
@@ -253,6 +261,7 @@ async fn create_gpu(window: Arc<Window>, assets: PathBuf) -> Result<Gpu, String>
         surface,
         config,
         renderer,
+        copy_src: caps.usages.contains(wgpu::TextureUsages::COPY_SRC),
     })
 }
 
@@ -365,10 +374,11 @@ impl Player {
     fn play_scripted(&mut self, input: ScriptedInput) {
         match input {
             ScriptedInput::Key(code) => {
-                for kind in [InputKind::Began, InputKind::Ended] {
-                    self.send(kind, user_input::KEYBOARD, code, Vec3::ZERO, Vec3::ZERO);
+                for pressed in [true, false] {
+                    self.input(Input::Key { code, pressed, text: None });
                 }
             }
+            ScriptedInput::Verb(verb) => self.do_verb(&verb),
             ScriptedInput::Click(x, y) => {
                 let p = Vec3::new(x, y, 0.0);
                 self.send(
@@ -419,7 +429,124 @@ impl Player {
             gpu.renderer
                 .render(&e.dm, &view, gpu.config.width, gpu.config.height);
         }
+        #[cfg(not(target_arch = "wasm32"))]
+        if let Some(rec) = &mut self.recorder
+            && rec.wants_frame()
+            && rec.width == gpu.config.width
+            && rec.height == gpu.config.height
+            && let Some(pixels) = read_texture(&gpu.renderer, &frame.texture, rec.width, rec.height)
+        {
+            rec.push(pixels);
+        }
         gpu.renderer.queue.present(frame);
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn run_verbs(&mut self) {
+        for verb in self.runtime.take_verbs() {
+            self.do_verb(&verb);
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn do_verb(&mut self, verb: &str) {
+        let home = std::env::var_os("USERPROFILE")
+            .or_else(|| std::env::var_os("HOME"))
+            .map(PathBuf::from)
+            .unwrap_or_else(std::env::temp_dir);
+        let stamp = rbx_base::time::unix_seconds() as u64;
+        match verb {
+            "Screenshot" => {
+                let dir = home.join("Pictures").join("Roblox");
+                let _ = std::fs::create_dir_all(&dir);
+                let path = dir.join(format!("RobloxScreenShot{stamp}.png"));
+                self.take_screenshot(&path);
+                self.runtime.show_on_screen_message(0, "Screenshot saved", 2.0);
+            }
+            "RecordToggle" => {
+                if let Some(rec) = self.recorder.take() {
+                    self.set_recording_surface(false);
+                    match rec.finish() {
+                        Ok((path, frames)) => self.runtime.engine.lock().print(
+                            rbx_script::MessageType::Info,
+                            format!("Video recording stopped: {frames} frames saved to {}", path.display()),
+                        ),
+                        Err(e) => self
+                            .runtime
+                            .engine
+                            .lock()
+                            .print(rbx_script::MessageType::Error, format!("Video recording failed: {e}")),
+                    }
+                    self.runtime.fire_video_recording_changed(false);
+                    return;
+                }
+                let Some((width, height, bgra, supported)) = self.gpu.as_ref().map(|g| {
+                    (
+                        g.config.width,
+                        g.config.height,
+                        matches!(g.config.format, wgpu::TextureFormat::Bgra8Unorm | wgpu::TextureFormat::Bgra8UnormSrgb),
+                        g.copy_src,
+                    )
+                }) else {
+                    return;
+                };
+                if !supported {
+                    self.runtime.engine.lock().print(
+                        rbx_script::MessageType::Error,
+                        "Video recording is not supported by this graphics backend",
+                    );
+                    return;
+                }
+                let quality = self.video_quality();
+                match video::VideoRecorder::start(video::video_path(&home, &stamp.to_string()), width, height, 30, quality, bgra) {
+                    Ok(rec) => {
+                        self.recorder = Some(rec);
+                        self.set_recording_surface(true);
+                        self.runtime
+                            .engine
+                            .lock()
+                            .print(rbx_script::MessageType::Info, "Video recording started");
+                        self.runtime.fire_video_recording_changed(true);
+                    }
+                    Err(e) => self
+                        .runtime
+                        .engine
+                        .lock()
+                        .print(rbx_script::MessageType::Error, format!("Video recording failed: {e}")),
+                }
+            }
+            _ => {}
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn video_quality(&self) -> u8 {
+        let e = self.runtime.engine.lock();
+        let level = e
+            .dm
+            .descendants(e.dm.root())
+            .into_iter()
+            .find(|&d| e.dm.class_of(d) == Some("GameSettings"))
+            .and_then(|g| e.dm.get(g, "VideoQuality").ok())
+            .and_then(|v| v.as_enum())
+            .unwrap_or(1);
+        match level {
+            0 => 60,
+            2 => 92,
+            _ => 80,
+        }
+    }
+
+    #[cfg(not(target_arch = "wasm32"))]
+    fn set_recording_surface(&mut self, recording: bool) {
+        if let Some(gpu) = &mut self.gpu {
+            if recording {
+                gpu.config.usage |= wgpu::TextureUsages::COPY_SRC;
+            } else {
+                gpu.config.usage = wgpu::TextureUsages::RENDER_ATTACHMENT;
+            }
+            gpu.surface.configure(&gpu.renderer.device, &gpu.config);
+        }
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -484,6 +611,10 @@ impl App for Player {
                 pressed,
                 text,
             } => {
+                #[cfg(not(target_arch = "wasm32"))]
+                if pressed && code == 316 {
+                    self.do_verb("Screenshot");
+                }
                 let kind = if pressed {
                     self.keys.insert(code);
                     InputKind::Began
@@ -630,6 +761,8 @@ impl App for Player {
         self.apply_mouse_behavior();
         self.ensure_camera();
         self.runtime.render_step(dt);
+        #[cfg(not(target_arch = "wasm32"))]
+        self.run_verbs();
         self.render();
         self.frames += 1;
         #[cfg(target_arch = "wasm32")]
@@ -641,7 +774,7 @@ impl App for Player {
             .scripted
             .iter()
             .filter(|(f, _)| *f == self.frames)
-            .map(|(_, i)| *i)
+            .map(|(_, i)| i.clone())
             .collect();
         #[cfg(not(target_arch = "wasm32"))]
         for input in due {
@@ -768,6 +901,7 @@ pub fn desktop_main() {
         screenshot: args.screenshot.map(|p| (p, args.screenshot_frames)),
         scripted: args.inputs.iter().filter_map(|s| parse_input(s)).collect(),
         dump_gui: args.dump_gui.clone(),
+        recorder: None,
         frames: 0,
         done: false,
     };
@@ -995,6 +1129,7 @@ pub mod mobile {
             screenshot: None,
             scripted: Vec::new(),
             dump_gui: None,
+            recorder: None,
             frames: 0,
             done: false,
         };
@@ -1023,3 +1158,46 @@ fn android_start(app: rbx_platform::AndroidApp) {
 }
 
 rbx_platform::android_entry!(android_start);
+
+#[cfg(not(target_arch = "wasm32"))]
+fn read_texture(renderer: &Renderer, texture: &wgpu::Texture, width: u32, height: u32) -> Option<Vec<u8>> {
+    let device = &renderer.device;
+    let row = width * 4;
+    let padded = row.div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT) * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+    let buffer = device.create_buffer(&wgpu::BufferDescriptor {
+        label: Some("video frame"),
+        size: (padded * height) as u64,
+        usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
+        mapped_at_creation: false,
+    });
+    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("video frame") });
+    encoder.copy_texture_to_buffer(
+        texture.as_image_copy(),
+        wgpu::TexelCopyBufferInfo {
+            buffer: &buffer,
+            layout: wgpu::TexelCopyBufferLayout {
+                offset: 0,
+                bytes_per_row: Some(padded),
+                rows_per_image: Some(height),
+            },
+        },
+        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+    );
+    renderer.queue.submit(std::iter::once(encoder.finish()));
+    let slice = buffer.slice(..);
+    let (tx, rx) = std::sync::mpsc::channel();
+    slice.map_async(wgpu::MapMode::Read, move |r| {
+        let _ = tx.send(r);
+    });
+    let _ = device.poll(wgpu::PollType::wait_indefinitely());
+    rx.recv().ok()?.ok()?;
+    let data = slice.get_mapped_range().ok()?;
+    let mut out = Vec::with_capacity((row * height) as usize);
+    for y in 0..height as usize {
+        let start = y * padded as usize;
+        out.extend_from_slice(&data[start..start + row as usize]);
+    }
+    drop(data);
+    buffer.unmap();
+    Some(out)
+}

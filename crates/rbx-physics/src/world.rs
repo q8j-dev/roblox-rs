@@ -7,7 +7,8 @@ use parry3d::query::{ContactManifold, ContactManifoldsWorkspace};
 use rbx_dom::{DataModel, DomEvent, EventCursor, InstanceId, Variant};
 use rbx_math::materials::material_physics;
 use rbx_math::{CFrame, Mat3, NormalId, Vec3, Vec4, normal_id_to_vector, vector_to_normal_id};
-use std::collections::{HashMap, HashSet, VecDeque};
+use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
+use std::collections::VecDeque;
 
 pub const GRAVITY: f32 = 196.2;
 pub const WORLD_STEPS_PER_SEC: u32 = 240;
@@ -567,11 +568,11 @@ impl PhysicsWorld {
     pub fn new() -> PhysicsWorld {
         PhysicsWorld {
             parts: Vec::new(),
-            index: HashMap::new(),
-            joints: HashMap::new(),
-            movers: HashMap::new(),
+            index: HashMap::default(),
+            joints: HashMap::default(),
+            movers: HashMap::default(),
             assemblies: Vec::new(),
-            contacts: HashMap::new(),
+            contacts: HashMap::default(),
             terrain: Default::default(),
             water_viscosity: 0.02,
             solver: Solver::default(),
@@ -586,18 +587,18 @@ impl PhysicsWorld {
             topology_dirty: true,
             spatial: SpatialIndex::new(16.0),
             spatial_dirty: Vec::new(),
-            mover_wake: HashMap::new(),
-            humanoids: HashMap::new(),
+            mover_wake: HashMap::default(),
+            humanoids: HashMap::default(),
             humanoid_events: Vec::new(),
             dm_writes: Vec::new(),
-            accoutrement_parts: HashSet::new(),
+            accoutrement_parts: HashSet::default(),
             recursive_wake: Vec::new(),
             external_wake: Vec::new(),
             tickled_parts: Vec::new(),
             plain_wake: Vec::new(),
             vehicle_seats: Default::default(),
-            seat_axle_velocities: HashMap::new(),
-            part_joints: HashMap::new(),
+            seat_axle_velocities: HashMap::default(),
+            part_joints: HashMap::default(),
             local_character: None,
             cursor: None,
             pending_events: StepEvents::default(),
@@ -673,7 +674,7 @@ impl PhysicsWorld {
             return;
         }
         let mut reconsider: Vec<InstanceId> = Vec::new();
-        let mut seen: HashSet<InstanceId> = HashSet::new();
+        let mut seen: HashSet<InstanceId> = HashSet::default();
         let mut props: Vec<(InstanceId, &'static str)> = Vec::new();
         for e in events {
             match e {
@@ -1535,7 +1536,7 @@ impl PhysicsWorld {
                 })
                 .unwrap_or(&start);
             let mut tree = Vec::new();
-            let mut visited = HashSet::new();
+            let mut visited = HashSet::default();
             visited.insert(root);
             let mut queue = VecDeque::new();
             queue.push_back(root);

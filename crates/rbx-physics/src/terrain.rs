@@ -11,7 +11,7 @@ use rbx_dom::rbx_terrain::{
 };
 use rbx_dom::{DataModel, InstanceId};
 use rbx_math::{CFrame, IVec3, Mat3, Vec3};
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 use std::sync::LazyLock;
 
 pub const SMOOTH_CHUNK_LOG2: i32 = 3;
@@ -192,7 +192,7 @@ impl TerrainCollider {
                 self.contacts.clear();
                 if let Some(g) = &self.smooth {
                     let regions = g.non_empty_regions();
-                    let mut ids = HashSet::new();
+                    let mut ids = HashSet::default();
                     for r in regions {
                         for c in r.expand(1).chunk_ids(SMOOTH_CHUNK_LOG2 as u32) {
                             ids.insert(c);
@@ -207,7 +207,7 @@ impl TerrainCollider {
                 let entries = entries.to_vec();
                 self.legacy = data.legacy.clone();
                 self.smooth = data.smooth.clone();
-                let mut dirty = HashSet::new();
+                let mut dirty = HashSet::default();
                 for (min, max) in entries {
                     changed.push(Aabb::new(
                         to_parry_vec(min.as_vec3() * CELL_SIZE - Vec3::ONE),
@@ -754,9 +754,9 @@ impl PhysicsWorld {
             let _ = ai;
         }
         candidates.sort_by_key(|&i| self.parts[i].id);
-        let mut overlapping_parts: HashSet<InstanceId> = HashSet::new();
-        let mut water_parts: HashSet<InstanceId> = HashSet::new();
-        let mut checked_parts: HashSet<InstanceId> = HashSet::new();
+        let mut overlapping_parts: HashSet<InstanceId> = HashSet::default();
+        let mut water_parts: HashSet<InstanceId> = HashSet::default();
+        let mut checked_parts: HashSet<InstanceId> = HashSet::default();
         for pi in candidates {
             let part = &self.parts[pi];
             let pid = part.id;
@@ -850,7 +850,7 @@ impl PhysicsWorld {
                     water_parts.insert(pid);
                 }
             }
-            let mut seen_features: HashSet<IVec3> = HashSet::new();
+            let mut seen_features: HashSet<IVec3> = HashSet::default();
             let mut part_overlap = false;
             for (feature, shape_b, pose_b) in features {
                 seen_features.insert(feature);

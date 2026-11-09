@@ -1,6 +1,6 @@
 use crate::math::{fill_rotation, orthonormal_basis};
 use rbx_math::{CFrame, Mat3, Vec3, orthonormalize};
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 
 pub const WORLD_DT: f32 = 1.0 / 240.0;
 

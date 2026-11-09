@@ -4,13 +4,13 @@ use parry3d::shape::SharedShape;
 use rbx_csg::{CsgMesh, PhysicsData, hash_key_of, md5_hex, physics};
 use rbx_dom::{DataModel, InstanceId, Variant};
 use rbx_math::Vec3;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 use std::sync::{Arc, LazyLock, Mutex};
 
 type HullSet = Arc<Vec<Vec<Vec3>>>;
 
 static DECOMPOSITIONS: LazyLock<Mutex<HashMap<String, HullSet>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
+    LazyLock::new(|| Mutex::new(HashMap::default()));
 
 fn decompose(mesh: &CsgMesh, key: String) -> HullSet {
     if let Ok(cache) = DECOMPOSITIONS.lock()

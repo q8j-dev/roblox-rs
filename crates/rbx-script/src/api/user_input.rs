@@ -486,6 +486,13 @@ fn gui_mouse(lua: &Lua, ev: &InputEvent) -> bool {
                 local,
             );
             if pressed == Some(t) {
+                if button == 1 {
+                    let eng = engine(lua);
+                    let mut e = eng.lock();
+                    if let Some(verb) = e.gui.button_verbs.get(&t).cloned() {
+                        e.gui.requested_verbs.push(verb);
+                    }
+                }
                 fire_lua(
                     lua,
                     t,

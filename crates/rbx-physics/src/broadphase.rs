@@ -1,7 +1,7 @@
 use parry3d::bounding_volume::{Aabb, BoundingVolume};
 use rbx_dom::InstanceId;
 use rbx_math::Vec3;
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
 const MAX_CELLS_PER_AXIS: i64 = 32;
 
@@ -27,9 +27,9 @@ impl SpatialIndex {
     pub fn new(cell: f32) -> SpatialIndex {
         SpatialIndex {
             cell,
-            cells: HashMap::new(),
-            large: HashSet::new(),
-            entries: HashMap::new(),
+            cells: HashMap::default(),
+            large: HashSet::default(),
+            entries: HashMap::default(),
         }
     }
 
@@ -132,10 +132,9 @@ impl SpatialIndex {
     }
 
     pub fn query(&self, aabb: &Aabb, out: &mut Vec<InstanceId>) {
-        let mut seen: HashSet<InstanceId> = HashSet::new();
-        let mut push = |id: InstanceId, out: &mut Vec<InstanceId>| {
-            if seen.insert(id)
-                && let Some(e) = self.entries.get(&id)
+        let start = out.len();
+        let push = |id: InstanceId, out: &mut Vec<InstanceId>| {
+            if let Some(e) = self.entries.get(&id)
                 && e.aabb.intersects(aabb)
             {
                 out.push(id);
@@ -159,16 +158,27 @@ impl SpatialIndex {
                 }
             }
             Placement::Large => {
-                let ids: Vec<InstanceId> = self.entries.keys().copied().collect();
-                for id in ids {
-                    push(id, out);
+                for (&id, e) in &self.entries {
+                    if e.aabb.intersects(aabb) {
+                        out.push(id);
+                    }
                 }
             }
         }
+        let found = &mut out[start..];
+        found.sort_unstable();
+        let mut n = 0;
+        for i in 0..found.len() {
+            if i == 0 || found[i] != found[n - 1] {
+                found[n] = found[i];
+                n += 1;
+            }
+        }
+        out.truncate(start + n);
     }
 
     pub fn query_ray(&self, origin: Vec3, dir: Vec3, max: f32, out: &mut Vec<InstanceId>) {
-        let mut seen: HashSet<InstanceId> = HashSet::new();
+        let mut seen: HashSet<InstanceId> = HashSet::default();
         for &id in &self.large {
             if seen.insert(id) {
                 out.push(id);

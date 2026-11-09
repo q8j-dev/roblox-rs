@@ -40,12 +40,21 @@ pub fn start(edit: &Document, assets: &Path, mode: Mode) -> Result<Document, Str
     if mode == Mode::Play {
         let players = runtime.engine.lock().dm.get_service("Players");
         let result = players.map_err(|e| e.to_string()).and_then(|players| {
-            let player = rbx_script::api::players::make_local_player(&runtime.lua, players, 1, false, Some("Player1"))
-                .map_err(|e| e.to_string())?;
-            rbx_script::api::players::load_character(&runtime.lua, player, true, "").map_err(|e| e.to_string())
+            let player = rbx_script::api::players::make_local_player(
+                &runtime.lua,
+                players,
+                1,
+                false,
+                Some("Player1"),
+            )
+            .map_err(|e| e.to_string())?;
+            rbx_script::api::players::load_character(&runtime.lua, player, true, "")
+                .map_err(|e| e.to_string())
         });
         result?;
-        runtime.start_core_scripts("StarterScript").map_err(|e| e.to_string())?;
+        runtime
+            .start_core_scripts("StarterScript")
+            .map_err(|e| e.to_string())?;
     }
     Ok(Document::from_runtime(runtime, &assets.join("content")))
 }
@@ -118,7 +127,14 @@ impl PlaySession {
         }
     }
 
-    pub fn mouse(&mut self, live: &Document, kind: InputKind, input_type: u32, pos: (f32, f32), delta: (f32, f32)) {
+    pub fn mouse(
+        &mut self,
+        live: &Document,
+        kind: InputKind,
+        input_type: u32,
+        pos: (f32, f32),
+        delta: (f32, f32),
+    ) {
         if input_type != user_input::MOUSE_MOVEMENT {
             live.runtime.engine.lock().audio.resume_output();
         }

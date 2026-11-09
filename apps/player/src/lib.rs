@@ -375,7 +375,11 @@ impl Player {
         match input {
             ScriptedInput::Key(code) => {
                 for pressed in [true, false] {
-                    self.input(Input::Key { code, pressed, text: None });
+                    self.input(Input::Key {
+                        code,
+                        pressed,
+                        text: None,
+                    });
                 }
             }
             ScriptedInput::Verb(verb) => self.do_verb(&verb),
@@ -461,7 +465,8 @@ impl Player {
                 let _ = std::fs::create_dir_all(&dir);
                 let path = dir.join(format!("RobloxScreenShot{stamp}.png"));
                 self.take_screenshot(&path);
-                self.runtime.show_on_screen_message(0, "Screenshot saved", 2.0);
+                self.runtime
+                    .show_on_screen_message(0, "Screenshot saved", 2.0);
             }
             "RecordToggle" => {
                 if let Some(rec) = self.recorder.take() {
@@ -469,13 +474,15 @@ impl Player {
                     match rec.finish() {
                         Ok((path, frames)) => self.runtime.engine.lock().print(
                             rbx_script::MessageType::Info,
-                            format!("Video recording stopped: {frames} frames saved to {}", path.display()),
+                            format!(
+                                "Video recording stopped: {frames} frames saved to {}",
+                                path.display()
+                            ),
                         ),
-                        Err(e) => self
-                            .runtime
-                            .engine
-                            .lock()
-                            .print(rbx_script::MessageType::Error, format!("Video recording failed: {e}")),
+                        Err(e) => self.runtime.engine.lock().print(
+                            rbx_script::MessageType::Error,
+                            format!("Video recording failed: {e}"),
+                        ),
                     }
                     self.runtime.fire_video_recording_changed(false);
                     return;
@@ -484,7 +491,10 @@ impl Player {
                     (
                         g.config.width,
                         g.config.height,
-                        matches!(g.config.format, wgpu::TextureFormat::Bgra8Unorm | wgpu::TextureFormat::Bgra8UnormSrgb),
+                        matches!(
+                            g.config.format,
+                            wgpu::TextureFormat::Bgra8Unorm | wgpu::TextureFormat::Bgra8UnormSrgb
+                        ),
                         g.copy_src,
                     )
                 }) else {
@@ -498,7 +508,14 @@ impl Player {
                     return;
                 }
                 let quality = self.video_quality();
-                match video::VideoRecorder::start(video::video_path(&home, &stamp.to_string()), width, height, 30, quality, bgra) {
+                match video::VideoRecorder::start(
+                    video::video_path(&home, &stamp.to_string()),
+                    width,
+                    height,
+                    30,
+                    quality,
+                    bgra,
+                ) {
                     Ok(rec) => {
                         self.recorder = Some(rec);
                         self.set_recording_surface(true);
@@ -508,11 +525,10 @@ impl Player {
                             .print(rbx_script::MessageType::Info, "Video recording started");
                         self.runtime.fire_video_recording_changed(true);
                     }
-                    Err(e) => self
-                        .runtime
-                        .engine
-                        .lock()
-                        .print(rbx_script::MessageType::Error, format!("Video recording failed: {e}")),
+                    Err(e) => self.runtime.engine.lock().print(
+                        rbx_script::MessageType::Error,
+                        format!("Video recording failed: {e}"),
+                    ),
                 }
             }
             _ => {}
@@ -522,14 +538,13 @@ impl Player {
     #[cfg(not(target_arch = "wasm32"))]
     fn video_quality(&self) -> u8 {
         let e = self.runtime.engine.lock();
-        let level = e
-            .dm
-            .descendants(e.dm.root())
-            .into_iter()
-            .find(|&d| e.dm.class_of(d) == Some("GameSettings"))
-            .and_then(|g| e.dm.get(g, "VideoQuality").ok())
-            .and_then(|v| v.as_enum())
-            .unwrap_or(1);
+        let level =
+            e.dm.descendants(e.dm.root())
+                .into_iter()
+                .find(|&d| e.dm.class_of(d) == Some("GameSettings"))
+                .and_then(|g| e.dm.get(g, "VideoQuality").ok())
+                .and_then(|v| v.as_enum())
+                .unwrap_or(1);
         match level {
             0 => 60,
             2 => 92,
@@ -1160,17 +1175,25 @@ fn android_start(app: rbx_platform::AndroidApp) {
 rbx_platform::android_entry!(android_start);
 
 #[cfg(not(target_arch = "wasm32"))]
-fn read_texture(renderer: &Renderer, texture: &wgpu::Texture, width: u32, height: u32) -> Option<Vec<u8>> {
+fn read_texture(
+    renderer: &Renderer,
+    texture: &wgpu::Texture,
+    width: u32,
+    height: u32,
+) -> Option<Vec<u8>> {
     let device = &renderer.device;
     let row = width * 4;
-    let padded = row.div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT) * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
+    let padded =
+        row.div_ceil(wgpu::COPY_BYTES_PER_ROW_ALIGNMENT) * wgpu::COPY_BYTES_PER_ROW_ALIGNMENT;
     let buffer = device.create_buffer(&wgpu::BufferDescriptor {
         label: Some("video frame"),
         size: (padded * height) as u64,
         usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
         mapped_at_creation: false,
     });
-    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("video frame") });
+    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor {
+        label: Some("video frame"),
+    });
     encoder.copy_texture_to_buffer(
         texture.as_image_copy(),
         wgpu::TexelCopyBufferInfo {
@@ -1181,7 +1204,11 @@ fn read_texture(renderer: &Renderer, texture: &wgpu::Texture, width: u32, height
                 rows_per_image: Some(height),
             },
         },
-        wgpu::Extent3d { width, height, depth_or_array_layers: 1 },
+        wgpu::Extent3d {
+            width,
+            height,
+            depth_or_array_layers: 1,
+        },
     );
     renderer.queue.submit(std::iter::once(encoder.finish()));
     let slice = buffer.slice(..);

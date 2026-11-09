@@ -90,7 +90,11 @@ impl Plugins {
             .iter()
             .filter(|b| toolbar.is_none_or(|t| b.toolbar == t))
             .find(|b| b.text == text)
-            .or_else(|| self.buttons.iter().find(|b| toolbar.is_none() && b.tooltip == text))
+            .or_else(|| {
+                self.buttons
+                    .iter()
+                    .find(|b| toolbar.is_none() && b.tooltip == text)
+            })
     }
 
     pub fn click(&mut self, doc: &Document, button: InstanceId) {

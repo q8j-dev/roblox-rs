@@ -1102,7 +1102,8 @@ impl PhysicsWorld {
         let mut refs: Vec<ConstraintRef<'_>> = Vec::new();
         let joints = &mut self.joints;
         let contacts = &mut self.contacts;
-        let mut joint_lookup: HashMap<InstanceId, (usize, usize, CFrame, CFrame)> = HashMap::default();
+        let mut joint_lookup: HashMap<InstanceId, (usize, usize, CFrame, CFrame)> =
+            HashMap::default();
         for (jid, ba, bb, fa, fb) in joint_specs {
             joint_lookup.insert(jid, (ba, bb, fa, fb));
         }
@@ -1170,7 +1171,8 @@ impl PhysicsWorld {
                 });
             }
         }
-        let mut tlookup: HashMap<(InstanceId, rbx_math::IVec3), (usize, CFrame)> = HashMap::default();
+        let mut tlookup: HashMap<(InstanceId, rbx_math::IVec3), (usize, CFrame)> =
+            HashMap::default();
         for (key, ba, fa) in terrain_specs {
             tlookup.insert(key, (ba, fa));
         }

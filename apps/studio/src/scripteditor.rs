@@ -31,7 +31,10 @@ fn line_start(s: &str, line: usize) -> usize {
     if line <= 1 {
         return 0;
     }
-    s.match_indices('\n').nth(line - 2).map(|(i, _)| i + 1).unwrap_or(s.len())
+    s.match_indices('\n')
+        .nth(line - 2)
+        .map(|(i, _)| i + 1)
+        .unwrap_or(s.len())
 }
 
 impl Studio {
@@ -50,11 +53,17 @@ impl Studio {
     }
 
     fn buffer_mut(&mut self, id: InstanceId) -> Option<&mut String> {
-        self.scripts.iter_mut().find(|(s, _)| *s == id).map(|(_, b)| b)
+        self.scripts
+            .iter_mut()
+            .find(|(s, _)| *s == id)
+            .map(|(_, b)| b)
     }
 
     pub fn script_command(&mut self, ctx: &egui::Context, action: &str) -> bool {
-        let Some(id) = self.active_script().or_else(|| self.scripts.first().map(|s| s.0)) else {
+        let Some(id) = self
+            .active_script()
+            .or_else(|| self.scripts.first().map(|s| s.0))
+        else {
             return matches!(action, "findAction" | "replaceAction" | "goToLineAction");
         };
         let (sel_a, sel_b) = self.editor_selection(ctx, id);
@@ -79,9 +88,14 @@ impl Studio {
                     let needle = needle.to_lowercase();
                     let from = char_to_byte(buf, if forward { sel_b } else { sel_a });
                     let found = if forward {
-                        lower[from..].find(&needle).map(|i| i + from).or_else(|| lower.find(&needle))
+                        lower[from..]
+                            .find(&needle)
+                            .map(|i| i + from)
+                            .or_else(|| lower.find(&needle))
                     } else {
-                        lower[..from].rfind(&needle).or_else(|| lower.rfind(&needle))
+                        lower[..from]
+                            .rfind(&needle)
+                            .or_else(|| lower.rfind(&needle))
                     };
                     if let Some(b) = found {
                         let a = byte_to_char(buf, b);
@@ -105,18 +119,24 @@ impl Studio {
                 let sel = self.doc.selection();
                 let kids: Vec<InstanceId> = {
                     let e = self.doc.runtime.engine.lock();
-                    sel.iter().flat_map(|s| e.dm.children_of(*s).to_vec()).collect()
+                    sel.iter()
+                        .flat_map(|s| e.dm.children_of(*s).to_vec())
+                        .collect()
                 };
                 self.doc.select(kids);
             }
             "commentSelectionAction" | "uncommentSelectionAction" | "toggleCommentAction" => {
-                let Some(buf) = self.buffer_mut(id) else { return true };
+                let Some(buf) = self.buffer_mut(id) else {
+                    return true;
+                };
                 let a = char_to_byte(buf, sel_a);
                 let b = char_to_byte(buf, sel_b);
                 let start = buf[..a].rfind('\n').map(|i| i + 1).unwrap_or(0);
                 let end = buf[b..].find('\n').map(|i| i + b).unwrap_or(buf.len());
                 let lines: Vec<&str> = buf[start..end].split('\n').collect();
-                let all_commented = lines.iter().all(|l| l.trim_start().starts_with("--") || l.trim().is_empty());
+                let all_commented = lines
+                    .iter()
+                    .all(|l| l.trim_start().starts_with("--") || l.trim().is_empty());
                 let comment = match action {
                     "commentSelectionAction" => true,
                     "uncommentSelectionAction" => false,
@@ -165,7 +185,9 @@ impl Studio {
     }
 
     pub fn script_editor_ui(&mut self, ui: &mut Ui, id: InstanceId) {
-        let Some(i) = self.scripts.iter().position(|(sid, _)| *sid == id) else { return };
+        let Some(i) = self.scripts.iter().position(|(sid, _)| *sid == id) else {
+            return;
+        };
         let mut buffer = std::mem::take(&mut self.scripts[i].1);
         let state = self.editors.entry(id).or_default();
         let full = ui.available_rect_before_wrap();
@@ -175,12 +197,23 @@ impl Studio {
         let mut replace_one = false;
         let mut replace_all = false;
         if state.show_find {
-            let bar = egui::Rect::from_min_size(full.min, vec2(full.width(), if state.show_replace { 52.0 } else { 28.0 }));
-            ui.painter().rect_filled(bar, 0.0, Color32::from_rgb(243, 243, 243));
-            ui.painter().line_segment([bar.left_bottom(), bar.right_bottom()], Stroke::new(1.0, Color32::from_rgb(196, 196, 196)));
+            let bar = egui::Rect::from_min_size(
+                full.min,
+                vec2(full.width(), if state.show_replace { 52.0 } else { 28.0 }),
+            );
+            ui.painter()
+                .rect_filled(bar, 0.0, Color32::from_rgb(243, 243, 243));
+            ui.painter().line_segment(
+                [bar.left_bottom(), bar.right_bottom()],
+                Stroke::new(1.0, Color32::from_rgb(196, 196, 196)),
+            );
             ui.scope_builder(egui::UiBuilder::new().max_rect(bar.shrink(3.0)), |ui| {
                 ui.horizontal(|ui| {
-                    let r = ui.add(egui::TextEdit::singleline(&mut state.find).hint_text("Find...").desired_width(220.0));
+                    let r = ui.add(
+                        egui::TextEdit::singleline(&mut state.find)
+                            .hint_text("Find...")
+                            .desired_width(220.0),
+                    );
                     if r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                         find_next = true;
                     }
@@ -192,7 +225,11 @@ impl Studio {
                 });
                 if state.show_replace {
                     ui.horizontal(|ui| {
-                        ui.add(egui::TextEdit::singleline(&mut state.replace).hint_text("Replace...").desired_width(220.0));
+                        ui.add(
+                            egui::TextEdit::singleline(&mut state.replace)
+                                .hint_text("Replace...")
+                                .desired_width(220.0),
+                        );
                         replace_one = ui.button("Replace").clicked();
                         replace_all = ui.button("Replace All").clicked();
                     });
@@ -207,11 +244,16 @@ impl Studio {
                 .resizable(false)
                 .anchor(Align2::CENTER_CENTER, vec2(0.0, 0.0))
                 .show(ui.ctx(), |ui| {
-                    ui.label(format!("Line number (1 - {}):", buffer.lines().count().max(1)));
+                    ui.label(format!(
+                        "Line number (1 - {}):",
+                        buffer.lines().count().max(1)
+                    ));
                     let r = ui.add(egui::TextEdit::singleline(text).desired_width(200.0));
                     r.request_focus();
                     ui.horizontal(|ui| {
-                        if ui.button("OK").clicked() || (r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter))) {
+                        if ui.button("OK").clicked()
+                            || (r.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)))
+                        {
                             done = Some(text.trim().parse::<usize>().ok());
                         }
                         if ui.button("Cancel").clicked() {
@@ -235,55 +277,68 @@ impl Studio {
         let char_w = ui.fonts_mut(|f| f.glyph_width(&font, '0'));
         let margin = digits * char_w + 26.0;
         let mut changed = false;
-        egui::ScrollArea::both().auto_shrink([false, false]).show(ui, |ui| {
-            ui.horizontal_top(|ui| {
-                ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
-                let height = (lines as f32 * row + 8.0).max(ui.available_height());
-                let (gutter, _) = ui.allocate_exact_size(vec2(margin, height), Sense::hover());
-                ui.painter().rect_filled(gutter, 0.0, Color32::from_rgb(221, 221, 221));
-                ui.painter().rect_filled(
-                    egui::Rect::from_min_max(egui::pos2(gutter.right() - 12.0, gutter.top()), gutter.right_bottom()),
-                    0.0,
-                    Color32::from_rgb(249, 249, 249),
-                );
-                for n in 0..lines {
-                    ui.painter().text(
-                        egui::pos2(gutter.right() - 16.0, gutter.top() + 2.0 + n as f32 * row),
-                        Align2::RIGHT_TOP,
-                        (n + 1).to_string(),
-                        font.clone(),
-                        Color32::BLACK,
+        egui::ScrollArea::both()
+            .auto_shrink([false, false])
+            .show(ui, |ui| {
+                ui.horizontal_top(|ui| {
+                    ui.spacing_mut().item_spacing = vec2(0.0, 0.0);
+                    let height = (lines as f32 * row + 8.0).max(ui.available_height());
+                    let (gutter, _) = ui.allocate_exact_size(vec2(margin, height), Sense::hover());
+                    ui.painter()
+                        .rect_filled(gutter, 0.0, Color32::from_rgb(221, 221, 221));
+                    ui.painter().rect_filled(
+                        egui::Rect::from_min_max(
+                            egui::pos2(gutter.right() - 12.0, gutter.top()),
+                            gutter.right_bottom(),
+                        ),
+                        0.0,
+                        Color32::from_rgb(249, 249, 249),
                     );
-                }
-                let mut layouter = |ui: &Ui, text: &dyn egui::TextBuffer, wrap: f32| {
-                    let mut job = luau_layout(text.as_str());
-                    job.wrap.max_width = wrap;
-                    ui.fonts_mut(|f| f.layout_job(job))
-                };
-                let output = egui::TextEdit::multiline(&mut buffer)
-                    .id(edit_id(id))
-                    .font(egui::TextStyle::Monospace)
-                    .code_editor()
-                    .frame(egui::Frame::new())
-                    .margin(vec2(4.0, 2.0))
-                    .desired_width(f32::INFINITY)
-                    .min_size(vec2(0.0, height))
-                    .layouter(&mut layouter)
-                    .show(ui);
-                if output.response.gained_focus() {
-                    self.doc.checkpoint();
-                }
-                changed = output.response.changed();
-                if let Some((a, b)) = pending {
-                    let mut st = output.state.clone();
-                    st.cursor.set_char_range(Some(CCursorRange::two(CCursor::new(a), CCursor::new(b))));
-                    st.store(ui.ctx(), edit_id(id));
-                    output.response.request_focus();
-                    let y = output.galley_pos.y + output.galley.pos_from_cursor(CCursor::new(a)).min.y;
-                    ui.scroll_to_rect(egui::Rect::from_min_size(egui::pos2(full.left(), y), vec2(1.0, row)), Some(egui::Align::Center));
-                }
+                    for n in 0..lines {
+                        ui.painter().text(
+                            egui::pos2(gutter.right() - 16.0, gutter.top() + 2.0 + n as f32 * row),
+                            Align2::RIGHT_TOP,
+                            (n + 1).to_string(),
+                            font.clone(),
+                            Color32::BLACK,
+                        );
+                    }
+                    let mut layouter = |ui: &Ui, text: &dyn egui::TextBuffer, wrap: f32| {
+                        let mut job = luau_layout(text.as_str());
+                        job.wrap.max_width = wrap;
+                        ui.fonts_mut(|f| f.layout_job(job))
+                    };
+                    let output = egui::TextEdit::multiline(&mut buffer)
+                        .id(edit_id(id))
+                        .font(egui::TextStyle::Monospace)
+                        .code_editor()
+                        .frame(egui::Frame::new())
+                        .margin(vec2(4.0, 2.0))
+                        .desired_width(f32::INFINITY)
+                        .min_size(vec2(0.0, height))
+                        .layouter(&mut layouter)
+                        .show(ui);
+                    if output.response.gained_focus() {
+                        self.doc.checkpoint();
+                    }
+                    changed = output.response.changed();
+                    if let Some((a, b)) = pending {
+                        let mut st = output.state.clone();
+                        st.cursor.set_char_range(Some(CCursorRange::two(
+                            CCursor::new(a),
+                            CCursor::new(b),
+                        )));
+                        st.store(ui.ctx(), edit_id(id));
+                        output.response.request_focus();
+                        let y = output.galley_pos.y
+                            + output.galley.pos_from_cursor(CCursor::new(a)).min.y;
+                        ui.scroll_to_rect(
+                            egui::Rect::from_min_size(egui::pos2(full.left(), y), vec2(1.0, row)),
+                            Some(egui::Align::Center),
+                        );
+                    }
+                });
             });
-        });
         if changed {
             self.doc.write_script_source(id, &buffer);
         }
@@ -303,7 +358,11 @@ impl Studio {
                 && let Some(i) = self.scripts.iter().position(|(sid, _)| *sid == id)
             {
                 let buf = &mut self.scripts[i].1;
-                let new_text = if replace_all { buf.replace(&find, &replace) } else { buf.replacen(&find, &replace, 1) };
+                let new_text = if replace_all {
+                    buf.replace(&find, &replace)
+                } else {
+                    buf.replacen(&find, &replace, 1)
+                };
                 *buf = new_text.clone();
                 self.doc.checkpoint();
                 self.doc.write_script_source(id, &new_text);

@@ -12,8 +12,8 @@ mod properties;
 mod ribbon;
 mod scripteditor;
 mod theme;
-mod views;
 mod viewport;
+mod views;
 
 use app::Studio;
 use clap::Parser;
@@ -144,7 +144,11 @@ fn create_gpu(window: Arc<Window>, assets: &std::path::Path) -> Result<Gpu, Stri
 
 impl Host {
     fn apply_mouse_behavior(&mut self) {
-        let behavior = if self.studio.playing_game() { self.studio.doc.runtime.mouse_behavior() } else { 0 };
+        let behavior = if self.studio.playing_game() {
+            self.studio.doc.runtime.mouse_behavior()
+        } else {
+            0
+        };
         if behavior == self.behavior {
             return;
         }
@@ -155,7 +159,9 @@ impl Host {
             w.set_cursor_visible(true);
             return;
         }
-        if w.set_cursor_grab(winit::window::CursorGrabMode::Locked).is_err() {
+        if w.set_cursor_grab(winit::window::CursorGrabMode::Locked)
+            .is_err()
+        {
             let _ = w.set_cursor_grab(winit::window::CursorGrabMode::Confined);
         }
         w.set_cursor_visible(behavior != 1);
@@ -179,7 +185,9 @@ impl Host {
             sample_count: 1,
             dimension: wgpu::TextureDimension::D2,
             format: gpu.renderer.format,
-            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::TEXTURE_BINDING | wgpu::TextureUsages::COPY_SRC,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT
+                | wgpu::TextureUsages::TEXTURE_BINDING
+                | wgpu::TextureUsages::COPY_SRC,
             view_formats: &[],
         });
         let view = texture.create_view(&wgpu::TextureViewDescriptor::default());
@@ -191,19 +199,26 @@ impl Host {
                 id,
             ),
             None => {
-                self.studio.view.texture =
-                    Some(gpu.egui.register_native_texture(device, &view, wgpu::FilterMode::Linear));
+                self.studio.view.texture = Some(gpu.egui.register_native_texture(
+                    device,
+                    &view,
+                    wgpu::FilterMode::Linear,
+                ));
             }
         }
         gpu.viewport = Some((texture, view, want));
     }
 
     fn frame(&mut self) {
-        let Some(window) = self.window.clone() else { return };
+        let Some(window) = self.window.clone() else {
+            return;
+        };
         let now = rbx_base::time::Instant::now();
         let dt = now.duration_since(self.last).as_secs_f64().min(0.1);
         self.last = now;
-        let Some(state) = &mut self.egui_state else { return };
+        let Some(state) = &mut self.egui_state else {
+            return;
+        };
         let raw = state.take_egui_input(&window);
         let studio = &mut self.studio;
         let output = self.egui_ctx.run_ui(raw, |ui| studio.ui(ui));
@@ -249,7 +264,8 @@ impl Host {
             }
         }
         let frame = match gpu.surface.get_current_texture() {
-            wgpu::CurrentSurfaceTexture::Success(f) | wgpu::CurrentSurfaceTexture::Suboptimal(f) => f,
+            wgpu::CurrentSurfaceTexture::Success(f)
+            | wgpu::CurrentSurfaceTexture::Suboptimal(f) => f,
             wgpu::CurrentSurfaceTexture::Occluded => {
                 self.occluded = true;
                 return;
@@ -278,10 +294,12 @@ impl Host {
             Some((_, at)) if self.frames + 1 == *at => Some(capture_texture(gpu)),
             _ => None,
         };
-        let mut encoder = gpu
-            .renderer
-            .device
-            .create_command_encoder(&wgpu::CommandEncoderDescriptor { label: Some("egui") });
+        let mut encoder =
+            gpu.renderer
+                .device
+                .create_command_encoder(&wgpu::CommandEncoderDescriptor {
+                    label: Some("egui"),
+                });
         let extra = gpu.egui.update_buffers(
             &gpu.renderer.device,
             &gpu.renderer.queue,
@@ -333,13 +351,20 @@ impl Host {
         {
             let path = Studio::screenshot_path();
             match save_texture(gpu, tex, &path) {
-                Ok(()) => self.studio.status.push((rbx_script::MessageType::Info, format!("Screenshot saved to {}", path.display()))),
+                Ok(()) => self.studio.status.push((
+                    rbx_script::MessageType::Info,
+                    format!("Screenshot saved to {}", path.display()),
+                )),
                 Err(e) => self.studio.status.push((rbx_script::MessageType::Error, e)),
             }
         }
         if std::mem::take(&mut self.studio.extras.pending_fullscreen) {
             let full = window.fullscreen().is_some();
-            window.set_fullscreen(if full { None } else { Some(winit::window::Fullscreen::Borderless(None)) });
+            window.set_fullscreen(if full {
+                None
+            } else {
+                Some(winit::window::Fullscreen::Borderless(None))
+            });
         }
         if let (Some(tex), Some((path, _))) = (capture, &self.screenshot) {
             match save_texture(gpu, &tex, path) {
@@ -357,20 +382,22 @@ impl Host {
 }
 
 fn capture_texture(gpu: &Gpu) -> wgpu::Texture {
-    gpu.renderer.device.create_texture(&wgpu::TextureDescriptor {
-        label: Some("studio capture"),
-        size: wgpu::Extent3d {
-            width: gpu.config.width,
-            height: gpu.config.height,
-            depth_or_array_layers: 1,
-        },
-        mip_level_count: 1,
-        sample_count: 1,
-        dimension: wgpu::TextureDimension::D2,
-        format: gpu.config.format,
-        usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
-        view_formats: &[],
-    })
+    gpu.renderer
+        .device
+        .create_texture(&wgpu::TextureDescriptor {
+            label: Some("studio capture"),
+            size: wgpu::Extent3d {
+                width: gpu.config.width,
+                height: gpu.config.height,
+                depth_or_array_layers: 1,
+            },
+            mip_level_count: 1,
+            sample_count: 1,
+            dimension: wgpu::TextureDimension::D2,
+            format: gpu.config.format,
+            usage: wgpu::TextureUsages::RENDER_ATTACHMENT | wgpu::TextureUsages::COPY_SRC,
+            view_formats: &[],
+        })
 }
 
 fn save_texture(gpu: &Gpu, tex: &wgpu::Texture, path: &std::path::Path) -> Result<(), String> {
@@ -383,7 +410,8 @@ fn save_texture(gpu: &Gpu, tex: &wgpu::Texture, path: &std::path::Path) -> Resul
         usage: wgpu::BufferUsages::COPY_DST | wgpu::BufferUsages::MAP_READ,
         mapped_at_creation: false,
     });
-    let mut encoder = device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
+    let mut encoder =
+        device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
     encoder.copy_texture_to_buffer(
         tex.as_image_copy(),
         wgpu::TexelCopyBufferInfo {
@@ -423,7 +451,8 @@ fn save_texture(gpu: &Gpu, tex: &wgpu::Texture, path: &std::path::Path) -> Resul
     drop(data);
     buffer.unmap();
     let img = image::RgbaImage::from_raw(w, h, pixels).ok_or("bad capture size")?;
-    img.save(path).map_err(|e| format!("{}: {e}", path.display()))
+    img.save(path)
+        .map_err(|e| format!("{}: {e}", path.display()))
 }
 
 impl ApplicationHandler for Host {
@@ -479,7 +508,12 @@ impl ApplicationHandler for Host {
         self.window = Some(window);
     }
 
-    fn device_event(&mut self, _event_loop: &ActiveEventLoop, _id: winit::event::DeviceId, event: winit::event::DeviceEvent) {
+    fn device_event(
+        &mut self,
+        _event_loop: &ActiveEventLoop,
+        _id: winit::event::DeviceId,
+        event: winit::event::DeviceEvent,
+    ) {
         if self.behavior != 0
             && let winit::event::DeviceEvent::MouseMotion { delta } = event
             && let Some(session) = &mut self.studio.play
@@ -496,7 +530,9 @@ impl ApplicationHandler for Host {
     }
 
     fn window_event(&mut self, event_loop: &ActiveEventLoop, _id: WindowId, event: WindowEvent) {
-        let game_keys = self.studio.playing_game() && self.studio.viewport_focus && !self.egui_ctx.egui_wants_keyboard_input();
+        let game_keys = self.studio.playing_game()
+            && self.studio.viewport_focus
+            && !self.egui_ctx.egui_wants_keyboard_input();
         if game_keys
             && let WindowEvent::KeyboardInput { event: key, .. } = &event
             && let winit::keyboard::PhysicalKey::Code(code) = key.physical_key
@@ -509,7 +545,12 @@ impl ApplicationHandler for Host {
                     && let Some(session) = &mut self.studio.play
                 {
                     let text = key.text.as_ref().map(|t| t.to_string());
-                    session.key(&self.studio.doc, rc, key.state == winit::event::ElementState::Pressed, text);
+                    session.key(
+                        &self.studio.doc,
+                        rc,
+                        key.state == winit::event::ElementState::Pressed,
+                        text,
+                    );
                 }
                 return;
             }
@@ -582,7 +623,10 @@ fn main() {
     };
     let mut studio = Studio::new(doc, assets);
     if let Some(src) = &args.run {
-        let _ = studio.doc.runtime.execute(src, "CommandBar", rbx_script::Identity::CmdLine);
+        let _ = studio
+            .doc
+            .runtime
+            .execute(src, "CommandBar", rbx_script::Identity::CmdLine);
         studio.doc.runtime.pump();
         studio.view.camera = app::camera_for(&studio.doc);
     }

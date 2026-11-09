@@ -33,8 +33,8 @@ fn category_name(raw: &str) -> String {
         r if r.starts_with("category_") => {
             let s = &r["category_".len()..];
             match s {
-                "Part" | "BasicPart" | "Pyramid" | "CornerWedge" | "ParallelRamp" | "ExtrudedPart"
-                | "RightAngleRamp" | "Prism" => "Part".into(),
+                "Part" | "BasicPart" | "Pyramid" | "CornerWedge" | "ParallelRamp"
+                | "ExtrudedPart" | "RightAngleRamp" | "Prism" => "Part".into(),
                 other => other.into(),
             }
         }
@@ -79,11 +79,21 @@ pub fn display(doc: &Document, v: &Variant) -> String {
         Variant::Double(f) => num(*f),
         Variant::String(s) | Variant::Content(s) => s.clone(),
         Variant::ProtectedString(_) => String::new(),
-        Variant::Vector3(p) => format!("{}, {}, {}", num(p.x as f64), num(p.y as f64), num(p.z as f64)),
+        Variant::Vector3(p) => format!(
+            "{}, {}, {}",
+            num(p.x as f64),
+            num(p.y as f64),
+            num(p.z as f64)
+        ),
         Variant::Vector2(p) => format!("{}, {}", num(p.x as f64), num(p.y as f64)),
         Variant::CFrame(cf) => {
             let p = cf.translation;
-            format!("{}, {}, {}", num(p.x as f64), num(p.y as f64), num(p.z as f64))
+            format!(
+                "{}, {}, {}",
+                num(p.x as f64),
+                num(p.y as f64),
+                num(p.z as f64)
+            )
         }
         Variant::Color3(c) => format!("[{}, {}, {}]", to8(c.r), to8(c.g), to8(c.b)),
         Variant::BrickColor(b) => b.name().to_string(),
@@ -100,7 +110,9 @@ pub fn display(doc: &Document, v: &Variant) -> String {
         Variant::NumberRange(r) => format!("{} {}", num(r.min as f64), num(r.max as f64)),
         other => {
             let s = format!("{other:?}");
-            s.split_once('(').map(|(_, rest)| rest.trim_end_matches(')').to_string()).unwrap_or(s)
+            s.split_once('(')
+                .map(|(_, rest)| rest.trim_end_matches(')').to_string())
+                .unwrap_or(s)
         }
     }
 }
@@ -131,11 +143,18 @@ fn parse(text: &str, current: &Variant) -> Option<Variant> {
         }
         Variant::CFrame(cf) => {
             let f = floats(t);
-            Variant::CFrame(CFrame::new(cf.rotation, Vec3::new(*f.first()?, *f.get(1)?, *f.get(2)?)))
+            Variant::CFrame(CFrame::new(
+                cf.rotation,
+                Vec3::new(*f.first()?, *f.get(1)?, *f.get(2)?),
+            ))
         }
         Variant::Color3(_) => {
             let f = floats(t);
-            Variant::Color3(Color3::new(*f.first()? / 255.0, *f.get(1)? / 255.0, *f.get(2)? / 255.0))
+            Variant::Color3(Color3::new(
+                *f.first()? / 255.0,
+                *f.get(1)? / 255.0,
+                *f.get(2)? / 255.0,
+            ))
         }
         Variant::UDim(_) => {
             let f = floats(t);
@@ -143,7 +162,12 @@ fn parse(text: &str, current: &Variant) -> Option<Variant> {
         }
         Variant::UDim2(_) => {
             let f = floats(t);
-            Variant::UDim2(UDim2::new(*f.first()?, *f.get(1)? as i32, *f.get(2)?, *f.get(3)? as i32))
+            Variant::UDim2(UDim2::new(
+                *f.first()?,
+                *f.get(1)? as i32,
+                *f.get(2)?,
+                *f.get(3)? as i32,
+            ))
         }
         Variant::BrickColor(_) => {
             let b = BrickColor::all().find(|b| b.name().eq_ignore_ascii_case(t))?;
@@ -194,11 +218,14 @@ impl Properties {
                 {
                     continue;
                 }
-                groups.entry(category_name(&p.category)).or_default().push(Prop {
-                    name: p.name.clone(),
-                    ty: p.ty.clone(),
-                    read_only: p.read_only,
-                });
+                groups
+                    .entry(category_name(&p.category))
+                    .or_default()
+                    .push(Prop {
+                        name: p.name.clone(),
+                        ty: p.ty.clone(),
+                        read_only: p.read_only,
+                    });
             }
         }
         let mut out: Vec<(String, Vec<Prop>)> = groups.into_iter().collect();
@@ -214,7 +241,12 @@ impl Properties {
         let label = selection_label(doc, &selection);
         let (bar, _) = ui.allocate_exact_size(vec2(ui.available_width(), 20.0), Sense::hover());
         ui.painter().rect_filled(bar, 0.0, theme::WINDOW);
-        ui.painter().rect_stroke(bar, 0.0, Stroke::new(1.0, theme::EDIT_BORDER), egui::StrokeKind::Inside);
+        ui.painter().rect_stroke(
+            bar,
+            0.0,
+            Stroke::new(1.0, theme::EDIT_BORDER),
+            egui::StrokeKind::Inside,
+        );
         ui.painter().with_clip_rect(bar.shrink(2.0)).text(
             pos2(bar.left() + 9.0, bar.center().y),
             Align2::LEFT_CENTER,
@@ -225,7 +257,9 @@ impl Properties {
         ui.add_space(4.0);
         ui.add_sized(
             vec2(ui.available_width(), 22.0),
-            egui::TextEdit::singleline(&mut self.filter).hint_text("Search Properties").margin(vec2(4.0, 3.0)),
+            egui::TextEdit::singleline(&mut self.filter)
+                .hint_text("Search Properties")
+                .margin(vec2(4.0, 3.0)),
         );
         ui.add_space(4.0);
         self.grid(ui, doc, &selection);
@@ -240,7 +274,12 @@ impl Properties {
         }
         let full = ui.available_rect_before_wrap();
         ui.painter().rect_filled(full, 0.0, Color32::WHITE);
-        ui.painter().rect_stroke(full, 0.0, Stroke::new(1.0, theme::VIEW_BORDER), egui::StrokeKind::Inside);
+        ui.painter().rect_stroke(
+            full,
+            0.0,
+            Stroke::new(1.0, theme::VIEW_BORDER),
+            egui::StrokeKind::Inside,
+        );
         let Some(&id) = selection.last() else {
             return;
         };
@@ -279,13 +318,26 @@ impl Properties {
                         ));
                     } else {
                         ui.painter().add(egui::Shape::convex_polygon(
-                            vec![c + vec2(-2.0, -4.0), c + vec2(2.5, 0.0), c + vec2(-2.0, 4.0)],
+                            vec![
+                                c + vec2(-2.0, -4.0),
+                                c + vec2(2.5, 0.0),
+                                c + vec2(-2.0, 4.0),
+                            ],
                             Color32::TRANSPARENT,
                             Stroke::new(1.0, Color32::from_rgb(110, 110, 110)),
                         ));
                     }
-                    ui.painter().text(pos2(r.left() + 18.0, r.center().y), Align2::LEFT_CENTER, cat, bold.clone(), Color32::BLACK);
-                    ui.painter().line_segment([r.left_bottom(), r.right_bottom()], Stroke::new(1.0, theme::GRID_LINE));
+                    ui.painter().text(
+                        pos2(r.left() + 18.0, r.center().y),
+                        Align2::LEFT_CENTER,
+                        cat,
+                        bold.clone(),
+                        Color32::BLACK,
+                    );
+                    ui.painter().line_segment(
+                        [r.left_bottom(), r.right_bottom()],
+                        Stroke::new(1.0, theme::GRID_LINE),
+                    );
                     if resp.clicked() && !self.collapsed.remove(cat) {
                         self.collapsed.insert(cat.clone());
                     }
@@ -302,10 +354,16 @@ impl Properties {
                         };
                         let Ok(value) = value else { continue };
                         let (r, _) = ui.allocate_exact_size(vec2(width, ROW), Sense::hover());
-                        let name_rect = Rect::from_min_max(r.min, pos2(r.left() + split_x, r.bottom()));
-                        let value_rect = Rect::from_min_max(pos2(r.left() + split_x + 1.0, r.top()), r.max);
+                        let name_rect =
+                            Rect::from_min_max(r.min, pos2(r.left() + split_x, r.bottom()));
+                        let value_rect =
+                            Rect::from_min_max(pos2(r.left() + split_x + 1.0, r.top()), r.max);
                         let can_edit = !p.read_only && editable(&p.ty, &value);
-                        let text_color = if can_edit { Color32::BLACK } else { Color32::GRAY };
+                        let text_color = if can_edit {
+                            Color32::BLACK
+                        } else {
+                            Color32::GRAY
+                        };
                         ui.painter().text(
                             pos2(name_rect.left() + 18.0, r.center().y),
                             Align2::LEFT_CENTER,
@@ -313,8 +371,14 @@ impl Properties {
                             font.clone(),
                             text_color,
                         );
-                        ui.painter().line_segment([name_rect.right_top(), name_rect.right_bottom()], Stroke::new(1.0, theme::GRID_LINE));
-                        ui.painter().line_segment([r.left_bottom(), r.right_bottom()], Stroke::new(1.0, theme::GRID_LINE));
+                        ui.painter().line_segment(
+                            [name_rect.right_top(), name_rect.right_bottom()],
+                            Stroke::new(1.0, theme::GRID_LINE),
+                        );
+                        ui.painter().line_segment(
+                            [r.left_bottom(), r.right_bottom()],
+                            Stroke::new(1.0, theme::GRID_LINE),
+                        );
                         self.value_cell(ui, doc, id, p, &value, value_rect, can_edit, text_color);
                     }
                 }
@@ -323,7 +387,17 @@ impl Properties {
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn value_cell(&mut self, ui: &mut Ui, doc: &mut Document, id: InstanceId, p: &Prop, value: &Variant, r: Rect, can_edit: bool, color: Color32) {
+    fn value_cell(
+        &mut self,
+        ui: &mut Ui,
+        doc: &mut Document,
+        id: InstanceId,
+        p: &Prop,
+        value: &Variant,
+        r: Rect,
+        can_edit: bool,
+        color: Color32,
+    ) {
         let font = FontId::proportional(theme::FONT_SIZE);
         let key = (id, p.name.clone());
         if let Some((eid, ename, buf)) = &mut self.editing
@@ -331,7 +405,10 @@ impl Properties {
         {
             let te = ui.put(
                 r.shrink2(vec2(1.0, 1.0)),
-                egui::TextEdit::singleline(buf).font(font.clone()).margin(vec2(4.0, 1.0)).frame(egui::Frame::new()),
+                egui::TextEdit::singleline(buf)
+                    .font(font.clone())
+                    .margin(vec2(4.0, 1.0))
+                    .frame(egui::Frame::new()),
             );
             te.request_focus();
             if te.lost_focus() {
@@ -350,17 +427,45 @@ impl Properties {
             }
             return;
         }
-        let resp = ui.interact(r, ui.scope_id().with(("prop-value", id.raw(), &p.name)), Sense::click());
+        let resp = ui.interact(
+            r,
+            ui.scope_id().with(("prop-value", id.raw(), &p.name)),
+            Sense::click(),
+        );
         let mut x = r.left() + 4.0;
         match value {
             Variant::Bool(b) => {
                 let bx = Rect::from_min_size(pos2(x, r.center().y - 6.5), vec2(13.0, 13.0));
                 ui.painter().rect_filled(bx, 0.0, Color32::WHITE);
-                ui.painter().rect_stroke(bx, 0.0, Stroke::new(1.0, theme::EDIT_BORDER), egui::StrokeKind::Inside);
+                ui.painter().rect_stroke(
+                    bx,
+                    0.0,
+                    Stroke::new(1.0, theme::EDIT_BORDER),
+                    egui::StrokeKind::Inside,
+                );
                 if *b {
-                    let s = Stroke::new(1.6, if can_edit { Color32::from_rgb(38, 38, 38) } else { Color32::GRAY });
-                    ui.painter().line_segment([bx.left_center() + vec2(2.5, 0.0), bx.center_bottom() + vec2(-1.0, -3.0)], s);
-                    ui.painter().line_segment([bx.center_bottom() + vec2(-1.0, -3.0), bx.right_top() + vec2(-2.5, 3.0)], s);
+                    let s = Stroke::new(
+                        1.6,
+                        if can_edit {
+                            Color32::from_rgb(38, 38, 38)
+                        } else {
+                            Color32::GRAY
+                        },
+                    );
+                    ui.painter().line_segment(
+                        [
+                            bx.left_center() + vec2(2.5, 0.0),
+                            bx.center_bottom() + vec2(-1.0, -3.0),
+                        ],
+                        s,
+                    );
+                    ui.painter().line_segment(
+                        [
+                            bx.center_bottom() + vec2(-1.0, -3.0),
+                            bx.right_top() + vec2(-2.5, 3.0),
+                        ],
+                        s,
+                    );
                 }
                 if resp.clicked() && can_edit {
                     let _ = doc.set_property(id, &p.name, Variant::Bool(!b));
@@ -370,13 +475,23 @@ impl Properties {
             Variant::BrickColor(b) => {
                 let sw = Rect::from_min_size(pos2(x, r.center().y - 6.0), vec2(12.0, 12.0));
                 ui.painter().rect_filled(sw, 0.0, swatch(b.color3()));
-                ui.painter().rect_stroke(sw, 0.0, Stroke::new(1.0, Color32::BLACK), egui::StrokeKind::Inside);
+                ui.painter().rect_stroke(
+                    sw,
+                    0.0,
+                    Stroke::new(1.0, Color32::BLACK),
+                    egui::StrokeKind::Inside,
+                );
                 x = sw.right() + 4.0;
             }
             Variant::Color3(c) => {
                 let sw = Rect::from_min_size(pos2(x, r.center().y - 6.0), vec2(12.0, 12.0));
                 ui.painter().rect_filled(sw, 0.0, swatch(*c));
-                ui.painter().rect_stroke(sw, 0.0, Stroke::new(1.0, Color32::BLACK), egui::StrokeKind::Inside);
+                ui.painter().rect_stroke(
+                    sw,
+                    0.0,
+                    Stroke::new(1.0, Color32::BLACK),
+                    egui::StrokeKind::Inside,
+                );
                 x = sw.right() + 4.0;
             }
             _ => {}
@@ -384,16 +499,27 @@ impl Properties {
         let text = match (&p.ty, value) {
             (ValueType::Enum(e), Variant::Enum(v)) => database()
                 .enum_desc(e)
-                .and_then(|d| d.items.iter().find(|i| i.value == *v).map(|i| i.name.clone()))
+                .and_then(|d| {
+                    d.items
+                        .iter()
+                        .find(|i| i.value == *v)
+                        .map(|i| i.name.clone())
+                })
                 .unwrap_or_else(|| v.to_string()),
             _ => display(doc, value),
         };
         let galley = ui.painter().layout_no_wrap(text, font.clone(), color);
-        ui.painter().with_clip_rect(r.shrink2(vec2(1.0, 0.0))).galley(pos2(x, r.center().y - galley.size().y / 2.0), galley, color);
+        ui.painter()
+            .with_clip_rect(r.shrink2(vec2(1.0, 0.0)))
+            .galley(pos2(x, r.center().y - galley.size().y / 2.0), galley, color);
         if matches!(p.ty, ValueType::Enum(_)) && can_edit {
             let c = pos2(r.right() - 9.0, r.center().y);
             ui.painter().add(egui::Shape::convex_polygon(
-                vec![c + vec2(-3.5, -1.5), c + vec2(3.5, -1.5), c + vec2(0.0, 2.0)],
+                vec![
+                    c + vec2(-3.5, -1.5),
+                    c + vec2(3.5, -1.5),
+                    c + vec2(0.0, 2.0),
+                ],
                 theme::TEXT,
                 Stroke::NONE,
             ));
@@ -439,23 +565,40 @@ impl Properties {
                     .inner_margin(1.0)
                     .show(ui, |ui| match (&ty, &value) {
                         (ValueType::Enum(e), Variant::Enum(cur)) => {
-                            let Some(desc) = database().enum_desc(e) else { return };
-                            egui::ScrollArea::vertical().max_height(300.0).show(ui, |ui| {
-                                ui.set_min_width(anchor.width() - 2.0);
-                                for item in &desc.items {
-                                    let (r, resp) = ui.allocate_exact_size(vec2(anchor.width() - 2.0, 18.0), Sense::click());
-                                    if item.value == *cur {
-                                        theme::selected_row(ui.painter(), r);
-                                    } else if resp.hovered() {
-                                        theme::hovered_row(ui.painter(), r);
+                            let Some(desc) = database().enum_desc(e) else {
+                                return;
+                            };
+                            egui::ScrollArea::vertical()
+                                .max_height(300.0)
+                                .show(ui, |ui| {
+                                    ui.set_min_width(anchor.width() - 2.0);
+                                    for item in &desc.items {
+                                        let (r, resp) = ui.allocate_exact_size(
+                                            vec2(anchor.width() - 2.0, 18.0),
+                                            Sense::click(),
+                                        );
+                                        if item.value == *cur {
+                                            theme::selected_row(ui.painter(), r);
+                                        } else if resp.hovered() {
+                                            theme::hovered_row(ui.painter(), r);
+                                        }
+                                        let color = if item.value == *cur {
+                                            Color32::WHITE
+                                        } else {
+                                            Color32::BLACK
+                                        };
+                                        ui.painter().text(
+                                            pos2(r.left() + 4.0, r.center().y),
+                                            Align2::LEFT_CENTER,
+                                            &item.name,
+                                            FontId::proportional(theme::FONT_SIZE),
+                                            color,
+                                        );
+                                        if resp.clicked() {
+                                            chosen = Some(Variant::Enum(item.value));
+                                        }
                                     }
-                                    let color = if item.value == *cur { Color32::WHITE } else { Color32::BLACK };
-                                    ui.painter().text(pos2(r.left() + 4.0, r.center().y), Align2::LEFT_CENTER, &item.name, FontId::proportional(theme::FONT_SIZE), color);
-                                    if resp.clicked() {
-                                        chosen = Some(Variant::Enum(item.value));
-                                    }
-                                }
-                            });
+                                });
                         }
                         (_, Variant::BrickColor(cur)) => {
                             let colors: Vec<BrickColor> = BrickColor::palette().collect();
@@ -463,14 +606,20 @@ impl Properties {
                                 ui.horizontal(|ui| {
                                     ui.spacing_mut().item_spacing = vec2(1.0, 1.0);
                                     for b in row {
-                                        let (r, resp) = ui.allocate_exact_size(vec2(18.0, 18.0), Sense::click());
+                                        let (r, resp) = ui
+                                            .allocate_exact_size(vec2(18.0, 18.0), Sense::click());
                                         ui.painter().rect_filled(r, 0.0, swatch(b.color3()));
                                         let stroke = if b == cur || resp.hovered() {
                                             Stroke::new(2.0, Color32::BLACK)
                                         } else {
                                             Stroke::new(1.0, Color32::from_gray(120))
                                         };
-                                        ui.painter().rect_stroke(r, 0.0, stroke, egui::StrokeKind::Inside);
+                                        ui.painter().rect_stroke(
+                                            r,
+                                            0.0,
+                                            stroke,
+                                            egui::StrokeKind::Inside,
+                                        );
                                         if resp.on_hover_text(b.name()).clicked() {
                                             chosen = Some(Variant::BrickColor(*b));
                                         }
@@ -484,7 +633,10 @@ impl Properties {
         if let Some(v) = chosen {
             let _ = doc.set_property(id, &name, v);
             self.popup = None;
-        } else if ui.input(|i| i.pointer.any_pressed()) && !area.response.contains_pointer() && !ui.rect_contains_pointer(anchor) {
+        } else if ui.input(|i| i.pointer.any_pressed())
+            && !area.response.contains_pointer()
+            && !ui.rect_contains_pointer(anchor)
+        {
             self.popup = None;
         }
     }
@@ -492,7 +644,11 @@ impl Properties {
 
 fn selection_label(doc: &Document, selection: &[InstanceId]) -> String {
     let e = doc.runtime.engine.lock();
-    let items: Vec<InstanceId> = selection.iter().copied().filter(|i| e.dm.contains(*i)).collect();
+    let items: Vec<InstanceId> = selection
+        .iter()
+        .copied()
+        .filter(|i| e.dm.contains(*i))
+        .collect();
     let Some(&first) = items.first() else {
         return String::new();
     };
@@ -502,7 +658,9 @@ fn selection_label(doc: &Document, selection: &[InstanceId]) -> String {
         return format!("{class} \"{name}\"");
     }
     let same_name = items.iter().all(|i| e.dm.name_of(*i) == name);
-    let same_class = items.iter().all(|i| e.dm.class_of(*i) == Some(class.as_str()));
+    let same_class = items
+        .iter()
+        .all(|i| e.dm.class_of(*i) == Some(class.as_str()));
     match (same_class, same_name) {
         (true, true) => format!("{class} \"{name}\" - {} items", items.len()),
         (true, false) => format!("{class} - {} items", items.len()),

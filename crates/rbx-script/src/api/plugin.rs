@@ -53,7 +53,9 @@ pub fn manager(lua: &Lua) -> Result<InstanceId> {
     if let Some(m) = e.plugins.manager.filter(|m| e.dm.contains(*m)) {
         return Ok(m);
     }
-    let m = e.dm.create_internal("PluginManager").map_err(|err| rt(err.to_string()))?;
+    let m =
+        e.dm.create_internal("PluginManager")
+            .map_err(|err| rt(err.to_string()))?;
     e.plugins.manager = Some(m);
     Ok(m)
 }
@@ -62,7 +64,9 @@ fn create_plugin(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
     let id = {
         let eng = engine(lua);
         let mut e = eng.lock();
-        let id = e.dm.create_internal("Plugin").map_err(|err| rt(err.to_string()))?;
+        let id =
+            e.dm.create_internal("Plugin")
+                .map_err(|err| rt(err.to_string()))?;
         let dir = e.plugins.current_dir.clone();
         let builtin = e.plugins.loading_builtin;
         e.plugins.plugins.push((id, dir, builtin));
@@ -74,7 +78,9 @@ fn create_plugin(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
 pub fn create_model_plugin(lua: &Lua, roots: &[InstanceId]) -> Result<InstanceId> {
     let eng = engine(lua);
     let mut e = eng.lock();
-    let id = e.dm.create_internal("Plugin").map_err(|err| rt(err.to_string()))?;
+    let id =
+        e.dm.create_internal("Plugin")
+            .map_err(|err| rt(err.to_string()))?;
     let dir = e.plugins.current_dir.clone();
     let builtin = e.plugins.loading_builtin;
     e.plugins.plugins.push((id, dir, builtin));
@@ -108,7 +114,9 @@ fn create_toolbar(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
         match e.plugins.toolbars.iter().find(|(_, n)| *n == name) {
             Some((t, _)) => *t,
             None => {
-                let t = e.dm.create_internal("Toolbar").map_err(|err| rt(err.to_string()))?;
+                let t =
+                    e.dm.create_internal("Toolbar")
+                        .map_err(|err| rt(err.to_string()))?;
                 e.dm.set_name(t, &name);
                 e.plugins.toolbars.push((t, name));
                 t
@@ -132,7 +140,9 @@ fn create_button(lua: &Lua, toolbar: InstanceId, args: &[Value]) -> Result<Ret> 
             .find(|(t, _)| *t == toolbar)
             .map(|(_, n)| n.clone())
             .unwrap_or_default();
-        let b = e.dm.create_internal("Button").map_err(|err| rt(err.to_string()))?;
+        let b =
+            e.dm.create_internal("Button")
+                .map_err(|err| rt(err.to_string()))?;
         e.dm.set_name(b, if text.is_empty() { &tooltip } else { &text });
         let dir = e.plugins.current_dir.clone();
         let content = e.content_root.clone();
@@ -189,10 +199,18 @@ fn get_mouse(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
     let mouse = {
         let eng = engine(lua);
         let mut e = eng.lock();
-        match e.plugins.mice.get(&id).copied().filter(|m| e.dm.contains(*m)) {
+        match e
+            .plugins
+            .mice
+            .get(&id)
+            .copied()
+            .filter(|m| e.dm.contains(*m))
+        {
             Some(m) => m,
             None => {
-                let m = e.dm.create_internal("PluginMouse").map_err(|err| rt(err.to_string()))?;
+                let m =
+                    e.dm.create_internal("PluginMouse")
+                        .map_err(|err| rt(err.to_string()))?;
                 e.plugins.mice.insert(id, m);
                 m
             }

@@ -127,7 +127,8 @@ fn build(class: &'static str) -> ClassLayout {
             aliases.insert(name, t.name.as_str());
         }
     }
-    let resolve = |mut n: &'static str, aliases: &rustc_hash::FxHashMap<&'static str, &'static str>| {
+    let resolve = |mut n: &'static str,
+                   aliases: &rustc_hash::FxHashMap<&'static str, &'static str>| {
         let mut guard = 0;
         while let Some(t) = aliases.get(n) {
             if *t == n || guard > 8 {

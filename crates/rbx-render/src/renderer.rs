@@ -1035,7 +1035,11 @@ impl Renderer {
         } else {
             0
         };
-        let offset_variant = if textured { ((part.seed >> 3) & 4095) + 1 } else { 0 };
+        let offset_variant = if textured {
+            ((part.seed >> 3) & 4095) + 1
+        } else {
+            0
+        };
         let key = MeshKey {
             shape: part.shape,
             size: [size.x.to_bits(), size.y.to_bits(), size.z.to_bits()],
@@ -1052,7 +1056,9 @@ impl Renderer {
             Vec3::ZERO
         };
         let surface_offset = match part.shading {
-            Shading::Textured(m) => crate::geometry::surface_offset(size, part.seed, m == 848 || m == 528),
+            Shading::Textured(m) => {
+                crate::geometry::surface_offset(size, part.seed, m == 848 || m == 528)
+            }
             _ => Vec2::ZERO,
         };
         if !self.meshes.contains_key(&key) {
@@ -1139,8 +1145,14 @@ impl Renderer {
         self.poll_texture_loads();
         let aspect = width.max(1) as f32 / height.max(1) as f32;
         let mut scene = scene::extract_cached(dm, aspect, &mut self.part_cache);
-        scene.adorns.meshes.extend(self.overlay.meshes.iter().cloned());
-        scene.adorns.lines.extend(self.overlay.lines.iter().copied());
+        scene
+            .adorns
+            .meshes
+            .extend(self.overlay.meshes.iter().cloned());
+        scene
+            .adorns
+            .lines
+            .extend(self.overlay.lines.iter().copied());
         self.update_terrain(dm);
         self.update_lightgrid(dm, &scene);
         self.render_scene(&scene, target, width, height);

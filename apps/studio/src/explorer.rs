@@ -59,7 +59,9 @@ pub fn visible_children(dm: &DataModel, meta: &ClassMetadata, id: InstanceId) ->
 impl Explorer {
     fn matches(&self, dm: &DataModel, meta: &ClassMetadata, id: InstanceId, needle: &str) -> bool {
         dm.name_of(id).to_lowercase().contains(needle)
-            || visible_children(dm, meta, id).into_iter().any(|c| self.matches(dm, meta, c, needle))
+            || visible_children(dm, meta, id)
+                .into_iter()
+                .any(|c| self.matches(dm, meta, c, needle))
     }
 
     fn rows(&self, dm: &DataModel, meta: &ClassMetadata) -> Vec<Row> {
@@ -106,7 +108,13 @@ impl Explorer {
         }
     }
 
-    pub fn show(&mut self, ui: &mut Ui, doc: &mut Document, meta: &ClassMetadata, icons: &mut Icons) -> Option<Request> {
+    pub fn show(
+        &mut self,
+        ui: &mut Ui,
+        doc: &mut Document,
+        meta: &ClassMetadata,
+        icons: &mut Icons,
+    ) -> Option<Request> {
         let selection = doc.selection();
         if selection != self.last_selection {
             let e = doc.runtime.engine.lock();
@@ -127,7 +135,12 @@ impl Explorer {
         ui.add_space(4.0);
         let full = ui.available_rect_before_wrap();
         ui.painter().rect_filled(full, 0.0, Color32::WHITE);
-        ui.painter().rect_stroke(full, 0.0, Stroke::new(1.0, theme::VIEW_BORDER), egui::StrokeKind::Inside);
+        ui.painter().rect_stroke(
+            full,
+            0.0,
+            Stroke::new(1.0, theme::VIEW_BORDER),
+            egui::StrokeKind::Inside,
+        );
         let mut request = None;
         let mut toggle = None;
         let mut new_selection: Option<Vec<InstanceId>> = None;
@@ -141,11 +154,22 @@ impl Explorer {
                     let (r, resp) = ui.allocate_exact_size(vec2(width, ROW), Sense::click());
                     let x0 = r.left() + 4.0 + row.depth as f32 * INDENT;
                     let arrow = Rect::from_min_size(pos2(x0, r.top()), vec2(14.0, ROW));
-                    let icon = Rect::from_min_size(pos2(x0 + 15.0, r.center().y - 8.0), vec2(16.0, 16.0));
-                    let tw = ui.fonts_mut(|f| f.layout_no_wrap(row.name.clone(), font.clone(), Color32::BLACK).size().x);
-                    let label = Rect::from_min_max(pos2(icon.right() + 2.0, r.top()), pos2(icon.right() + tw + 8.0, r.bottom()));
+                    let icon =
+                        Rect::from_min_size(pos2(x0 + 15.0, r.center().y - 8.0), vec2(16.0, 16.0));
+                    let tw = ui.fonts_mut(|f| {
+                        f.layout_no_wrap(row.name.clone(), font.clone(), Color32::BLACK)
+                            .size()
+                            .x
+                    });
+                    let label = Rect::from_min_max(
+                        pos2(icon.right() + 2.0, r.top()),
+                        pos2(icon.right() + tw + 8.0, r.bottom()),
+                    );
                     let selected = selection.contains(&row.id);
-                    let item = Rect::from_min_max(pos2(icon.left() - 1.0, r.top()), pos2(label.right(), r.bottom()));
+                    let item = Rect::from_min_max(
+                        pos2(icon.left() - 1.0, r.top()),
+                        pos2(label.right(), r.bottom()),
+                    );
                     if selected {
                         theme::selected_row(ui.painter(), item);
                     } else if resp.hovered() {
@@ -155,16 +179,28 @@ impl Explorer {
                         let c = arrow.center();
                         let hover = ui.rect_contains_pointer(arrow);
                         if row.expanded {
-                            let color = if hover { theme::ACCENT } else { Color32::from_rgb(38, 38, 38) };
+                            let color = if hover {
+                                theme::ACCENT
+                            } else {
+                                Color32::from_rgb(38, 38, 38)
+                            };
                             ui.painter().add(egui::Shape::convex_polygon(
                                 vec![c + vec2(2.5, -2.5), c + vec2(2.5, 2.5), c + vec2(-2.5, 2.5)],
                                 color,
                                 Stroke::NONE,
                             ));
                         } else {
-                            let color = if hover { theme::ACCENT } else { Color32::from_rgb(166, 166, 166) };
+                            let color = if hover {
+                                theme::ACCENT
+                            } else {
+                                Color32::from_rgb(166, 166, 166)
+                            };
                             ui.painter().add(egui::Shape::convex_polygon(
-                                vec![c + vec2(-2.0, -4.0), c + vec2(2.5, 0.0), c + vec2(-2.0, 4.0)],
+                                vec![
+                                    c + vec2(-2.0, -4.0),
+                                    c + vec2(2.5, 0.0),
+                                    c + vec2(-2.0, 4.0),
+                                ],
                                 Color32::TRANSPARENT,
                                 Stroke::new(1.0, color),
                             ));
@@ -177,8 +213,14 @@ impl Explorer {
                     if editing {
                         let mut done = false;
                         if let Some((_, buf)) = &mut self.renaming {
-                            let edit_rect = Rect::from_min_size(label.min, vec2(label.width().max(140.0), ROW));
-                            let te = ui.put(edit_rect, egui::TextEdit::singleline(buf).font(font.clone()).margin(vec2(2.0, 1.0)));
+                            let edit_rect =
+                                Rect::from_min_size(label.min, vec2(label.width().max(140.0), ROW));
+                            let te = ui.put(
+                                edit_rect,
+                                egui::TextEdit::singleline(buf)
+                                    .font(font.clone())
+                                    .margin(vec2(2.0, 1.0)),
+                            );
                             te.request_focus();
                             if te.lost_focus() {
                                 done = true;
@@ -191,8 +233,18 @@ impl Explorer {
                             }
                         }
                     } else {
-                        let color = if selected { Color32::WHITE } else { Color32::BLACK };
-                        ui.painter().text(pos2(label.left() + 2.0, r.center().y), Align2::LEFT_CENTER, &row.name, font.clone(), color);
+                        let color = if selected {
+                            Color32::WHITE
+                        } else {
+                            Color32::BLACK
+                        };
+                        ui.painter().text(
+                            pos2(label.left() + 2.0, r.center().y),
+                            Align2::LEFT_CENTER,
+                            &row.name,
+                            font.clone(),
+                            color,
+                        );
                     }
                     let resp = resp.on_hover_text(&row.class);
                     if resp.clicked() {
@@ -244,7 +296,10 @@ impl Explorer {
             self.last_selection = s.clone();
             doc.select(s);
         }
-        if f2 && !ui.ctx().egui_wants_keyboard_input() && let Some(&id) = doc.selection().last() {
+        if f2
+            && !ui.ctx().egui_wants_keyboard_input()
+            && let Some(&id) = doc.selection().last()
+        {
             let name = doc.runtime.engine.lock().dm.name_of(id).to_string();
             self.renaming = Some((id, name));
         }

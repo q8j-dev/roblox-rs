@@ -402,7 +402,9 @@ fn collect_parts(
         let Some(class) = dm.class_of(id) else {
             continue;
         };
-        let is_part = *part_classes.entry(class).or_insert_with(|| dm.is_a(id, "BasePart") && class != "Terrain");
+        let is_part = *part_classes
+            .entry(class)
+            .or_insert_with(|| dm.is_a(id, "BasePart") && class != "Terrain");
         if !is_part {
             continue;
         }
@@ -412,7 +414,12 @@ fn collect_parts(
             Some(c) if c != root && c != dm.root() => dm.revision(c),
             _ => 0,
         };
-        let key: PartKey = (dm.revision(id), container_rev(parent), container_rev(grandparent), outlines);
+        let key: PartKey = (
+            dm.revision(id),
+            container_rev(parent),
+            container_rev(grandparent),
+            outlines,
+        );
         if let Some(c) = cache.entries.get_mut(&id)
             && c.key == key
         {
@@ -430,7 +437,15 @@ fn collect_parts(
         let transparency = get_f32(dm, id, "Transparency", 0.0).clamp(0.0, 1.0);
         let cframe = dm.get_raw(id, "CFrame").and_then(|v| v.as_cframe());
         let Some(cframe) = cframe.filter(|_| transparency < 1.0) else {
-            cache.entries.insert(id, CachedPart { key, frame, draw: None, composite: None });
+            cache.entries.insert(
+                id,
+                CachedPart {
+                    key,
+                    frame,
+                    draw: None,
+                    composite: None,
+                },
+            );
             continue;
         };
         let mut part_composite = None;
@@ -485,7 +500,8 @@ fn collect_parts(
         let mut decals = Vec::new();
         collect_decals(dm, id, &mut decals);
         let parent_humanoid = parent.is_some_and(&mut has_humanoid);
-        let humanoid_part = parent.is_some_and(|p| dm.class_of(p) != Some("Workspace")) && parent_humanoid;
+        let humanoid_part =
+            parent.is_some_and(|p| dm.class_of(p) != Some("Workspace")) && parent_humanoid;
         let (voxel, voxel_transparency) = if humanoid_part {
             (None, transparency)
         } else {
@@ -501,7 +517,9 @@ fn collect_parts(
             .iter()
             .any(|c| dm.is_a(*c, "DataModelMesh"));
         let caster = parent_humanoid
-            || parent.is_some_and(|p| dm.is_a(p, "Accoutrement") && dm.parent_of(p).is_some_and(&mut has_humanoid));
+            || parent.is_some_and(|p| {
+                dm.is_a(p, "Accoutrement") && dm.parent_of(p).is_some_and(&mut has_humanoid)
+            });
         if let Some(model) = dm.parent_of(id) {
             let entry = characters.entry(model).or_insert_with(|| {
                 crate::character::identify(dm, model).map(|ch| {
@@ -544,8 +562,7 @@ fn collect_parts(
             }
         }
         let seed = appearance_seed(id);
-        let randomize =
-            outlines && surfaces.iter().any(|s| *s != Surface::SmoothNoOutlines);
+        let randomize = outlines && surfaces.iter().any(|s| *s != Surface::SmoothNoOutlines);
         if randomize && shape != Shape::File {
             c = randomize_color(c, seed);
         }
@@ -571,7 +588,15 @@ fn collect_parts(
             randomize,
         };
         out.push(draw.clone());
-        cache.entries.insert(id, CachedPart { key, frame, draw: Some(draw), composite: part_composite });
+        cache.entries.insert(
+            id,
+            CachedPart {
+                key,
+                frame,
+                draw: Some(draw),
+                composite: part_composite,
+            },
+        );
     }
     if frame % 120 == 0 {
         cache.entries.retain(|_, c| frame - c.frame < 120);

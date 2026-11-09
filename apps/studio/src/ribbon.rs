@@ -138,11 +138,17 @@ impl Ribbon {
     }
 
     pub fn height(&self) -> f32 {
-        if self.minimized { QAT_ROW + TAB_ROW } else { QAT_ROW + TAB_ROW + BODY }
+        if self.minimized {
+            QAT_ROW + TAB_ROW
+        } else {
+            QAT_ROW + TAB_ROW + BODY
+        }
     }
 
     fn section(&self, tag: &str) -> Option<&Value> {
-        children(&self.layout).iter().find(|c| attr(c, "tag") == Some(tag))
+        children(&self.layout)
+            .iter()
+            .find(|c| attr(c, "tag") == Some(tag))
     }
 
     fn pages(&self) -> Vec<&Value> {
@@ -150,7 +156,10 @@ impl Ribbon {
             .map(|r| {
                 children(r)
                     .iter()
-                    .filter(|p| attr(p, "tag") == Some("TabPage") && (self.script_menu || attr(p, "name") != Some("scriptMenu")))
+                    .filter(|p| {
+                        attr(p, "tag") == Some("TabPage")
+                            && (self.script_menu || attr(p, "name") != Some("scriptMenu"))
+                    })
                     .collect()
             })
             .unwrap_or_default()
@@ -173,14 +182,20 @@ impl Ribbon {
     fn tooltip_of(&self, n: &Value) -> Option<String> {
         attr(n, "tooltip")
             .map(str::to_string)
-            .or_else(|| self.actions.get(attr(n, "name")?).and_then(|a| a.tooltip.clone()))
+            .or_else(|| {
+                self.actions
+                    .get(attr(n, "name")?)
+                    .and_then(|a| a.tooltip.clone())
+            })
             .filter(|s| !s.is_empty())
     }
 
     fn icon_of(&self, n: &Value) -> Option<String> {
-        attr(n, "icon")
-            .map(str::to_string)
-            .or_else(|| self.actions.get(attr(n, "name")?).and_then(|a| a.icon.clone()))
+        attr(n, "icon").map(str::to_string).or_else(|| {
+            self.actions
+                .get(attr(n, "name")?)
+                .and_then(|a| a.icon.clone())
+        })
     }
 
     pub fn show(&mut self, ui: &mut Ui, icons: &mut Icons, state: &dyn State) -> Vec<Event> {
@@ -194,36 +209,71 @@ impl Ribbon {
         let qat = Rect::from_min_size(rect.min, vec2(rect.width(), QAT_ROW));
         self.quick_access(ui, icons, state, qat, &mut events);
 
-        let tabs = Rect::from_min_size(pos2(rect.left(), qat.bottom()), vec2(rect.width(), TAB_ROW));
+        let tabs =
+            Rect::from_min_size(pos2(rect.left(), qat.bottom()), vec2(rect.width(), TAB_ROW));
         let body = Rect::from_min_max(pos2(rect.left(), tabs.bottom()), rect.max);
         let active_tab = self.tabs(ui, tabs, &mut events);
 
-        let mr = Rect::from_center_size(pos2(tabs.right() - 14.0, tabs.center().y), vec2(18.0, 18.0));
+        let mr =
+            Rect::from_center_size(pos2(tabs.right() - 14.0, tabs.center().y), vec2(18.0, 18.0));
         let mresp = ui.interact(mr, ui.scope_id().with("ribbon-minimize"), Sense::click());
         if mresp.hovered() {
             ui.painter().rect_filled(mr, 0.0, theme::HIGHLIGHT);
         }
         let c = mr.center();
         let pts = if self.minimized {
-            vec![c + vec2(-4.0, -2.0), c + vec2(4.0, -2.0), c + vec2(0.0, 2.0)]
+            vec![
+                c + vec2(-4.0, -2.0),
+                c + vec2(4.0, -2.0),
+                c + vec2(0.0, 2.0),
+            ]
         } else {
             vec![c + vec2(-4.0, 2.0), c + vec2(4.0, 2.0), c + vec2(0.0, -2.0)]
         };
-        ui.painter().add(egui::Shape::convex_polygon(pts, theme::TEXT, Stroke::NONE));
-        let mresp = mresp.on_hover_text(if self.minimized { "Expand the Ribbon" } else { "Minimize the Ribbon" });
+        ui.painter()
+            .add(egui::Shape::convex_polygon(pts, theme::TEXT, Stroke::NONE));
+        let mresp = mresp.on_hover_text(if self.minimized {
+            "Expand the Ribbon"
+        } else {
+            "Minimize the Ribbon"
+        });
         if mresp.clicked() {
             self.minimized = !self.minimized;
         }
         if self.minimized {
-            painter.line_segment([pos2(rect.left(), rect.bottom() - 0.5), pos2(rect.right(), rect.bottom() - 0.5)], Stroke::new(1.0, theme::RIBBON_SEPARATOR));
+            painter.line_segment(
+                [
+                    pos2(rect.left(), rect.bottom() - 0.5),
+                    pos2(rect.right(), rect.bottom() - 0.5),
+                ],
+                Stroke::new(1.0, theme::RIBBON_SEPARATOR),
+            );
             self.menu_popup(ui, icons, state, &mut events);
             return events;
         }
         painter.rect_filled(body, 0.0, theme::RIBBON_FACE);
         let sep = Stroke::new(1.0, theme::RIBBON_SEPARATOR);
-        painter.line_segment([pos2(body.left(), body.top()), pos2(active_tab.left(), body.top())], sep);
-        painter.line_segment([pos2(active_tab.right(), body.top()), pos2(body.right(), body.top())], sep);
-        painter.line_segment([pos2(body.left(), body.bottom() - 0.5), pos2(body.right(), body.bottom() - 0.5)], sep);
+        painter.line_segment(
+            [
+                pos2(body.left(), body.top()),
+                pos2(active_tab.left(), body.top()),
+            ],
+            sep,
+        );
+        painter.line_segment(
+            [
+                pos2(active_tab.right(), body.top()),
+                pos2(body.right(), body.top()),
+            ],
+            sep,
+        );
+        painter.line_segment(
+            [
+                pos2(body.left(), body.bottom() - 0.5),
+                pos2(body.right(), body.bottom() - 0.5),
+            ],
+            sep,
+        );
 
         let pages = self.pages();
         let page = self.page.min(pages.len().saturating_sub(1));
@@ -252,7 +302,14 @@ impl Ribbon {
         events
     }
 
-    fn quick_access(&mut self, ui: &mut Ui, icons: &mut Icons, state: &dyn State, row: Rect, events: &mut Vec<Event>) {
+    fn quick_access(
+        &mut self,
+        ui: &mut Ui,
+        icons: &mut Icons,
+        state: &dyn State,
+        row: Rect,
+        events: &mut Vec<Event>,
+    ) {
         let Some(qab) = self.section("QuickAccessBar").cloned() else {
             return;
         };
@@ -268,7 +325,13 @@ impl Ribbon {
                 ui.painter().rect_filled(r, 0.0, theme::HIGHLIGHT);
             }
             let enabled = state.enabled(&name);
-            if let Some(tex) = self.icon_of(a).and_then(|i| if enabled { icons.studio(ui.ctx(), &i) } else { icons.studio_disabled(ui.ctx(), &i) }) {
+            if let Some(tex) = self.icon_of(a).and_then(|i| {
+                if enabled {
+                    icons.studio(ui.ctx(), &i)
+                } else {
+                    icons.studio_disabled(ui.ctx(), &i)
+                }
+            }) {
                 ui.painter().image(
                     tex.id(),
                     Rect::from_center_size(r.center(), vec2(16.0, 16.0)),
@@ -291,7 +354,10 @@ impl Ribbon {
             ui.painter().rect_filled(ar, 0.0, theme::HIGHLIGHT);
         }
         let c = ar.center();
-        ui.painter().line_segment([c + vec2(-3.0, -4.0), c + vec2(3.0, -4.0)], Stroke::new(1.0, theme::TEXT));
+        ui.painter().line_segment(
+            [c + vec2(-3.0, -4.0), c + vec2(3.0, -4.0)],
+            Stroke::new(1.0, theme::TEXT),
+        );
         arrow(ui, c + vec2(0.0, 1.0), theme::TEXT);
         let _ = aresp.on_hover_text("Customize Quick Access Bar");
     }
@@ -303,35 +369,66 @@ impl Ribbon {
         ui.painter().rect_filled(
             file,
             0.0,
-            if fr.hovered() { theme::ACCENT_HILIGHT } else { theme::ACCENT },
+            if fr.hovered() {
+                theme::ACCENT_HILIGHT
+            } else {
+                theme::ACCENT
+            },
         );
-        ui.painter().text(file.center(), Align2::CENTER_CENTER, "FILE", font.clone(), Color32::WHITE);
+        ui.painter().text(
+            file.center(),
+            Align2::CENTER_CENTER,
+            "FILE",
+            font.clone(),
+            Color32::WHITE,
+        );
         if fr.clicked() {
             let open = matches!(&self.open_menu, Some((n, _)) if n == "#file");
-            self.open_menu = if open { None } else { Some(("#file".into(), file)) };
+            self.open_menu = if open {
+                None
+            } else {
+                Some(("#file".into(), file))
+            };
         }
         let mut x = file.right() + 2.0;
         let mut active = Rect::NOTHING;
         let names: Vec<String> = self
             .pages()
             .iter()
-            .map(|p| attr(p, "text").or(attr(p, "name")).unwrap_or("").to_uppercase())
+            .map(|p| {
+                attr(p, "text")
+                    .or(attr(p, "name"))
+                    .unwrap_or("")
+                    .to_uppercase()
+            })
             .collect();
         for (i, name) in names.iter().enumerate() {
-            let w = ui.fonts_mut(|f| f.layout_no_wrap(name.clone(), font.clone(), Color32::BLACK).size().x) + 22.0;
+            let w = ui.fonts_mut(|f| {
+                f.layout_no_wrap(name.clone(), font.clone(), Color32::BLACK)
+                    .size()
+                    .x
+            }) + 22.0;
             let r = Rect::from_min_size(pos2(x, row.top() + 1.0), vec2(w, row.height() - 1.0));
             let resp = ui.interact(r, ui.scope_id().with(("ribbon-tab", i)), Sense::click());
             let selected = i == self.page;
             if selected {
-                ui.painter().rect_filled(r.expand2(vec2(0.0, 0.5)), 0.0, theme::RIBBON_FACE);
+                ui.painter()
+                    .rect_filled(r.expand2(vec2(0.0, 0.5)), 0.0, theme::RIBBON_FACE);
                 let s = Stroke::new(1.0, theme::RIBBON_SEPARATOR);
-                ui.painter().line_segment([r.left_bottom(), r.left_top()], s);
+                ui.painter()
+                    .line_segment([r.left_bottom(), r.left_top()], s);
                 ui.painter().line_segment([r.left_top(), r.right_top()], s);
-                ui.painter().line_segment([r.right_top(), r.right_bottom()], s);
+                ui.painter()
+                    .line_segment([r.right_top(), r.right_bottom()], s);
                 active = r;
             }
-            let color = if selected || resp.hovered() { theme::ACCENT } else { theme::TEXT };
-            ui.painter().text(r.center(), Align2::CENTER_CENTER, name, font.clone(), color);
+            let color = if selected || resp.hovered() {
+                theme::ACCENT
+            } else {
+                theme::TEXT
+            };
+            ui.painter()
+                .text(r.center(), Align2::CENTER_CENTER, name, font.clone(), color);
             if resp.clicked() {
                 self.page = i;
                 self.open_menu = None;
@@ -351,13 +448,21 @@ impl Ribbon {
                 Some("ActionGroup") => {
                     let large = attr(c, "style") == Some("textundericon");
                     for a in children(c) {
-                        out.push(if large { Item::Large(a) } else { Item::Small(a) });
+                        out.push(if large {
+                            Item::Large(a)
+                        } else {
+                            Item::Small(a)
+                        });
                     }
                 }
                 Some("addcheckbox") | Some("addcombobox") => out.push(Item::Small(c)),
                 Some(_) => {
                     let large = attr(c, "style") == Some("textundericon");
-                    out.push(if large { Item::Large(c) } else { Item::Small(c) });
+                    out.push(if large {
+                        Item::Large(c)
+                    } else {
+                        Item::Small(c)
+                    });
                 }
                 None => {}
             }
@@ -381,7 +486,12 @@ impl Ribbon {
         let top = body.top() + 3.0;
         let mut x = start + 3.0;
         let mut col: Vec<&Value> = Vec::new();
-        let flush = |this: &mut Ribbon, ui: &mut Ui, icons: &mut Icons, col: &mut Vec<&Value>, x: &mut f32, events: &mut Vec<Event>| {
+        let flush = |this: &mut Ribbon,
+                     ui: &mut Ui,
+                     icons: &mut Icons,
+                     col: &mut Vec<&Value>,
+                     x: &mut f32,
+                     events: &mut Vec<Event>| {
             if col.is_empty() {
                 return;
             }
@@ -390,7 +500,10 @@ impl Ribbon {
                 .map(|n| this.small_width(ui, n))
                 .fold(0.0f32, f32::max);
             for (row, n) in col.iter().enumerate() {
-                let r = Rect::from_min_size(pos2(*x, top + 1.0 + row as f32 * SMALL_H), vec2(width, SMALL_H));
+                let r = Rect::from_min_size(
+                    pos2(*x, top + 1.0 + row as f32 * SMALL_H),
+                    vec2(width, SMALL_H),
+                );
                 this.small(ui, icons, state, n, r, events);
             }
             *x += width + 2.0;
@@ -408,7 +521,11 @@ impl Ribbon {
                 Item::Large(n) => {
                     flush(self, ui, icons, &mut col, &mut x, events);
                     let text = self.text_of(n);
-                    let tw = ui.fonts_mut(|f| f.layout_no_wrap(text.clone(), font.clone(), Color32::BLACK).size().x);
+                    let tw = ui.fonts_mut(|f| {
+                        f.layout_no_wrap(text.clone(), font.clone(), Color32::BLACK)
+                            .size()
+                            .x
+                    });
                     let w = (tw + 10.0).max(42.0);
                     let r = Rect::from_min_size(pos2(x, top), vec2(w, LARGE_H));
                     self.large(ui, icons, state, n, &text, r, events);
@@ -417,15 +534,38 @@ impl Ribbon {
                 Item::Plugin(p) => {
                     flush(self, ui, icons, &mut col, &mut x, events);
                     let has_icon = p.icon.as_ref().is_some_and(|i| i.is_file());
-                    let text = if p.text.is_empty() && !has_icon { p.tooltip.clone() } else { p.text.clone() };
-                    let tw = ui.fonts_mut(|f| f.layout_no_wrap(text.clone(), font.clone(), Color32::BLACK).size().x);
+                    let text = if p.text.is_empty() && !has_icon {
+                        p.tooltip.clone()
+                    } else {
+                        p.text.clone()
+                    };
+                    let tw = ui.fonts_mut(|f| {
+                        f.layout_no_wrap(text.clone(), font.clone(), Color32::BLACK)
+                            .size()
+                            .x
+                    });
                     let w = (tw + 10.0).max(42.0);
                     let r = Rect::from_min_size(pos2(x, top), vec2(w, LARGE_H));
-                    let resp = ui.interact(r, ui.scope_id().with(("plugin-btn", p.id)), Sense::click());
-                    paint_button(ui, r, resp.hovered(), resp.is_pointer_button_down_on(), p.active);
+                    let resp =
+                        ui.interact(r, ui.scope_id().with(("plugin-btn", p.id)), Sense::click());
+                    paint_button(
+                        ui,
+                        r,
+                        resp.hovered(),
+                        resp.is_pointer_button_down_on(),
+                        p.active,
+                    );
                     if let Some(tex) = p.icon.as_ref().and_then(|i| icons.get(ui.ctx(), i)) {
-                        let ir = Rect::from_min_size(pos2(r.center().x - 16.0, r.top() + 4.0), vec2(32.0, 32.0));
-                        ui.painter().image(tex.id(), ir, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
+                        let ir = Rect::from_min_size(
+                            pos2(r.center().x - 16.0, r.top() + 4.0),
+                            vec2(32.0, 32.0),
+                        );
+                        ui.painter().image(
+                            tex.id(),
+                            ir,
+                            Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
+                            Color32::WHITE,
+                        );
                     }
                     ui.painter().text(
                         pos2(r.center().x, r.top() + 40.0),
@@ -434,7 +574,11 @@ impl Ribbon {
                         font.clone(),
                         theme::TEXT,
                     );
-                    let resp = if p.tooltip.is_empty() { resp } else { resp.on_hover_text(&p.tooltip) };
+                    let resp = if p.tooltip.is_empty() {
+                        resp
+                    } else {
+                        resp.on_hover_text(&p.tooltip)
+                    };
                     if resp.clicked() {
                         events.push(Event::Action(format!("#plugin:{}", p.id)));
                     }
@@ -444,10 +588,23 @@ impl Ribbon {
         }
         flush(self, ui, icons, &mut col, &mut x, events);
         let name = attr(g, "name").unwrap_or("");
-        let cw = ui.fonts_mut(|f| f.layout_no_wrap(name.to_string(), font.clone(), Color32::BLACK).size().x);
+        let cw = ui.fonts_mut(|f| {
+            f.layout_no_wrap(name.to_string(), font.clone(), Color32::BLACK)
+                .size()
+                .x
+        });
         let end = x.max(start + cw + 16.0) + 3.0;
-        let caption = Rect::from_min_max(pos2(start, body.bottom() - CAPTION - 1.0), pos2(end, body.bottom() - 1.0));
-        ui.painter().text(caption.center(), Align2::CENTER_CENTER, name, font, theme::DISABLED_TEXT);
+        let caption = Rect::from_min_max(
+            pos2(start, body.bottom() - CAPTION - 1.0),
+            pos2(end, body.bottom() - 1.0),
+        );
+        ui.painter().text(
+            caption.center(),
+            Align2::CENTER_CENTER,
+            name,
+            font,
+            theme::DISABLED_TEXT,
+        );
         ui.painter().line_segment(
             [pos2(end, body.top() + 4.0), pos2(end, body.bottom() - 4.0)],
             Stroke::new(1.0, theme::RIBBON_SEPARATOR),
@@ -462,28 +619,76 @@ impl Ribbon {
             _ => self.text_of(n),
         };
         let tw = ui.fonts_mut(|f| f.layout_no_wrap(text, font, Color32::BLACK).size().x);
-        let arrow = if matches!(attr(n, "tag"), Some("MenuButton" | "MenuPopupButton")) { 12.0 } else { 0.0 };
+        let arrow = if matches!(attr(n, "tag"), Some("MenuButton" | "MenuPopupButton")) {
+            12.0
+        } else {
+            0.0
+        };
         tw + 30.0 + arrow
     }
 
     fn is_menu(n: &Value) -> bool {
-        matches!(attr(n, "tag"), Some("MenuButton" | "MenuPopupButton" | "ColorPicker"))
+        matches!(
+            attr(n, "tag"),
+            Some("MenuButton" | "MenuPopupButton" | "ColorPicker")
+        )
     }
 
     #[allow(clippy::too_many_arguments)]
-    fn large(&mut self, ui: &mut Ui, icons: &mut Icons, state: &dyn State, n: &Value, text: &str, r: Rect, events: &mut Vec<Event>) {
+    fn large(
+        &mut self,
+        ui: &mut Ui,
+        icons: &mut Icons,
+        state: &dyn State,
+        n: &Value,
+        text: &str,
+        r: Rect,
+        events: &mut Vec<Event>,
+    ) {
         let name = attr(n, "name").unwrap_or("").to_string();
-        let resp = ui.interact(r, ui.scope_id().with(("large", &name, r.left() as i32)), Sense::click());
+        let resp = ui.interact(
+            r,
+            ui.scope_id().with(("large", &name, r.left() as i32)),
+            Sense::click(),
+        );
         let enabled = state.enabled(&name);
         let open = matches!(&self.open_menu, Some((m, _)) if *m == name);
-        paint_button(ui, r, resp.hovered() && enabled, resp.is_pointer_button_down_on() || open, state.checked(&name));
-        if let Some(tex) = self.icon_of(n).and_then(|i| if enabled { icons.studio(ui.ctx(), &i) } else { icons.studio_disabled(ui.ctx(), &i) }) {
-            let ir = Rect::from_min_size(pos2(r.center().x - 16.0, r.top() + 4.0), vec2(32.0, 32.0));
-            ui.painter().image(tex.id(), ir, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
+        paint_button(
+            ui,
+            r,
+            resp.hovered() && enabled,
+            resp.is_pointer_button_down_on() || open,
+            state.checked(&name),
+        );
+        if let Some(tex) = self.icon_of(n).and_then(|i| {
+            if enabled {
+                icons.studio(ui.ctx(), &i)
+            } else {
+                icons.studio_disabled(ui.ctx(), &i)
+            }
+        }) {
+            let ir =
+                Rect::from_min_size(pos2(r.center().x - 16.0, r.top() + 4.0), vec2(32.0, 32.0));
+            ui.painter().image(
+                tex.id(),
+                ir,
+                Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
+                Color32::WHITE,
+            );
         }
-        let color = if enabled { theme::TEXT } else { theme::DISABLED_TEXT };
+        let color = if enabled {
+            theme::TEXT
+        } else {
+            theme::DISABLED_TEXT
+        };
         let font = FontId::proportional(theme::FONT_SIZE);
-        ui.painter().text(pos2(r.center().x, r.top() + 39.0), Align2::CENTER_TOP, text, font, color);
+        ui.painter().text(
+            pos2(r.center().x, r.top() + 39.0),
+            Align2::CENTER_TOP,
+            text,
+            font,
+            color,
+        );
         if Ribbon::is_menu(n) {
             arrow(ui, pos2(r.center().x, r.top() + 60.0), color);
         }
@@ -496,21 +701,53 @@ impl Ribbon {
         }
     }
 
-    fn small(&mut self, ui: &mut Ui, icons: &mut Icons, state: &dyn State, n: &Value, r: Rect, events: &mut Vec<Event>) {
+    fn small(
+        &mut self,
+        ui: &mut Ui,
+        icons: &mut Icons,
+        state: &dyn State,
+        n: &Value,
+        r: Rect,
+        events: &mut Vec<Event>,
+    ) {
         let name = attr(n, "name").unwrap_or("").to_string();
         let font = FontId::proportional(theme::FONT_SIZE);
         match attr(n, "tag") {
             Some("addcheckbox") => {
                 let resp = ui.interact(r, ui.scope_id().with(("cb", &name)), Sense::click());
                 let on = state.checked(&name);
-                let b = Rect::from_min_size(pos2(r.left() + 3.0, r.center().y - 6.0), vec2(12.0, 12.0));
+                let b =
+                    Rect::from_min_size(pos2(r.left() + 3.0, r.center().y - 6.0), vec2(12.0, 12.0));
                 ui.painter().rect_filled(b, 0.0, Color32::WHITE);
-                ui.painter().rect_stroke(b, 0.0, Stroke::new(1.0, theme::EDIT_BORDER), egui::StrokeKind::Inside);
+                ui.painter().rect_stroke(
+                    b,
+                    0.0,
+                    Stroke::new(1.0, theme::EDIT_BORDER),
+                    egui::StrokeKind::Inside,
+                );
                 if on {
-                    ui.painter().line_segment([b.left_center() + vec2(2.0, 0.0), b.center_bottom() - vec2(1.0, 3.0)], Stroke::new(1.5, theme::TEXT));
-                    ui.painter().line_segment([b.center_bottom() - vec2(1.0, 3.0), b.right_top() + vec2(-2.0, 3.0)], Stroke::new(1.5, theme::TEXT));
+                    ui.painter().line_segment(
+                        [
+                            b.left_center() + vec2(2.0, 0.0),
+                            b.center_bottom() - vec2(1.0, 3.0),
+                        ],
+                        Stroke::new(1.5, theme::TEXT),
+                    );
+                    ui.painter().line_segment(
+                        [
+                            b.center_bottom() - vec2(1.0, 3.0),
+                            b.right_top() + vec2(-2.0, 3.0),
+                        ],
+                        Stroke::new(1.5, theme::TEXT),
+                    );
                 }
-                ui.painter().text(pos2(b.right() + 5.0, r.center().y), Align2::LEFT_CENTER, self.text_of(n), font, theme::TEXT);
+                ui.painter().text(
+                    pos2(b.right() + 5.0, r.center().y),
+                    Align2::LEFT_CENTER,
+                    self.text_of(n),
+                    font,
+                    theme::TEXT,
+                );
                 if resp.clicked() {
                     events.push(Event::Check(name, !on));
                 }
@@ -539,17 +776,50 @@ impl Ribbon {
             }
             _ => {}
         }
-        let resp = ui.interact(r, ui.scope_id().with(("small", &name, r.left() as i32, r.top() as i32)), Sense::click());
+        let resp = ui.interact(
+            r,
+            ui.scope_id()
+                .with(("small", &name, r.left() as i32, r.top() as i32)),
+            Sense::click(),
+        );
         let enabled = state.enabled(&name);
         let open = matches!(&self.open_menu, Some((m, _)) if *m == name);
-        paint_button(ui, r, resp.hovered() && enabled, resp.is_pointer_button_down_on() || open, state.checked(&name));
-        let color = if enabled { theme::TEXT } else { theme::DISABLED_TEXT };
-        if let Some(tex) = self.icon_of(n).and_then(|i| if enabled { icons.studio(ui.ctx(), &i) } else { icons.studio_disabled(ui.ctx(), &i) }) {
-            let ir = Rect::from_min_size(pos2(r.left() + 3.0, r.center().y - 8.0), vec2(16.0, 16.0));
-            ui.painter().image(tex.id(), ir, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
+        paint_button(
+            ui,
+            r,
+            resp.hovered() && enabled,
+            resp.is_pointer_button_down_on() || open,
+            state.checked(&name),
+        );
+        let color = if enabled {
+            theme::TEXT
+        } else {
+            theme::DISABLED_TEXT
+        };
+        if let Some(tex) = self.icon_of(n).and_then(|i| {
+            if enabled {
+                icons.studio(ui.ctx(), &i)
+            } else {
+                icons.studio_disabled(ui.ctx(), &i)
+            }
+        }) {
+            let ir =
+                Rect::from_min_size(pos2(r.left() + 3.0, r.center().y - 8.0), vec2(16.0, 16.0));
+            ui.painter().image(
+                tex.id(),
+                ir,
+                Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
+                Color32::WHITE,
+            );
         }
         let label = self.text_of(n);
-        ui.painter().text(pos2(r.left() + 23.0, r.center().y), Align2::LEFT_CENTER, &label, font, color);
+        ui.painter().text(
+            pos2(r.left() + 23.0, r.center().y),
+            Align2::LEFT_CENTER,
+            &label,
+            font,
+            color,
+        );
         if Ribbon::is_menu(n) {
             arrow(ui, pos2(r.right() - 7.0, r.center().y), color);
         }
@@ -575,7 +845,11 @@ impl Ribbon {
 
     fn find_menu(&self, name: &str) -> Option<Value> {
         fn walk(n: &Value, name: &str) -> Option<Value> {
-            if matches!(attr(n, "tag"), Some("MenuButton" | "MenuPopupButton" | "ColorPicker")) && attr(n, "name") == Some(name) {
+            if matches!(
+                attr(n, "tag"),
+                Some("MenuButton" | "MenuPopupButton" | "ColorPicker")
+            ) && attr(n, "name") == Some(name)
+            {
                 return Some(n.clone());
             }
             children(n).iter().find_map(|c| walk(c, name))
@@ -583,7 +857,13 @@ impl Ribbon {
         walk(&self.layout, name)
     }
 
-    fn menu_popup(&mut self, ui: &mut Ui, icons: &mut Icons, state: &dyn State, events: &mut Vec<Event>) {
+    fn menu_popup(
+        &mut self,
+        ui: &mut Ui,
+        icons: &mut Icons,
+        state: &dyn State,
+        events: &mut Vec<Event>,
+    ) {
         let Some((name, anchor)) = self.open_menu.clone() else {
             return;
         };
@@ -640,16 +920,27 @@ impl Ribbon {
         }
     }
 
-    fn menu_items(&mut self, ui: &mut Ui, icons: &mut Icons, state: &dyn State, items: &[Value], events: &mut Vec<Event>) -> bool {
+    fn menu_items(
+        &mut self,
+        ui: &mut Ui,
+        icons: &mut Icons,
+        state: &dyn State,
+        items: &[Value],
+        events: &mut Vec<Event>,
+    ) -> bool {
         let font = FontId::proportional(theme::FONT_SIZE);
         let mut close = false;
         ui.set_min_width(180.0);
         for c in items {
             match attr(c, "tag") {
                 Some("addseparator") => {
-                    let (r, _) = ui.allocate_exact_size(vec2(ui.available_width(), 5.0), Sense::hover());
+                    let (r, _) =
+                        ui.allocate_exact_size(vec2(ui.available_width(), 5.0), Sense::hover());
                     ui.painter().line_segment(
-                        [pos2(r.left() + 26.0, r.center().y), pos2(r.right(), r.center().y)],
+                        [
+                            pos2(r.left() + 26.0, r.center().y),
+                            pos2(r.right(), r.center().y),
+                        ],
                         Stroke::new(1.0, theme::RIBBON_SEPARATOR),
                     );
                 }
@@ -665,22 +956,52 @@ impl Ribbon {
                     let text = if text.is_empty() { name.clone() } else { text };
                     let big = attr(c, "width") == Some("32");
                     let h = if big { 36.0 } else { 22.0 };
-                    let (r, resp) = ui.allocate_exact_size(vec2(ui.available_width().max(180.0), h), Sense::click());
+                    let (r, resp) = ui.allocate_exact_size(
+                        vec2(ui.available_width().max(180.0), h),
+                        Sense::click(),
+                    );
                     let enabled = state.enabled(&name);
                     if resp.hovered() && enabled {
                         ui.painter().rect_filled(r, 0.0, theme::HIGHLIGHT);
-                        ui.painter().rect_stroke(r, 0.0, Stroke::new(1.0, theme::ACCENT_HILIGHT), egui::StrokeKind::Inside);
+                        ui.painter().rect_stroke(
+                            r,
+                            0.0,
+                            Stroke::new(1.0, theme::ACCENT_HILIGHT),
+                            egui::StrokeKind::Inside,
+                        );
                     }
                     if state.checked(&name) {
-                        ui.painter().rect_filled(Rect::from_min_size(r.min, vec2(h, h)).shrink(1.0), 0.0, theme::HIGHLIGHT_DN);
+                        ui.painter().rect_filled(
+                            Rect::from_min_size(r.min, vec2(h, h)).shrink(1.0),
+                            0.0,
+                            theme::HIGHLIGHT_DN,
+                        );
                     }
                     let isz = if big { 32.0 } else { 16.0 };
                     if let Some(tex) = self.icon_of(c).and_then(|i| icons.studio(ui.ctx(), &i)) {
-                        let ir = Rect::from_min_size(pos2(r.left() + (h - isz) / 2.0, r.center().y - isz / 2.0), vec2(isz, isz));
-                        ui.painter().image(tex.id(), ir, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
+                        let ir = Rect::from_min_size(
+                            pos2(r.left() + (h - isz) / 2.0, r.center().y - isz / 2.0),
+                            vec2(isz, isz),
+                        );
+                        ui.painter().image(
+                            tex.id(),
+                            ir,
+                            Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
+                            Color32::WHITE,
+                        );
                     }
-                    let color = if enabled { theme::TEXT } else { theme::DISABLED_TEXT };
-                    ui.painter().text(pos2(r.left() + h + 6.0, r.center().y), Align2::LEFT_CENTER, &text, font.clone(), color);
+                    let color = if enabled {
+                        theme::TEXT
+                    } else {
+                        theme::DISABLED_TEXT
+                    };
+                    ui.painter().text(
+                        pos2(r.left() + h + 6.0, r.center().y),
+                        Align2::LEFT_CENTER,
+                        &text,
+                        font.clone(),
+                        color,
+                    );
                     if resp.clicked() && enabled {
                         events.push(Event::Action(name));
                         close = true;
@@ -703,14 +1024,23 @@ fn paint_button(ui: &Ui, r: Rect, hovered: bool, pressed: bool, checked: bool) {
     if let Some(c) = color {
         ui.painter().rect_filled(r, 0.0, c);
         if checked {
-            ui.painter().rect_stroke(r, 2.0, Stroke::new(1.0, theme::CHECKED_BORDER), egui::StrokeKind::Inside);
+            ui.painter().rect_stroke(
+                r,
+                2.0,
+                Stroke::new(1.0, theme::CHECKED_BORDER),
+                egui::StrokeKind::Inside,
+            );
         }
     }
 }
 
 fn arrow(ui: &Ui, c: Pos2, color: Color32) {
     ui.painter().add(egui::Shape::convex_polygon(
-        vec![c + vec2(-3.0, -1.5), c + vec2(3.0, -1.5), c + vec2(0.0, 1.5)],
+        vec![
+            c + vec2(-3.0, -1.5),
+            c + vec2(3.0, -1.5),
+            c + vec2(0.0, 1.5),
+        ],
         color,
         Stroke::NONE,
     ));
@@ -726,10 +1056,19 @@ fn color_grid(ui: &mut Ui, events: &mut Vec<Event>) -> bool {
             for c in row {
                 let (r, resp) = ui.allocate_exact_size(vec2(20.0, 20.0), Sense::click());
                 let col = c.color3();
-                let fill = Color32::from_rgb((col.r * 255.0) as u8, (col.g * 255.0) as u8, (col.b * 255.0) as u8);
+                let fill = Color32::from_rgb(
+                    (col.r * 255.0) as u8,
+                    (col.g * 255.0) as u8,
+                    (col.b * 255.0) as u8,
+                );
                 ui.painter().rect_filled(r, 0.0, fill);
-                let stroke = if resp.hovered() { Stroke::new(2.0, theme::ACCENT) } else { Stroke::new(1.0, theme::EDIT_BORDER) };
-                ui.painter().rect_stroke(r, 0.0, stroke, egui::StrokeKind::Inside);
+                let stroke = if resp.hovered() {
+                    Stroke::new(2.0, theme::ACCENT)
+                } else {
+                    Stroke::new(1.0, theme::EDIT_BORDER)
+                };
+                ui.painter()
+                    .rect_stroke(r, 0.0, stroke, egui::StrokeKind::Inside);
                 let resp = resp.on_hover_text(c.name());
                 if resp.clicked() {
                     events.push(Event::Color(c.number()));

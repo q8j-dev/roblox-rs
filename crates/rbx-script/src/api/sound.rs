@@ -299,8 +299,7 @@ fn is_paused(e: &Engine, id: InstanceId) -> bool {
 
 fn looped_voice_playing(e: &Engine, id: InstanceId) -> bool {
     e.dm.get_bool(id, "Looped")
-        && e
-            .audio_state
+        && e.audio_state
             .sounds
             .get(&id)
             .and_then(|s| s.voice)

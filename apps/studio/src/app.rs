@@ -1,22 +1,22 @@
 use crate::explorer::{self, Explorer};
 use crate::extras::Extras;
-use crate::views::Views;
-use crate::scripteditor::EditorState;
-use std::collections::HashMap;
 use crate::icons::Icons;
 use crate::metadata::ClassMetadata;
 use crate::play::{self, Mode, PlaySession};
 use crate::plugins::Plugins;
 use crate::properties::Properties;
 use crate::ribbon::{self, Event, PluginItem, Ribbon};
+use crate::scripteditor::EditorState;
 use crate::theme;
 use crate::viewport::{self, FlyCamera, Tool, Tools};
+use crate::views::Views;
 use egui::{Align2, Color32, FontId, Rect, Sense, Stroke, Ui, pos2, vec2};
 use egui_stack::{DockArea, DockState, NodeIndex, TabStyle, TabViewer};
 use rbx_dom::{InstanceId, Variant};
 use rbx_script::api::user_input::{self, InputEvent, InputKind};
 use rbx_script::{Identity, MessageType};
 use rbx_studio_ui::Document;
+use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -100,25 +100,66 @@ fn dock_title(ui: &mut Ui, title: &str) -> bool {
     ui.allocate_rect(bar, Sense::hover());
     let p = ui.painter();
     p.rect_filled(bar, 0.0, theme::DOCK_TITLE);
-    p.text(bar.center(), Align2::CENTER_CENTER, title, FontId::proportional(theme::FONT_SIZE), Color32::BLACK);
-    let close = Rect::from_center_size(egui::pos2(bar.right() - 10.0, bar.center().y), vec2(14.0, 14.0));
-    let float = Rect::from_center_size(egui::pos2(bar.right() - 26.0, bar.center().y), vec2(14.0, 14.0));
-    let cr = ui.interact(close, ui.scope_id().with(("dock-close", title)), Sense::click());
-    let fr = ui.interact(float, ui.scope_id().with(("dock-float", title)), Sense::click());
+    p.text(
+        bar.center(),
+        Align2::CENTER_CENTER,
+        title,
+        FontId::proportional(theme::FONT_SIZE),
+        Color32::BLACK,
+    );
+    let close = Rect::from_center_size(
+        egui::pos2(bar.right() - 10.0, bar.center().y),
+        vec2(14.0, 14.0),
+    );
+    let float = Rect::from_center_size(
+        egui::pos2(bar.right() - 26.0, bar.center().y),
+        vec2(14.0, 14.0),
+    );
+    let cr = ui.interact(
+        close,
+        ui.scope_id().with(("dock-close", title)),
+        Sense::click(),
+    );
+    let fr = ui.interact(
+        float,
+        ui.scope_id().with(("dock-float", title)),
+        Sense::click(),
+    );
     for (r, hovered) in [(close, cr.hovered()), (float, fr.hovered())] {
         if hovered {
             ui.painter().rect_filled(r, 0.0, theme::HIGHLIGHT);
-            ui.painter().rect_stroke(r, 0.0, Stroke::new(1.0, theme::ACCENT_HILIGHT), egui::StrokeKind::Inside);
+            ui.painter().rect_stroke(
+                r,
+                0.0,
+                Stroke::new(1.0, theme::ACCENT_HILIGHT),
+                egui::StrokeKind::Inside,
+            );
         }
     }
     let ink = Stroke::new(1.0, Color32::from_gray(40));
     let c = close.shrink(4.0);
-    ui.painter().line_segment([c.left_top(), c.right_bottom()], ink);
-    ui.painter().line_segment([c.right_top(), c.left_bottom()], ink);
+    ui.painter()
+        .line_segment([c.left_top(), c.right_bottom()], ink);
+    ui.painter()
+        .line_segment([c.right_top(), c.left_bottom()], ink);
     let f = float.shrink(4.0);
-    ui.painter().rect_stroke(Rect::from_min_max(f.min + vec2(2.0, 0.0), f.max - vec2(0.0, 2.0)), 0.0, ink, egui::StrokeKind::Inside);
-    ui.painter().rect_filled(Rect::from_min_max(f.min + vec2(0.0, 2.0), f.max - vec2(2.0, 0.0)), 0.0, theme::DOCK_TITLE);
-    ui.painter().rect_stroke(Rect::from_min_max(f.min + vec2(0.0, 2.0), f.max - vec2(2.0, 0.0)), 0.0, ink, egui::StrokeKind::Inside);
+    ui.painter().rect_stroke(
+        Rect::from_min_max(f.min + vec2(2.0, 0.0), f.max - vec2(0.0, 2.0)),
+        0.0,
+        ink,
+        egui::StrokeKind::Inside,
+    );
+    ui.painter().rect_filled(
+        Rect::from_min_max(f.min + vec2(0.0, 2.0), f.max - vec2(2.0, 0.0)),
+        0.0,
+        theme::DOCK_TITLE,
+    );
+    ui.painter().rect_stroke(
+        Rect::from_min_max(f.min + vec2(0.0, 2.0), f.max - vec2(2.0, 0.0)),
+        0.0,
+        ink,
+        egui::StrokeKind::Inside,
+    );
     cr.clicked()
 }
 
@@ -177,22 +218,56 @@ impl ribbon::State for RibbonState<'_> {
         let selected = !self.studio.doc.selection().is_empty();
         let playing = self.studio.play.is_some();
         match action {
-            "simulationPlayAction" | "simulationRunAction" | "playGameActionGroup" | "fileSaveAction"
-            | "fileSaveAsAction" | "fileOpenAction" | "fileNewAction" | "undoAction" | "redoAction" => !playing,
+            "simulationPlayAction"
+            | "simulationRunAction"
+            | "playGameActionGroup"
+            | "fileSaveAction"
+            | "fileSaveAsAction"
+            | "fileOpenAction"
+            | "fileNewAction"
+            | "undoAction"
+            | "redoAction" => !playing,
             "simulationResetAction" | "simulationStopAction" => playing,
-            "copyAction" | "cutAction" | "duplicateSelectionAction" | "groupSelectionAction"
-            | "ungroupSelectionAction" | "anchorAction" | "actionMaterialSelector"
-            | "actionColorSelector" | "actionSurface" => selected,
-            "unionSelectionAction" | "negateSelectionAction" | "separateSelectionAction"
-            | "publishToRobloxAction" | "publishToRobloxAsAction" | "publishSelectionToRobloxAction"
+            "copyAction"
+            | "cutAction"
+            | "duplicateSelectionAction"
+            | "groupSelectionAction"
+            | "ungroupSelectionAction"
+            | "anchorAction"
+            | "actionMaterialSelector"
+            | "actionColorSelector"
+            | "actionSurface" => selected,
+            "unionSelectionAction"
+            | "negateSelectionAction"
+            | "separateSelectionAction"
+            | "publishToRobloxAction"
+            | "publishToRobloxAsAction"
+            | "publishSelectionToRobloxAction"
             | "pairRbxDevDeviceAction"
-            | "toggleVideoRecordAction" | "filePublishedProjectsAction" | "downloadPlaceCopyAction"
-            | "publishGameAction" | "viewTeamCreateAction" | "breakpointsDockWidgetAction"
-            | "callStackDockWidgetAction" | "watchDockWidgetAction" | "actionStartPage" | "gameExplorerAction"
-            | "viewContextualHelpAction" | "viewTutorialsAction" | "emulateDeviceAction"
-            | "manageEmulationDeviceAction" | "onlineHelpAction" | "fastLogDumpAction" | "fileOpenRecentSavesAction" | "stepIntoAction"
-            | "stepOverAction" | "stepOutAction" | "addWatchAction" | "neverBreakOnScriptErrorsAction"
-            | "breakOnAllScriptErrorsAction" | "breakOnUnhandledScriptErrorsAction" => false,
+            | "toggleVideoRecordAction"
+            | "filePublishedProjectsAction"
+            | "downloadPlaceCopyAction"
+            | "publishGameAction"
+            | "viewTeamCreateAction"
+            | "breakpointsDockWidgetAction"
+            | "callStackDockWidgetAction"
+            | "watchDockWidgetAction"
+            | "actionStartPage"
+            | "gameExplorerAction"
+            | "viewContextualHelpAction"
+            | "viewTutorialsAction"
+            | "emulateDeviceAction"
+            | "manageEmulationDeviceAction"
+            | "onlineHelpAction"
+            | "fastLogDumpAction"
+            | "fileOpenRecentSavesAction"
+            | "stepIntoAction"
+            | "stepOverAction"
+            | "stepOutAction"
+            | "addWatchAction"
+            | "neverBreakOnScriptErrorsAction"
+            | "breakOnAllScriptErrorsAction"
+            | "breakOnUnhandledScriptErrorsAction" => false,
             _ => true,
         }
     }
@@ -236,7 +311,9 @@ impl Studio {
             ctx: None,
             assets,
         };
-        studio.ribbon.set_combo("playersMode", studio.extras.players);
+        studio
+            .ribbon
+            .set_combo("playersMode", studio.extras.players);
         studio.load_plugins();
         studio
     }
@@ -266,7 +343,13 @@ impl Studio {
         }
     }
 
-    fn send_input(&self, kind: InputKind, input_type: u32, position: egui::Pos2, delta: egui::Vec2) {
+    fn send_input(
+        &self,
+        kind: InputKind,
+        input_type: u32,
+        position: egui::Pos2,
+        delta: egui::Vec2,
+    ) {
         let local = position - self.view.rect.min;
         self.doc.runtime.input(InputEvent {
             kind,
@@ -284,8 +367,7 @@ impl Studio {
 
     pub fn place_name(&self) -> String {
         let doc = self.play.as_ref().map(|p| &p.edit).unwrap_or(&self.doc);
-        doc
-            .path
+        doc.path
             .as_ref()
             .and_then(|p| p.file_name())
             .map(|n| n.to_string_lossy().to_string())
@@ -329,7 +411,11 @@ impl Studio {
 
     fn save_dialog(&mut self) {
         let name = self.place_name();
-        let name = if name.contains('.') { name } else { format!("{name}.rbxl") };
+        let name = if name.contains('.') {
+            name
+        } else {
+            format!("{name}.rbxl")
+        };
         if let Some(p) = rfd::FileDialog::new()
             .add_filter("Roblox Place Files", &["rbxl"])
             .add_filter("Roblox XML Place Files", &["rbxlx"])
@@ -357,11 +443,14 @@ impl Studio {
     }
 
     pub fn stop_play(&mut self) {
-        let Some(mut session) = self.play.take() else { return };
+        let Some(mut session) = self.play.take() else {
+            return;
+        };
         session.release_keys(&self.doc);
         self.doc = session.edit;
         self.explorer = Explorer::default();
-        self.scripts.retain(|(id, _)| self.doc.runtime.engine.lock().dm.contains(*id));
+        self.scripts
+            .retain(|(id, _)| self.doc.runtime.engine.lock().dm.contains(*id));
     }
 
     pub fn playing_game(&self) -> bool {
@@ -385,7 +474,11 @@ impl Studio {
                 if let Some(s) = shape {
                     let _ = e.dm.set(id, "Shape", Variant::Enum(s));
                 }
-                let _ = e.dm.set(id, "CFrame", Variant::CFrame(rbx_math::CFrame::from_translation(at)));
+                let _ = e.dm.set(
+                    id,
+                    "CFrame",
+                    Variant::CFrame(rbx_math::CFrame::from_translation(at)),
+                );
                 drop(e);
                 self.doc.select(vec![id]);
             }
@@ -421,7 +514,11 @@ impl Studio {
             if e.dm.is_a(id, "BasePart") {
                 out.push(id);
             }
-            out.extend(e.dm.descendants(id).into_iter().filter(|d| e.dm.is_a(*d, "BasePart")));
+            out.extend(
+                e.dm.descendants(id)
+                    .into_iter()
+                    .filter(|d| e.dm.is_a(*d, "BasePart")),
+            );
         }
         out
     }
@@ -445,8 +542,12 @@ impl Studio {
         }
         self.doc.checkpoint();
         let mut e = self.doc.runtime.engine.lock();
-        let parent = e.dm.parent_of(sel[0]).or_else(|| e.dm.find_service("Workspace"));
-        let Ok(model) = e.dm.create("Model") else { return };
+        let parent =
+            e.dm.parent_of(sel[0])
+                .or_else(|| e.dm.find_service("Workspace"));
+        let Ok(model) = e.dm.create("Model") else {
+            return;
+        };
         let _ = e.dm.set_parent(model, parent);
         for id in &sel {
             let _ = e.dm.set_parent(*id, Some(model));
@@ -492,7 +593,14 @@ impl Studio {
         self.doc.checkpoint();
         let mut e = self.doc.runtime.engine.lock();
         for p in parts {
-            for s in ["TopSurface", "BottomSurface", "FrontSurface", "BackSurface", "LeftSurface", "RightSurface"] {
+            for s in [
+                "TopSurface",
+                "BottomSurface",
+                "FrontSurface",
+                "BackSurface",
+                "LeftSurface",
+                "RightSurface",
+            ] {
                 let _ = e.dm.set(p, s, Variant::Enum(value));
             }
         }
@@ -506,7 +614,15 @@ impl Studio {
             let neighbours: &[Tab] = if side {
                 &[Tab::Properties, Tab::Explorer, Tab::AdvancedObjects]
             } else {
-                &[Tab::Output, Tab::ScriptAnalysis, Tab::FindResults, Tab::Diagnostics, Tab::TaskScheduler, Tab::ScriptPerformance, Tab::Command]
+                &[
+                    Tab::Output,
+                    Tab::ScriptAnalysis,
+                    Tab::FindResults,
+                    Tab::Diagnostics,
+                    Tab::TaskScheduler,
+                    Tab::ScriptPerformance,
+                    Tab::Command,
+                ]
             };
             if let Some(path) = neighbours.iter().find_map(|t| self.dock.find_tab(t)) {
                 self.dock.set_focused_node_and_surface(path.node_path());
@@ -530,7 +646,10 @@ impl Studio {
                     self.extras.paint_material = None;
                     self.tool = Tool::Paint;
                 } else {
-                    self.set_on_parts("BrickColor", Variant::BrickColor(rbx_math::BrickColor::new(n as i64)));
+                    self.set_on_parts(
+                        "BrickColor",
+                        Variant::BrickColor(rbx_math::BrickColor::new(n as i64)),
+                    );
                 }
             }
             Event::Check(name, on) => {
@@ -560,7 +679,10 @@ impl Studio {
         {
             return;
         }
-        if let Some(id) = name.strip_prefix("#plugin:").and_then(|s| s.parse::<u64>().ok()) {
+        if let Some(id) = name
+            .strip_prefix("#plugin:")
+            .and_then(|s| s.parse::<u64>().ok())
+        {
             if let Some(b) = InstanceId::from_raw(id) {
                 self.plugins.click(&self.doc, b);
             }
@@ -570,7 +692,11 @@ impl Studio {
             let tab = if target == "viewport" {
                 Some(Tab::Viewport)
             } else {
-                target.parse::<u64>().ok().and_then(InstanceId::from_raw).map(Tab::Script)
+                target
+                    .parse::<u64>()
+                    .ok()
+                    .and_then(InstanceId::from_raw)
+                    .map(Tab::Script)
             };
             if let Some(path) = tab.and_then(|t| self.dock.find_tab(&t)) {
                 let _ = self.dock.set_active_tab(path);
@@ -639,7 +765,9 @@ impl Studio {
                 let sel = self.doc.selection();
                 let kids: Vec<InstanceId> = {
                     let e = self.doc.runtime.engine.lock();
-                    sel.iter().flat_map(|s| e.dm.children_of(*s).to_vec()).collect()
+                    sel.iter()
+                        .flat_map(|s| e.dm.children_of(*s).to_vec())
+                        .collect()
                 };
                 self.doc.select(kids);
             }
@@ -671,12 +799,23 @@ impl Studio {
             "hingeAction" => self.surface(6),
             "motorRightAction" => self.surface(7),
             "smoothNoOutlinesAction" => self.surface(10),
-            "lockAction" => self.tool = if self.tool == Tool::Lock { Tool::Select } else { Tool::Lock },
+            "lockAction" => {
+                self.tool = if self.tool == Tool::Lock {
+                    Tool::Select
+                } else {
+                    Tool::Lock
+                }
+            }
             "unlockAllAction" => {
                 let parts = {
                     let e = self.doc.runtime.engine.lock();
                     e.dm.find_service("Workspace")
-                        .map(|ws| e.dm.descendants(ws).into_iter().filter(|d| e.dm.is_a(*d, "BasePart")).collect::<Vec<_>>())
+                        .map(|ws| {
+                            e.dm.descendants(ws)
+                                .into_iter()
+                                .filter(|d| e.dm.is_a(*d, "BasePart"))
+                                .collect::<Vec<_>>()
+                        })
                         .unwrap_or_default()
                 };
                 self.doc.checkpoint();
@@ -709,23 +848,37 @@ impl Studio {
                     if let Some(vp) = self.dock.find_tab(&Tab::Viewport) {
                         self.dock.set_focused_node_and_surface(vp.node_path());
                     }
-                    self.dock.main_surface_mut().push_to_focused_leaf(Tab::ObjectBrowser);
+                    self.dock
+                        .main_surface_mut()
+                        .push_to_focused_leaf(Tab::ObjectBrowser);
                 }
             }
-            "actionInsertAdvancedObject" | "viewToolboxAction" => self.toggle_tab(Tab::AdvancedObjects),
+            "actionInsertAdvancedObject" | "viewToolboxAction" => {
+                self.toggle_tab(Tab::AdvancedObjects)
+            }
             "insertServiceAction" => {
                 let mut e = self.doc.runtime.engine.lock();
-                for s in ["ReplicatedStorage", "ServerScriptService", "ServerStorage", "Teams"] {
+                for s in [
+                    "ReplicatedStorage",
+                    "ServerScriptService",
+                    "ServerStorage",
+                    "Teams",
+                ] {
                     let _ = e.dm.get_service(s);
                 }
             }
             "openPluginsFolderAction" | "managePluginsAction" => {
                 let dir = self.assets.join("plugins").join("studio");
-                self.log(MessageType::Info, format!("plugins load from {}", dir.display()));
+                self.log(
+                    MessageType::Info,
+                    format!("plugins load from {}", dir.display()),
+                );
             }
-            "unionSelectionAction" | "negateSelectionAction" | "separateSelectionAction" => {
-                self.log(MessageType::Warning, "solid modeling is not available in this build")
-            }
+            "unionSelectionAction" | "negateSelectionAction" | "separateSelectionAction" => self
+                .log(
+                    MessageType::Warning,
+                    "solid modeling is not available in this build",
+                ),
             other => {
                 if let Some(b) = self.plugins.find(other) {
                     self.plugins.click(&self.doc, b);
@@ -741,7 +894,11 @@ impl Studio {
         }
         self.doc.checkpoint();
         self.log(MessageType::Output, format!("> {source}"));
-        if let Err(e) = self.doc.runtime.execute(&source, "CommandBar", Identity::CmdLine) {
+        if let Err(e) = self
+            .doc
+            .runtime
+            .execute(&source, "CommandBar", Identity::CmdLine)
+        {
             self.log(MessageType::Error, e.to_string());
         }
         self.doc.runtime.pump();
@@ -772,7 +929,10 @@ impl Studio {
                 let shift = i.modifiers.shift;
                 [
                     (cmd && !shift && i.key_pressed(egui::Key::F), "findAction"),
-                    (cmd && shift && i.key_pressed(egui::Key::F), "findInScriptsAction"),
+                    (
+                        cmd && shift && i.key_pressed(egui::Key::F),
+                        "findInScriptsAction",
+                    ),
                     (cmd && i.key_pressed(egui::Key::H), "replaceAction"),
                     (cmd && i.key_pressed(egui::Key::G), "goToLineAction"),
                     (!shift && i.key_pressed(egui::Key::F3), "findNextAction"),
@@ -804,7 +964,8 @@ impl Studio {
             [
                 cmd && i.key_pressed(egui::Key::S),
                 cmd && !i.modifiers.shift && i.key_pressed(egui::Key::Z),
-                cmd && (i.key_pressed(egui::Key::Y) || (i.modifiers.shift && i.key_pressed(egui::Key::Z))),
+                cmd && (i.key_pressed(egui::Key::Y)
+                    || (i.modifiers.shift && i.key_pressed(egui::Key::Z))),
                 i.key_pressed(egui::Key::Delete),
                 cmd && i.key_pressed(egui::Key::D),
                 cmd && i.key_pressed(egui::Key::C),
@@ -852,7 +1013,11 @@ impl Studio {
         let sel = self.doc.selection();
         if (keys[10] || keys[11]) && !sel.is_empty() {
             self.doc.checkpoint();
-            let axis = if keys[10] { rbx_math::Vec3::Y } else { rbx_math::Vec3::X };
+            let axis = if keys[10] {
+                rbx_math::Vec3::Y
+            } else {
+                rbx_math::Vec3::X
+            };
             self.doc.rotate(&sel, axis, std::f32::consts::FRAC_PI_2);
         }
     }
@@ -874,7 +1039,8 @@ impl Studio {
             }
         }
         self.ribbon.plugin_groups = groups;
-        let opens: Vec<InstanceId> = std::mem::take(&mut self.doc.runtime.engine.lock().plugins.open_requests);
+        let opens: Vec<InstanceId> =
+            std::mem::take(&mut self.doc.runtime.engine.lock().plugins.open_requests);
         for id in opens {
             self.open_script(id);
         }
@@ -891,18 +1057,25 @@ impl Studio {
             let e = self.doc.runtime.engine.lock();
             for (id, _) in &self.scripts {
                 if e.dm.contains(*id) {
-                    out.push((e.dm.name_of(*id).to_string(), format!("#focus:{}", id.raw())));
+                    out.push((
+                        e.dm.name_of(*id).to_string(),
+                        format!("#focus:{}", id.raw()),
+                    ));
                 }
             }
             out
         };
-        self.ribbon.dynamic.insert("switchWindowsMenu".into(), windows);
+        self.ribbon
+            .dynamic
+            .insert("switchWindowsMenu".into(), windows);
         let mut ribbon = std::mem::replace(&mut self.ribbon, Ribbon::empty());
         let mut icons = std::mem::replace(&mut self.icons, Icons::new(Path::new("")));
         let events = egui::Panel::top("ribbon")
             .exact_size(self.ribbon.height())
             .frame(egui::Frame::new())
-            .show(ui, |ui| ribbon.show(ui, &mut icons, &RibbonState { studio: self }))
+            .show(ui, |ui| {
+                ribbon.show(ui, &mut icons, &RibbonState { studio: self })
+            })
             .inner;
         self.ribbon = ribbon;
         self.icons = icons;
@@ -912,7 +1085,12 @@ impl Studio {
         let mut dock = std::mem::replace(&mut self.dock, DockState::new(Vec::new()));
         hide_dock_tab_bars(&mut dock);
         let style = dock_style(ui.style());
-        let mut viewer = Viewer { studio: self, open: None, context: None, close: None };
+        let mut viewer = Viewer {
+            studio: self,
+            open: None,
+            context: None,
+            close: None,
+        };
         egui::CentralPanel::default()
             .frame(egui::Frame::new().fill(theme::WINDOW).inner_margin(2.0))
             .show(ui, |ui| {
@@ -958,7 +1136,9 @@ impl Studio {
         let classes: Vec<Entry> = {
             let mut names: Vec<String> = rbx_reflection::database()
                 .classes()
-                .filter(|c| c.creatable && self.meta.insertable(&c.name) && self.meta.order(&c.name) >= 0)
+                .filter(|c| {
+                    c.creatable && self.meta.insertable(&c.name) && self.meta.order(&c.name) >= 0
+                })
                 .map(|c| c.name.clone())
                 .collect();
             names.sort();
@@ -976,17 +1156,65 @@ impl Studio {
                 .collect()
         };
         let entries = vec![
-            item("cutAction", "Cut", "Ctrl+X", Some("images/Studio 2.0 icons/16x16/cut_clipboard_16_h.png"), selected),
-            item("copyAction", "Copy", "Ctrl+C", Some("images/Studio 2.0 icons/16x16/copy_clipboard_16_h.png"), selected),
+            item(
+                "cutAction",
+                "Cut",
+                "Ctrl+X",
+                Some("images/Studio 2.0 icons/16x16/cut_clipboard_16_h.png"),
+                selected,
+            ),
+            item(
+                "copyAction",
+                "Copy",
+                "Ctrl+C",
+                Some("images/Studio 2.0 icons/16x16/copy_clipboard_16_h.png"),
+                selected,
+            ),
             item("pasteIntoAction", "Paste Into", "Ctrl+Shift+V", None, true),
-            item("duplicateSelectionAction", "Duplicate", "Ctrl+D", Some("images/Studio 2.0 icons/16x16/copy_clipboard_16_h.png"), selected),
-            item("deleteSelectedAction", "Delete", "Del", Some("images/Studio 2.0 icons/16x16/delete_x_16_h.png"), selected),
+            item(
+                "duplicateSelectionAction",
+                "Duplicate",
+                "Ctrl+D",
+                Some("images/Studio 2.0 icons/16x16/copy_clipboard_16_h.png"),
+                selected,
+            ),
+            item(
+                "deleteSelectedAction",
+                "Delete",
+                "Del",
+                Some("images/Studio 2.0 icons/16x16/delete_x_16_h.png"),
+                selected,
+            ),
             item("renameObjectAction", "Rename", "", None, selected),
             Entry::Separator,
-            item("groupSelectionAction", "Group", "Ctrl+G", Some("images/Studio 2.0 icons/16x16/group_16.png"), selected),
-            item("ungroupSelectionAction", "Ungroup", "Ctrl+U", Some("images/Studio 2.0 icons/16x16/ungroup_16.png"), selected),
-            item("selectChildrenAction", "Select Children", "", None, selected),
-            item("zoomExtentsAction", "Zoom to", "F", Some("images/c_zoomExtent_old.png"), selected),
+            item(
+                "groupSelectionAction",
+                "Group",
+                "Ctrl+G",
+                Some("images/Studio 2.0 icons/16x16/group_16.png"),
+                selected,
+            ),
+            item(
+                "ungroupSelectionAction",
+                "Ungroup",
+                "Ctrl+U",
+                Some("images/Studio 2.0 icons/16x16/ungroup_16.png"),
+                selected,
+            ),
+            item(
+                "selectChildrenAction",
+                "Select Children",
+                "",
+                None,
+                selected,
+            ),
+            item(
+                "zoomExtentsAction",
+                "Zoom to",
+                "F",
+                Some("images/c_zoomExtent_old.png"),
+                selected,
+            ),
             Entry::Separator,
             Entry::Item {
                 id: "#insertpart".into(),
@@ -997,19 +1225,64 @@ impl Studio {
                 enabled: true,
                 checked: false,
             },
-            Entry::Sub { text: "Insert Object".into(), items: classes },
-            item("insertIntoFileAction", "Insert from File...", "", None, true),
+            Entry::Sub {
+                text: "Insert Object".into(),
+                items: classes,
+            },
+            item(
+                "insertIntoFileAction",
+                "Insert from File...",
+                "",
+                None,
+                true,
+            ),
             Entry::Separator,
-            item("selectionSaveToFileAction", "Save to File...", "", None, selected),
+            item(
+                "selectionSaveToFileAction",
+                "Save to File...",
+                "",
+                None,
+                selected,
+            ),
             item("saveToRobloxAction", "Save to Roblox...", "", None, false),
-            item("createNewLinkedSourceAction", "Create new LinkedSource...", "", None, false),
-            item("publishAsPluginAction", "Publish as Plugin...", "", None, false),
-            item("exportSelectionAction", "Export Selection...", "", None, selected),
+            item(
+                "createNewLinkedSourceAction",
+                "Create new LinkedSource...",
+                "",
+                None,
+                false,
+            ),
+            item(
+                "publishAsPluginAction",
+                "Publish as Plugin...",
+                "",
+                None,
+                false,
+            ),
+            item(
+                "exportSelectionAction",
+                "Export Selection...",
+                "",
+                None,
+                selected,
+            ),
             Entry::Separator,
-            item("launchHelpForSelectionAction", "Help", "", Some("images/Studio Ribbon Icons/help.png"), false),
+            item(
+                "launchHelpForSelectionAction",
+                "Help",
+                "",
+                Some("images/Studio Ribbon Icons/help.png"),
+                false,
+            ),
         ];
         let mut icons = std::mem::replace(&mut self.icons, Icons::new(Path::new("")));
-        let (chosen, outside) = crate::menus::show(ctx, egui::Id::unique("explorer-context"), at, &entries, &mut icons);
+        let (chosen, outside) = crate::menus::show(
+            ctx,
+            egui::Id::unique("explorer-context"),
+            at,
+            &entries,
+            &mut icons,
+        );
         self.icons = icons;
         if let Some(a) = chosen {
             self.context = None;
@@ -1085,11 +1358,18 @@ impl Studio {
         else {
             return;
         };
-        let tree = self.doc.runtime.engine.lock().dm.save_tree(&sel, rbx_dom::SaveOptions::default());
+        let tree = self
+            .doc
+            .runtime
+            .engine
+            .lock()
+            .dm
+            .save_tree(&sel, rbx_dom::SaveOptions::default());
         let data = if path.extension().is_some_and(|e| e == "rbxmx") {
             Ok(rbx_format::write_xml(&tree).into_bytes())
         } else {
-            rbx_format::write_binary(&tree, rbx_format::BinaryWriteOptions::default()).map_err(|e| e.to_string())
+            rbx_format::write_binary(&tree, rbx_format::BinaryWriteOptions::default())
+                .map_err(|e| e.to_string())
         };
         match data.and_then(|d| std::fs::write(&path, d).map_err(|e| e.to_string())) {
             Ok(()) => self.log(MessageType::Info, format!("saved {}", path.display())),
@@ -1098,7 +1378,11 @@ impl Studio {
     }
 
     pub fn export_selection_obj(&mut self) {
-        let Some(path) = rfd::FileDialog::new().add_filter("Wavefront OBJ", &["obj"]).set_file_name("Selection.obj").save_file() else {
+        let Some(path) = rfd::FileDialog::new()
+            .add_filter("Wavefront OBJ", &["obj"])
+            .set_file_name("Selection.obj")
+            .save_file()
+        else {
             return;
         };
         let parts = self.selected_parts();
@@ -1106,7 +1390,9 @@ impl Studio {
         let mut out = String::from("# exported by Roblox Studio\n");
         let mut base = 1;
         for p in parts {
-            let Some((cf, size)) = viewport::part_box(&e.dm, p) else { continue };
+            let Some((cf, size)) = viewport::part_box(&e.dm, p) else {
+                continue;
+            };
             out.push_str(&format!("o {}\n", e.dm.name_of(p)));
             let h = size * 0.5;
             for i in 0..8 {
@@ -1118,8 +1404,21 @@ impl Studio {
                 let w = cf.point_to_world_space(c);
                 out.push_str(&format!("v {} {} {}\n", w.x, w.y, w.z));
             }
-            for f in [[0, 2, 3, 1], [4, 5, 7, 6], [0, 1, 5, 4], [2, 6, 7, 3], [0, 4, 6, 2], [1, 3, 7, 5]] {
-                out.push_str(&format!("f {} {} {} {}\n", base + f[0], base + f[1], base + f[2], base + f[3]));
+            for f in [
+                [0, 2, 3, 1],
+                [4, 5, 7, 6],
+                [0, 1, 5, 4],
+                [2, 6, 7, 3],
+                [0, 4, 6, 2],
+                [1, 3, 7, 5],
+            ] {
+                out.push_str(&format!(
+                    "f {} {} {} {}\n",
+                    base + f[0],
+                    base + f[1],
+                    base + f[2],
+                    base + f[3]
+                ));
             }
             base += 8;
         }
@@ -1140,7 +1439,12 @@ impl Studio {
         );
         let response = ui.allocate_rect(rect, Sense::click_and_drag());
         if let Some(tex) = self.view.texture {
-            ui.painter().image(tex, rect, Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)), Color32::WHITE);
+            ui.painter().image(
+                tex,
+                rect,
+                Rect::from_min_max(pos2(0.0, 0.0), pos2(1.0, 1.0)),
+                Color32::WHITE,
+            );
         }
         self.viewport_input(ui, &response, rect);
         if self.playing_game() {
@@ -1153,11 +1457,24 @@ impl Studio {
         let fps = 1.0 / ui.input(|i| i.stable_dt).max(1e-4);
         {
             let e = self.doc.runtime.engine.lock();
-            self.overlay = self.tools.overlay(&e.dm, self.tool, &sel, self.view.camera.position);
+            self.overlay = self
+                .tools
+                .overlay(&e.dm, self.tool, &sel, self.view.camera.position);
             if self.extras.show_grid {
-                crate::extras::zero_plane_grid(&mut self.overlay, self.view.camera.position, self.extras.grid_studs);
+                crate::extras::zero_plane_grid(
+                    &mut self.overlay,
+                    self.view.camera.position,
+                    self.extras.grid_studs,
+                );
             }
-            self.tools.draw_2d(&ui.painter_at(rect), rect, &self.view.camera, &e.dm, self.tool, &sel);
+            self.tools.draw_2d(
+                &ui.painter_at(rect),
+                rect,
+                &self.view.camera,
+                &e.dm,
+                self.tool,
+                &sel,
+            );
         }
         if self.extras.axis_widget {
             crate::extras::axis_widget(&ui.painter_at(rect), rect, &self.view.camera);
@@ -1166,21 +1483,37 @@ impl Studio {
     }
 
     fn game_input(&mut self, ui: &mut Ui, response: &egui::Response, rect: Rect) {
-        let Some(session) = self.play.as_mut() else { return };
+        let Some(session) = self.play.as_mut() else {
+            return;
+        };
         let (delta, scroll, events) = ui.input(|i| {
             (
                 i.pointer.delta(),
                 i.smooth_scroll_delta.y,
-                i.events.iter().filter_map(|e| match e {
-                    egui::Event::PointerButton { pos, button, pressed, .. } => Some((*pos, *button, *pressed)),
-                    _ => None,
-                }).collect::<Vec<_>>(),
+                i.events
+                    .iter()
+                    .filter_map(|e| match e {
+                        egui::Event::PointerButton {
+                            pos,
+                            button,
+                            pressed,
+                            ..
+                        } => Some((*pos, *button, *pressed)),
+                        _ => None,
+                    })
+                    .collect::<Vec<_>>(),
             )
         });
         let local = |p: egui::Pos2| (p.x - rect.left(), p.y - rect.top());
         if let Some(pos) = response.hover_pos().or(response.interact_pointer_pos()) {
             if delta != egui::Vec2::ZERO {
-                session.mouse(&self.doc, InputKind::Changed, user_input::MOUSE_MOVEMENT, local(pos), (delta.x, delta.y));
+                session.mouse(
+                    &self.doc,
+                    InputKind::Changed,
+                    user_input::MOUSE_MOVEMENT,
+                    local(pos),
+                    (delta.x, delta.y),
+                );
             }
             if scroll != 0.0 && response.hovered() {
                 session.wheel(&self.doc, local(pos), scroll.signum());
@@ -1196,7 +1529,11 @@ impl Studio {
                 egui::PointerButton::Middle => user_input::MOUSE_BUTTON3,
                 _ => continue,
             };
-            let kind = if pressed { InputKind::Began } else { InputKind::Ended };
+            let kind = if pressed {
+                InputKind::Began
+            } else {
+                InputKind::Ended
+            };
             session.mouse(&self.doc, kind, input_type, local(pos), (0.0, 0.0));
         }
     }
@@ -1257,24 +1594,48 @@ impl Studio {
             )
         });
         if pressed && response.hovered() {
-            self.send_input(InputKind::Began, user_input::MOUSE_BUTTON1, pos, egui::Vec2::ZERO);
+            self.send_input(
+                InputKind::Began,
+                user_input::MOUSE_BUTTON1,
+                pos,
+                egui::Vec2::ZERO,
+            );
         }
         if released && (response.hovered() || response.dragged()) {
-            self.send_input(InputKind::Ended, user_input::MOUSE_BUTTON1, pos, egui::Vec2::ZERO);
+            self.send_input(
+                InputKind::Ended,
+                user_input::MOUSE_BUTTON1,
+                pos,
+                egui::Vec2::ZERO,
+            );
         }
         let (origin, dir) = self.view.camera.ray(rect, pos);
         {
             let sel = self.doc.selection();
             let e = self.doc.runtime.engine.lock();
-            self.tools.update_hover(&e.dm, self.tool, &sel, &self.view.camera, origin, dir);
+            self.tools
+                .update_hover(&e.dm, self.tool, &sel, &self.view.camera, origin, dir);
         }
         if pressed && response.hovered() {
             self.tools.press = Some((origin, dir, self.tools.over_handle));
         }
-        if response.drag_started_by(egui::PointerButton::Primary) && !matches!(self.tool, Tool::Lock | Tool::Paint) {
-            let (o, d, handle) = self.tools.press.take().unwrap_or((origin, dir, self.tools.over_handle));
+        if response.drag_started_by(egui::PointerButton::Primary)
+            && !matches!(self.tool, Tool::Lock | Tool::Paint)
+        {
+            let (o, d, handle) =
+                self.tools
+                    .press
+                    .take()
+                    .unwrap_or((origin, dir, self.tools.over_handle));
             self.tools.over_handle = handle;
-            if self.tools.begin(&mut self.doc, self.tool, self.collisions, &self.view.camera, o, d) {
+            if self.tools.begin(
+                &mut self.doc,
+                self.tool,
+                self.collisions,
+                &self.view.camera,
+                o,
+                d,
+            ) {
                 self.tools.update(&mut self.doc, origin, dir, self.grid);
             }
         } else if response.dragged_by(egui::PointerButton::Primary) {
@@ -1296,7 +1657,11 @@ impl Studio {
                     }
                     _ => {
                         if let Some(c) = self.extras.paint_color {
-                            let _ = e.dm.set(part, "BrickColor", Variant::BrickColor(rbx_math::BrickColor::new(c as i64)));
+                            let _ = e.dm.set(
+                                part,
+                                "BrickColor",
+                                Variant::BrickColor(rbx_math::BrickColor::new(c as i64)),
+                            );
                         }
                         if let Some(m) = self.extras.paint_material {
                             let _ = e.dm.set(part, "Material", Variant::Enum(m));
@@ -1310,9 +1675,11 @@ impl Studio {
             }
             let hit = {
                 let e = self.doc.runtime.engine.lock();
-                viewport::pick(&e.dm, origin, dir, false, &[]).map(|h| viewport::selectable(&e.dm, h.part))
+                viewport::pick(&e.dm, origin, dir, false, &[])
+                    .map(|h| viewport::selectable(&e.dm, h.part))
             };
-            let additive = ui.input(|i| i.modifiers.shift || i.modifiers.command || i.modifiers.ctrl);
+            let additive =
+                ui.input(|i| i.modifiers.shift || i.modifiers.command || i.modifiers.ctrl);
             match hit {
                 Some(id) if additive => {
                     let mut sel = self.doc.selection();
@@ -1349,7 +1716,11 @@ impl Studio {
                         MessageType::Info => Color32::from_rgb(0, 0, 255),
                         MessageType::Output => Color32::BLACK,
                     };
-                    ui.label(egui::RichText::new(format!(" {text}")).font(FontId::proportional(theme::FONT_SIZE)).color(color));
+                    ui.label(
+                        egui::RichText::new(format!(" {text}"))
+                            .font(FontId::proportional(theme::FONT_SIZE))
+                            .color(color),
+                    );
                 }
             });
     }
@@ -1375,32 +1746,55 @@ impl Studio {
         ui.painter().rect_filled(full, 0.0, Color32::WHITE);
         ui.add_sized(
             vec2(full.width(), 22.0),
-            egui::TextEdit::singleline(&mut self.object_filter).hint_text("Search object (Ctrl+I)").margin(vec2(4.0, 3.0)),
+            egui::TextEdit::singleline(&mut self.object_filter)
+                .hint_text("Search object (Ctrl+I)")
+                .margin(vec2(4.0, 3.0)),
         );
         let filter = self.object_filter.to_lowercase();
         let mut classes: Vec<String> = rbx_reflection::database()
             .classes()
-            .filter(|c| c.creatable && self.meta.insertable(&c.name) && self.meta.order(&c.name) >= 0)
+            .filter(|c| {
+                c.creatable && self.meta.insertable(&c.name) && self.meta.order(&c.name) >= 0
+            })
             .map(|c| c.name.clone())
             .filter(|n| filter.is_empty() || n.to_lowercase().contains(&filter))
             .collect();
         classes.sort();
         let mut chosen = None;
-        egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
-            for c in &classes {
-                let (r, resp) = ui.allocate_exact_size(vec2(ui.available_width(), explorer::ROW), Sense::click());
-                if resp.hovered() {
-                    theme::hovered_row(ui.painter(), r);
+        egui::ScrollArea::vertical()
+            .auto_shrink([false, false])
+            .show(ui, |ui| {
+                for c in &classes {
+                    let (r, resp) = ui.allocate_exact_size(
+                        vec2(ui.available_width(), explorer::ROW),
+                        Sense::click(),
+                    );
+                    if resp.hovered() {
+                        theme::hovered_row(ui.painter(), r);
+                    }
+                    if let Some((tex, uv)) = self.icons.class(ui.ctx(), self.meta.image(c)) {
+                        ui.painter().image(
+                            tex,
+                            Rect::from_min_size(
+                                pos2(r.left() + 4.0, r.center().y - 8.0),
+                                vec2(16.0, 16.0),
+                            ),
+                            uv,
+                            Color32::WHITE,
+                        );
+                    }
+                    ui.painter().text(
+                        pos2(r.left() + 24.0, r.center().y),
+                        Align2::LEFT_CENTER,
+                        c,
+                        FontId::proportional(theme::FONT_SIZE),
+                        Color32::BLACK,
+                    );
+                    if resp.clicked() {
+                        chosen = Some(c.clone());
+                    }
                 }
-                if let Some((tex, uv)) = self.icons.class(ui.ctx(), self.meta.image(c)) {
-                    ui.painter().image(tex, Rect::from_min_size(pos2(r.left() + 4.0, r.center().y - 8.0), vec2(16.0, 16.0)), uv, Color32::WHITE);
-                }
-                ui.painter().text(pos2(r.left() + 24.0, r.center().y), Align2::LEFT_CENTER, c, FontId::proportional(theme::FONT_SIZE), Color32::BLACK);
-                if resp.clicked() {
-                    chosen = Some(c.clone());
-                }
-            }
-        });
+            });
         if let Some(c) = chosen {
             self.insert_object(&c);
         }
@@ -1419,7 +1813,12 @@ fn dock_style(base: &egui::Style) -> egui_stack::Style {
     s.tab_bar.height = 20.0;
     s.tab_bar.hline_color = theme::DOCK_TITLE;
     s.tab_bar.corner_radius = egui::CornerRadius::ZERO;
-    for t in [&mut s.tab.active, &mut s.tab.inactive, &mut s.tab.focused, &mut s.tab.hovered] {
+    for t in [
+        &mut s.tab.active,
+        &mut s.tab.inactive,
+        &mut s.tab.focused,
+        &mut s.tab.hovered,
+    ] {
         t.bg_fill = theme::DOCK_TITLE;
         t.outline_color = theme::DOCK_TITLE;
         t.text_color = Color32::BLACK;

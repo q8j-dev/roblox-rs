@@ -112,7 +112,9 @@ impl FlyCamera {
         dm.store_silent(
             cam,
             "Focus",
-            Variant::CFrame(CFrame::from_translation(self.position + self.cframe().look_vector() * 20.0)),
+            Variant::CFrame(CFrame::from_translation(
+                self.position + self.cframe().look_vector() * 20.0,
+            )),
         );
     }
 }
@@ -168,7 +170,13 @@ pub fn part_box(dm: &DataModel, id: InstanceId) -> Option<(CFrame, Vec3)> {
     Some((cf, size))
 }
 
-pub fn pick(dm: &DataModel, origin: Vec3, dir: Vec3, include_locked: bool, ignore: &[InstanceId]) -> Option<Hit> {
+pub fn pick(
+    dm: &DataModel,
+    origin: Vec3,
+    dir: Vec3,
+    include_locked: bool,
+    ignore: &[InstanceId],
+) -> Option<Hit> {
     let ws = dm.find_service("Workspace")?;
     let mut best: Option<Hit> = None;
     for id in dm.descendants(ws) {
@@ -220,7 +228,11 @@ fn parts_in(dm: &DataModel, ids: &[InstanceId]) -> Vec<InstanceId> {
         if dm.is_a(id, "BasePart") {
             out.push(id);
         }
-        out.extend(dm.descendants(id).into_iter().filter(|d| dm.is_a(*d, "BasePart")));
+        out.extend(
+            dm.descendants(id)
+                .into_iter()
+                .filter(|d| dm.is_a(*d, "BasePart")),
+        );
     }
     out
 }
@@ -230,7 +242,9 @@ fn extents(dm: &DataModel, parts: &[InstanceId]) -> Option<(Vec3, Vec3)> {
     let mut hi = Vec3::splat(f32::NEG_INFINITY);
     let mut any = false;
     for &p in parts {
-        let Some((cf, size)) = part_box(dm, p) else { continue };
+        let Some((cf, size)) = part_box(dm, p) else {
+            continue;
+        };
         let h = size * 0.5;
         for i in 0..8 {
             let c = Vec3::new(
@@ -289,7 +303,11 @@ fn ray_segment_distance(origin: Vec3, dir: Vec3, a: Vec3, b: Vec3) -> f32 {
     let dd = dir.dot(w0);
     let ee = u.dot(w0);
     let denom = aa * cc - bb * bb;
-    let (mut sc, mut tc) = if denom.abs() < 1e-6 { (0.0, ee / cc.max(1e-6)) } else { ((bb * ee - cc * dd) / denom, (aa * ee - bb * dd) / denom) };
+    let (mut sc, mut tc) = if denom.abs() < 1e-6 {
+        (0.0, ee / cc.max(1e-6))
+    } else {
+        ((bb * ee - cc * dd) / denom, (aa * ee - bb * dd) / denom)
+    };
     tc = tc.clamp(0.0, 1.0);
     sc = sc.max(0.0);
     let p = origin + dir * sc;
@@ -375,16 +393,28 @@ impl Tools {
                 .filter(|id| dm.is_a(**id, "BasePart"))
                 .filter_map(|&id| {
                     let (cf, size) = part_box(dm, id)?;
-                    Some(HandleSet { owner: Some(id), kind: OverlayHandle::Resize, frame: cf, size, mask: 0x3f })
+                    Some(HandleSet {
+                        owner: Some(id),
+                        kind: OverlayHandle::Resize,
+                        frame: cf,
+                        size,
+                        mask: 0x3f,
+                    })
                 })
                 .collect(),
             Tool::Move | Tool::Rotate => {
-                let Some((lo, hi)) = extents(dm, &parts) else { return Vec::new() };
+                let Some((lo, hi)) = extents(dm, &parts) else {
+                    return Vec::new();
+                };
                 let mut size = hi - lo;
                 if size.max_element() < MINIMUM_EXTENTS {
                     size = Vec3::splat(MINIMUM_EXTENTS);
                 }
-                let kind = if tool == Tool::Move { OverlayHandle::Move } else { OverlayHandle::Rotate };
+                let kind = if tool == Tool::Move {
+                    OverlayHandle::Move
+                } else {
+                    OverlayHandle::Rotate
+                };
                 let mask = match (&self.drag, tool) {
                     (Some(Drag::Rotate { normal_id, .. }), Tool::Rotate) => 1u8 << normal_id,
                     _ => 0x3f,
@@ -392,7 +422,14 @@ impl Tools {
                 vec![HandleSet {
                     owner: None,
                     kind,
-                    frame: CFrame::new(if tool == Tool::Rotate { Mat3::IDENTITY } else { self.rotation_frame }, (lo + hi) * 0.5),
+                    frame: CFrame::new(
+                        if tool == Tool::Rotate {
+                            Mat3::IDENTITY
+                        } else {
+                            self.rotation_frame
+                        },
+                        (lo + hi) * 0.5,
+                    ),
                     size,
                     mask,
                 }]
@@ -400,7 +437,13 @@ impl Tools {
         }
     }
 
-    pub fn overlay(&self, dm: &DataModel, tool: Tool, selection: &[InstanceId], camera: Vec3) -> Adorns {
+    pub fn overlay(
+        &self,
+        dm: &DataModel,
+        tool: Tool,
+        selection: &[InstanceId],
+        camera: Vec3,
+    ) -> Adorns {
         let mut out = Adorns::default();
         if let Some(h) = self.hover
             && self.drag.is_none()
@@ -423,25 +466,62 @@ impl Tools {
             let highlight = match self.over_handle {
                 Some((owner, id)) if owner == set.owner => Some(id),
                 _ => match (&self.drag, set.kind) {
-                    (Some(Drag::Move { axis, .. }), OverlayHandle::Move) => axis_id(*axis, set.frame.rotation),
-                    (Some(Drag::Scale { part, normal_id, .. }), OverlayHandle::Resize) if Some(*part) == set.owner => Some(*normal_id),
-                    (Some(Drag::Rotate { normal_id, .. }), OverlayHandle::Rotate) => Some(*normal_id),
+                    (Some(Drag::Move { axis, .. }), OverlayHandle::Move) => {
+                        axis_id(*axis, set.frame.rotation)
+                    }
+                    (
+                        Some(Drag::Scale {
+                            part, normal_id, ..
+                        }),
+                        OverlayHandle::Resize,
+                    ) if Some(*part) == set.owner => Some(*normal_id),
+                    (Some(Drag::Rotate { normal_id, .. }), OverlayHandle::Rotate) => {
+                        Some(*normal_id)
+                    }
                     _ => None,
                 },
             };
-            let color = if set.kind == OverlayHandle::Rotate { [0.0, 1.0, 0.0, 1.0] } else { RESIZE_COLOR };
+            let color = if set.kind == OverlayHandle::Rotate {
+                [0.0, 1.0, 0.0, 1.0]
+            } else {
+                RESIZE_COLOR
+            };
             let highlight_color = if set.kind == OverlayHandle::Rotate {
                 let c = AXIS_COLORS[highlight.unwrap_or(0) % 3];
-                [c.r() as f32 / 255.0, c.g() as f32 / 255.0, c.b() as f32 / 255.0, 1.0]
+                [
+                    c.r() as f32 / 255.0,
+                    c.g() as f32 / 255.0,
+                    c.b() as f32 / 255.0,
+                    1.0,
+                ]
             } else {
                 HANDLE_HIGHLIGHT
             };
-            adorn::overlay_handles(&mut out, camera, set.size, set.frame, set.kind, color, true, set.mask, highlight, highlight_color);
+            adorn::overlay_handles(
+                &mut out,
+                camera,
+                set.size,
+                set.frame,
+                set.kind,
+                color,
+                true,
+                set.mask,
+                highlight,
+                highlight_color,
+            );
         }
         out
     }
 
-    pub fn draw_2d(&self, painter: &egui::Painter, rect: Rect, cam: &FlyCamera, dm: &DataModel, tool: Tool, selection: &[InstanceId]) {
+    pub fn draw_2d(
+        &self,
+        painter: &egui::Painter,
+        rect: Rect,
+        cam: &FlyCamera,
+        dm: &DataModel,
+        tool: Tool,
+        selection: &[InstanceId],
+    ) {
         if tool == Tool::Rotate && self.drag.is_some() {
             return;
         }
@@ -454,16 +534,29 @@ impl Tools {
                 let mut world = set.frame.point_to_world_space(local);
                 if set.kind == OverlayHandle::Move {
                     let r = adorn::handle_tip_radius(cam.position, world);
-                    world = CFrame::new(set.frame.rotation, world).point_to_world_space(adorn::normal_vector_of(id) * r);
+                    world = CFrame::new(set.frame.rotation, world)
+                        .point_to_world_space(adorn::normal_vector_of(id) * r);
                 }
                 if let Some(p) = cam.project(rect, world) {
-                    painter.rect_filled(Rect::from_center_size(p, egui::vec2(6.0, 6.0)), 0.0, AXIS_COLORS[id % 3]);
+                    painter.rect_filled(
+                        Rect::from_center_size(p, egui::vec2(6.0, 6.0)),
+                        0.0,
+                        AXIS_COLORS[id % 3],
+                    );
                 }
             }
         }
     }
 
-    pub fn update_hover(&mut self, dm: &DataModel, tool: Tool, selection: &[InstanceId], cam: &FlyCamera, origin: Vec3, dir: Vec3) {
+    pub fn update_hover(
+        &mut self,
+        dm: &DataModel,
+        tool: Tool,
+        selection: &[InstanceId],
+        cam: &FlyCamera,
+        origin: Vec3,
+        dir: Vec3,
+    ) {
         if self.drag.is_some() {
             return;
         }
@@ -477,7 +570,9 @@ impl Tools {
                 let world = set.frame.point_to_world_space(local);
                 let radius = adorn::handle_radius(cam.position, set.kind, world);
                 let hit = if set.kind == OverlayHandle::Move {
-                    let arrow = set.frame.vector_to_world_space(adorn::normal_vector_of(id) * radius);
+                    let arrow = set
+                        .frame
+                        .vector_to_world_space(adorn::normal_vector_of(id) * radius);
                     ray_segment_distance(origin, dir, world, world + arrow) <= 0.05 * radius
                 } else {
                     ray_sphere(origin, dir, world, radius)
@@ -494,7 +589,11 @@ impl Tools {
     fn set_transparent(&mut self, doc: &mut Document, parts: &[InstanceId]) {
         let mut e = doc.runtime.engine.lock();
         for &p in parts {
-            let t = e.dm.get(p, "Transparency").ok().and_then(|v| v.as_f64()).unwrap_or(0.0) as f32;
+            let t =
+                e.dm.get(p, "Transparency")
+                    .ok()
+                    .and_then(|v| v.as_f64())
+                    .unwrap_or(0.0) as f32;
             self.saved_transparency.push((p, t));
             let _ = e.dm.set(p, "Transparency", Variant::Float(0.5));
         }
@@ -509,14 +608,27 @@ impl Tools {
         }
     }
 
-    pub fn begin(&mut self, doc: &mut Document, tool: Tool, collisions: bool, cam: &FlyCamera, origin: Vec3, dir: Vec3) -> bool {
+    pub fn begin(
+        &mut self,
+        doc: &mut Document,
+        tool: Tool,
+        collisions: bool,
+        cam: &FlyCamera,
+        origin: Vec3,
+        dir: Vec3,
+    ) -> bool {
         let selection = doc.selection();
         if let Some((owner, id)) = self.over_handle {
             let (sets, parts) = {
                 let e = doc.runtime.engine.lock();
-                (self.handle_sets(&e.dm, tool, &selection), parts_in(&e.dm, &selection))
+                (
+                    self.handle_sets(&e.dm, tool, &selection),
+                    parts_in(&e.dm, &selection),
+                )
             };
-            let Some(set) = sets.into_iter().find(|s| s.owner == owner) else { return false };
+            let Some(set) = sets.into_iter().find(|s| s.owner == owner) else {
+                return false;
+            };
             doc.checkpoint();
             let local = adorn::handle_position(cam.position, set.size, set.kind, id);
             let world = set.frame.point_to_world_space(local);
@@ -527,7 +639,11 @@ impl Tools {
                     if !collisions {
                         self.set_transparent(doc, &parts);
                     }
-                    Drag::Move { axis, start, applied: 0.0 }
+                    Drag::Move {
+                        axis,
+                        start,
+                        applied: 0.0,
+                    }
                 }
                 OverlayHandle::Resize => {
                     let part = owner.unwrap_or(set.owner.unwrap_or(selection[0]));
@@ -548,7 +664,12 @@ impl Tools {
                     let normal = adorn::normal_vector_of(id % 3);
                     let center = set.frame.translation;
                     let start = plane_point(origin, dir, center, normal).unwrap_or(world) - center;
-                    Drag::Rotate { normal_id: id, center, start_vec: start, applied: 0.0 }
+                    Drag::Rotate {
+                        normal_id: id,
+                        center,
+                        start_vec: start,
+                        applied: 0.0,
+                    }
                 }
             });
             return true;
@@ -557,7 +678,9 @@ impl Tools {
             let e = doc.runtime.engine.lock();
             pick(&e.dm, origin, dir, false, &[]).map(|h| (selectable(&e.dm, h.part), h))
         };
-        let Some((target, hit)) = hit else { return false };
+        let Some((target, hit)) = hit else {
+            return false;
+        };
         if !selection.contains(&target) {
             doc.select(vec![target]);
         }
@@ -590,9 +713,16 @@ impl Tools {
     }
 
     pub fn update(&mut self, doc: &mut Document, origin: Vec3, dir: Vec3, grid: f32) {
-        let Some(drag) = self.drag.as_mut() else { return };
+        let Some(drag) = self.drag.as_mut() else {
+            return;
+        };
         match drag {
-            Drag::Run { parts, grab_offset, center, half } => {
+            Drag::Run {
+                parts,
+                grab_offset,
+                center,
+                half,
+            } => {
                 let ignore: Vec<InstanceId> = parts.iter().map(|p| p.0).collect();
                 let hit = {
                     let e = doc.runtime.engine.lock();
@@ -604,7 +734,9 @@ impl Tools {
                             let e = doc.runtime.engine.lock();
                             part_box(&e.dm, h.part).unwrap_or((CFrame::IDENTITY, Vec3::ONE))
                         };
-                        let n = cf.vector_to_world_space(h.local_normal).normalize_or(Vec3::Y);
+                        let n = cf
+                            .vector_to_world_space(h.local_normal)
+                            .normalize_or(Vec3::Y);
                         let support = half.x * n.x.abs() + half.y * n.y.abs() + half.z * n.z.abs();
                         let tangent = *grab_offset - n * grab_offset.dot(n);
                         h.point + n * support - tangent
@@ -614,15 +746,27 @@ impl Tools {
                         None => return,
                     },
                 };
-                let snapped = Vec3::new(snap(target.x - half.x, grid) + half.x, target.y, snap(target.z - half.z, grid) + half.z);
+                let snapped = Vec3::new(
+                    snap(target.x - half.x, grid) + half.x,
+                    target.y,
+                    snap(target.z - half.z, grid) + half.z,
+                );
                 let delta = snapped - *center;
                 let mut e = doc.runtime.engine.lock();
                 for (p, orig) in parts.iter() {
-                    let _ = e.dm.set(*p, "CFrame", Variant::CFrame(CFrame::new(orig.rotation, orig.translation + delta)));
+                    let _ = e.dm.set(
+                        *p,
+                        "CFrame",
+                        Variant::CFrame(CFrame::new(orig.rotation, orig.translation + delta)),
+                    );
                 }
                 doc.dirty = true;
             }
-            Drag::Move { axis, start, applied } => {
+            Drag::Move {
+                axis,
+                start,
+                applied,
+            } => {
                 let along = closest_on_axis(origin, dir, *start, *axis);
                 let target = snap(along, grid);
                 let delta = target - *applied;
@@ -632,26 +776,48 @@ impl Tools {
                     *applied = target;
                 }
             }
-            Drag::Scale { part, normal_id, anchor, axis_world, orig_cf, orig_size, .. } => {
+            Drag::Scale {
+                part,
+                normal_id,
+                anchor,
+                axis_world,
+                orig_cf,
+                orig_size,
+                ..
+            } => {
                 let along = closest_on_axis(origin, dir, *anchor, *axis_world);
                 let step = if grid > 0.0 { grid } else { 0.01 };
                 let amount = (along / step).round() * step;
                 let axis = *normal_id % 3;
                 let sign = if *normal_id < 3 { 1.0 } else { -1.0 };
                 let mut size = *orig_size;
-                size[axis] = (orig_size[axis] + amount).max(if grid > 0.0 { grid.clamp(0.2, 1.0) } else { 0.2 });
+                size[axis] = (orig_size[axis] + amount).max(if grid > 0.0 {
+                    grid.clamp(0.2, 1.0)
+                } else {
+                    0.2
+                });
                 let grown = size[axis] - orig_size[axis];
                 let mut local = Vec3::ZERO;
                 local[axis] = grown * 0.5 * sign;
-                let cf = CFrame::new(orig_cf.rotation, orig_cf.translation + orig_cf.vector_to_world_space(local));
+                let cf = CFrame::new(
+                    orig_cf.rotation,
+                    orig_cf.translation + orig_cf.vector_to_world_space(local),
+                );
                 let mut e = doc.runtime.engine.lock();
                 let _ = e.dm.set(*part, "Size", Variant::Vector3(size));
                 let _ = e.dm.set(*part, "CFrame", Variant::CFrame(cf));
                 doc.dirty = true;
             }
-            Drag::Rotate { normal_id, center, start_vec, applied } => {
+            Drag::Rotate {
+                normal_id,
+                center,
+                start_vec,
+                applied,
+            } => {
                 let normal = adorn::normal_vector_of(*normal_id % 3);
-                let Some(p) = plane_point(origin, dir, *center, normal) else { return };
+                let Some(p) = plane_point(origin, dir, *center, normal) else {
+                    return;
+                };
                 let cur = p - *center;
                 let a = start_vec.normalize_or(Vec3::X);
                 let b = cur.normalize_or(Vec3::X);
@@ -663,7 +829,11 @@ impl Tools {
                 } else {
                     0.0
                 };
-                let target = if step > 0.0 { (angle / step).trunc() * step } else { angle };
+                let target = if step > 0.0 {
+                    (angle / step).trunc() * step
+                } else {
+                    angle
+                };
                 let delta = target - *applied;
                 if delta.abs() > 0.0001 {
                     let sel = doc.selection();

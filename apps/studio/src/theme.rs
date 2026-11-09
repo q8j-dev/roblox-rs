@@ -1,4 +1,6 @@
-use egui::{Color32, CornerRadius, FontData, FontDefinitions, FontFamily, FontId, Stroke, TextStyle};
+use egui::{
+    Color32, CornerRadius, FontData, FontDefinitions, FontFamily, FontId, Stroke, TextStyle,
+};
 use std::path::Path;
 use std::sync::Arc;
 
@@ -131,10 +133,20 @@ pub fn vertical_gradient(painter: &egui::Painter, rect: egui::Rect, top: Color32
 
 pub fn selected_row(painter: &egui::Painter, rect: egui::Rect) {
     vertical_gradient(painter, rect, SELECT_TOP, SELECT_BOTTOM);
-    painter.rect_stroke(rect, 0.0, Stroke::new(1.0, SELECT_BOTTOM), egui::StrokeKind::Inside);
+    painter.rect_stroke(
+        rect,
+        0.0,
+        Stroke::new(1.0, SELECT_BOTTOM),
+        egui::StrokeKind::Inside,
+    );
 }
 
 pub fn hovered_row(painter: &egui::Painter, rect: egui::Rect) {
     vertical_gradient(painter, rect, HOVER_TOP, HOVER_BOTTOM);
-    painter.rect_stroke(rect, 0.0, Stroke::new(1.0, HOVER_BORDER), egui::StrokeKind::Inside);
+    painter.rect_stroke(
+        rect,
+        0.0,
+        Stroke::new(1.0, HOVER_BORDER),
+        egui::StrokeKind::Inside,
+    );
 }

@@ -22,17 +22,29 @@ impl Harness {
             let ws = e.dm.find_service("Workspace").expect("workspace");
             let p = e.dm.create("Part").expect("part");
             let _ = e.dm.set(p, "Anchored", Variant::Bool(true));
-            let _ = e.dm.set(p, "Size", Variant::Vector3(Vec3::new(4.0, 2.0, 4.0)));
-            let _ = e.dm.set(p, "CFrame", Variant::CFrame(CFrame::from_translation(Vec3::new(0.0, 5.0, 0.0))));
+            let _ =
+                e.dm.set(p, "Size", Variant::Vector3(Vec3::new(4.0, 2.0, 4.0)));
+            let _ = e.dm.set(
+                p,
+                "CFrame",
+                Variant::CFrame(CFrame::from_translation(Vec3::new(0.0, 5.0, 0.0))),
+            );
             let _ = e.dm.set_parent(p, Some(ws));
             p
         };
         doc.select(vec![part]);
         let mut studio = Studio::new(doc, assets);
         studio.tool = tool;
-        studio.view.camera = crate::viewport::FlyCamera::looking_at(Vec3::new(14.0, 14.0, 14.0), Vec3::new(0.0, 5.0, 0.0));
+        studio.view.camera = crate::viewport::FlyCamera::looking_at(
+            Vec3::new(14.0, 14.0, 14.0),
+            Vec3::new(0.0, 5.0, 0.0),
+        );
         let ctx = egui::Context::default();
-        let mut h = Harness { ctx, studio, time: 0.0 };
+        let mut h = Harness {
+            ctx,
+            studio,
+            time: 0.0,
+        };
         for _ in 0..3 {
             h.frame(vec![]);
         }
@@ -61,7 +73,10 @@ impl Harness {
         let local = adorn::handle_position(cam.position, size, kind, id);
         let world = cf.point_to_world_space(local);
         let tip = if kind == OverlayHandle::Move {
-            world + adorn::normal_vector_of(id) * adorn::handle_radius(cam.position, kind, world) * 0.5
+            world
+                + adorn::normal_vector_of(id)
+                    * adorn::handle_radius(cam.position, kind, world)
+                    * 0.5
         } else {
             world
         };
@@ -70,12 +85,22 @@ impl Harness {
 
     fn drag(&mut self, from: Pos2, to: Pos2) {
         self.frame(vec![Event::PointerMoved(from)]);
-        self.frame(vec![Event::PointerButton { pos: from, button: PointerButton::Primary, pressed: true, modifiers: Modifiers::NONE }]);
+        self.frame(vec![Event::PointerButton {
+            pos: from,
+            button: PointerButton::Primary,
+            pressed: true,
+            modifiers: Modifiers::NONE,
+        }]);
         for i in 1..=10 {
             let t = i as f32 / 10.0;
             self.frame(vec![Event::PointerMoved(from + (to - from) * t)]);
         }
-        self.frame(vec![Event::PointerButton { pos: to, button: PointerButton::Primary, pressed: false, modifiers: Modifiers::NONE }]);
+        self.frame(vec![Event::PointerButton {
+            pos: to,
+            button: PointerButton::Primary,
+            pressed: false,
+            modifiers: Modifiers::NONE,
+        }]);
         self.frame(vec![]);
     }
 
@@ -91,7 +116,11 @@ fn move_handle_drags_part() {
     let from = h.handle_screen(part, OverlayHandle::Move, 1);
     h.drag(from, from - vec2(0.0, 80.0));
     let (cf, _) = h.part(part);
-    assert!(cf.translation.y > 6.0, "part did not move up: {:?}", cf.translation);
+    assert!(
+        cf.translation.y > 6.0,
+        "part did not move up: {:?}",
+        cf.translation
+    );
     assert!(cf.translation.x.abs() < 1e-3 && cf.translation.z.abs() < 1e-3);
 }
 
@@ -119,27 +148,48 @@ fn rotate_handle_turns_part() {
     let to = h.studio.view.camera.project(rect, turned).expect("visible");
     h.drag(from, to);
     let (cf, _) = h.part(part);
-    assert!((cf.rotation.x_axis - Vec3::X).length() > 0.1 || (cf.rotation.z_axis - Vec3::Z).length() > 0.1, "part did not rotate");
+    assert!(
+        (cf.rotation.x_axis - Vec3::X).length() > 0.1
+            || (cf.rotation.z_axis - Vec3::Z).length() > 0.1,
+        "part did not rotate"
+    );
 }
 
 #[test]
 fn select_tool_drags_part_on_surface() {
     let (mut h, part) = Harness::new(Tool::Select);
     let (cf, _) = h.part(part);
-    let from = h.studio.view.camera.project(h.studio.view.rect, cf.translation + Vec3::new(0.0, 1.0, 0.0)).expect("visible");
+    let from = h
+        .studio
+        .view
+        .camera
+        .project(
+            h.studio.view.rect,
+            cf.translation + Vec3::new(0.0, 1.0, 0.0),
+        )
+        .expect("visible");
     h.drag(from, from + vec2(60.0, 0.0));
     let (moved, _) = h.part(part);
-    assert!((moved.translation - cf.translation).length() > 0.5, "part did not move: {:?}", moved.translation);
+    assert!(
+        (moved.translation - cf.translation).length() > 0.5,
+        "part did not move: {:?}",
+        moved.translation
+    );
 }
 
 #[test]
 fn inserted_part_moves_with_handles_in_real_place() {
     let assets = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../assets");
-    let place = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../tests/places/RobloxStudio/content/FirstPlaceBasePlate.rbxl");
+    let place = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../tests/places/RobloxStudio/content/FirstPlaceBasePlate.rbxl");
     let doc = Document::open(&place, &assets.join("content")).expect("open");
     let mut studio = Studio::new(doc, assets);
     studio.view.camera = crate::app::camera_for(&studio.doc);
-    let mut h = Harness { ctx: egui::Context::default(), studio, time: 0.0 };
+    let mut h = Harness {
+        ctx: egui::Context::default(),
+        studio,
+        time: 0.0,
+    };
     for _ in 0..3 {
         h.frame(vec![]);
     }
@@ -151,9 +201,11 @@ fn inserted_part_moves_with_handles_in_real_place() {
     let from = h.handle_screen(part, OverlayHandle::Move, 1);
     h.drag(from, from - vec2(0.0, 60.0));
     let after = h.part(part).0.translation;
-    assert!(after.y > before.y + 0.5, "part did not move up: {before:?} -> {after:?}");
+    assert!(
+        after.y > before.y + 0.5,
+        "part did not move up: {before:?} -> {after:?}"
+    );
 }
-
 
 #[test]
 #[ignore]
@@ -163,7 +215,11 @@ fn ui_frame_cost() {
     let doc = Document::open(&PathBuf::from(place), &assets.join("content")).expect("open");
     let mut studio = Studio::new(doc, assets);
     studio.view.camera = crate::app::camera_for(&studio.doc);
-    let mut h = Harness { ctx: egui::Context::default(), studio, time: 0.0 };
+    let mut h = Harness {
+        ctx: egui::Context::default(),
+        studio,
+        time: 0.0,
+    };
     let mut ui = Vec::new();
     let mut step = Vec::new();
     for i in 0..330 {
@@ -171,7 +227,10 @@ fn ui_frame_cost() {
         let raw = RawInput {
             screen_rect: Some(Rect::from_min_size(Pos2::ZERO, vec2(1600.0, 1000.0))),
             time: Some(h.time),
-            events: vec![Event::PointerMoved(Pos2::new(800.0 + (i as f32).sin() * 50.0, 500.0))],
+            events: vec![Event::PointerMoved(Pos2::new(
+                800.0 + (i as f32).sin() * 50.0,
+                500.0,
+            ))],
             ..Default::default()
         };
         let t = std::time::Instant::now();
@@ -190,6 +249,11 @@ fn ui_frame_cost() {
     for (name, mut v) in [("ui", ui), ("step", step)] {
         v.sort_by(|a, b| a.total_cmp(b));
         let avg = v.iter().sum::<f64>() / v.len() as f64;
-        eprintln!("{name} avg {avg:.2} median {:.2} p99 {:.2} max {:.2}", v[v.len() / 2], v[v.len() * 99 / 100], v[v.len() - 1]);
+        eprintln!(
+            "{name} avg {avg:.2} median {:.2} p99 {:.2} max {:.2}",
+            v[v.len() / 2],
+            v[v.len() * 99 / 100],
+            v[v.len() - 1]
+        );
     }
 }

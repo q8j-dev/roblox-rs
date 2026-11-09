@@ -100,18 +100,19 @@ pub trait Behavior: Sync + Send {
 static REGISTRY: LazyLock<HashMap<&'static str, &'static dyn Behavior>> =
     LazyLock::new(crate::classes::registry);
 
-static CHAINS: LazyLock<rustc_hash::FxHashMap<&'static str, Vec<&'static dyn Behavior>>> = LazyLock::new(|| {
-    let db = database();
-    db.classes()
-        .map(|c| {
-            let chain: Vec<&'static dyn Behavior> = db
-                .superclasses(&c.name)
-                .filter_map(|s| REGISTRY.get(s.name.as_str()).copied())
-                .collect();
-            (c.name.as_str(), chain)
-        })
-        .collect()
-});
+static CHAINS: LazyLock<rustc_hash::FxHashMap<&'static str, Vec<&'static dyn Behavior>>> =
+    LazyLock::new(|| {
+        let db = database();
+        db.classes()
+            .map(|c| {
+                let chain: Vec<&'static dyn Behavior> = db
+                    .superclasses(&c.name)
+                    .filter_map(|s| REGISTRY.get(s.name.as_str()).copied())
+                    .collect();
+                (c.name.as_str(), chain)
+            })
+            .collect()
+    });
 
 pub fn behaviors_for(class: &str) -> &'static [&'static dyn Behavior] {
     CHAINS.get(class).map(|v| v.as_slice()).unwrap_or(&[])

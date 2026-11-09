@@ -439,7 +439,11 @@ fn handles(
             let radius = scale_to_camera(ctx.camera, world, min_angle, expected);
             ctx.cframe = CFrame::new(position.rotation, world);
             let lit = highlight == Some(id);
-            ctx.material = if lit { Material::SelfLitHighlight } else { Material::SelfLit };
+            ctx.material = if lit {
+                Material::SelfLitHighlight
+            } else {
+                Material::SelfLit
+            };
             let mut handle_color = if use_axis_color || kind == HandleType::Rotate {
                 alpha(AXIS_COLORS[id % 3], color[3])
             } else {
@@ -451,9 +455,11 @@ fn handles(
                 handle_color[3] *= HANDLE_TRANSPARENCY;
             }
             match kind {
-                HandleType::Resize => {
-                    ctx.sphere(Vec3::ZERO, if lit { radius + 0.08 } else { radius }, handle_color)
-                }
+                HandleType::Resize => ctx.sphere(
+                    Vec3::ZERO,
+                    if lit { radius + 0.08 } else { radius },
+                    handle_color,
+                ),
                 HandleType::Move => ctx.ray(Vec3::ZERO, normal_vector(id) * radius, handle_color),
                 HandleType::Rotate => {
                     let flag = 1u8 << (id % 3);
@@ -795,7 +801,14 @@ impl OverlayHandle {
     }
 }
 
-pub fn overlay_selection_box(out: &mut Adorns, camera: Vec3, cf: CFrame, size: Vec3, color: [f32; 4], thickness: f32) {
+pub fn overlay_selection_box(
+    out: &mut Adorns,
+    camera: Vec3,
+    cf: CFrame,
+    size: Vec3,
+    color: [f32; 4],
+    thickness: f32,
+) {
     let mut ctx = Ctx {
         out,
         camera,
@@ -834,7 +847,17 @@ pub fn overlay_handles(
         cframe: position,
         material: Material::SelfLit,
     };
-    handles(&mut ctx, size, position, kind.kind(), color, mask, use_axis_color, highlight, highlight_color);
+    handles(
+        &mut ctx,
+        size,
+        position,
+        kind.kind(),
+        color,
+        mask,
+        use_axis_color,
+        highlight,
+        highlight_color,
+    );
 }
 
 pub fn overlay_star(out: &mut Adorns, camera: Vec3, center: Vec3, radius: f32, color: [f32; 4]) {
@@ -853,7 +876,9 @@ pub fn handle_position(camera: Vec3, size: Vec3, kind: OverlayHandle, id: usize)
     let half = size / 2.0;
     let _ = camera;
     match kind {
-        OverlayHandle::Rotate => normal_vector(normal_to_u(id)) * (half.length() + HANDLE_OFFSET * 4.0),
+        OverlayHandle::Rotate => {
+            normal_vector(normal_to_u(id)) * (half.length() + HANDLE_OFFSET * 4.0)
+        }
         OverlayHandle::Resize => normal_vector(id) * (half + Vec3::splat(HANDLE_OFFSET * 4.0)),
         OverlayHandle::Move => normal_vector(id) * (half + Vec3::splat(HANDLE_OFFSET)),
     }

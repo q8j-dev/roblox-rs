@@ -138,7 +138,11 @@ pub fn zero_plane_grid(out: &mut Adorns, camera: Vec3, studs: i32) {
         let b = Vec3::new(i as f32, 0.0, (base + lz) as f32);
         let mid = b + (b - a) * 0.5;
         let alpha = (1.0 - ((camera - mid).length() * 1.5) / GRID_SIZE_BASE).max(0.25);
-        out.lines.push(AdornLine { a, b, color: [large[0], large[1], large[2], alpha] });
+        out.lines.push(AdornLine {
+            a,
+            b,
+            color: [large[0], large[1], large[2], alpha],
+        });
         i += large_step;
     }
     let mut i = -base + lz;
@@ -154,7 +158,11 @@ pub fn zero_plane_grid(out: &mut Adorns, camera: Vec3, studs: i32) {
         });
         i += large_step;
     }
-    for (axis, color) in [(Vec3::X, [1.0, 0.0, 0.0, 1.0]), (Vec3::Y, [0.0, 1.0, 0.0, 1.0]), (Vec3::Z, [0.0, 0.0, 1.0, 1.0])] {
+    for (axis, color) in [
+        (Vec3::X, [1.0, 0.0, 0.0, 1.0]),
+        (Vec3::Y, [0.0, 1.0, 0.0, 1.0]),
+        (Vec3::Z, [0.0, 0.0, 1.0, 1.0]),
+    ] {
         rbx_render::adorn::overlay_ray(out, camera, Vec3::ZERO, axis * 4.0, color);
     }
 }
@@ -163,28 +171,42 @@ pub fn axis_widget(painter: &egui::Painter, rect: Rect, cam: &crate::viewport::F
     let cf = cam.cframe();
     let origin = cf.translation + cf.look_vector() * 2.0;
     let offset = egui::vec2(rect.width() / 2.0 - 50.0, -(rect.height() / 2.0) + 50.0);
-    let Some(o) = cam.project(rect, origin) else { return };
+    let Some(o) = cam.project(rect, origin) else {
+        return;
+    };
     let o = o - offset;
     for (axis, color, label, nudge) in [
         (Vec3::X, Color32::RED, "X", 0.0),
         (Vec3::Y, Color32::GREEN, "Y", 3.0),
         (Vec3::Z, Color32::BLUE, "Z", 0.0),
     ] {
-        let Some(p) = cam.project(rect, origin + axis * 0.1) else { continue };
+        let Some(p) = cam.project(rect, origin + axis * 0.1) else {
+            continue;
+        };
         let p = p - offset;
         painter.line_segment([o, p], Stroke::new(1.0, color));
-        painter.text(p + egui::vec2(nudge, 0.0), Align2::LEFT_TOP, label, FontId::proportional(12.0), color);
+        painter.text(
+            p + egui::vec2(nudge, 0.0),
+            Align2::LEFT_TOP,
+            label,
+            FontId::proportional(12.0),
+            color,
+        );
     }
 }
 
 pub fn stats_overlay(painter: &egui::Painter, rect: Rect, studio: &Studio, fps: f32) {
     let names = ["Stats", "Render", "Physics", "Network", "Summary", "Custom"];
     let e = studio.doc.runtime.engine.lock();
-    let parts = e
-        .dm
-        .find_service("Workspace")
-        .map(|ws| e.dm.descendants(ws).into_iter().filter(|d| e.dm.is_a(*d, "BasePart")).count())
-        .unwrap_or(0);
+    let parts =
+        e.dm.find_service("Workspace")
+            .map(|ws| {
+                e.dm.descendants(ws)
+                    .into_iter()
+                    .filter(|d| e.dm.is_a(*d, "BasePart"))
+                    .count()
+            })
+            .unwrap_or(0);
     let instances = e.dm.descendants(e.dm.root()).len();
     let mut y = rect.top() + 8.0;
     for (i, on) in studio.extras.stats.iter().enumerate() {
@@ -192,17 +214,36 @@ pub fn stats_overlay(painter: &egui::Painter, rect: Rect, studio: &Studio, fps: 
             continue;
         }
         let lines: Vec<String> = match i {
-            0 => vec![format!("Instances: {instances}"), format!("Game time: {:.1}", e.game_time)],
-            1 => vec![format!("FPS: {fps:.1}"), format!("Frame: {:.2} ms", 1000.0 / fps.max(1.0))],
-            2 => vec![format!("Parts: {parts}"), format!("Physics FPS: {:.1}", e.fps)],
+            0 => vec![
+                format!("Instances: {instances}"),
+                format!("Game time: {:.1}", e.game_time),
+            ],
+            1 => vec![
+                format!("FPS: {fps:.1}"),
+                format!("Frame: {:.2} ms", 1000.0 / fps.max(1.0)),
+            ],
+            2 => vec![
+                format!("Parts: {parts}"),
+                format!("Physics FPS: {:.1}", e.fps),
+            ],
             3 => vec!["Network: not connected".to_string()],
-            4 => vec![format!("FPS {fps:.1}"), format!("Parts {parts}"), format!("Instances {instances}")],
+            4 => vec![
+                format!("FPS {fps:.1}"),
+                format!("Parts {parts}"),
+                format!("Instances {instances}"),
+            ],
             _ => vec!["No custom stats".to_string()],
         };
         let h = 18.0 + lines.len() as f32 * 15.0;
         let r = Rect::from_min_size(Pos2::new(rect.left() + 8.0, y), egui::vec2(200.0, h));
         painter.rect_filled(r, 0.0, Color32::from_black_alpha(140));
-        painter.text(r.left_top() + egui::vec2(6.0, 3.0), Align2::LEFT_TOP, names[i], FontId::proportional(12.0), Color32::WHITE);
+        painter.text(
+            r.left_top() + egui::vec2(6.0, 3.0),
+            Align2::LEFT_TOP,
+            names[i],
+            FontId::proportional(12.0),
+            Color32::WHITE,
+        );
         for (n, l) in lines.iter().enumerate() {
             painter.text(
                 r.left_top() + egui::vec2(10.0, 18.0 + n as f32 * 15.0),
@@ -229,7 +270,9 @@ impl Studio {
         let parent = {
             let sel = self.doc.selection();
             let e = self.doc.runtime.engine.lock();
-            sel.first().copied().or_else(|| e.dm.find_service("Workspace"))
+            sel.first()
+                .copied()
+                .or_else(|| e.dm.find_service("Workspace"))
         };
         if let Some(p) = parent {
             match self.doc.insert(class, p) {
@@ -248,18 +291,24 @@ impl Studio {
         };
         let data = match std::fs::read(&path) {
             Ok(d) => d,
-            Err(e) => return self.status.push((MessageType::Error, format!("{}: {e}", path.display()))),
+            Err(e) => {
+                return self
+                    .status
+                    .push((MessageType::Error, format!("{}: {e}", path.display())));
+            }
         };
         self.doc.checkpoint();
         let roots: Result<Vec<InstanceId>, String> = {
             let mut e = self.doc.runtime.engine.lock();
             let ws = e.dm.find_service("Workspace");
-            e.dm.load_model(&data).map_err(|err| err.to_string()).map(|(roots, _)| {
-                for r in &roots {
-                    let _ = e.dm.set_parent(*r, ws);
-                }
-                roots
-            })
+            e.dm.load_model(&data)
+                .map_err(|err| err.to_string())
+                .map(|(roots, _)| {
+                    for r in &roots {
+                        let _ = e.dm.set_parent(*r, ws);
+                    }
+                    roots
+                })
         };
         match roots {
             Ok(r) => self.doc.select(r),
@@ -268,24 +317,38 @@ impl Studio {
     }
 
     pub fn execute_script_file(&mut self) {
-        let Some(path) = rfd::FileDialog::new().add_filter("Lua", &["lua", "txt"]).pick_file() else {
+        let Some(path) = rfd::FileDialog::new()
+            .add_filter("Lua", &["lua", "txt"])
+            .pick_file()
+        else {
             return;
         };
         match std::fs::read_to_string(&path) {
             Ok(src) => {
                 self.doc.checkpoint();
-                if let Err(e) = self.doc.runtime.execute(&src, &path.display().to_string(), rbx_script::Identity::CmdLine) {
+                if let Err(e) = self.doc.runtime.execute(
+                    &src,
+                    &path.display().to_string(),
+                    rbx_script::Identity::CmdLine,
+                ) {
                     self.status.push((MessageType::Error, e.to_string()));
                 }
             }
-            Err(e) => self.status.push((MessageType::Error, format!("{}: {e}", path.display()))),
+            Err(e) => self
+                .status
+                .push((MessageType::Error, format!("{}: {e}", path.display()))),
         }
     }
 
     pub fn toggle_mute(&mut self) {
         self.extras.muted = !self.extras.muted;
         let volume = if self.extras.muted { 0.0 } else { 1.0 };
-        self.doc.runtime.engine.lock().audio.set_master_volume(volume);
+        self.doc
+            .runtime
+            .engine
+            .lock()
+            .audio
+            .set_master_volume(volume);
     }
 
     pub fn start_servers(&mut self) {
@@ -302,7 +365,10 @@ impl Studio {
             return self.status.push((MessageType::Error, e.to_string()));
         }
         let (Some(server), Some(player)) = (exe("server"), exe("player")) else {
-            return self.status.push((MessageType::Error, "the server and player executables are not next to studio".into()));
+            return self.status.push((
+                MessageType::Error,
+                "the server and player executables are not next to studio".into(),
+            ));
         };
         let port = 64000 + (std::process::id() % 900) as u16;
         let http = format!("127.0.0.1:{port}");
@@ -317,7 +383,11 @@ impl Studio {
             .spawn();
         match child {
             Ok(c) => self.extras.children.push(c),
-            Err(e) => return self.status.push((MessageType::Error, format!("{}: {e}", server.display()))),
+            Err(e) => {
+                return self
+                    .status
+                    .push((MessageType::Error, format!("{}: {e}", server.display())));
+            }
         }
         let players = self.extras.players;
         let assets = self.assets.clone();
@@ -348,7 +418,9 @@ impl Studio {
                     .call()
                     .ok()
                     .and_then(|mut r| r.body_mut().read_json::<Value>().ok());
-                if let Some(i) = info.filter(|i| i["port"].as_u64().is_some() && i["certHash"].as_str().is_some()) {
+                if let Some(i) = info
+                    .filter(|i| i["port"].as_u64().is_some() && i["certHash"].as_str().is_some())
+                {
                     break Some(i);
                 }
                 if start.elapsed() > Duration::from_secs(30) {
@@ -378,7 +450,9 @@ impl Studio {
                     spawned += 1;
                 }
             }
-            let _ = tx.send(Ok(format!("started a server on port {port} with {spawned} players")));
+            let _ = tx.send(Ok(format!(
+                "started a server on port {port} with {spawned} players"
+            )));
         });
     }
 
@@ -390,7 +464,9 @@ impl Studio {
     }
 
     pub fn poll_launch(&mut self) {
-        let Some(rx) = &self.extras.launch else { return };
+        let Some(rx) = &self.extras.launch else {
+            return;
+        };
         if let Ok(r) = rx.try_recv() {
             match r {
                 Ok(m) => self.status.push((MessageType::Info, m)),
@@ -434,7 +510,9 @@ impl Studio {
             "gridSizeToFourAction" => self.extras.grid_studs = 4,
             "gridSizeToSixteenAction" => self.extras.grid_studs = 16,
             "audioToggleAction" => self.toggle_mute(),
-            "analyzePhysicsToggleAction" => self.extras.analyze_physics = !self.extras.analyze_physics,
+            "analyzePhysicsToggleAction" => {
+                self.extras.analyze_physics = !self.extras.analyze_physics
+            }
             "Always" => self.extras.join_mode = JoinMode::Always,
             "Surface only" => self.extras.join_mode = JoinMode::Surface,
             "Never" => self.extras.join_mode = JoinMode::Never,
@@ -446,9 +524,8 @@ impl Studio {
             "executeScriptAction" => self.execute_script_file(),
             "startServerAndPlayersAction" => self.start_servers(),
             "cleanupServersAndPlayersAction" => self.cleanup_servers(),
-            "Explosion" | "Fire" | "PointLight" | "Smoke" | "Sparkles" | "SpotLight" | "SurfaceLight" | "ParticleEmitter" => {
-                self.insert_into_selection(action)
-            }
+            "Explosion" | "Fire" | "PointLight" | "Smoke" | "Sparkles" | "SpotLight"
+            | "SurfaceLight" | "ParticleEmitter" => self.insert_into_selection(action),
             "testStatsAction" => self.extras.stats[0] = !self.extras.stats[0],
             "testRenderStatsAction" => self.extras.stats[1] = !self.extras.stats[1],
             "testPhysicsStatsAction" => self.extras.stats[2] = !self.extras.stats[2],
@@ -462,7 +539,9 @@ impl Studio {
             "exportPlaceAction" => {
                 let all: Vec<InstanceId> = {
                     let e = self.doc.runtime.engine.lock();
-                    e.dm.find_service("Workspace").map(|w| vec![w]).unwrap_or_default()
+                    e.dm.find_service("Workspace")
+                        .map(|w| vec![w])
+                        .unwrap_or_default()
                 };
                 let prev = self.doc.selection();
                 self.doc.select(all);
@@ -514,11 +593,15 @@ impl Studio {
         if self.extras.show_shortcuts {
             let mut open = true;
             let mut rows: Vec<(String, String)> = Vec::new();
-            if let Ok(text) = std::fs::read_to_string(self.assets.join("studio").join("actions.json"))
+            if let Ok(text) =
+                std::fs::read_to_string(self.assets.join("studio").join("actions.json"))
                 && let Ok(Value::Object(map)) = serde_json::from_str::<Value>(&text)
             {
                 for (_, v) in map {
-                    if let (Some(t), Some(k)) = (v.get("text").and_then(Value::as_str), v.get("shortcut").and_then(Value::as_str)) {
+                    if let (Some(t), Some(k)) = (
+                        v.get("text").and_then(Value::as_str),
+                        v.get("shortcut").and_then(Value::as_str),
+                    ) {
                         rows.push((t.to_string(), k.to_string()));
                     }
                 }
@@ -530,11 +613,13 @@ impl Studio {
                 .default_size(egui::vec2(420.0, 480.0))
                 .show(ctx, |ui| {
                     let xs = crate::views::header(ui, &[("Action", 2.0), ("Shortcut", 1.0)]);
-                    egui::ScrollArea::vertical().auto_shrink([false, false]).show(ui, |ui| {
-                        for (t, k) in &rows {
-                            crate::views::row(ui, &xs, &[t.clone(), k.clone()], Color32::BLACK);
-                        }
-                    });
+                    egui::ScrollArea::vertical()
+                        .auto_shrink([false, false])
+                        .show(ui, |ui| {
+                            for (t, k) in &rows {
+                                crate::views::row(ui, &xs, &[t.clone(), k.clone()], Color32::BLACK);
+                            }
+                        });
                 });
             if !open {
                 self.extras.show_shortcuts = false;
@@ -542,11 +627,18 @@ impl Studio {
         }
         if self.extras.show_settings {
             let mut open = true;
-            let root = rbx_script::api::services::settings_root(&self.doc.runtime.lua, "GlobalSettings").ok();
+            let root =
+                rbx_script::api::services::settings_root(&self.doc.runtime.lua, "GlobalSettings")
+                    .ok();
             let categories: Vec<(InstanceId, String)> = {
                 let e = self.doc.runtime.engine.lock();
-                root.map(|r| e.dm.children_of(r).iter().map(|c| (*c, e.dm.name_of(*c).to_string())).collect())
-                    .unwrap_or_default()
+                root.map(|r| {
+                    e.dm.children_of(r)
+                        .iter()
+                        .map(|c| (*c, e.dm.name_of(*c).to_string()))
+                        .collect()
+                })
+                .unwrap_or_default()
             };
             egui::Window::new("Settings")
                 .collapsible(false)
@@ -556,29 +648,50 @@ impl Studio {
                 .anchor(Align2::CENTER_CENTER, egui::vec2(0.0, 0.0))
                 .show(ctx, |ui| {
                     let area = ui.available_rect_before_wrap();
-                    let body = Rect::from_min_max(area.min, egui::pos2(area.right(), area.bottom() - 32.0));
-                    let left = Rect::from_min_max(body.min, egui::pos2(body.left() + 200.0, body.bottom()));
-                    let right = Rect::from_min_max(egui::pos2(left.right() + 6.0, body.top()), body.max);
-                    let buttons = Rect::from_min_max(egui::pos2(area.left(), body.bottom() + 6.0), area.max);
+                    let body = Rect::from_min_max(
+                        area.min,
+                        egui::pos2(area.right(), area.bottom() - 32.0),
+                    );
+                    let left = Rect::from_min_max(
+                        body.min,
+                        egui::pos2(body.left() + 200.0, body.bottom()),
+                    );
+                    let right =
+                        Rect::from_min_max(egui::pos2(left.right() + 6.0, body.top()), body.max);
+                    let buttons =
+                        Rect::from_min_max(egui::pos2(area.left(), body.bottom() + 6.0), area.max);
                     ui.painter().rect_filled(left, 0.0, Color32::WHITE);
-                    ui.painter().rect_stroke(left, 0.0, Stroke::new(1.0, crate::theme::VIEW_BORDER), egui::StrokeKind::Inside);
+                    ui.painter().rect_stroke(
+                        left,
+                        0.0,
+                        Stroke::new(1.0, crate::theme::VIEW_BORDER),
+                        egui::StrokeKind::Inside,
+                    );
                     ui.scope_builder(egui::UiBuilder::new().max_rect(left.shrink(1.0)), |ui| {
                         ui.spacing_mut().item_spacing = egui::vec2(0.0, 0.0);
                         crate::views::header(ui, &[("Names", 1.0)]);
                         for (i, (id, name)) in categories.iter().enumerate() {
-                            let (r, resp) = ui.allocate_exact_size(egui::vec2(ui.available_width(), 19.0), egui::Sense::click());
+                            let (r, resp) = ui.allocate_exact_size(
+                                egui::vec2(ui.available_width(), 19.0),
+                                egui::Sense::click(),
+                            );
                             let selected = self.extras.settings_selected == Some(*id);
                             if selected {
                                 crate::theme::selected_row(ui.painter(), r);
                             } else if i % 2 == 1 {
-                                ui.painter().rect_filled(r, 0.0, Color32::from_rgb(249, 249, 249));
+                                ui.painter()
+                                    .rect_filled(r, 0.0, Color32::from_rgb(249, 249, 249));
                             }
                             ui.painter().text(
                                 r.left_center() + egui::vec2(6.0, 0.0),
                                 Align2::LEFT_CENTER,
                                 name,
                                 FontId::proportional(crate::theme::FONT_SIZE),
-                                if selected { Color32::WHITE } else { Color32::BLACK },
+                                if selected {
+                                    Color32::WHITE
+                                } else {
+                                    Color32::BLACK
+                                },
                             );
                             if resp.clicked() {
                                 self.extras.settings_selected = Some(*id);
@@ -592,17 +705,25 @@ impl Studio {
                             self.extras.settings_props = props;
                         } else {
                             ui.painter().rect_filled(right, 0.0, Color32::WHITE);
-                            ui.painter().rect_stroke(right, 0.0, Stroke::new(1.0, crate::theme::VIEW_BORDER), egui::StrokeKind::Inside);
+                            ui.painter().rect_stroke(
+                                right,
+                                0.0,
+                                Stroke::new(1.0, crate::theme::VIEW_BORDER),
+                                egui::StrokeKind::Inside,
+                            );
                         }
                     });
                     ui.scope_builder(egui::UiBuilder::new().max_rect(buttons), |ui| {
                         ui.horizontal(|ui| {
                             let _ = ui.button("Reset All Settings");
-                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                                if ui.button("Close").clicked() {
-                                    self.extras.show_settings = false;
-                                }
-                            });
+                            ui.with_layout(
+                                egui::Layout::right_to_left(egui::Align::Center),
+                                |ui| {
+                                    if ui.button("Close").clicked() {
+                                        self.extras.show_settings = false;
+                                    }
+                                },
+                            );
                         });
                     });
                     ui.allocate_rect(area, egui::Sense::hover());

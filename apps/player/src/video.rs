@@ -19,7 +19,14 @@ pub struct VideoRecorder {
 }
 
 impl VideoRecorder {
-    pub fn start(path: PathBuf, width: u32, height: u32, fps: u32, quality: u8, bgra: bool) -> Result<VideoRecorder, String> {
+    pub fn start(
+        path: PathBuf,
+        width: u32,
+        height: u32,
+        fps: u32,
+        quality: u8,
+        bgra: bool,
+    ) -> Result<VideoRecorder, String> {
         if let Some(dir) = path.parent() {
             std::fs::create_dir_all(dir).map_err(|e| format!("{}: {e}", dir.display()))?;
         }
@@ -27,7 +34,10 @@ impl VideoRecorder {
         let (sender, receiver) = channel();
         let worker = std::thread::Builder::new()
             .name("video recorder".into())
-            .spawn(move || write_avi(file, width, height, fps, quality, bgra, receiver).map_err(|e| e.to_string()))
+            .spawn(move || {
+                write_avi(file, width, height, fps, quality, bgra, receiver)
+                    .map_err(|e| e.to_string())
+            })
             .map_err(|e| e.to_string())?;
         Ok(VideoRecorder {
             sender: Some(sender),
@@ -61,7 +71,9 @@ impl VideoRecorder {
     pub fn finish(mut self) -> Result<(PathBuf, u32), String> {
         self.sender.take();
         let frames = match self.worker.take() {
-            Some(w) => w.join().map_err(|_| "video writer panicked".to_string())??,
+            Some(w) => w
+                .join()
+                .map_err(|_| "video writer panicked".to_string())??,
             None => 0,
         };
         Ok((self.path.clone(), frames))
@@ -78,8 +90,14 @@ impl Drop for VideoRecorder {
 }
 
 pub fn video_path(home: &Path, stamp: &str) -> PathBuf {
-    let folder = if cfg!(target_os = "macos") { "Movies" } else { "Videos" };
-    home.join(folder).join("Roblox").join(format!("RobloxVideo{stamp}.avi"))
+    let folder = if cfg!(target_os = "macos") {
+        "Movies"
+    } else {
+        "Videos"
+    };
+    home.join(folder)
+        .join("Roblox")
+        .join(format!("RobloxVideo{stamp}.avi"))
 }
 
 fn u32le(w: &mut impl Write, v: u32) -> std::io::Result<()> {
@@ -151,7 +169,13 @@ fn write_headers(w: &mut impl Write, width: u32, height: u32, fps: u32) -> std::
     w.write_all(b"movi")
 }
 
-fn encode_jpeg(pixels: &[u8], width: u32, height: u32, quality: u8, bgra: bool) -> std::io::Result<Vec<u8>> {
+fn encode_jpeg(
+    pixels: &[u8],
+    width: u32,
+    height: u32,
+    quality: u8,
+    bgra: bool,
+) -> std::io::Result<Vec<u8>> {
     let mut rgb = Vec::with_capacity((width * height * 3) as usize);
     for px in pixels.chunks_exact(4) {
         if bgra {
@@ -167,7 +191,15 @@ fn encode_jpeg(pixels: &[u8], width: u32, height: u32, quality: u8, bgra: bool) 
     Ok(out)
 }
 
-fn write_avi(file: File, width: u32, height: u32, fps: u32, quality: u8, bgra: bool, frames: Receiver<Vec<u8>>) -> std::io::Result<u32> {
+fn write_avi(
+    file: File,
+    width: u32,
+    height: u32,
+    fps: u32,
+    quality: u8,
+    bgra: bool,
+    frames: Receiver<Vec<u8>>,
+) -> std::io::Result<u32> {
     let mut w = BufWriter::new(file);
     write_headers(&mut w, width, height, fps)?;
     let mut index: Vec<(u32, u32)> = Vec::new();
@@ -230,9 +262,15 @@ mod tests {
         assert_eq!(frames, 3);
         let data = std::fs::read(&out).expect("read");
         assert_eq!(&data[0..4], b"RIFF");
-        assert_eq!(u32::from_le_bytes(data[4..8].try_into().unwrap()) as usize, data.len() - 8);
+        assert_eq!(
+            u32::from_le_bytes(data[4..8].try_into().unwrap()) as usize,
+            data.len() - 8
+        );
         assert_eq!(&data[8..12], b"AVI ");
-        assert_eq!(&data[MOVI_FOURCC_OFFSET as usize..MOVI_FOURCC_OFFSET as usize + 4], b"movi");
+        assert_eq!(
+            &data[MOVI_FOURCC_OFFSET as usize..MOVI_FOURCC_OFFSET as usize + 4],
+            b"movi"
+        );
         assert_eq!(u32::from_le_bytes(data[48..52].try_into().unwrap()), 3);
         assert_eq!(&data[224..228], b"00dc");
         let jpeg_len = u32::from_le_bytes(data[228..232].try_into().unwrap()) as usize;

@@ -43,7 +43,13 @@ impl OrthoIfNeeded for CFrame {
 
 impl Behavior for BasePartBehavior {
     fn computed(&self) -> &'static [&'static str] {
-        &["Position", "Rotation", "Color", "CoordinateFrame", "SpecificGravity"]
+        &[
+            "Position",
+            "Rotation",
+            "Color",
+            "CoordinateFrame",
+            "SpecificGravity",
+        ]
     }
 
     fn get(&self, dm: &DataModel, id: InstanceId, prop: &str) -> Option<Variant> {
@@ -65,7 +71,9 @@ impl Behavior for BasePartBehavior {
                     .color3(),
             )),
             "SpecificGravity" => Some(Variant::Float(specific_gravity(
-                dm.get_raw(id, "Material").and_then(|v| v.as_enum()).unwrap_or(256),
+                dm.get_raw(id, "Material")
+                    .and_then(|v| v.as_enum())
+                    .unwrap_or(256),
             ))),
             _ => None,
         }

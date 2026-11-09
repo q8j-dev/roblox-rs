@@ -5,8 +5,14 @@ use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 const PLACES: &[(&str, &str)] = &[
-    ("crossroads", "RobloxTest/PhysicsQuickTests/Collisions/CollisionPerformance/StandardParts/CrossroadsBroadPhaseTest.rbxl"),
-    ("torture2500", "RobloxTest/PhysicsQuickTests/Collisions/CollisionPerformance/StandardParts/torture2500_v3.rbxl"),
+    (
+        "crossroads",
+        "RobloxTest/PhysicsQuickTests/Collisions/CollisionPerformance/StandardParts/CrossroadsBroadPhaseTest.rbxl",
+    ),
+    (
+        "torture2500",
+        "RobloxTest/PhysicsQuickTests/Collisions/CollisionPerformance/StandardParts/torture2500_v3.rbxl",
+    ),
 ];
 
 fn place_path(rel: &str) -> PathBuf {
@@ -28,8 +34,12 @@ fn load(rel: &str) -> DataModel {
 }
 
 fn move_camera(dm: &mut DataModel, i: u32) {
-    let Some(ws) = dm.find_service("Workspace") else { return };
-    let Some(cam) = dm.get_ref(ws, "CurrentCamera") else { return };
+    let Some(ws) = dm.find_service("Workspace") else {
+        return;
+    };
+    let Some(cam) = dm.get_ref(ws, "CurrentCamera") else {
+        return;
+    };
     let cf = rbx_math::CFrame::from_translation(rbx_math::Vec3::new(i as f32 * 0.01, 20.0, 40.0));
     dm.store_silent(cam, "CFrame", Variant::CFrame(cf));
 }

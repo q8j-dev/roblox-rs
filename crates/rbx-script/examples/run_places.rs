@@ -41,7 +41,11 @@ fn main() {
             .filter(|l| !l.is_empty())
             .map(str::to_string)
             .collect();
-        files.retain(|f| wanted.iter().any(|w| f.to_string_lossy().ends_with(w.as_str())));
+        files.retain(|f| {
+            wanted
+                .iter()
+                .any(|w| f.to_string_lossy().ends_with(w.as_str()))
+        });
     } else {
         files.retain(|f| f.to_string_lossy().contains(&filter));
     }

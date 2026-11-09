@@ -350,10 +350,15 @@ pub fn script_editor(ui: &mut Ui, doc: &mut Document, id: InstanceId, buffer: &m
             ui.horizontal_top(|ui| {
                 ui.spacing_mut().item_spacing = egui::vec2(0.0, 0.0);
                 let height = (lines as f32 * row + 8.0).max(full.height());
-                let (gutter, _) = ui.allocate_exact_size(egui::vec2(margin, height), egui::Sense::hover());
-                ui.painter().rect_filled(gutter, 0.0, Color32::from_rgb(221, 221, 221));
+                let (gutter, _) =
+                    ui.allocate_exact_size(egui::vec2(margin, height), egui::Sense::hover());
+                ui.painter()
+                    .rect_filled(gutter, 0.0, Color32::from_rgb(221, 221, 221));
                 ui.painter().rect_filled(
-                    egui::Rect::from_min_max(egui::pos2(gutter.right() - 12.0, gutter.top()), gutter.right_bottom()),
+                    egui::Rect::from_min_max(
+                        egui::pos2(gutter.right() - 12.0, gutter.top()),
+                        gutter.right_bottom(),
+                    ),
                     0.0,
                     Color32::from_rgb(249, 249, 249),
                 );
@@ -467,7 +472,8 @@ pub fn luau_tokens(src: &str) -> Vec<(std::ops::Range<usize>, Token)> {
             }
             i = (i + 1).min(b.len());
             Token::Str
-        } else if c.is_ascii_digit() || (c == b'.' && b.get(i + 1).is_some_and(u8::is_ascii_digit)) {
+        } else if c.is_ascii_digit() || (c == b'.' && b.get(i + 1).is_some_and(u8::is_ascii_digit))
+        {
             while i < b.len() && (b[i].is_ascii_alphanumeric() || b[i] == b'.' || b[i] == b'_') {
                 i += 1;
             }
@@ -481,10 +487,34 @@ pub fn luau_tokens(src: &str) -> Vec<(std::ops::Range<usize>, Token)> {
                 Token::Keyword
             } else if matches!(
                 word,
-                "game" | "workspace" | "script" | "print" | "warn" | "error" | "wait" | "spawn"
-                    | "delay" | "tick" | "require" | "pairs" | "ipairs" | "math" | "string"
-                    | "table" | "Instance" | "Vector3" | "CFrame" | "Color3" | "BrickColor"
-                    | "UDim2" | "Enum" | "self" | "typeof" | "pcall" | "tostring" | "tonumber"
+                "game"
+                    | "workspace"
+                    | "script"
+                    | "print"
+                    | "warn"
+                    | "error"
+                    | "wait"
+                    | "spawn"
+                    | "delay"
+                    | "tick"
+                    | "require"
+                    | "pairs"
+                    | "ipairs"
+                    | "math"
+                    | "string"
+                    | "table"
+                    | "Instance"
+                    | "Vector3"
+                    | "CFrame"
+                    | "Color3"
+                    | "BrickColor"
+                    | "UDim2"
+                    | "Enum"
+                    | "self"
+                    | "typeof"
+                    | "pcall"
+                    | "tostring"
+                    | "tonumber"
             ) {
                 Token::Builtin
             } else {

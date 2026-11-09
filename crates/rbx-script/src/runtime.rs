@@ -779,7 +779,13 @@ impl ScriptRuntime {
         result
     }
 
-    pub fn run_plugin(&self, source: &str, name: &str, dir: Option<std::path::PathBuf>, builtin: bool) -> Result<(), String> {
+    pub fn run_plugin(
+        &self,
+        source: &str,
+        name: &str,
+        dir: Option<std::path::PathBuf>,
+        builtin: bool,
+    ) -> Result<(), String> {
         {
             let mut e = self.engine.lock();
             e.plugins.current_dir = dir;
@@ -794,21 +800,29 @@ impl ScriptRuntime {
         r.map(|_| ())
     }
 
-    pub fn run_plugin_model(&self, data: &[u8], dir: Option<std::path::PathBuf>, builtin: bool) -> Result<(), String> {
+    pub fn run_plugin_model(
+        &self,
+        data: &[u8],
+        dir: Option<std::path::PathBuf>,
+        builtin: bool,
+    ) -> Result<(), String> {
         let roots = {
             let mut e = self.engine.lock();
             e.plugins.current_dir = dir;
             e.plugins.loading_builtin = builtin;
             e.dm.load_model(data).map_err(|err| err.to_string())?.0
         };
-        let result = crate::api::plugin::create_model_plugin(&self.lua, &roots).map_err(|e| e.to_string());
+        let result =
+            crate::api::plugin::create_model_plugin(&self.lua, &roots).map_err(|e| e.to_string());
         if result.is_ok() {
             let scripts: Vec<InstanceId> = {
                 let e = self.engine.lock();
                 roots
                     .iter()
                     .flat_map(|r| std::iter::once(*r).chain(e.dm.descendants(*r)))
-                    .filter(|d| e.dm.class_of(*d) == Some("Script") && !e.dm.get_bool(*d, "Disabled"))
+                    .filter(|d| {
+                        e.dm.class_of(*d) == Some("Script") && !e.dm.get_bool(*d, "Disabled")
+                    })
                     .collect()
             };
             for s in scripts {
@@ -1262,7 +1276,11 @@ end
             e.dm.find_first_child_of_class(root, "GameSettings")
         };
         if let Some(options) = options {
-            self.fire(options, "VideoRecordingChangeRequest", vec![Variant::Bool(recording)]);
+            self.fire(
+                options,
+                "VideoRecordingChangeRequest",
+                vec![Variant::Bool(recording)],
+            );
         }
     }
 

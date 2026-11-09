@@ -186,6 +186,15 @@ pub fn write_content_index(root: &Path) -> Result<(), String> {
     std::fs::write(out.join("content-index.txt"), files.join("\n")).map_err(|e| e.to_string())
 }
 
+fn clean_target(root: &Path, target: &str) -> Result<(), String> {
+    step(
+        &format!("clean {target}"),
+        root,
+        "cargo",
+        &["clean", "--target", target],
+    )
+}
+
 pub fn run(root: &Path, options: &[String]) -> Result<(), String> {
     let has = |flag: &str| options.iter().any(|o| o == flag);
     let quick = has("--quick");
@@ -217,6 +226,7 @@ pub fn run(root: &Path, options: &[String]) -> Result<(), String> {
             "cargo",
             &["build", "--workspace", "--target", "x86_64-apple-darwin"],
         )?;
+        clean_target(root, "x86_64-apple-darwin")?;
         step(
             "build linux x86_64",
             root,
@@ -228,6 +238,7 @@ pub fn run(root: &Path, options: &[String]) -> Result<(), String> {
                 "x86_64-unknown-linux-gnu",
             ],
         )?;
+        clean_target(root, "x86_64-unknown-linux-gnu")?;
         step(
             "build windows x86_64",
             root,
@@ -240,6 +251,7 @@ pub fn run(root: &Path, options: &[String]) -> Result<(), String> {
                 "x86_64-pc-windows-msvc",
             ],
         )?;
+        clean_target(root, "x86_64-pc-windows-msvc")?;
     }
 
     if !has("--skip-docker") {

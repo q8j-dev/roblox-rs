@@ -16,6 +16,7 @@ use std::sync::Arc;
 
 const STEP: f64 = 1.0 / 60.0;
 
+#[cfg(not(target_arch = "wasm32"))]
 use rbx_render::video;
 
 #[cfg(not(target_arch = "wasm32"))]

@@ -10,7 +10,6 @@ use rbx_dom::{DataModel, DomEvent, EventCursor, InstanceId, Variant, database};
 use rustc_hash::FxHashMap as HashMap;
 use std::collections::VecDeque;
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MessageType {
@@ -45,6 +44,7 @@ pub enum RunMode {
 
 pub struct Engine {
     pub dm: DataModel,
+    pub rng: std::cell::Cell<u64>,
     pub cursor: EventCursor,
     pub output: Vec<OutputMessage>,
     pub fired: VecDeque<Fired>,
@@ -195,6 +195,7 @@ impl Engine {
             physics_analyzer_break: true,
             camel_case_violations: 0,
             model_in_primary: HashMap::default(),
+            rng: std::cell::Cell::new(0x2545_f491_4f6c_dd1d),
             ownership: HashMap::default(),
             debris_timers: Vec::new(),
             debris_queue: Vec::new(),
@@ -451,15 +452,15 @@ pub fn set_script_timeout(lua: &Lua, seconds: f64) {
     };
 }
 
-static SEED: AtomicU64 = AtomicU64::new(0x2545_f491_4f6c_dd1d);
-
-pub fn random_seed() -> u64 {
-    let mut x = SEED.load(Ordering::Relaxed);
-    x ^= x << 13;
-    x ^= x >> 7;
-    x ^= x << 17;
-    SEED.store(x, Ordering::Relaxed);
-    x
+impl Engine {
+    pub fn next_random(&self) -> u64 {
+        let mut x = self.rng.get();
+        x ^= x << 13;
+        x ^= x >> 7;
+        x ^= x << 17;
+        self.rng.set(x);
+        x
+    }
 }
 
 pub fn engine(lua: &Lua) -> Shared {

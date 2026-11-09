@@ -60,7 +60,8 @@ impl Harness {
             ..Default::default()
         };
         let studio = &mut self.studio;
-        let _ = self.ctx.run_ui(raw, |ui| studio.ui(ui));
+        let mut output = self.ctx.run_ui(raw, |ui| studio.ui(ui));
+        output.textures_delta.clear();
         self.studio.doc.runtime.step(1.0 / 60.0);
     }
 

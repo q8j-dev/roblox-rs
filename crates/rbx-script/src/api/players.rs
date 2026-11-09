@@ -274,7 +274,7 @@ fn choose_spawn(e: &Engine, player: InstanceId, preferred: &str) -> Option<Spawn
     } else {
         candidates
     };
-    let pick = (crate::runtime::random_seed() % pool.len() as u64) as usize;
+    let pick = (e.next_random() % pool.len() as u64) as usize;
     Some(spawn_data(e, pool[pick]))
 }
 

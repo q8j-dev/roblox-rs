@@ -1427,10 +1427,9 @@ pub fn register_constructors(lua: &Lua, g: &Table) -> Result<()> {
     })?;
     bc.set("new", new_bc.clone())?;
     bc.set("New", new_bc)?;
-    let random = lua.create_function(|_, ()| {
-        Ok(LBrickColor(BrickColor::random(
-            crate::runtime::random_seed(),
-        )))
+    let random = lua.create_function(|lua, ()| {
+        let seed = crate::runtime::engine(lua).lock().next_random();
+        Ok(LBrickColor(BrickColor::random(seed)))
     })?;
     bc.set("random", random.clone())?;
     bc.set("Random", random)?;

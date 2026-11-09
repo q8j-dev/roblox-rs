@@ -164,11 +164,11 @@ impl ServerPhysics {
     ) {
         let by_player =
             |p: Option<InstanceId>| p.and_then(|p| clients.iter().find(|c| c.player == p));
-        let moving: rustc_hash::FxHashSet<InstanceId> = groups
-            .iter()
-            .flat_map(|g| g.parts.iter().copied())
-            .collect();
-        e.ownership.retain(|part, _| moving.contains(part));
+        {
+            let world = e.world.lock();
+            e.ownership
+                .retain(|part, _| world.assembly_of(*part).is_some_and(|a| !a.anchored));
+        }
         for g in groups {
             let entry = e.reconcile_ownership(&g.parts);
             let owner = match entry {

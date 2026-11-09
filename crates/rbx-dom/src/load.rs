@@ -14,6 +14,8 @@ pub struct SaveOptions {
     pub include_non_archivable: bool,
 }
 
+pub type MappedLoad = (Vec<InstanceId>, Vec<String>, HashMap<usize, InstanceId>);
+
 struct Created {
     id: InstanceId,
     tree_index: usize,
@@ -54,7 +56,7 @@ impl DataModel {
         tree: &Tree,
         parent: Option<InstanceId>,
         options: LoadOptions,
-    ) -> Result<(Vec<InstanceId>, Vec<String>, HashMap<usize, InstanceId>), DomError> {
+    ) -> Result<MappedLoad, DomError> {
         let mut warnings = Vec::new();
         let mut created: Vec<Created> = Vec::new();
         let mut map: HashMap<usize, InstanceId> = HashMap::new();

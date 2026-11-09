@@ -25,9 +25,11 @@ pub fn ensure_sdk(root: &Path) -> Result<PathBuf, String> {
     let name = host_archive()?;
     let dir = root.join("target").join("wasi-sdk");
     let sdk = dir.join(&name);
-    if sdk.join("bin").is_dir() {
+    let clang = PathBuf::from(tool(&sdk, "clang++"));
+    if clang.is_file() {
         return Ok(sdk);
     }
+    let _ = std::fs::remove_dir_all(&sdk);
     std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
     let archive = dir.join(format!("{name}.tar.gz"));
     let url = format!(
@@ -54,7 +56,7 @@ pub fn ensure_sdk(root: &Path) -> Result<PathBuf, String> {
         .map_err(|e| format!("could not start tar: {e}"))?
         .success();
     let _ = std::fs::remove_file(&archive);
-    if !ok || !sdk.join("bin").is_dir() {
+    if !ok || !clang.is_file() {
         return Err("could not unpack wasi-sdk".into());
     }
     Ok(sdk)

@@ -40,8 +40,8 @@ fn load(data: &[u8]) -> Result<DataModel, String> {
 impl Document {
     pub fn new_baseplate(content_root: &Path) -> Result<Document, String> {
         let mut dm = DataModel::new();
-        dm.ensure_terrain();
         let ws = dm.get_service("Workspace").map_err(|e| e.to_string())?;
+        dm.ensure_terrain();
         for s in [
             "Players",
             "Lighting",

@@ -831,7 +831,7 @@ fn collect_lights(dm: &DataModel, root: InstanceId) -> Vec<crate::lightgrid::Lig
     out
 }
 
-fn csg_bytes(dm: &DataModel, id: InstanceId, prop: &str) -> Vec<u8> {
+pub fn csg_bytes(dm: &DataModel, id: InstanceId, prop: &str) -> Vec<u8> {
     let data = match dm.get_raw(id, prop) {
         Some(Variant::BinaryString(b)) => b.clone(),
         Some(Variant::String(s)) | Some(Variant::Content(s)) => s.as_bytes().to_vec(),

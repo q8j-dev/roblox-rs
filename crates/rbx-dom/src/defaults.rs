@@ -241,6 +241,9 @@ pub fn default_value(class: &str, prop: &PropertyDescriptor) -> Variant {
 }
 
 pub fn default_name(class: &str) -> String {
+    if crate::classes::is_service_class(class) {
+        return class.to_string();
+    }
     let db = database();
     for c in db.superclasses(class) {
         if let Some(Variant::String(s)) = GENERATED.get(&c.name).and_then(|m| m.get("Name")) {

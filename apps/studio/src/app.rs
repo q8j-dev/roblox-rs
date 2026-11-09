@@ -237,10 +237,10 @@ impl ribbon::State for RibbonState<'_> {
             | "actionMaterialSelector"
             | "actionColorSelector"
             | "actionSurface" => selected,
-            "unionSelectionAction"
-            | "negateSelectionAction"
-            | "separateSelectionAction"
-            | "publishToRobloxAction"
+            "unionSelectionAction" | "negateSelectionAction" | "separateSelectionAction" => {
+                selected
+            }
+            "publishToRobloxAction"
             | "publishToRobloxAsAction"
             | "publishSelectionToRobloxAction"
             | "pairRbxDevDeviceAction"
@@ -874,11 +874,16 @@ impl Studio {
                     format!("plugins load from {}", dir.display()),
                 );
             }
-            "unionSelectionAction" | "negateSelectionAction" | "separateSelectionAction" => self
-                .log(
-                    MessageType::Warning,
-                    "solid modeling is not available in this build",
-                ),
+            "unionSelectionAction" | "negateSelectionAction" | "separateSelectionAction" => {
+                let result = match name {
+                    "unionSelectionAction" => crate::csg::union(&mut self.doc),
+                    "negateSelectionAction" => crate::csg::negate(&mut self.doc),
+                    _ => crate::csg::separate(&mut self.doc),
+                };
+                if let Err(e) = result {
+                    self.log(MessageType::Error, e);
+                }
+            }
             other => {
                 if let Some(b) = self.plugins.find(other) {
                     self.plugins.click(&self.doc, b);

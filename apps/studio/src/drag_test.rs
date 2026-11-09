@@ -257,3 +257,75 @@ fn ui_frame_cost() {
         );
     }
 }
+
+#[test]
+fn union_negate_and_separate_round_trip() {
+    let assets = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../assets");
+    let doc = Document::new_baseplate(&assets.join("content")).expect("baseplate");
+    let make = |doc: &Document, pos: Vec3| {
+        let mut e = doc.runtime.engine.lock();
+        let ws = e.dm.find_service("Workspace").expect("workspace");
+        let p = e.dm.create("Part").expect("part");
+        let _ = e.dm.set(p, "Anchored", Variant::Bool(true));
+        let _ = e.dm.set(p, "formFactorRaw", Variant::Enum(3));
+        let _ =
+            e.dm.set(p, "Size", Variant::Vector3(Vec3::new(4.0, 4.0, 4.0)));
+        let _ =
+            e.dm.set(p, "CFrame", Variant::CFrame(CFrame::from_translation(pos)));
+        let _ = e.dm.set_parent(p, Some(ws));
+        p
+    };
+    let a = make(&doc, Vec3::new(0.0, 10.0, 0.0));
+    let b = make(&doc, Vec3::new(2.0, 10.0, 0.0));
+    let mut studio = Studio::new(doc, assets);
+    studio.doc.select(vec![a, b]);
+    studio.run_action("unionSelectionAction");
+    let sel = studio.doc.selection();
+    assert_eq!(sel.len(), 1);
+    let union = sel[0];
+    {
+        let e = studio.doc.runtime.engine.lock();
+        assert_eq!(e.dm.class_of(union), Some("UnionOperation"));
+        assert!(e.dm.parent_of(a).is_none() && e.dm.parent_of(b).is_none());
+        let size =
+            e.dm.get(union, "Size")
+                .ok()
+                .and_then(|v| v.as_vec3())
+                .expect("size");
+        assert!(
+            (size - Vec3::new(6.0, 4.0, 4.0)).length() < 1e-3,
+            "size {size:?}"
+        );
+        let mesh =
+            rbx_csg::CsgMesh::from_binary(&rbx_render::scene::csg_bytes(&e.dm, union, "MeshData"));
+        assert!(mesh.is_some_and(|m| m.is_not_empty()));
+    }
+    studio.run_action("separateSelectionAction");
+    let parts = studio.doc.selection();
+    assert_eq!(parts.len(), 2);
+    {
+        let e = studio.doc.runtime.engine.lock();
+        assert!(parts.iter().all(|&p| e.dm.class_of(p) == Some("Part")));
+        assert!(e.dm.parent_of(union).is_none());
+    }
+    studio.doc.select(vec![parts[1]]);
+    studio.run_action("negateSelectionAction");
+    let negate = studio.doc.selection()[0];
+    assert_eq!(
+        studio.doc.runtime.engine.lock().dm.class_of(negate),
+        Some("NegateOperation")
+    );
+    studio.doc.select(vec![parts[0], negate]);
+    studio.run_action("unionSelectionAction");
+    let cut = studio.doc.selection()[0];
+    let e = studio.doc.runtime.engine.lock();
+    let size =
+        e.dm.get(cut, "Size")
+            .ok()
+            .and_then(|v| v.as_vec3())
+            .expect("size");
+    assert!(
+        (size - Vec3::new(2.0, 4.0, 4.0)).length() < 1e-3,
+        "size {size:?}"
+    );
+}

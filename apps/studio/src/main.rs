@@ -1,4 +1,5 @@
 mod app;
+mod csg;
 #[cfg(test)]
 mod drag_test;
 mod explorer;

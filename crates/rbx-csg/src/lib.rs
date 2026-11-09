@@ -1,4 +1,5 @@
 pub mod mesh;
+pub mod ops;
 pub mod physics;
 
 pub use mesh::{CsgMesh, CsgVertex};

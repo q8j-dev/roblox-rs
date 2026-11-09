@@ -259,8 +259,47 @@ fn join_mode(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
     ret(lua, 0i64)
 }
 
-fn csg(_lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
-    Err(rt("solid modeling is not available in this build"))
+fn csg_args(lua: &Lua, args: &[Value]) -> Vec<InstanceId> {
+    match args.first() {
+        Some(Value::Table(t)) => t
+            .sequence_values::<Value>()
+            .filter_map(|v| v.ok())
+            .filter_map(|v| crate::runtime::instance_from_value(lua, &v))
+            .collect(),
+        other => arg_instance(lua, other).into_iter().collect(),
+    }
+}
+
+fn instance_table(lua: &Lua, ids: &[InstanceId]) -> Result<Value> {
+    let t = lua.create_table_with_capacity(ids.len(), 0)?;
+    for (i, v) in crate::instance::push_instances(lua, ids)?
+        .into_iter()
+        .enumerate()
+    {
+        t.raw_set(i + 1, v)?;
+    }
+    Ok(Value::Table(t))
+}
+
+fn union(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let parts = csg_args(lua, args);
+    let r = crate::csg::union(&mut engine(lua).lock().dm, &parts);
+    let op = r.map_err(rt)?;
+    ret(lua, push_instance(lua, op)?)
+}
+
+fn negate(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let parts = csg_args(lua, args);
+    let r = crate::csg::negate(&mut engine(lua).lock().dm, &parts);
+    let ops = r.map_err(rt)?;
+    ret(lua, instance_table(lua, &ops)?)
+}
+
+fn separate(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let parts = csg_args(lua, args);
+    let r = crate::csg::separate(&mut engine(lua).lock().dm, &parts);
+    let restored = r.map_err(rt)?;
+    ret(lua, instance_table(lua, &restored)?)
 }
 
 fn ignore(_lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
@@ -283,7 +322,9 @@ pub fn register(r: &mut Registry) {
     r.add("Plugin", &["OpenWikiPage", "SaveSelectedToRoblox"], ignore);
     r.add("Plugin", &["GetStudioUserId"], studio_user_id);
     r.add("Plugin", &["GetJoinMode"], join_mode);
-    r.add("Plugin", &["Negate", "Union", "Separate"], csg);
+    r.add("Plugin", &["Union"], union);
+    r.add("Plugin", &["Negate"], negate);
+    r.add("Plugin", &["Separate"], separate);
     r.add("Toolbar", &["CreateButton"], create_button);
     r.add("Button", &["SetActive"], set_active);
 }

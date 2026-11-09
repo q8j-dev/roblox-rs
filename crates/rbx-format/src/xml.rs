@@ -954,7 +954,11 @@ fn write_property(out: &mut String, depth: usize, name: &str, value: &Variant) {
             };
             simple(out, depth, "Ref", name, &text, false)
         }
-        Variant::SystemAddress(_) => {}
+        Variant::SystemAddress(_)
+        | Variant::Font(_)
+        | Variant::UniqueId(_)
+        | Variant::SecurityCapabilities(_)
+        | Variant::OptionalCFrame(_) => {}
     }
 }
 

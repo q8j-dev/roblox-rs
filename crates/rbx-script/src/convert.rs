@@ -58,6 +58,11 @@ pub fn variant_to_lua(lua: &Lua, v: &Variant, ty: Option<&ValueType>) -> Result<
             Some(id) => push_instance(lua, *id)?,
             None => Value::Nil,
         },
+        Variant::OptionalCFrame(Some(x)) => Value::UserData(lua.create_userdata(LCFrame(*x))?),
+        Variant::OptionalCFrame(None)
+        | Variant::Font(_)
+        | Variant::UniqueId(_)
+        | Variant::SecurityCapabilities(_) => Value::Nil,
     })
 }
 
@@ -250,6 +255,17 @@ pub fn lua_to_variant(lua: &Lua, v: Value, ty: &ValueType) -> Result<Variant> {
             VariantType::Nil => Variant::Nil,
             VariantType::Enum => Variant::Enum(number(&v).unwrap_or(0.0) as u32),
             VariantType::Ref => Variant::Ref(instance_from_value(lua, &v)),
+            VariantType::OptionalCFrame => match &v {
+                Value::Nil => Variant::OptionalCFrame(None),
+                _ => Variant::OptionalCFrame(Some(
+                    LCFrame::from_lua(v.clone(), lua)
+                        .map_err(|_| bad(ty, &v))?
+                        .0,
+                )),
+            },
+            VariantType::Font | VariantType::UniqueId | VariantType::SecurityCapabilities => {
+                return Err(bad(ty, &v));
+            }
         },
         ValueType::Enum(name) => Variant::Enum(enum_value(lua, &v, name)?),
         ValueType::Ref(class) => match &v {

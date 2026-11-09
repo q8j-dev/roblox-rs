@@ -19,6 +19,32 @@ impl InstanceId {
     }
 }
 
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct FontFace {
+    pub family: String,
+    pub weight: u16,
+    pub style: u8,
+    pub cached_face_id: String,
+}
+
+impl Default for FontFace {
+    fn default() -> FontFace {
+        FontFace {
+            family: "rbxasset://fonts/families/SourceSansPro.json".to_string(),
+            weight: 400,
+            style: 0,
+            cached_face_id: String::new(),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub struct UniqueId {
+    pub index: u32,
+    pub time: u32,
+    pub random: i64,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum VariantType {
     Nil,
@@ -54,6 +80,10 @@ pub enum VariantType {
     Enum,
     Ref,
     SystemAddress,
+    Font,
+    UniqueId,
+    SecurityCapabilities,
+    OptionalCFrame,
 }
 
 #[derive(Clone, Debug, PartialEq, Default, Serialize, Deserialize)]
@@ -92,6 +122,10 @@ pub enum Variant {
     Enum(u32),
     Ref(Option<InstanceId>),
     SystemAddress(String),
+    Font(FontFace),
+    UniqueId(UniqueId),
+    SecurityCapabilities(u64),
+    OptionalCFrame(Option<CFrame>),
 }
 
 impl Variant {
@@ -130,6 +164,10 @@ impl Variant {
             Variant::Enum(_) => VariantType::Enum,
             Variant::Ref(_) => VariantType::Ref,
             Variant::SystemAddress(_) => VariantType::SystemAddress,
+            Variant::Font(_) => VariantType::Font,
+            Variant::UniqueId(_) => VariantType::UniqueId,
+            Variant::SecurityCapabilities(_) => VariantType::SecurityCapabilities,
+            Variant::OptionalCFrame(_) => VariantType::OptionalCFrame,
         }
     }
 
@@ -170,6 +208,10 @@ impl Variant {
             VariantType::Enum => Variant::Enum(0),
             VariantType::Ref => Variant::Ref(None),
             VariantType::SystemAddress => Variant::SystemAddress(String::new()),
+            VariantType::Font => Variant::Font(FontFace::default()),
+            VariantType::UniqueId => Variant::UniqueId(UniqueId::default()),
+            VariantType::SecurityCapabilities => Variant::SecurityCapabilities(0),
+            VariantType::OptionalCFrame => Variant::OptionalCFrame(None),
         }
     }
 

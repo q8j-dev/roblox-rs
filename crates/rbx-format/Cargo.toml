@@ -13,4 +13,5 @@ base64 = "0.23.1"
 lz4_flex = { version = "0.14.0", default-features = false, features = ["std"] }
 rbx-math = { version = "0.1.0", path = "../rbx-math" }
 rbx-reflection = { version = "0.1.0", path = "../rbx-reflection" }
+ruzstd = "0.9.1"
 thiserror = "2.0.21"

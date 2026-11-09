@@ -6,4 +6,4 @@ pub use database::{
     FunctionDescriptor, FunctionKind, ParamDescriptor, PropertyDescriptor, ReflectionDatabase,
     Security, ValueType, database,
 };
-pub use variant::{InstanceId, Variant, VariantType};
+pub use variant::{FontFace, InstanceId, UniqueId, Variant, VariantType};

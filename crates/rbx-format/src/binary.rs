@@ -5,7 +5,7 @@ use rbx_math::{
     NumberRange, NumberSequence, NumberSequenceKeypoint, PhysicalProperties, Quat, Ray, Rect2D,
     UDim, UDim2, Vec2, Vec3, Vector2int16, Vector3int16,
 };
-use rbx_reflection::{Variant, VariantType};
+use rbx_reflection::{FontFace, UniqueId, Variant, VariantType};
 use std::collections::{BTreeMap, HashMap};
 
 const SIGNATURE: [u8; 6] = [0x89, 0xff, 0x0d, 0x0a, 0x1a, 0x0a];
@@ -39,6 +39,16 @@ const BPF_COLOR_SEQUENCE: u8 = 22;
 const BPF_NUMBER_RANGE: u8 = 23;
 const BPF_RECT2D: u8 = 24;
 const BPF_PHYSICAL_PROPERTIES: u8 = 25;
+const BPF_COLOR3UINT8: u8 = 26;
+const BPF_INT64: u8 = 27;
+const BPF_SHARED_STRING: u8 = 28;
+const BPF_BYTECODE: u8 = 29;
+const BPF_OPTIONAL_CFRAME: u8 = 30;
+const BPF_UNIQUE_ID: u8 = 31;
+const BPF_FONT: u8 = 32;
+const BPF_SECURITY_CAPABILITIES: u8 = 33;
+const BPF_CONTENT: u8 = 34;
+const CHUNK_SSTR: [u8; 4] = *b"SSTR";
 
 struct Reader<'a> {
     data: &'a [u8],
@@ -131,6 +141,41 @@ impl<'a> Reader<'a> {
             .collect())
     }
 
+    fn interleaved_wide<const N: usize>(&mut self, count: usize) -> Result<Vec<[u8; N]>, FormatError> {
+        let bytes = self.take(count * N)?;
+        Ok((0..count)
+            .map(|i| std::array::from_fn(|k| bytes[k * count + i]))
+            .collect())
+    }
+
+    fn longs(&mut self, count: usize) -> Result<Vec<i64>, FormatError> {
+        Ok(self
+            .interleaved_wide::<8>(count)?
+            .into_iter()
+            .map(|b| {
+                let v = u64::from_be_bytes(b);
+                ((v >> 1) as i64) ^ -((v & 1) as i64)
+            })
+            .collect())
+    }
+
+    fn cframes(&mut self, format: u8, count: usize) -> Result<Vec<CFrame>, FormatError> {
+        let mut rot = Vec::with_capacity(count);
+        for _ in 0..count {
+            rot.push(if format == BPF_CFRAME_MATRIX {
+                read_rotation_exact(self)?
+            } else {
+                read_rotation_quat(self)?
+            });
+        }
+        let tx = self.floats(count)?;
+        let ty = self.floats(count)?;
+        let tz = self.floats(count)?;
+        Ok((0..count)
+            .map(|i| CFrame::new(rot[i], Vec3::new(tx[i], ty[i], tz[i])))
+            .collect())
+    }
+
     fn ids(&mut self, count: usize) -> Result<Vec<i32>, FormatError> {
         let mut v = self.ints(count)?;
         let mut last = 0i32;
@@ -189,6 +234,7 @@ fn read_values(
     name: &str,
     count: usize,
     id_count: usize,
+    shared: &[Vec<u8>],
 ) -> Result<Vec<Variant>, FormatError> {
     let format = r.u8()?;
     let mut out = Vec::with_capacity(count);
@@ -283,21 +329,7 @@ fn read_values(
             }
         }
         BPF_CFRAME_MATRIX | BPF_CFRAME_QUAT => {
-            let mut rot = Vec::with_capacity(count);
-            for _ in 0..count {
-                rot.push(if format == BPF_CFRAME_MATRIX {
-                    read_rotation_exact(r)?
-                } else {
-                    read_rotation_quat(r)?
-                });
-            }
-            let tx = r.floats(count)?;
-            let ty = r.floats(count)?;
-            let tz = r.floats(count)?;
-            out.extend(
-                (0..count)
-                    .map(|i| Variant::CFrame(CFrame::new(rot[i], Vec3::new(tx[i], ty[i], tz[i])))),
-            );
+            out.extend(r.cframes(format, count)?.into_iter().map(Variant::CFrame));
         }
         BPF_ENUM => out.extend(r.interleaved(count)?.into_iter().map(Variant::Enum)),
         BPF_REF => {
@@ -359,11 +391,104 @@ fn read_values(
         }
         BPF_PHYSICAL_PROPERTIES => {
             for _ in 0..count {
-                let custom = r.u8()? != 0;
-                out.push(Variant::PhysicalProperties(if custom {
-                    PhysicalProperties::custom(r.f32()?, r.f32()?, r.f32()?, r.f32()?, r.f32()?)
+                let flags = r.u8()?;
+                out.push(Variant::PhysicalProperties(if flags & 1 != 0 {
+                    let p =
+                        PhysicalProperties::custom(r.f32()?, r.f32()?, r.f32()?, r.f32()?, r.f32()?);
+                    if flags & 2 != 0 {
+                        r.f32()?;
+                    }
+                    p
                 } else {
                     PhysicalProperties::default()
+                }));
+            }
+        }
+        BPF_COLOR3UINT8 => {
+            let c = r.take(count * 3)?;
+            out.extend((0..count).map(|i| {
+                Variant::Color3(Color3::new(
+                    c[i] as f32 / 255.0,
+                    c[count + i] as f32 / 255.0,
+                    c[count * 2 + i] as f32 / 255.0,
+                ))
+            }));
+        }
+        BPF_INT64 => out.extend(r.longs(count)?.into_iter().map(Variant::Int64)),
+        BPF_SHARED_STRING => {
+            for i in r.interleaved(count)? {
+                let s = shared
+                    .get(i as usize)
+                    .ok_or(FormatError::InvalidId(i as i64))?;
+                out.push(Variant::BinaryString(s.clone()));
+            }
+        }
+        BPF_BYTECODE => {
+            for _ in 0..count {
+                out.push(Variant::BinaryString(r.bytes()?.to_vec()));
+            }
+        }
+        BPF_OPTIONAL_CFRAME => {
+            let inner = r.u8()?;
+            let cframes = r.cframes(inner, count)?;
+            if r.u8()? != BPF_BOOL {
+                return Err(FormatError::UnknownPropertyFormat(format, name.to_string()));
+            }
+            let present = r.take(count)?;
+            out.extend(
+                cframes
+                    .into_iter()
+                    .zip(present)
+                    .map(|(cf, &p)| Variant::OptionalCFrame((p != 0).then_some(cf))),
+            );
+        }
+        BPF_UNIQUE_ID => {
+            for b in r.interleaved_wide::<16>(count)? {
+                out.push(Variant::UniqueId(UniqueId {
+                    index: u32::from_be_bytes([b[0], b[1], b[2], b[3]]),
+                    time: u32::from_be_bytes([b[4], b[5], b[6], b[7]]),
+                    random: i64::from_be_bytes([
+                        b[8], b[9], b[10], b[11], b[12], b[13], b[14], b[15],
+                    ])
+                    .rotate_right(1),
+                }));
+            }
+        }
+        BPF_FONT => {
+            for _ in 0..count {
+                let family = r.string()?;
+                let weight = r.u16()?;
+                let style = r.u8()?;
+                let cached_face_id = r.string()?;
+                out.push(Variant::Font(FontFace {
+                    family,
+                    weight,
+                    style,
+                    cached_face_id,
+                }));
+            }
+        }
+        BPF_SECURITY_CAPABILITIES => out.extend(
+            r.longs(count)?
+                .into_iter()
+                .map(|v| Variant::SecurityCapabilities(v as u64)),
+        ),
+        BPF_CONTENT => {
+            let kinds = r.ints(count)?;
+            let uri_count = r.u32()? as usize;
+            let mut uris = Vec::with_capacity(uri_count);
+            for _ in 0..uri_count {
+                uris.push(r.string()?);
+            }
+            let object_count = r.u32()? as usize;
+            r.ids(object_count)?;
+            let external = r.u32()? as usize;
+            r.take(external * 4)?;
+            let mut uris = uris.into_iter();
+            for k in kinds {
+                out.push(Variant::Content(match k {
+                    1 => uris.next().unwrap_or_default(),
+                    _ => String::new(),
                 }));
             }
         }
@@ -395,6 +520,18 @@ fn read_chunk(data: &[u8], offset: &mut usize) -> Result<([u8; 4], Vec<u8>), For
         }
         let src = &data[*offset..*offset + compressed];
         *offset += compressed;
+        if src.starts_with(&[0x28, 0xb5, 0x2f, 0xfd]) {
+            let mut input = src;
+            let mut decoder = ruzstd::decoding::StreamingDecoder::new(&mut input)
+                .map_err(|_| FormatError::Decompress(0, size))?;
+            let mut out = Vec::with_capacity(size);
+            std::io::Read::read_to_end(&mut decoder, &mut out)
+                .map_err(|_| FormatError::Decompress(0, size))?;
+            if out.len() != size {
+                return Err(FormatError::Decompress(out.len(), size));
+            }
+            return Ok((name, out));
+        }
         let mut out = vec![0u8; size];
         let n = lz4_flex::block::decompress_into(src, &mut out)
             .map_err(|_| FormatError::Decompress(0, size))?;
@@ -431,6 +568,7 @@ pub fn read_binary(data: &[u8]) -> Result<Tree, FormatError> {
     let mut links: Vec<(usize, Option<usize>)> = Vec::new();
     let mut offset = 32;
     let mut done = false;
+    let mut shared: Vec<Vec<u8>> = Vec::new();
 
     while offset < data.len() {
         let (name, payload) = read_chunk(data, &mut offset)?;
@@ -480,7 +618,7 @@ pub fn read_binary(data: &[u8]) -> Result<Tree, FormatError> {
                 }
                 let prop = r.string()?;
                 if let Some((_, members)) = &types[index as usize] {
-                    let values = read_values(&mut r, &prop, members.len(), object_count)?;
+                    let values = read_values(&mut r, &prop, members.len(), object_count, &shared)?;
                     for (id, value) in members.iter().zip(values) {
                         if let Some(inst) = slots[*id].as_mut() {
                             inst.properties.push((prop.clone(), value));
@@ -508,6 +646,14 @@ pub fn read_binary(data: &[u8]) -> Result<Tree, FormatError> {
                         Some(p as usize)
                     };
                     links.push((o as usize, parent));
+                }
+            }
+            CHUNK_SSTR => {
+                r.u32()?;
+                let n = r.u32()? as usize;
+                for _ in 0..n {
+                    r.take(16)?;
+                    shared.push(r.bytes()?.to_vec());
                 }
             }
             CHUNK_END => {

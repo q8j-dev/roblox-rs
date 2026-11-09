@@ -78,6 +78,63 @@ pub fn push_instance(lua: &Lua, id: InstanceId) -> Result<Value> {
     Ok(Value::UserData(ud))
 }
 
+pub fn push_instances(lua: &Lua, ids: &[InstanceId]) -> Result<Vec<Value>> {
+    let (cache, release) = with_state(lua, |s| {
+        (
+            s.instance_cache
+                .as_ref()
+                .map(|k| lua.registry_value::<Table>(k)),
+            s.release.clone(),
+        )
+    });
+    let cache = match cache {
+        Some(c) => c?,
+        None => return Err(rt("runtime not initialized")),
+    };
+    let mut out = Vec::with_capacity(ids.len());
+    let mut missing = Vec::new();
+    for (i, &id) in ids.iter().enumerate() {
+        match cache.raw_get::<Value>(id.raw() as f64)? {
+            Value::UserData(ud) => out.push(Value::UserData(ud)),
+            _ => {
+                out.push(Value::Nil);
+                missing.push(i);
+            }
+        }
+    }
+    if missing.is_empty() {
+        return Ok(out);
+    }
+    let alive: Vec<bool> = {
+        let eng = engine(lua);
+        let mut e = eng.lock();
+        missing
+            .iter()
+            .map(|&i| {
+                let id = ids[i];
+                let ok = e.dm.contains(id);
+                if ok {
+                    e.dm.retain(id);
+                }
+                ok
+            })
+            .collect()
+    };
+    for (&i, ok) in missing.iter().zip(alive) {
+        if !ok {
+            continue;
+        }
+        let id = ids[i];
+        let ud = lua.create_userdata(LInstance {
+            id,
+            release: release.clone(),
+        })?;
+        cache.raw_set(id.raw() as f64, ud.clone())?;
+        out[i] = Value::UserData(ud);
+    }
+    Ok(out)
+}
+
 fn key_name(key: &Value) -> Result<String> {
     match key {
         Value::String(s) => Ok(s.to_str()?.to_string()),

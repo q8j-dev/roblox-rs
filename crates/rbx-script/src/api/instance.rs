@@ -8,8 +8,11 @@ use rbx_dom::InstanceId;
 
 fn children_table(lua: &Lua, ids: &[InstanceId]) -> Result<mlua::Table> {
     let t = lua.create_table_with_capacity(ids.len(), 0)?;
-    for (i, &c) in ids.iter().enumerate() {
-        t.raw_set(i + 1, push_instance(lua, c)?)?;
+    for (i, v) in crate::instance::push_instances(lua, ids)?
+        .into_iter()
+        .enumerate()
+    {
+        t.raw_set(i + 1, v)?;
     }
     Ok(t)
 }

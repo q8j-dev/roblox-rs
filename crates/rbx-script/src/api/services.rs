@@ -8,7 +8,7 @@ use rbx_dom::{InstanceId, database, is_service_class};
 
 pub fn settings_root(lua: &Lua, class: &str) -> Result<InstanceId> {
     let key = format!("rbx_settings_{class}");
-    if let Ok(Value::Number(n)) = lua.named_registry_value::<Value>(&key)
+    if let Ok(Some(n)) = lua.named_registry_value::<Option<f64>>(&key)
         && let Some(id) = InstanceId::from_raw(n as u64)
         && engine(lua).lock().dm.contains(id)
     {

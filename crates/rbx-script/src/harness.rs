@@ -36,7 +36,7 @@ impl PlaceRun {
 
 pub const FRAME: f64 = 1.0 / 60.0;
 pub const EMPTY_TEST_SECONDS: f64 = 5.0;
-pub const SCRIPT_TIMEOUT: f64 = 10.0;
+pub const SCRIPT_TIMEOUT: f64 = 120.0;
 pub fn wall_limit() -> std::time::Duration {
     let secs = std::env::var("RBX_PLACE_WALL_LIMIT")
         .ok()

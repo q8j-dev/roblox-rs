@@ -698,11 +698,28 @@ impl PhysicsWorld {
         if self.joints_service.is_none() {
             self.joints_service = dm.find_service("JointsService");
         }
-        for id in reconsider {
+        for &id in &reconsider {
             self.reconsider(dm, id);
         }
+        let mut joint_upserts: Vec<InstanceId> = Vec::new();
         for (id, prop) in props {
+            if self.joints.contains_key(&id)
+                && !matches!(
+                    prop,
+                    "DesiredAngle" | "MaxVelocity" | "CurrentAngle" | "BaseAngle"
+                )
+            {
+                if prop != "Parent" && seen.insert(id) {
+                    joint_upserts.push(id);
+                }
+                continue;
+            }
             self.property_changed(dm, id, prop);
+        }
+        for id in joint_upserts {
+            if let Some(kind) = self.joints.get(&id).map(|j| j.kind) {
+                self.upsert_joint(dm, id, kind);
+            }
         }
         self.flush_spatial();
     }

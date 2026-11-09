@@ -88,12 +88,25 @@ fn prepare(
         engine.asset_dirs.push(tests.join("assets"));
     }
     engine.process_after_load();
-    engine.virtual_clock = Some(
-        rbx_base::time::SystemTime::now()
-            .duration_since(rbx_base::time::UNIX_EPOCH)
-            .map(|d| d.as_secs_f64())
-            .unwrap_or(0.0),
-    );
+    let performance_test = engine.dm.find_service("TestService").is_some_and(|t| {
+        let flag = |name: &str| {
+            engine
+                .dm
+                .get(t, name)
+                .ok()
+                .and_then(|v| v.as_bool())
+                .unwrap_or(true)
+        };
+        !flag("Is30FpsThrottleEnabled") || !flag("IsPhysicsEnvironmentalThrottled")
+    });
+    if !performance_test {
+        engine.virtual_clock = Some(
+            rbx_base::time::SystemTime::now()
+                .duration_since(rbx_base::time::UNIX_EPOCH)
+                .map(|d| d.as_secs_f64())
+                .unwrap_or(0.0),
+        );
+    }
     let engine = Arc::new(Mutex::new(engine));
     let runtime = ScriptRuntime::new(engine).map_err(|e| e.to_string())?;
     crate::runtime::set_script_timeout(&runtime.lua, SCRIPT_TIMEOUT);

@@ -912,6 +912,10 @@ impl ScriptRuntime {
             crate::api::tween::step(&self.lua, dt as f32);
             pump(&self.lua);
             self.step_physics(dt);
+            let mut e = self.engine.lock();
+            e.clock_carry += e.frame_clock_peak;
+            e.frame_clock_peak = 0.0;
+            e.frame_started = rbx_base::time::Instant::now();
         }
         crate::api::sound::step(&self.lua, dt);
         self.step_debris();

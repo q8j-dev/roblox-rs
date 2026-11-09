@@ -46,8 +46,12 @@ fn main() {
             .unwrap_or("")
             .to_string()
     }
-    let mut stack: Vec<(usize, PathBuf, usize)> =
-        tree.roots.iter().rev().map(|&r| (r, out.clone(), 0)).collect();
+    let mut stack: Vec<(usize, PathBuf, usize)> = tree
+        .roots
+        .iter()
+        .rev()
+        .map(|&r| (r, out.clone(), 0))
+        .collect();
     while let Some((i, dir, depth)) = stack.pop() {
         let inst = &tree.instances[i];
         for (n, v) in &inst.properties {
@@ -58,7 +62,12 @@ fn main() {
                 .or_default() += 1;
         }
         let name = safe(&name_of(inst));
-        listing.push_str(&format!("{}{} [{}]\n", "  ".repeat(depth), name, inst.class));
+        listing.push_str(&format!(
+            "{}{} [{}]\n",
+            "  ".repeat(depth),
+            name,
+            inst.class
+        ));
         let here = dir.join(&name);
         let is_script = inst.class.ends_with("Script");
         if !children[i].is_empty() || !is_script {
@@ -66,7 +75,7 @@ fn main() {
         }
         if is_script {
             if let Some(src) = inst.get("Source").and_then(source_of) {
-                if src.first() == Some(&0x1b) || src.iter().take(64).any(|&b| b == 0) {
+                if src.contains(&0) || std::str::from_utf8(&src).is_err() {
                     bytecode += 1;
                 } else {
                     source += 1;

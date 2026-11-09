@@ -1,0 +1,16 @@
+[package]
+name = "luau-bytecode"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+thiserror = "2.0.21"
+
+[dev-dependencies]
+rbx-format = { version = "0.1.0", path = "../rbx-format" }
+rbx-reflection = { version = "0.1.0", path = "../rbx-reflection" }

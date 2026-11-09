@@ -141,7 +141,10 @@ impl<'a> Reader<'a> {
             .collect())
     }
 
-    fn interleaved_wide<const N: usize>(&mut self, count: usize) -> Result<Vec<[u8; N]>, FormatError> {
+    fn interleaved_wide<const N: usize>(
+        &mut self,
+        count: usize,
+    ) -> Result<Vec<[u8; N]>, FormatError> {
         let bytes = self.take(count * N)?;
         Ok((0..count)
             .map(|i| std::array::from_fn(|k| bytes[k * count + i]))
@@ -393,8 +396,13 @@ fn read_values(
             for _ in 0..count {
                 let flags = r.u8()?;
                 out.push(Variant::PhysicalProperties(if flags & 1 != 0 {
-                    let p =
-                        PhysicalProperties::custom(r.f32()?, r.f32()?, r.f32()?, r.f32()?, r.f32()?);
+                    let p = PhysicalProperties::custom(
+                        r.f32()?,
+                        r.f32()?,
+                        r.f32()?,
+                        r.f32()?,
+                        r.f32()?,
+                    );
                     if flags & 2 != 0 {
                         r.f32()?;
                     }

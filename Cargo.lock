@@ -2188,6 +2188,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "luau-bytecode"
+version = "0.1.0"
+dependencies = [
+ "rbx-format",
+ "rbx-reflection",
+ "thiserror 2.0.21",
+]
+
+[[package]]
 name = "luau0-src"
 version = "0.23.0+luau745"
 source = "registry+https://github.com/rust-lang/crates.io-index"

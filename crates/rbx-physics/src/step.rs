@@ -743,9 +743,10 @@ impl PhysicsWorld {
                 if !was_overlapping {
                     let ai = pa.assembly;
                     let bi = pb.assembly;
-                    let high = [ai, bi]
-                        .iter()
-                        .any(|&a| self.assemblies.get(a).is_some_and(|x| x.high_velocity()));
+                    let high = pair.last_long_step < 0
+                        && [ai, bi]
+                            .iter()
+                            .any(|&a| self.assemblies.get(a).is_some_and(|x| x.high_velocity()));
                     if high {
                         recursive.push(ai);
                         recursive.push(bi);

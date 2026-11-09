@@ -119,6 +119,7 @@ pub fn start_script(lua: &Lua, id: InstanceId, identity: Identity) {
     };
     let func = match lua
         .load(&source)
+        .set_mode(mlua::chunk::ChunkMode::Text)
         .set_name(format!("={name}"))
         .set_environment(env)
         .into_function()

@@ -155,3 +155,14 @@ error("boom")
     assert_eq!(out[1].0, MessageType::Error);
     assert!(out[1].1.contains("Test:5: boom"), "{}", out[1].1);
 }
+
+#[test]
+fn script_source_is_never_loaded_as_bytecode() {
+    let rt = runtime();
+    let bytecode = "\u{0}print('bytecode ran')";
+    let err = rt
+        .execute(bytecode, "Test", Identity::GameScript)
+        .expect_err("bytecode source must be rejected");
+    assert!(!err.to_string().contains("bytecode ran"));
+    assert!(!outputs(&rt).iter().any(|(_, t)| t.contains("bytecode ran")));
+}

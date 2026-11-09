@@ -92,6 +92,7 @@ pub fn load_library(lua: &Lua, name: &str) -> Result<Value> {
     let env = new_environment(lua, None)?;
     let func: Function = lua
         .load(&source)
+        .set_mode(mlua::chunk::ChunkMode::Text)
         .set_name(format!("={name}"))
         .set_environment(env)
         .into_function()?;

@@ -269,6 +269,7 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
                 let env = new_environment(lua, info.script)?;
                 match lua
                     .load(&src)
+                    .set_mode(mlua::chunk::ChunkMode::Text)
                     .set_name(format!("={}", name.unwrap_or_else(|| "[string]".into())))
                     .set_environment(env)
                     .into_function()

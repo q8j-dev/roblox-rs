@@ -662,6 +662,7 @@ impl ScriptRuntime {
         let func = self
             .lua
             .load(source)
+            .set_mode(mlua::chunk::ChunkMode::Text)
             .set_name(format!("={name}"))
             .set_environment(env)
             .into_function()?;
@@ -700,6 +701,7 @@ impl ScriptRuntime {
         let func = self
             .lua
             .load(source)
+            .set_mode(mlua::chunk::ChunkMode::Text)
             .set_name(format!("={name}"))
             .set_environment(env)
             .into_function()
@@ -761,6 +763,7 @@ impl ScriptRuntime {
         let func = self
             .lua
             .load(source)
+            .set_mode(mlua::chunk::ChunkMode::Text)
             .set_name(format!("={name}"))
             .set_environment(env)
             .into_function()
@@ -1575,6 +1578,7 @@ pub fn require_module(lua: &Lua, m: Value) -> mlua::Result<Value> {
     let env = new_environment(lua, Some(id))?;
     let func = match lua
         .load(&source)
+        .set_mode(mlua::chunk::ChunkMode::Text)
         .set_name(format!("={name}"))
         .set_environment(env)
         .into_function()

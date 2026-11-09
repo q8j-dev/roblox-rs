@@ -152,7 +152,12 @@ impl Studio {
             .into_iter()
             .map(|(id, name, src)| {
                 let mut messages = Vec::new();
-                if let Err(err) = lua.load(&src).set_name(format!("={name}")).into_function() {
+                if let Err(err) = lua
+                    .load(&src)
+                    .set_mode(rbx_script::mlua::chunk::ChunkMode::Text)
+                    .set_name(format!("={name}"))
+                    .into_function()
+                {
                     let text = err.to_string();
                     let line = text
                         .split(':')

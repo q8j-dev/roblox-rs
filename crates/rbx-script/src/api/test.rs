@@ -368,6 +368,7 @@ pub fn start(lua: &Lua, identity: Identity) -> Result<()> {
         let env = new_environment(lua, Some(s))?;
         let func = match lua
             .load(&filtered)
+            .set_mode(mlua::chunk::ChunkMode::Text)
             .set_name(format!("={name}"))
             .set_environment(env)
             .into_function()

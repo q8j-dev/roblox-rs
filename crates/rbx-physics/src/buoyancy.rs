@@ -7,25 +7,7 @@ use rbx_math::{CFrame, IVec3, Vec3};
 pub const WATER_DENSITY: f32 = 1.0;
 pub const KERNEL_DT: f32 = 1.0 / (240.0 * 19.0);
 
-pub fn specific_gravity(material: u32) -> f32 {
-    match material {
-        0xFFFF | 0x0100 | 0x0110 | 0x0120 => 0.7,
-        0x0200 | 0x0210 => 0.35,
-        0x0310 => 2.563,
-        0x0320 | 0x0340 | 0x0370 | 0x0380 | 0x0390 | 0x0314 | 0x0324 => 2.691,
-        0x0330 | 0x0360 => 2.403,
-        0x0350 => 1.922,
-        0x0410 | 0x0420 | 0x0440 => 7.85,
-        0x0430 => 7.7,
-        0x0500 | 0x0530 | 0x0540 | 0x0550 => 0.9,
-        0x0510 => 1.602,
-        0x0520 => 0.7,
-        0x0600 | 0x0610 => 0.919,
-        0x0700 => 0.0,
-        0x0800 => 1.0,
-        _ => 1.0,
-    }
-}
+pub use rbx_dom::specific_gravity;
 
 #[derive(Clone, Copy)]
 struct Extents {

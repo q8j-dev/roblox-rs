@@ -37,7 +37,13 @@ impl PlaceRun {
 pub const FRAME: f64 = 1.0 / 60.0;
 pub const EMPTY_TEST_SECONDS: f64 = 5.0;
 pub const SCRIPT_TIMEOUT: f64 = 10.0;
-pub const WALL_LIMIT: std::time::Duration = std::time::Duration::from_secs(60);
+pub fn wall_limit() -> std::time::Duration {
+    let secs = std::env::var("RBX_PLACE_WALL_LIMIT")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or(60);
+    std::time::Duration::from_secs(secs)
+}
 
 fn load_file(path: &Path) -> Result<(DataModel, Vec<String>), String> {
     let data = std::fs::read(path).map_err(|e| format!("{}: {e}", path.display()))?;
@@ -163,7 +169,7 @@ pub fn run_datamodel(
             if engine.lock().test.done {
                 break;
             }
-            if started.elapsed() > WALL_LIMIT {
+            if started.elapsed() > wall_limit() {
                 run.timed_out = true;
                 break;
             }
@@ -179,7 +185,7 @@ pub fn run_datamodel(
         let frames = (EMPTY_TEST_SECONDS / FRAME).ceil() as usize;
         let started = rbx_base::time::Instant::now();
         for _ in 0..frames {
-            if started.elapsed() > WALL_LIMIT {
+            if started.elapsed() > wall_limit() {
                 run.timed_out = true;
                 break;
             }
@@ -271,7 +277,7 @@ fn run_multiplayer(
         if server.engine.lock().test.done {
             break;
         }
-        if started.elapsed() > WALL_LIMIT {
+        if started.elapsed() > wall_limit() {
             run.timed_out = true;
             break;
         }

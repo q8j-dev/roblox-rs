@@ -122,7 +122,8 @@ pub fn union_shape(dm: &DataModel, id: InstanceId, size: Vec3) -> PartShape {
                 SharedShape::compound(parts)
             }
         }
-        PhysicsData::Missing | PhysicsData::OutOfDate(_) => {
+        PhysicsData::OutOfDate(_) => block(),
+        PhysicsData::Missing => {
             let raw = resolve(dm, bytes(dm.get_raw(id, "MeshData")));
             let fidelity = match dm.get_raw(id, "CollisionFidelity") {
                 Some(Variant::Enum(v)) => *v,

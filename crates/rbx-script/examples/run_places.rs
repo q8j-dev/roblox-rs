@@ -33,10 +33,24 @@ fn main() {
     let mut files = Vec::new();
     collect(&root, &mut files);
     files.sort();
-    files.retain(|f| f.to_string_lossy().contains(&filter));
+    if let Some(list) = filter.strip_prefix('@') {
+        let wanted: Vec<String> = std::fs::read_to_string(list)
+            .unwrap_or_default()
+            .lines()
+            .map(str::trim)
+            .filter(|l| !l.is_empty())
+            .map(str::to_string)
+            .collect();
+        files.retain(|f| wanted.iter().any(|w| f.to_string_lossy().ends_with(w.as_str())));
+    } else {
+        files.retain(|f| f.to_string_lossy().contains(&filter));
+    }
     let counts: Mutex<[usize; 4]> = Mutex::new([0; 4]);
     let next = AtomicUsize::new(0);
-    let threads = std::thread::available_parallelism().map_or(4, |n| n.get());
+    let threads = std::env::var("RBX_PLACE_THREADS")
+        .ok()
+        .and_then(|v| v.parse().ok())
+        .unwrap_or_else(|| std::thread::available_parallelism().map_or(4, |n| n.get()));
     std::thread::scope(|s| {
         for _ in 0..threads {
             s.spawn(|| {

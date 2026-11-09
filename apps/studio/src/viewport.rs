@@ -350,13 +350,15 @@ pub enum Drag {
     },
 }
 
+pub type HandleRef = (Option<InstanceId>, usize);
+
 pub struct Tools {
     pub hover: Option<InstanceId>,
     pub over_handle: Option<(Option<InstanceId>, usize)>,
     pub drag: Option<Drag>,
     pub rotation_frame: Mat3,
     pub saved_transparency: Vec<(InstanceId, f32)>,
-    pub press: Option<(Vec3, Vec3, Option<(Option<InstanceId>, usize)>)>,
+    pub press: Option<(Vec3, Vec3, Option<HandleRef>)>,
 }
 
 impl Default for Tools {

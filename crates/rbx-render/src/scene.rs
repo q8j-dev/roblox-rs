@@ -598,7 +598,7 @@ fn collect_parts(
             },
         );
     }
-    if frame % 120 == 0 {
+    if frame.is_multiple_of(120) {
         cache.entries.retain(|_, c| frame - c.frame < 120);
     }
 }

@@ -177,7 +177,7 @@ fn encode_jpeg(
     bgra: bool,
 ) -> std::io::Result<Vec<u8>> {
     let mut rgb = Vec::with_capacity((width * height * 3) as usize);
-    for px in pixels.chunks_exact(4) {
+    for px in pixels.as_chunks::<4>().0 {
         if bgra {
             rgb.extend_from_slice(&[px[2], px[1], px[0]]);
         } else {

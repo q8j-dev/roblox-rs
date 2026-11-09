@@ -3,3 +3,818 @@
 # python3 backports.py <path to Full-API-Dump.json>
 class CorePackages | StarterScript: game:GetService("CorePackages") at line 6; DataModelInstances/CorePackages in tree.txt
 class LocalizationTable | PatchRoot/CoreScripts/CoreScriptLocalization and CoreScriptLocalizationTrimmed in tree.txt
+class AchievementService | GetService("AchievementService") at 2 call sites (docs/inexperience/services.txt)
+class AnimationClipProvider | GetService("AnimationClipProvider") at 2 call sites (docs/inexperience/services.txt)
+class AppAgeSignalsService | GetService("AppAgeSignalsService") at 2 call sites (docs/inexperience/services.txt)
+class AppLifecycleObserverService | GetService("AppLifecycleObserverService") at 16 call sites (docs/inexperience/services.txt)
+class AppStorageService | GetService("AppStorageService") at 81 call sites (docs/inexperience/services.txt)
+class AppUpdateService | GetService("AppUpdateService") at 1 call sites (docs/inexperience/services.txt)
+class AssetQualityService | GetService("AssetQualityService") at 2 call sites (docs/inexperience/services.txt)
+class AudioFocusService | GetService("AudioFocusService") at 7 call sites (docs/inexperience/services.txt)
+class AvatarChatService | GetService("AvatarChatService") at 10 call sites (docs/inexperience/services.txt)
+class AvatarCreationService | GetService("AvatarCreationService") at 6 call sites (docs/inexperience/services.txt)
+class AvatarEditorService | GetService("AvatarEditorService") at 36 call sites (docs/inexperience/services.txt)
+class BrowserService | GetService("BrowserService") at 17 call sites (docs/inexperience/services.txt)
+class CallingService | GetService("CallingService") at 3 call sites (docs/inexperience/services.txt)
+class CaptureService | GetService("CaptureService") at 35 call sites (docs/inexperience/services.txt)
+class CommerceService | GetService("CommerceService") at 5 call sites (docs/inexperience/services.txt)
+class CoreScriptSyncService | GetService("CoreScriptSyncService") at 1 call sites (docs/inexperience/services.txt)
+class CreatorStoreService | GetService("CreatorStoreService") at 1 call sites (docs/inexperience/services.txt)
+class DeferredAssetManagerService | GetService("DeferredAssetManagerService") at 5 call sites (docs/inexperience/services.txt)
+class DeviceDisplayService | GetService("DeviceDisplayService") at 1 call sites (docs/inexperience/services.txt)
+class EncodingService | GetService("EncodingService") at 1 call sites (docs/inexperience/services.txt)
+class EventIngestService | GetService("EventIngestService") at 35 call sites (docs/inexperience/services.txt)
+class ExperienceAuthService | GetService("ExperienceAuthService") at 4 call sites (docs/inexperience/services.txt)
+class ExperienceNotificationService | GetService("ExperienceNotificationService") at 2 call sites (docs/inexperience/services.txt)
+class ExperienceService | GetService("ExperienceService") at 13 call sites (docs/inexperience/services.txt)
+class ExperienceStateCaptureService | GetService("ExperienceStateCaptureService") at 16 call sites (docs/inexperience/services.txt)
+class ExperienceStateRecordingService | GetService("ExperienceStateRecordingService") at 4 call sites (docs/inexperience/services.txt)
+class FaceAnimatorService | GetService("FaceAnimatorService") at 11 call sites (docs/inexperience/services.txt)
+class FacialAgeEstimationService | GetService("FacialAgeEstimationService") at 2 call sites (docs/inexperience/services.txt)
+class FeatureRestrictionManager | GetService("FeatureRestrictionManager") at 1 call sites (docs/inexperience/services.txt)
+class FriendsCallingService | GetService("FriendsCallingService") at 1 call sites (docs/inexperience/services.txt)
+class GenericChallengeService | GetService("GenericChallengeService") at 2 call sites (docs/inexperience/services.txt)
+class HeapProfilerService | GetService("HeapProfilerService") at 1 call sites (docs/inexperience/services.txt)
+class IXPService | GetService("IXPService") at 64 call sites (docs/inexperience/services.txt)
+class LocalizationService | GetService("LocalizationService") at 235 call sites (docs/inexperience/services.txt)
+class MemStorageService | GetService("MemStorageService") at 17 call sites (docs/inexperience/services.txt)
+class MessageBusService | GetService("MessageBusService") at 21 call sites (docs/inexperience/services.txt)
+class MessagingService | GetService("MessagingService") at 1 call sites (docs/inexperience/services.txt)
+class MicroProfilerService | GetService("MicroProfilerService") at 1 call sites (docs/inexperience/services.txt)
+class MomentsService | GetService("MomentsService") at 5 call sites (docs/inexperience/services.txt)
+class OpenCloudService | GetService("OpenCloudService") at 3 call sites (docs/inexperience/services.txt)
+class PerformanceControlService | GetService("PerformanceControlService") at 1 call sites (docs/inexperience/services.txt)
+class PermissionsService | GetService("PermissionsService") at 1 call sites (docs/inexperience/services.txt)
+class PinShortcutService | GetService("PinShortcutService") at 2 call sites (docs/inexperience/services.txt)
+class PlatformCloudStorageService | GetService("PlatformCloudStorageService") at 2 call sites (docs/inexperience/services.txt)
+class PlatformFriendsService | GetService("PlatformFriendsService") at 8 call sites (docs/inexperience/services.txt)
+class PlayerViewService | GetService("PlayerViewService") at 2 call sites (docs/inexperience/services.txt)
+class PolicyService | GetService("PolicyService") at 5 call sites (docs/inexperience/services.txt)
+class PopLatencyService | GetService("PopLatencyService") at 1 call sites (docs/inexperience/services.txt)
+class ProximityPromptService | GetService("ProximityPromptService") at 2 call sites (docs/inexperience/services.txt)
+class PublishService | GetService("PublishService") at 1 call sites (docs/inexperience/services.txt)
+class RbxAnalyticsService | GetService("RbxAnalyticsService") at 131 call sites (docs/inexperience/services.txt)
+class ReflectionService | GetService("ReflectionService") at 1 call sites (docs/inexperience/services.txt)
+class RequestOrchestratorService | GetService("RequestOrchestratorService") at 1 call sites (docs/inexperience/services.txt)
+class RtMessagingService | GetService("RtMessagingService") at 1 call sites (docs/inexperience/services.txt)
+class SafetyService | GetService("SafetyService") at 13 call sites (docs/inexperience/services.txt)
+class ScriptProfilerService | GetService("ScriptProfilerService") at 4 call sites (docs/inexperience/services.txt)
+class SerializationService | GetService("SerializationService") at 2 call sites (docs/inexperience/services.txt)
+class SessionService | GetService("SessionService") at 27 call sites (docs/inexperience/services.txt)
+class StudioService | GetService("StudioService") at 3 call sites (docs/inexperience/services.txt)
+class TelemetryService | GetService("TelemetryService") at 124 call sites (docs/inexperience/services.txt)
+class TextChatService | GetService("TextChatService") at 71 call sites (docs/inexperience/services.txt)
+class ThirdPartyUserService | GetService("ThirdPartyUserService") at 12 call sites (docs/inexperience/services.txt)
+class UGCValidationService | GetService("UGCValidationService") at 63 call sites (docs/inexperience/services.txt)
+class UserService | GetService("UserService") at 2 call sites (docs/inexperience/services.txt)
+class VRService | GetService("VRService") at 69 call sites (docs/inexperience/services.txt)
+class VideoCaptureService | GetService("VideoCaptureService") at 10 call sites (docs/inexperience/services.txt)
+class VideoService | GetService("VideoService") at 6 call sites (docs/inexperience/services.txt)
+class VirtualInputManager | GetService("VirtualInputManager") at 1 call sites (docs/inexperience/services.txt)
+class VoiceChatService | GetService("VoiceChatService") at 19 call sites (docs/inexperience/services.txt)
+class WebSocketService | GetService("WebSocketService") at 2 call sites (docs/inexperience/services.txt)
+class WebViewService | GetService("WebViewService") at 13 call sites (docs/inexperience/services.txt)
+member DataModel.DefineFastFlag | NAMECALL DefineFastFlag at 4314 call sites (docs/inexperience/methods.txt)
+member DataModel.DefineFastInt | NAMECALL DefineFastInt at 1304 call sites (docs/inexperience/methods.txt)
+member DataModel.DefineFastString | NAMECALL DefineFastString at 713 call sites (docs/inexperience/methods.txt)
+member DataModel.GetFastFlag | NAMECALL GetFastFlag at 682 call sites (docs/inexperience/methods.txt)
+member DataModel.GetFastInt | NAMECALL GetFastInt at 326 call sites (docs/inexperience/methods.txt)
+member DataModel.GetFastString | NAMECALL GetFastString at 186 call sites (docs/inexperience/methods.txt)
+member DataModel.GetEngineFeature | NAMECALL GetEngineFeature at 647 call sites (docs/inexperience/methods.txt)
+member DataModel.SetFastFlagForTesting | NAMECALL SetFastFlagForTesting at 2 call sites (docs/inexperience/methods.txt)
+member DataModel.SetFastIntForTesting | NAMECALL SetFastIntForTesting at 2 call sites (docs/inexperience/methods.txt)
+member Instance.FindFirstAncestor | NAMECALL FindFirstAncestor at 9667 call sites (docs/inexperience/methods.txt)
+member Instance.FindFirstAncestorOfClass | NAMECALL FindFirstAncestorOfClass at 26 call sites (docs/inexperience/methods.txt)
+member Instance.FindFirstAncestorWhichIsA | NAMECALL FindFirstAncestorWhichIsA at 73 call sites (docs/inexperience/methods.txt)
+member Instance.FindFirstChildOfClass | NAMECALL FindFirstChildOfClass at 190 call sites (docs/inexperience/methods.txt)
+member Instance.FindFirstChildWhichIsA | NAMECALL FindFirstChildWhichIsA at 108 call sites (docs/inexperience/methods.txt)
+member Instance.GetDescendants | NAMECALL GetDescendants at 145 call sites (docs/inexperience/methods.txt)
+member Instance.GetAttribute | NAMECALL GetAttribute at 55 call sites (docs/inexperience/methods.txt)
+member Instance.GetAttributes | NAMECALL GetAttributes at 10 call sites (docs/inexperience/methods.txt)
+member Instance.SetAttribute | NAMECALL SetAttribute at 68 call sites (docs/inexperience/methods.txt)
+member Instance.GetAttributeChangedSignal | NAMECALL GetAttributeChangedSignal at 4 call sites (docs/inexperience/methods.txt)
+member Instance.GetPropertyChangedSignal | NAMECALL GetPropertyChangedSignal at 802 call sites (docs/inexperience/methods.txt)
+member Instance.AddTag | NAMECALL AddTag at 10 call sites (docs/inexperience/methods.txt)
+member Instance.RemoveTag | NAMECALL RemoveTag at 13 call sites (docs/inexperience/methods.txt)
+member Instance.HasTag | NAMECALL HasTag at 11 call sites (docs/inexperience/methods.txt)
+member Instance.GetTags | NAMECALL GetTags at 12 call sites (docs/inexperience/methods.txt)
+member Instance.AttributeChanged | event behind GetAttributeChangedSignal; key AttributeChanged in the bytecode key list
+member Instance.Destroying | GETTABLEKS Destroying at 23 sites
+member Accessory.AccessoryType | GETTABLEKS/SETTABLEKS AccessoryType at 35 sites
+member AdService.GetAdTeleportInfo | NAMECALL/GETTABLEKS GetAdTeleportInfo at 1 sites
+member AdService.GetReportAdInfo | NAMECALL/GETTABLEKS GetReportAdInfo at 1 sites
+member AdService.GetUniversalAppAdsEligibility | NAMECALL/GETTABLEKS GetUniversalAppAdsEligibility at 1 sites
+member AdService.HandleWhyThisAdClicked | NAMECALL/GETTABLEKS HandleWhyThisAdClicked at 1 sites
+member AdService.HideEudsaDisclosure | NAMECALL/GETTABLEKS HideEudsaDisclosure at 1 sites
+member AdService.ReturnToPublisherExperience | NAMECALL/GETTABLEKS ReturnToPublisherExperience at 2 sites
+member AdService.SetAdGuiInteractivityHandlerInitialized | NAMECALL/GETTABLEKS SetAdGuiInteractivityHandlerInitialized at 1 sites
+member AdService.SubmitAdNotification | NAMECALL/GETTABLEKS SubmitAdNotification at 1 sites
+member AdService.GetAdAvailabilityNowForUniverseAsync | NAMECALL/GETTABLEKS GetAdAvailabilityNowForUniverseAsync at 2 sites
+member AdService.ShowRewardedVideoAdAtClientAsync | NAMECALL/GETTABLEKS ShowRewardedVideoAdAtClientAsync at 1 sites
+member AdService.AdTeleportEnded | GETTABLEKS/SETTABLEKS AdTeleportEnded at 1 sites
+member AdService.AdTeleportInitiated | GETTABLEKS/SETTABLEKS AdTeleportInitiated at 1 sites
+member AdService.RewardedVideoAdEnded | GETTABLEKS/SETTABLEKS RewardedVideoAdEnded at 1 sites
+member AdService.RewardedVideoAdStarted | GETTABLEKS/SETTABLEKS RewardedVideoAdStarted at 1 sites
+member AdService.ShowDynamicEudsaDisclosure | GETTABLEKS/SETTABLEKS ShowDynamicEudsaDisclosure at 1 sites
+member AdService.adGuiRegisterUI | GETTABLEKS/SETTABLEKS adGuiRegisterUI at 1 sites
+member AdService.OnImmersiveBrandedAdDisclosureButtonActivated | NAMECALL/GETTABLEKS OnImmersiveBrandedAdDisclosureButtonActivated at 2 sites
+member AdService.onDemandVideoPlayInUI | NAMECALL/GETTABLEKS onDemandVideoPlayInUI at 1 sites
+member AnimationTrack.Looped | GETTABLEKS/SETTABLEKS Looped at 26 sites
+member AnimationTrack.Speed | string constant Speed at 2 sites
+member AnimationTrack.WeightCurrent | GETTABLEKS/SETTABLEKS WeightCurrent at 2 sites
+member AnimationTrack.DidLoop | GETTABLEKS/SETTABLEKS DidLoop at 5 sites
+member AnimationTrack.Ended | GETTABLEKS/SETTABLEKS Ended at 34 sites
+member Animator.ApplyJointVelocities | NAMECALL/GETTABLEKS ApplyJointVelocities at 1 sites
+member Animator.GetPlayingAnimationTracks | NAMECALL/GETTABLEKS GetPlayingAnimationTracks at 10 sites
+member Animator.GetPlayingAnimationTracksCoreScript | NAMECALL/GETTABLEKS GetPlayingAnimationTracksCoreScript at 6 sites
+member Animator.LoadStreamAnimation | NAMECALL/GETTABLEKS LoadStreamAnimation at 1 sites
+member Animator.LoadStreamAnimationForSelfieView_deprecated | NAMECALL/GETTABLEKS LoadStreamAnimationForSelfieView_deprecated at 1 sites
+member Animator.LoadStreamAnimationV2 | NAMECALL/GETTABLEKS LoadStreamAnimationV2 at 2 sites
+member Animator.StepAnimations | NAMECALL/GETTABLEKS StepAnimations at 4 sites
+member Animator.SynchronizeWith | NAMECALL/GETTABLEKS SynchronizeWith at 1 sites
+member Animator.AnimationPlayed | GETTABLEKS/SETTABLEKS AnimationPlayed at 4 sites
+member Animator.AnimationPlayedCoreScript | GETTABLEKS/SETTABLEKS AnimationPlayedCoreScript at 5 sites
+member Animator.AnimationStreamTrackPlayed | GETTABLEKS/SETTABLEKS AnimationStreamTrackPlayed at 9 sites
+member AssetService.CreateEditableImage | NAMECALL/GETTABLEKS CreateEditableImage at 5 sites
+member AssetService.DeserializeInstance | NAMECALL/GETTABLEKS DeserializeInstance at 1 sites
+member AssetService.CreateEditableImageAsync | NAMECALL/GETTABLEKS CreateEditableImageAsync at 2 sites
+member AssetService.CreateEditableMeshAsync | NAMECALL/GETTABLEKS CreateEditableMeshAsync at 1 sites
+member AssetService.CreateMeshPartAsync | NAMECALL/GETTABLEKS CreateMeshPartAsync at 4 sites
+member AssetService.GetAudioMetadataAsync | NAMECALL/GETTABLEKS GetAudioMetadataAsync at 5 sites
+member AssetService.OpenPublishResultModal | GETTABLEKS/SETTABLEKS OpenPublishResultModal at 1 sites
+member Attachment.Orientation | GETTABLEKS/SETTABLEKS Orientation at 66 sites
+member Attachment.Visible | GETTABLEKS/SETTABLEKS Visible at 1179 sites
+member Attachment.WorldCFrame | GETTABLEKS/SETTABLEKS WorldCFrame at 6 sites
+member BackpackItem.TextureContent | GETTABLEKS/SETTABLEKS TextureContent at 10 sites
+member BadgeService.GetBadgeInfoAsync | NAMECALL/GETTABLEKS GetBadgeInfoAsync at 1 sites
+member BadgeService.OnBadgeAwarded | GETTABLEKS/SETTABLEKS OnBadgeAwarded at 1 sites
+member BasePart.CanQuery | GETTABLEKS/SETTABLEKS CanQuery at 13 sites
+member BasePart.CanTouch | GETTABLEKS/SETTABLEKS CanTouch at 12 sites
+member BasePart.CastShadow | GETTABLEKS/SETTABLEKS CastShadow at 9 sites
+member BasePart.ExtentsCFrame | GETTABLEKS/SETTABLEKS ExtentsCFrame at 1 sites
+member BasePart.ExtentsSize | GETTABLEKS/SETTABLEKS ExtentsSize at 1 sites
+member BasePart.Massless | GETTABLEKS/SETTABLEKS Massless at 1 sites
+member BasePart.Orientation | GETTABLEKS/SETTABLEKS Orientation at 66 sites
+member BasePart.RootPriority | GETTABLEKS/SETTABLEKS RootPriority at 1 sites
+member BasePart.GetJoints | NAMECALL/GETTABLEKS GetJoints at 1 sites
+member BasePlayerGui.GetGuiObjectsAtPosition | NAMECALL/GETTABLEKS GetGuiObjectsAtPosition at 4 sites
+member BasePlayerGui.GetGuiObjectsInCircle | NAMECALL/GETTABLEKS GetGuiObjectsInCircle at 4 sites
+member BaseScript.Enabled | GETTABLEKS/SETTABLEKS Enabled at 340 sites
+member BaseScript.RunContext | GETTABLEKS/SETTABLEKS RunContext at 24 sites
+member BillboardGui.Brightness | GETTABLEKS/SETTABLEKS Brightness at 10 sites
+member BillboardGui.ClipsDescendants | GETTABLEKS/SETTABLEKS ClipsDescendants at 175 sites
+member BillboardGui.ExtentsOffsetWorldSpace | GETTABLEKS/SETTABLEKS ExtentsOffsetWorldSpace at 1 sites
+member BillboardGui.LightInfluence | GETTABLEKS/SETTABLEKS LightInfluence at 4 sites
+member BillboardGui.MaxDistance | GETTABLEKS/SETTABLEKS MaxDistance at 6 sites
+member BillboardGui.StudsOffsetWorldSpace | GETTABLEKS/SETTABLEKS StudsOffsetWorldSpace at 3 sites
+member BillboardGui.GetScreenSpaceBounds | NAMECALL/GETTABLEKS GetScreenSpaceBounds at 1 sites
+member Camera.FieldOfViewMode | GETTABLEKS/SETTABLEKS FieldOfViewMode at 8 sites
+member Camera.HeadScale | GETTABLEKS/SETTABLEKS HeadScale at 36 sites
+member Camera.VRTiltAndRollEnabled | GETTABLEKS/SETTABLEKS VRTiltAndRollEnabled at 4 sites
+member CharacterMesh.MeshContent | GETTABLEKS/SETTABLEKS MeshContent at 4 sites
+member Chat.BubbleChatEnabled | GETTABLEKS/SETTABLEKS BubbleChatEnabled at 21 sites
+member Chat.IsAutoMigrated | GETTABLEKS/SETTABLEKS IsAutoMigrated at 10 sites
+member Chat.LoadDefaultChat | GETTABLEKS/SETTABLEKS LoadDefaultChat at 2 sites
+member Chat.ModerationMode | GETTABLEKS/SETTABLEKS ModerationMode at 4 sites
+member Chat.ChatLocal | NAMECALL/GETTABLEKS ChatLocal at 1 sites
+member Chat.InvokeChatCallback | NAMECALL/GETTABLEKS InvokeChatCallback at 4 sites
+member Chat.ReconcileCommunicationAccess | NAMECALL/GETTABLEKS ReconcileCommunicationAccess at 1 sites
+member Chat.RequestModerationModeEnabled | NAMECALL/GETTABLEKS RequestModerationModeEnabled at 2 sites
+member Chat.CanUserChatAsync | NAMECALL/GETTABLEKS CanUserChatAsync at 9 sites
+member Chat.CanUsersChatAsync | NAMECALL/GETTABLEKS CanUsersChatAsync at 3 sites
+member Chat.FilterStringAsync | NAMECALL/GETTABLEKS FilterStringAsync at 2 sites
+member Chat.FilterStringForBroadcast | NAMECALL/GETTABLEKS FilterStringForBroadcast at 1 sites
+member Chat.BubbleChatSettingsChanged | GETTABLEKS/SETTABLEKS BubbleChatSettingsChanged at 6 sites
+member Chat.ReconcileCommunicationAccessCompleted | GETTABLEKS/SETTABLEKS ReconcileCommunicationAccessCompleted at 1 sites
+member Chat.TimeoutChatAttempt | GETTABLEKS/SETTABLEKS TimeoutChatAttempt at 2 sites
+member ClientReplicator.RequestRCCProfilerData | NAMECALL/GETTABLEKS RequestRCCProfilerData at 2 sites
+member ClientReplicator.RCCProfilerDataComplete | GETTABLEKS/SETTABLEKS RCCProfilerDataComplete at 1 sites
+member Clothing.Color3 | GETTABLEKS/SETTABLEKS Color3 at 38921 sites
+member CollectionService.AddTag | NAMECALL/GETTABLEKS AddTag at 28 sites
+member CollectionService.GetInstanceAddedSignal | NAMECALL/GETTABLEKS GetInstanceAddedSignal at 6 sites
+member CollectionService.GetInstanceRemovedSignal | NAMECALL/GETTABLEKS GetInstanceRemovedSignal at 3 sites
+member CollectionService.GetTagged | NAMECALL/GETTABLEKS GetTagged at 21 sites
+member CollectionService.GetTags | NAMECALL/GETTABLEKS GetTags at 12 sites
+member CollectionService.HasTag | NAMECALL/GETTABLEKS HasTag at 11 sites
+member CollectionService.RemoveTag | NAMECALL/GETTABLEKS RemoveTag at 29 sites
+member ContentProvider.GetAssetFetchStatus | NAMECALL/GETTABLEKS GetAssetFetchStatus at 17 sites
+member ContentProvider.GetAssetFetchStatusChangedSignal | NAMECALL/GETTABLEKS GetAssetFetchStatusChangedSignal at 11 sites
+member ContextActionService.BindActionAtPriority | NAMECALL/GETTABLEKS BindActionAtPriority at 26 sites
+member ContextActionService.BindCoreActionAtPriority | NAMECALL/GETTABLEKS BindCoreActionAtPriority at 15 sites
+member ContextActionService.BindCoreActivate | NAMECALL/GETTABLEKS BindCoreActivate at 1 sites
+member ContextActionService.GetAllBoundCoreActionInfo | NAMECALL/GETTABLEKS GetAllBoundCoreActionInfo at 2 sites
+member CoreGui.SetUserGuiRendering | NAMECALL/GETTABLEKS SetUserGuiRendering at 3 sites
+member CoreGui.TakeScreenshot | NAMECALL/GETTABLEKS TakeScreenshot at 4 sites
+member CoreGui.ToggleRecording | NAMECALL/GETTABLEKS ToggleRecording at 2 sites
+member CoreGui.UserGuiRenderingChanged | GETTABLEKS/SETTABLEKS UserGuiRenderingChanged at 1 sites
+member DataModel.Environment | GETTABLEKS/SETTABLEKS Environment at 1 sites
+member DataModel.GameId | GETTABLEKS/SETTABLEKS GameId at 232 sites
+member DataModel.PrivateServerId | GETTABLEKS/SETTABLEKS PrivateServerId at 2 sites
+member DataModel.PrivateServerOwnerId | GETTABLEKS/SETTABLEKS PrivateServerOwnerId at 2 sites
+member DataModel.RunService | GETTABLEKS/SETTABLEKS RunService at 10 sites
+member DataModel.getGameTime | NAMECALL/GETTABLEKS getGameTime at 1 sites
+member DataModel.BindToClose | NAMECALL/GETTABLEKS BindToClose at 2 sites
+member DataModel.GetPioneerRootPlaceId | NAMECALL/GETTABLEKS GetPioneerRootPlaceId at 1 sites
+member DataModel.GetPioneerSource | NAMECALL/GETTABLEKS GetPioneerSource at 1 sites
+member DataModel.GetPlaySessionId | NAMECALL/GETTABLEKS GetPlaySessionId at 56 sites
+member DataModel.IsPioneerApp | NAMECALL/GETTABLEKS IsPioneerApp at 1 sites
+member DataModel.OpenLogsFolder | NAMECALL/GETTABLEKS OpenLogsFolder at 1 sites
+member DataModel.OpenScreenshotsFolder | NAMECALL/GETTABLEKS OpenScreenshotsFolder at 2 sites
+member DataModel.OpenVideosFolder | NAMECALL/GETTABLEKS OpenVideosFolder at 2 sites
+member DataModel.SetFlagVersion | NAMECALL/GETTABLEKS SetFlagVersion at 6 sites
+member DataModel.GetObjectsAllOrNone | NAMECALL/GETTABLEKS GetObjectsAllOrNone at 2 sites
+member DataModel.ScreenshotReady | GETTABLEKS/SETTABLEKS ScreenshotReady at 1 sites
+member DataModel.ScreenshotSavedToAlbum | GETTABLEKS/SETTABLEKS ScreenshotSavedToAlbum at 1 sites
+member Decal.AutoLocalize | GETTABLEKS/SETTABLEKS AutoLocalize at 48 sites
+member Decal.Color3 | GETTABLEKS/SETTABLEKS Color3 at 38921 sites
+member Decal.ColorMap | GETTABLEKS/SETTABLEKS ColorMap at 14 sites
+member Decal.ColorMapContent | GETTABLEKS/SETTABLEKS ColorMapContent at 3 sites
+member Decal.EmissiveMaskContent | GETTABLEKS/SETTABLEKS EmissiveMaskContent at 9 sites
+member Decal.EmissiveStrength | GETTABLEKS/SETTABLEKS EmissiveStrength at 10 sites
+member Decal.EmissiveTint | GETTABLEKS/SETTABLEKS EmissiveTint at 4 sites
+member Decal.LocalizedTextureContent | GETTABLEKS/SETTABLEKS LocalizedTextureContent at 1 sites
+member Decal.MetalnessMap | GETTABLEKS/SETTABLEKS MetalnessMap at 7 sites
+member Decal.MetalnessMapContent | GETTABLEKS/SETTABLEKS MetalnessMapContent at 3 sites
+member Decal.NormalMap | GETTABLEKS/SETTABLEKS NormalMap at 7 sites
+member Decal.NormalMapContent | GETTABLEKS/SETTABLEKS NormalMapContent at 3 sites
+member Decal.ResampleMode | GETTABLEKS/SETTABLEKS ResampleMode at 9 sites
+member Decal.Rotation | GETTABLEKS/SETTABLEKS Rotation at 168 sites
+member Decal.RoughnessMap | GETTABLEKS/SETTABLEKS RoughnessMap at 7 sites
+member Decal.RoughnessMapContent | GETTABLEKS/SETTABLEKS RoughnessMapContent at 3 sites
+member Decal.TextureContent | GETTABLEKS/SETTABLEKS TextureContent at 10 sites
+member Decal.TexturePack | string constant TexturePack at 3 sites
+member Decal.UVOffset | GETTABLEKS/SETTABLEKS UVOffset at 1 sites
+member Decal.UVScale | GETTABLEKS/SETTABLEKS UVScale at 1 sites
+member Decal.ZIndex | GETTABLEKS/SETTABLEKS ZIndex at 888 sites
+member Dialog.BehaviorType | GETTABLEKS/SETTABLEKS BehaviorType at 1 sites
+member Dialog.GoodbyeChoiceActive | GETTABLEKS/SETTABLEKS GoodbyeChoiceActive at 1 sites
+member Dialog.TriggerDistance | GETTABLEKS/SETTABLEKS TriggerDistance at 2 sites
+member Dialog.TriggerOffset | GETTABLEKS/SETTABLEKS TriggerOffset at 1 sites
+member Dialog.SetGuiObject | NAMECALL/GETTABLEKS SetGuiObject at 1 sites
+member Dialog.SetPlayerIsUsing | NAMECALL/GETTABLEKS SetPlayerIsUsing at 2 sites
+member DialogChoice.GoodbyeChoiceActive | GETTABLEKS/SETTABLEKS GoodbyeChoiceActive at 1 sites
+member Explosion.LocalTransparencyModifier | GETTABLEKS/SETTABLEKS LocalTransparencyModifier at 8 sites
+member Explosion.Visible | GETTABLEKS/SETTABLEKS Visible at 1179 sites
+member FileMesh.MeshContent | GETTABLEKS/SETTABLEKS MeshContent at 4 sites
+member FileMesh.TextureContent | GETTABLEKS/SETTABLEKS TextureContent at 10 sites
+member Fire.LocalTransparencyModifier | GETTABLEKS/SETTABLEKS LocalTransparencyModifier at 8 sites
+member Fire.FastForward | NAMECALL/GETTABLEKS FastForward at 1 sites
+member GamepadService.GamepadCursorEnabled | GETTABLEKS/SETTABLEKS GamepadCursorEnabled at 34 sites
+member GamepadService.AutoSelectGui | NAMECALL/GETTABLEKS AutoSelectGui at 1 sites
+member GamepadService.DisableGamepadCursor | NAMECALL/GETTABLEKS DisableGamepadCursor at 1 sites
+member GamepadService.GetGamepadCursorPosition | NAMECALL/GETTABLEKS GetGamepadCursorPosition at 3 sites
+member GamepadService.SetGamepadCursorPosition | NAMECALL/GETTABLEKS SetGamepadCursorPosition at 4 sites
+member GamepadService.GamepadThumbstick1Changed | GETTABLEKS/SETTABLEKS GamepadThumbstick1Changed at 2 sites
+member GroupService.PromptJoinCompleted | NAMECALL/GETTABLEKS PromptJoinCompleted at 3 sites
+member GroupService.ShowJoinPrompt | GETTABLEKS/SETTABLEKS ShowJoinPrompt at 1 sites
+member GuiBase2d.AbsoluteRotation | GETTABLEKS/SETTABLEKS AbsoluteRotation at 10 sites
+member GuiBase2d.AutoLocalize | GETTABLEKS/SETTABLEKS AutoLocalize at 48 sites
+member GuiBase2d.ClippedRect | string constant ClippedRect at 1 sites
+member GuiBase2d.IsNotOccluded | GETTABLEKS/SETTABLEKS IsNotOccluded at 2 sites
+member GuiBase2d.RawRect2D | string constant RawRect2D at 1 sites
+member GuiBase2d.RootLocalizationTable | GETTABLEKS/SETTABLEKS RootLocalizationTable at 8 sites
+member GuiBase2d.SelectionBehaviorDown | GETTABLEKS/SETTABLEKS SelectionBehaviorDown at 70 sites
+member GuiBase2d.SelectionBehaviorLeft | GETTABLEKS/SETTABLEKS SelectionBehaviorLeft at 65 sites
+member GuiBase2d.SelectionBehaviorRight | GETTABLEKS/SETTABLEKS SelectionBehaviorRight at 65 sites
+member GuiBase2d.SelectionBehaviorUp | GETTABLEKS/SETTABLEKS SelectionBehaviorUp at 74 sites
+member GuiBase2d.SelectionGroup | GETTABLEKS/SETTABLEKS SelectionGroup at 46 sites
+member GuiBase2d.TotalGroupScale | string constant TotalGroupScale at 1 sites
+member GuiBase2d.SelectionChanged | GETTABLEKS/SETTABLEKS SelectionChanged at 21 sites
+member GuiButton.Activated | GETTABLEKS/SETTABLEKS Activated at 407 sites
+member GuiButton.SecondaryActivated | GETTABLEKS/SETTABLEKS SecondaryActivated at 2 sites
+member GuiObject.AnchorPoint | GETTABLEKS/SETTABLEKS AnchorPoint at 1678 sites
+member GuiObject.AutomaticSize | GETTABLEKS/SETTABLEKS AutomaticSize at 1366 sites
+member GuiObject.BorderMode | GETTABLEKS/SETTABLEKS BorderMode at 6 sites
+member GuiObject.GuiState | GETTABLEKS/SETTABLEKS GuiState at 14 sites
+member GuiObject.InputSink | GETTABLEKS/SETTABLEKS InputSink at 13 sites
+member GuiObject.Interactable | GETTABLEKS/SETTABLEKS Interactable at 87 sites
+member GuiObject.LayoutOrder | GETTABLEKS/SETTABLEKS LayoutOrder at 3285 sites
+member GuiObject.SelectionOrder | GETTABLEKS/SETTABLEKS SelectionOrder at 39 sites
+member GuiObject.SelectionRect2D | GETTABLEKS/SETTABLEKS SelectionRect2D at 8 sites
+member GuiObject.TweenPositionInternal | NAMECALL/GETTABLEKS TweenPositionInternal at 14 sites
+member GuiObject.TweenSizeAndPositionInternal | NAMECALL/GETTABLEKS TweenSizeAndPositionInternal at 4 sites
+member GuiService.CoreEffectFolder | GETTABLEKS/SETTABLEKS CoreEffectFolder at 3 sites
+member GuiService.CoreGuiFolder | GETTABLEKS/SETTABLEKS CoreGuiFolder at 9 sites
+member GuiService.PreferredTextSize | GETTABLEKS/SETTABLEKS PreferredTextSize at 16 sites
+member GuiService.PreferredTransparency | GETTABLEKS/SETTABLEKS PreferredTransparency at 60 sites
+member GuiService.TopbarInset | GETTABLEKS/SETTABLEKS TopbarInset at 17 sites
+member GuiService.TouchControlsEnabled | GETTABLEKS/SETTABLEKS TouchControlsEnabled at 2 sites
+member GuiService.ViewportDisplaySize | GETTABLEKS/SETTABLEKS ViewportDisplaySize at 47 sites
+member GuiService.BroadcastNotification | NAMECALL/GETTABLEKS BroadcastNotification at 26 sites
+member GuiService.ClearError | NAMECALL/GETTABLEKS ClearError at 2 sites
+member GuiService.CloseInspectMenu | NAMECALL/GETTABLEKS CloseInspectMenu at 8 sites
+member GuiService.CloseStatsBasedOnInputString | NAMECALL/GETTABLEKS CloseStatsBasedOnInputString at 6 sites
+member GuiService.DismissNotification | NAMECALL/GETTABLEKS DismissNotification at 7 sites
+member GuiService.GetAutoUIScaleHundredths | NAMECALL/GETTABLEKS GetAutoUIScaleHundredths at 1 sites
+member GuiService.GetClosestVisibleDialogToPosition | NAMECALL/GETTABLEKS GetClosestVisibleDialogToPosition at 1 sites
+member GuiService.GetEffectiveUIScaleHundredths | NAMECALL/GETTABLEKS GetEffectiveUIScaleHundredths at 1 sites
+member GuiService.GetErrorCode | NAMECALL/GETTABLEKS GetErrorCode at 2 sites
+member GuiService.GetErrorDetails | NAMECALL/GETTABLEKS GetErrorDetails at 2 sites
+member GuiService.GetErrorType | NAMECALL/GETTABLEKS GetErrorType at 2 sites
+member GuiService.GetGuiInset | NAMECALL/GETTABLEKS GetGuiInset at 54 sites
+member GuiService.GetGuiIsVisible | NAMECALL/GETTABLEKS GetGuiIsVisible at 13 sites
+member GuiService.GetHardwareSafeViewport | NAMECALL/GETTABLEKS GetHardwareSafeViewport at 17 sites
+member GuiService.GetInsetArea | NAMECALL/GETTABLEKS GetInsetArea at 15 sites
+member GuiService.GetInspectMenuEnabled | NAMECALL/GETTABLEKS GetInspectMenuEnabled at 7 sites
+member GuiService.GetNotificationTypeList | NAMECALL/GETTABLEKS GetNotificationTypeList at 11 sites
+member GuiService.GetRawScreenScale | NAMECALL/GETTABLEKS GetRawScreenScale at 2 sites
+member GuiService.GetResolutionScale | NAMECALL/GETTABLEKS GetResolutionScale at 4 sites
+member GuiService.GetSafeZoneOffsets | NAMECALL/GETTABLEKS GetSafeZoneOffsets at 5 sites
+member GuiService.InspectPlayerFromUserIdWithCtx | NAMECALL/GETTABLEKS InspectPlayerFromUserIdWithCtx at 9 sites
+member GuiService.OnNotificationDisplayed | NAMECALL/GETTABLEKS OnNotificationDisplayed at 1 sites
+member GuiService.OnNotificationInteraction | NAMECALL/GETTABLEKS OnNotificationInteraction at 1 sites
+member GuiService.Select | NAMECALL/GETTABLEKS Select at 39 sites
+member GuiService.SendNotification | NAMECALL/GETTABLEKS SendNotification at 8 sites
+member GuiService.SendUIOcclusionMetricsForQueryRegion | NAMECALL/GETTABLEKS SendUIOcclusionMetricsForQueryRegion at 2 sites
+member GuiService.SetEmotesMenuOpen | NAMECALL/GETTABLEKS SetEmotesMenuOpen at 1 sites
+member GuiService.SetInspectMenuEnabled | NAMECALL/GETTABLEKS SetInspectMenuEnabled at 4 sites
+member GuiService.SetPurchasePromptIsShown | NAMECALL/GETTABLEKS SetPurchasePromptIsShown at 2 sites
+member GuiService.SetTopbarInset | NAMECALL/GETTABLEKS SetTopbarInset at 3 sites
+member GuiService.SetUIScaleMultiplier | NAMECALL/GETTABLEKS SetUIScaleMultiplier at 3 sites
+member GuiService.ToggleGuiIsVisibleForCaptures | NAMECALL/GETTABLEKS ToggleGuiIsVisibleForCaptures at 10 sites
+member GuiService.ToggleGuiIsVisibleIfAllowed | NAMECALL/GETTABLEKS ToggleGuiIsVisibleIfAllowed at 2 sites
+member GuiService.CloseInspectMenuRequest | GETTABLEKS/SETTABLEKS CloseInspectMenuRequest at 2 sites
+member GuiService.CoreGuiRenderOverflowed | GETTABLEKS/SETTABLEKS CoreGuiRenderOverflowed at 1 sites
+member GuiService.EmotesMenuOpenChanged | GETTABLEKS/SETTABLEKS EmotesMenuOpenChanged at 1 sites
+member GuiService.InspectMenuEnabledChangedSignal | GETTABLEKS/SETTABLEKS InspectMenuEnabledChangedSignal at 6 sites
+member GuiService.InspectPlayerFromHumanoidDescriptionRequest | GETTABLEKS/SETTABLEKS InspectPlayerFromHumanoidDescriptionRequest at 1 sites
+member GuiService.InspectPlayerFromUserIdWithCtxRequest | GETTABLEKS/SETTABLEKS InspectPlayerFromUserIdWithCtxRequest at 2 sites
+member GuiService.NativeClose | GETTABLEKS/SETTABLEKS NativeClose at 7 sites
+member GuiService.NetworkPausedEnabledChanged | GETTABLEKS/SETTABLEKS NetworkPausedEnabledChanged at 1 sites
+member GuiService.PurchasePromptShown | GETTABLEKS/SETTABLEKS PurchasePromptShown at 1 sites
+member GuiService.SafeZoneOffsetsChanged | GETTABLEKS/SETTABLEKS SafeZoneOffsetsChanged at 4 sites
+member HttpRbxApiService.GetAsyncFullUrl | NAMECALL/GETTABLEKS GetAsyncFullUrl at 23 sites
+member HttpRbxApiService.PostAsyncFullUrl | NAMECALL/GETTABLEKS PostAsyncFullUrl at 20 sites
+member HttpRbxApiService.RequestAsync | NAMECALL/GETTABLEKS RequestAsync at 5 sites
+member HttpService.GetUserAgent | NAMECALL/GETTABLEKS GetUserAgent at 12 sites
+member HttpService.RequestInternal | NAMECALL/GETTABLEKS RequestInternal at 123 sites
+member HttpService.RequestAsync | NAMECALL/GETTABLEKS RequestAsync at 5 sites
+member Humanoid.AutomaticScalingEnabled | GETTABLEKS/SETTABLEKS AutomaticScalingEnabled at 1 sites
+member Humanoid.BreakJointsOnDeath | GETTABLEKS/SETTABLEKS BreakJointsOnDeath at 1 sites
+member Humanoid.DisplayName | GETTABLEKS/SETTABLEKS DisplayName at 161 sites
+member Humanoid.InternalDisplayName | GETTABLEKS/SETTABLEKS InternalDisplayName at 2 sites
+member Humanoid.RootPart | GETTABLEKS/SETTABLEKS RootPart at 7 sites
+member Humanoid.BuildRigFromAttachments | NAMECALL/GETTABLEKS BuildRigFromAttachments at 2 sites
+member Humanoid.GetAccessories | NAMECALL/GETTABLEKS GetAccessories at 17 sites
+member Humanoid.GetAccessoryHandleScale | NAMECALL/GETTABLEKS GetAccessoryHandleScale at 1 sites
+member Humanoid.GetAppliedDescription | NAMECALL/GETTABLEKS GetAppliedDescription at 4 sites
+member Humanoid.GetBodyPartR15 | NAMECALL/GETTABLEKS GetBodyPartR15 at 2 sites
+member Humanoid.ReplaceBodyPartR15 | NAMECALL/GETTABLEKS ReplaceBodyPartR15 at 1 sites
+member Humanoid.ApplyDescriptionAsync | NAMECALL/GETTABLEKS ApplyDescriptionAsync at 3 sites
+member Humanoid.PlayEmoteAndGetAnimTrackById | NAMECALL/GETTABLEKS PlayEmoteAndGetAnimTrackById at 1 sites
+member Humanoid.PlayEmoteAsync | NAMECALL/GETTABLEKS PlayEmoteAsync at 1 sites
+member Humanoid.ClusterCompositionFinished | GETTABLEKS/SETTABLEKS ClusterCompositionFinished at 3 sites
+member Humanoid.EmoteTriggered | GETTABLEKS/SETTABLEKS EmoteTriggered at 4 sites
+member Humanoid.Touched | GETTABLEKS/SETTABLEKS Touched at 1 sites
+member ImageButton.ContentImageSize | GETTABLEKS/SETTABLEKS ContentImageSize at 2 sites
+member ImageButton.HoverImage | GETTABLEKS/SETTABLEKS HoverImage at 6 sites
+member ImageButton.ImageContent | GETTABLEKS/SETTABLEKS ImageContent at 36 sites
+member ImageButton.IsLoaded | GETTABLEKS/SETTABLEKS IsLoaded at 13 sites
+member ImageButton.LocalizedImageContent | GETTABLEKS/SETTABLEKS LocalizedImageContent at 1 sites
+member ImageButton.PressedImage | GETTABLEKS/SETTABLEKS PressedImage at 6 sites
+member ImageButton.ResampleMode | GETTABLEKS/SETTABLEKS ResampleMode at 9 sites
+member ImageButton.SliceScale | GETTABLEKS/SETTABLEKS SliceScale at 10 sites
+member ImageButton.TileSize | GETTABLEKS/SETTABLEKS TileSize at 21 sites
+member ImageHandleAdornment.DoubleSided | GETTABLEKS/SETTABLEKS DoubleSided at 1 sites
+member ImageHandleAdornment.ImageContent | GETTABLEKS/SETTABLEKS ImageContent at 36 sites
+member ImageLabel.ContentImageSize | GETTABLEKS/SETTABLEKS ContentImageSize at 2 sites
+member ImageLabel.ImageContent | GETTABLEKS/SETTABLEKS ImageContent at 36 sites
+member ImageLabel.IsLoaded | GETTABLEKS/SETTABLEKS IsLoaded at 13 sites
+member ImageLabel.LocalizedImageContent | GETTABLEKS/SETTABLEKS LocalizedImageContent at 1 sites
+member ImageLabel.ResampleMode | GETTABLEKS/SETTABLEKS ResampleMode at 9 sites
+member ImageLabel.SliceScale | GETTABLEKS/SETTABLEKS SliceScale at 10 sites
+member ImageLabel.TileSize | GETTABLEKS/SETTABLEKS TileSize at 21 sites
+member InputObject.IsModifierKeyDown | NAMECALL/GETTABLEKS IsModifierKeyDown at 5 sites
+member InsertService.LoadLocalAsset | NAMECALL/GETTABLEKS LoadLocalAsset at 9 sites
+member InsertService.CreateMeshPartAsync | NAMECALL/GETTABLEKS CreateMeshPartAsync at 4 sites
+member JointInstance.Active | GETTABLEKS/SETTABLEKS Active at 317 sites
+member JointInstance.Enabled | GETTABLEKS/SETTABLEKS Enabled at 340 sites
+member Keyframe.GetMarkers | NAMECALL/GETTABLEKS GetMarkers at 1 sites
+member KeyframeSequenceProvider.GetMemStats | NAMECALL/GETTABLEKS GetMemStats at 1 sites
+member LayerCollector.Enabled | GETTABLEKS/SETTABLEKS Enabled at 340 sites
+member LayerCollector.ResetOnSpawn | GETTABLEKS/SETTABLEKS ResetOnSpawn at 38 sites
+member LayerCollector.ZIndexBehavior | GETTABLEKS/SETTABLEKS ZIndexBehavior at 130 sites
+member LayerCollector.GetGuiObjectsAtPosition | NAMECALL/GETTABLEKS GetGuiObjectsAtPosition at 4 sites
+member Lighting.EnvironmentDiffuseScale | GETTABLEKS/SETTABLEKS EnvironmentDiffuseScale at 1 sites
+member Lighting.EnvironmentSpecularScale | GETTABLEKS/SETTABLEKS EnvironmentSpecularScale at 1 sites
+member Lighting.ExposureCompensation | GETTABLEKS/SETTABLEKS ExposureCompensation at 1 sites
+member Lighting.ShadowSoftness | GETTABLEKS/SETTABLEKS ShadowSoftness at 1 sites
+member LogService.Error | NAMECALL/GETTABLEKS Error at 394 sites
+member LogService.GetHttpResultHistory | NAMECALL/GETTABLEKS GetHttpResultHistory at 1 sites
+member LogService.Info | NAMECALL/GETTABLEKS Info at 37 sites
+member LogService.Log | NAMECALL/GETTABLEKS Log at 14 sites
+member LogService.Output | NAMECALL/GETTABLEKS Output at 1 sites
+member LogService.RequestHttpResultApproved | NAMECALL/GETTABLEKS RequestHttpResultApproved at 1 sites
+member LogService.RequestServerHttpResult | NAMECALL/GETTABLEKS RequestServerHttpResult at 1 sites
+member LogService.HttpResultOut | GETTABLEKS/SETTABLEKS HttpResultOut at 1 sites
+member LogService.OnHttpResultApproved | GETTABLEKS/SETTABLEKS OnHttpResultApproved at 1 sites
+member LogService.ServerContextOut | GETTABLEKS/SETTABLEKS ServerContextOut at 2 sites
+member LogService.ServerHttpResultOut | GETTABLEKS/SETTABLEKS ServerHttpResultOut at 1 sites
+member MarketplaceService.PromptBulkPurchase | NAMECALL/GETTABLEKS PromptBulkPurchase at 1 sites
+member MarketplaceService.PromptBundlePurchase | NAMECALL/GETTABLEKS PromptBundlePurchase at 3 sites
+member MarketplaceService.PromptCollectiblesPurchase | NAMECALL/GETTABLEKS PromptCollectiblesPurchase at 1 sites
+member MarketplaceService.PromptNativePurchaseWithContext | NAMECALL/GETTABLEKS PromptNativePurchaseWithContext at 1 sites
+member MarketplaceService.PromptNativePurchaseWithLocalPlayer | NAMECALL/GETTABLEKS PromptNativePurchaseWithLocalPlayer at 2 sites
+member MarketplaceService.PromptNativePurchaseWithLocalPlayerWithPaymentSessionId | NAMECALL/GETTABLEKS PromptNativePurchaseWithLocalPlayerWithPaymentSessionId at 1 sites
+member MarketplaceService.PromptNativePurchaseWithPaymentSessionId | NAMECALL/GETTABLEKS PromptNativePurchaseWithPaymentSessionId at 1 sites
+member MarketplaceService.PromptRobloxPurchase | NAMECALL/GETTABLEKS PromptRobloxPurchase at 3 sites
+member MarketplaceService.PromptSubscriptionPurchase | NAMECALL/GETTABLEKS PromptSubscriptionPurchase at 5 sites
+member MarketplaceService.RefreshBulkPurchase | NAMECALL/GETTABLEKS RefreshBulkPurchase at 2 sites
+member MarketplaceService.ReportAssetSale | NAMECALL/GETTABLEKS ReportAssetSale at 1 sites
+member MarketplaceService.ReportRobuxUpsellStarted | NAMECALL/GETTABLEKS ReportRobuxUpsellStarted at 1 sites
+member MarketplaceService.SignalAssetTypePurchased | NAMECALL/GETTABLEKS SignalAssetTypePurchased at 1 sites
+member MarketplaceService.SignalMockPurchaseRobloxSubscription | NAMECALL/GETTABLEKS SignalMockPurchaseRobloxSubscription at 1 sites
+member MarketplaceService.SignalPromptBundlePurchaseFinished | NAMECALL/GETTABLEKS SignalPromptBundlePurchaseFinished at 1 sites
+member MarketplaceService.SignalPromptGamePassPurchaseFinished | NAMECALL/GETTABLEKS SignalPromptGamePassPurchaseFinished at 2 sites
+member MarketplaceService.SignalPromptSubscriptionPurchaseFinished | NAMECALL/GETTABLEKS SignalPromptSubscriptionPurchaseFinished at 2 sites
+member MarketplaceService.SignalRobuxTransferCompleted | NAMECALL/GETTABLEKS SignalRobuxTransferCompleted at 2 sites
+member MarketplaceService.SignalUserSubscriptionStatusChanged | NAMECALL/GETTABLEKS SignalUserSubscriptionStatusChanged at 2 sites
+member MarketplaceService.GetAvailableSubscriptionProductsAsync | NAMECALL/GETTABLEKS GetAvailableSubscriptionProductsAsync at 1 sites
+member MarketplaceService.GetPassOwnershipAsync | NAMECALL/GETTABLEKS GetPassOwnershipAsync at 2 sites
+member MarketplaceService.GetProductInfoAsync | NAMECALL/GETTABLEKS GetProductInfoAsync at 9 sites
+member MarketplaceService.GetSubscriptionProductInfoAsync | NAMECALL/GETTABLEKS GetSubscriptionProductInfoAsync at 1 sites
+member MarketplaceService.GetSubscriptionPurchaseInfoAsync | NAMECALL/GETTABLEKS GetSubscriptionPurchaseInfoAsync at 1 sites
+member MarketplaceService.GetUserSubscriptionDetailsInternalAsync | NAMECALL/GETTABLEKS GetUserSubscriptionDetailsInternalAsync at 1 sites
+member MarketplaceService.PerformBulkPurchase | NAMECALL/GETTABLEKS PerformBulkPurchase at 1 sites
+member MarketplaceService.PerformCancelSubscription | NAMECALL/GETTABLEKS PerformCancelSubscription at 1 sites
+member MarketplaceService.PerformPurchase | NAMECALL/GETTABLEKS PerformPurchase at 4 sites
+member MarketplaceService.PerformPurchaseV2 | NAMECALL/GETTABLEKS PerformPurchaseV2 at 1 sites
+member MarketplaceService.PerformSubscriptionPurchaseV2 | NAMECALL/GETTABLEKS PerformSubscriptionPurchaseV2 at 1 sites
+member MarketplaceService.PerformSubscriptionPurchaseV3Async | NAMECALL/GETTABLEKS PerformSubscriptionPurchaseV3Async at 2 sites
+member MarketplaceService.PerformSubscriptionPurchaseWithRobuxAsync | NAMECALL/GETTABLEKS PerformSubscriptionPurchaseWithRobuxAsync at 1 sites
+member MarketplaceService.PlayerOwnsAssetAsync | NAMECALL/GETTABLEKS PlayerOwnsAssetAsync at 1 sites
+member MarketplaceService.PlayerOwnsBundleAsync | NAMECALL/GETTABLEKS PlayerOwnsBundleAsync at 1 sites
+member MarketplaceService.UserOwnsGamePassAsync | NAMECALL/GETTABLEKS UserOwnsGamePassAsync at 2 sites
+member MarketplaceService.NativePurchaseFinishedV2 | GETTABLEKS/SETTABLEKS NativePurchaseFinishedV2 at 6 sites
+member MarketplaceService.NativePurchaseFinishedWithLocalPlayer | GETTABLEKS/SETTABLEKS NativePurchaseFinishedWithLocalPlayer at 5 sites
+member MarketplaceService.NativePurchaseFinishedWithLocalPlayerV2 | GETTABLEKS/SETTABLEKS NativePurchaseFinishedWithLocalPlayerV2 at 5 sites
+member MarketplaceService.OpenShopRequested | GETTABLEKS/SETTABLEKS OpenShopRequested at 1 sites
+member MarketplaceService.PromptBulkPurchaseFinished | GETTABLEKS/SETTABLEKS PromptBulkPurchaseFinished at 2 sites
+member MarketplaceService.PromptBulkPurchaseRefreshed | GETTABLEKS/SETTABLEKS PromptBulkPurchaseRefreshed at 1 sites
+member MarketplaceService.PromptBulkPurchaseRequested | GETTABLEKS/SETTABLEKS PromptBulkPurchaseRequested at 1 sites
+member MarketplaceService.PromptBulkPurchaseRequestedV2 | GETTABLEKS/SETTABLEKS PromptBulkPurchaseRequestedV2 at 1 sites
+member MarketplaceService.PromptBulkPurchaseRequestedV3 | GETTABLEKS/SETTABLEKS PromptBulkPurchaseRequestedV3 at 1 sites
+member MarketplaceService.PromptBundlePurchaseFinished | GETTABLEKS/SETTABLEKS PromptBundlePurchaseFinished at 2 sites
+member MarketplaceService.PromptBundlePurchaseRequested | GETTABLEKS/SETTABLEKS PromptBundlePurchaseRequested at 1 sites
+member MarketplaceService.PromptCancelSubscriptionRequested | GETTABLEKS/SETTABLEKS PromptCancelSubscriptionRequested at 1 sites
+member MarketplaceService.PromptCollectibleBundlePurchaseRequested | GETTABLEKS/SETTABLEKS PromptCollectibleBundlePurchaseRequested at 2 sites
+member MarketplaceService.PromptCollectiblesPurchaseRequested | GETTABLEKS/SETTABLEKS PromptCollectiblesPurchaseRequested at 2 sites
+member MarketplaceService.PromptGamePassPurchaseFinished | GETTABLEKS/SETTABLEKS PromptGamePassPurchaseFinished at 1 sites
+member MarketplaceService.PromptGamePassPurchaseRequested | GETTABLEKS/SETTABLEKS PromptGamePassPurchaseRequested at 1 sites
+member MarketplaceService.PromptPremiumPurchaseRequested | GETTABLEKS/SETTABLEKS PromptPremiumPurchaseRequested at 1 sites
+member MarketplaceService.PromptPurchaseRequestedV2 | GETTABLEKS/SETTABLEKS PromptPurchaseRequestedV2 at 2 sites
+member MarketplaceService.PromptRobloxPurchaseRequested | GETTABLEKS/SETTABLEKS PromptRobloxPurchaseRequested at 1 sites
+member MarketplaceService.PromptRobloxSubscriptionPurchaseRequested | GETTABLEKS/SETTABLEKS PromptRobloxSubscriptionPurchaseRequested at 1 sites
+member MarketplaceService.PromptRobuxTransferRequested | GETTABLEKS/SETTABLEKS PromptRobuxTransferRequested at 1 sites
+member MarketplaceService.PromptRobuxTransferSubscriptionUpsellRequested | GETTABLEKS/SETTABLEKS PromptRobuxTransferSubscriptionUpsellRequested at 1 sites
+member MarketplaceService.PromptSubscriptionPurchaseRequested | GETTABLEKS/SETTABLEKS PromptSubscriptionPurchaseRequested at 1 sites
+member MarketplaceService.PromptVIPServerPurchaseRequested | GETTABLEKS/SETTABLEKS PromptVIPServerPurchaseRequested at 1 sites
+member Model.WorldPivot | GETTABLEKS/SETTABLEKS WorldPivot at 6 sites
+member Model.GetBoundingBox | NAMECALL/GETTABLEKS GetBoundingBox at 21 sites
+member Motor6D.EnableSkinning | GETTABLEKS/SETTABLEKS EnableSkinning at 1 sites
+member Motor6D.Transform | GETTABLEKS/SETTABLEKS Transform at 15 sites
+member Mouse.IconContent | GETTABLEKS/SETTABLEKS IconContent at 1 sites
+member NetworkPeer.InitializeRemoteAllowList | NAMECALL/GETTABLEKS InitializeRemoteAllowList at 1 sites
+member NotificationService.IsConnected | GETTABLEKS/SETTABLEKS IsConnected at 2 sites
+member NotificationService.SelectedTheme | GETTABLEKS/SETTABLEKS SelectedTheme at 6 sites
+member NotificationService.SubscribeToTopic | NAMECALL/GETTABLEKS SubscribeToTopic at 1 sites
+member NotificationService.UnsubscribeFromTopic | NAMECALL/GETTABLEKS UnsubscribeFromTopic at 1 sites
+member NotificationService.RobloxConnectionChanged | GETTABLEKS/SETTABLEKS RobloxConnectionChanged at 3 sites
+member NotificationService.RobloxEventReceived | GETTABLEKS/SETTABLEKS RobloxEventReceived at 7 sites
+member NotificationService.TopicNotificationReceived | GETTABLEKS/SETTABLEKS TopicNotificationReceived at 1 sites
+member NotificationService.TopicSubscriptionError | string constant TopicSubscriptionError at 1 sites
+member NotificationService.TopicTokenExpiry | string constant TopicTokenExpiry at 1 sites
+member PVInstance.GetPivot | NAMECALL/GETTABLEKS GetPivot at 3 sites
+member PVInstance.PivotTo | NAMECALL/GETTABLEKS PivotTo at 11 sites
+member ParticleEmitter.Brightness | GETTABLEKS/SETTABLEKS Brightness at 10 sites
+member ParticleEmitter.LightInfluence | GETTABLEKS/SETTABLEKS LightInfluence at 4 sites
+member ParticleEmitter.LocalTransparencyModifier | GETTABLEKS/SETTABLEKS LocalTransparencyModifier at 8 sites
+member ParticleEmitter.Orientation | GETTABLEKS/SETTABLEKS Orientation at 66 sites
+member ParticleEmitter.Shape | GETTABLEKS/SETTABLEKS Shape at 14 sites
+member ParticleEmitter.TextureContent | GETTABLEKS/SETTABLEKS TextureContent at 10 sites
+member ParticleEmitter.Clear | NAMECALL/GETTABLEKS Clear at 32 sites
+member ParticleEmitter.FastForward | NAMECALL/GETTABLEKS FastForward at 1 sites
+member Path.Blocked | GETTABLEKS/SETTABLEKS Blocked at 3 sites
+member Player.ChatAvailabilityStatus | GETTABLEKS/SETTABLEKS ChatAvailabilityStatus at 6 sites
+member Player.DisplayName | GETTABLEKS/SETTABLEKS DisplayName at 161 sites
+member Player.GameplayPaused | GETTABLEKS/SETTABLEKS GameplayPaused at 7 sites
+member Player.HasRobloxSubscription | GETTABLEKS/SETTABLEKS HasRobloxSubscription at 18 sites
+member Player.HasVerifiedBadge | GETTABLEKS/SETTABLEKS HasVerifiedBadge at 16 sites
+member Player.LocaleId | GETTABLEKS/SETTABLEKS LocaleId at 28 sites
+member Player.PartyId | GETTABLEKS/SETTABLEKS PartyId at 1 sites
+member Player.PlatformName | GETTABLEKS/SETTABLEKS PlatformName at 5 sites
+member Player.Team | GETTABLEKS/SETTABLEKS Team at 33 sites
+member Player.User | GETTABLEKS/SETTABLEKS User at 163 sites
+member Player.VREnabled | GETTABLEKS/SETTABLEKS VREnabled at 211 sites
+member Player.VoiceChatVolume | GETTABLEKS/SETTABLEKS VoiceChatVolume at 20 sites
+member Player.AddToBlockList | NAMECALL/GETTABLEKS AddToBlockList at 2 sites
+member Player.GetBlockListInitialized | NAMECALL/GETTABLEKS GetBlockListInitialized at 1 sites
+member Player.GetData | NAMECALL/GETTABLEKS GetData at 4 sites
+member Player.GetJoinData | NAMECALL/GETTABLEKS GetJoinData at 3 sites
+member Player.HasBlockedPlayer | NAMECALL/GETTABLEKS HasBlockedPlayer at 2 sites
+member Player.NotifyAgeCheckPassed | NAMECALL/GETTABLEKS NotifyAgeCheckPassed at 1 sites
+member Player.RequestTool | NAMECALL/GETTABLEKS RequestTool at 2 sites
+member Player.SetBlockListInitialized | NAMECALL/GETTABLEKS SetBlockListInitialized at 2 sites
+member Player.SetChatTranslationSettingsLocaleId | NAMECALL/GETTABLEKS SetChatTranslationSettingsLocaleId at 2 sites
+member Player.SetExperienceSettingsLocaleId | NAMECALL/GETTABLEKS SetExperienceSettingsLocaleId at 16 sites
+member Player.UpdatePlayerBlocked | NAMECALL/GETTABLEKS UpdatePlayerBlocked at 2 sites
+member Player.GetCanManageAsync | NAMECALL/GETTABLEKS GetCanManageAsync at 3 sites
+member Player.IsFriendsWithAsync | NAMECALL/GETTABLEKS IsFriendsWithAsync at 6 sites
+member Player.IsInGroupAsync | NAMECALL/GETTABLEKS IsInGroupAsync at 2 sites
+member Player.LoadCharacterAsync | NAMECALL/GETTABLEKS LoadCharacterAsync at 1 sites
+member Player.BlockListChanged | GETTABLEKS/SETTABLEKS BlockListChanged at 1 sites
+member Player.EmotesLoaded | GETTABLEKS/SETTABLEKS EmotesLoaded at 4 sites
+member PlayerGui.CurrentScreenOrientation | GETTABLEKS/SETTABLEKS CurrentScreenOrientation at 8 sites
+member PlayerGui.ScreenOrientation | string constant ScreenOrientation at 5 sites
+member PlayerScripts.GetRegisteredComputerCameraMovementModes | NAMECALL/GETTABLEKS GetRegisteredComputerCameraMovementModes at 3 sites
+member PlayerScripts.GetRegisteredComputerMovementModes | NAMECALL/GETTABLEKS GetRegisteredComputerMovementModes at 3 sites
+member PlayerScripts.GetRegisteredTouchCameraMovementModes | NAMECALL/GETTABLEKS GetRegisteredTouchCameraMovementModes at 1 sites
+member PlayerScripts.GetRegisteredTouchMovementModes | NAMECALL/GETTABLEKS GetRegisteredTouchMovementModes at 1 sites
+member PlayerScripts.ComputerCameraMovementModeRegistered | GETTABLEKS/SETTABLEKS ComputerCameraMovementModeRegistered at 2 sites
+member PlayerScripts.ComputerMovementModeRegistered | GETTABLEKS/SETTABLEKS ComputerMovementModeRegistered at 2 sites
+member PlayerScripts.TouchCameraMovementModeRegistered | GETTABLEKS/SETTABLEKS TouchCameraMovementModeRegistered at 1 sites
+member PlayerScripts.TouchMovementModeRegistered | GETTABLEKS/SETTABLEKS TouchMovementModeRegistered at 1 sites
+member Players.ReportAbuseV3 | NAMECALL/GETTABLEKS ReportAbuseV3 at 10 sites
+member Players.ReportAvatarAbuse | NAMECALL/GETTABLEKS ReportAvatarAbuse at 2 sites
+member Players.ReportChatAbuse | NAMECALL/GETTABLEKS ReportChatAbuse at 2 sites
+member Players.SetLocalPlayerInfo | NAMECALL/GETTABLEKS SetLocalPlayerInfo at 2 sites
+member Players.CreateHumanoidModelFromDescriptionAsync | NAMECALL/GETTABLEKS CreateHumanoidModelFromDescriptionAsync at 12 sites
+member Players.CreateHumanoidModelFromUserIdAsync | NAMECALL/GETTABLEKS CreateHumanoidModelFromUserIdAsync at 3 sites
+member Players.GetCharacterAppearanceInfoAsync | NAMECALL/GETTABLEKS GetCharacterAppearanceInfoAsync at 2 sites
+member Players.GetHumanoidDescriptionFromOutfitIdAsync | NAMECALL/GETTABLEKS GetHumanoidDescriptionFromOutfitIdAsync at 6 sites
+member Players.GetHumanoidDescriptionFromUserIdAsync | NAMECALL/GETTABLEKS GetHumanoidDescriptionFromUserIdAsync at 4 sites
+member Players.GetProfileConfigurationFromUserIdAsync | NAMECALL/GETTABLEKS GetProfileConfigurationFromUserIdAsync at 1 sites
+member Players.PromptAgeCheckRequested | GETTABLEKS/SETTABLEKS PromptAgeCheckRequested at 1 sites
+member Plugin.Deactivate | NAMECALL/GETTABLEKS Deactivate at 2 sites
+member Plugin.GetItem | NAMECALL/GETTABLEKS GetItem at 145 sites
+member Plugin.GetPluginComponent | NAMECALL/GETTABLEKS GetPluginComponent at 3 sites
+member Plugin.GetUri | NAMECALL/GETTABLEKS GetUri at 2 sites
+member Plugin.Invoke | NAMECALL/GETTABLEKS Invoke at 7 sites
+member Plugin.OnInvoke | NAMECALL/GETTABLEKS OnInvoke at 9 sites
+member Plugin.PlaySound | NAMECALL/GETTABLEKS PlaySound at 5 sites
+member Plugin.SetItem | NAMECALL/GETTABLEKS SetItem at 136 sites
+member Plugin.CreateQWidgetPluginGui | NAMECALL/GETTABLEKS CreateQWidgetPluginGui at 1 sites
+member Plugin.Ready | GETTABLEKS/SETTABLEKS Ready at 65 sites
+member ReplicatedFirst.SetDefaultLoadingGuiRemoved | NAMECALL/GETTABLEKS SetDefaultLoadingGuiRemoved at 4 sites
+member RunService.ClientGitHash | GETTABLEKS/SETTABLEKS ClientGitHash at 3 sites
+member RunService.GetCoreScriptVersion | NAMECALL/GETTABLEKS GetCoreScriptVersion at 12 sites
+member RunService.GetRobloxClientChannel | NAMECALL/GETTABLEKS GetRobloxClientChannel at 5 sites
+member RunService.GetRobloxGuiFocused | NAMECALL/GETTABLEKS GetRobloxGuiFocused at 1 sites
+member RunService.GetRobloxVersion | NAMECALL/GETTABLEKS GetRobloxVersion at 18 sites
+member RunService.GetTotalScriptPlusExecutionTime | NAMECALL/GETTABLEKS GetTotalScriptPlusExecutionTime at 1 sites
+member RunService.IsEdit | NAMECALL/GETTABLEKS IsEdit at 3 sites
+member RunService.IsTeamCreateViewer | NAMECALL/GETTABLEKS IsTeamCreateViewer at 2 sites
+member RunService.IsTeamTest | NAMECALL/GETTABLEKS IsTeamTest at 2 sites
+member RunService.SetRobloxGuiFocused | NAMECALL/GETTABLEKS SetRobloxGuiFocused at 34 sites
+member RunService.getThrottleFramerateEnabled | NAMECALL/GETTABLEKS getThrottleFramerateEnabled at 3 sites
+member RunService.setThrottleFramerateEnabled | NAMECALL/GETTABLEKS setThrottleFramerateEnabled at 6 sites
+member RunService.PostSimulation | GETTABLEKS/SETTABLEKS PostSimulation at 5 sites
+member RunService.PreAnimation | GETTABLEKS/SETTABLEKS PreAnimation at 3 sites
+member RunService.PreRender | GETTABLEKS/SETTABLEKS PreRender at 11 sites
+member RunService.RobloxGuiFocusedChanged | GETTABLEKS/SETTABLEKS RobloxGuiFocusedChanged at 1 sites
+member ScreenGui.ClipToDeviceSafeArea | GETTABLEKS/SETTABLEKS ClipToDeviceSafeArea at 7 sites
+member ScreenGui.DisplayOrder | GETTABLEKS/SETTABLEKS DisplayOrder at 117 sites
+member ScreenGui.IgnoreGuiInset | GETTABLEKS/SETTABLEKS IgnoreGuiInset at 42 sites
+member ScreenGui.OnTopOfCoreBlur | GETTABLEKS/SETTABLEKS OnTopOfCoreBlur at 9 sites
+member ScreenGui.SafeAreaCompatibility | GETTABLEKS/SETTABLEKS SafeAreaCompatibility at 7 sites
+member ScreenGui.ScreenInsets | GETTABLEKS/SETTABLEKS ScreenInsets at 37 sites
+member ScriptContext.CompressLuaApp | NAMECALL/GETTABLEKS CompressLuaApp at 1 sites
+member ScriptContext.ErrorDetailed | GETTABLEKS/SETTABLEKS ErrorDetailed at 3 sites
+member ScrollingFrame.AbsoluteCanvasSize | GETTABLEKS/SETTABLEKS AbsoluteCanvasSize at 168 sites
+member ScrollingFrame.AutomaticCanvasSize | GETTABLEKS/SETTABLEKS AutomaticCanvasSize at 155 sites
+member ScrollingFrame.DraggingScrollBar | string constant DraggingScrollBar at 1 sites
+member ScrollingFrame.ElasticBehavior | GETTABLEKS/SETTABLEKS ElasticBehavior at 25 sites
+member ScrollingFrame.HorizontalScrollBarInset | GETTABLEKS/SETTABLEKS HorizontalScrollBarInset at 6 sites
+member ScrollingFrame.ScrollBarImageColor3 | GETTABLEKS/SETTABLEKS ScrollBarImageColor3 at 23 sites
+member ScrollingFrame.ScrollBarImageTransparency | GETTABLEKS/SETTABLEKS ScrollBarImageTransparency at 28 sites
+member ScrollingFrame.ScrollRate | string constant ScrollRate at 1 sites
+member ScrollingFrame.ScrollVelocity | GETTABLEKS/SETTABLEKS ScrollVelocity at 5 sites
+member ScrollingFrame.ScrollingDirection | GETTABLEKS/SETTABLEKS ScrollingDirection at 161 sites
+member ScrollingFrame.SmoothScroll | string constant SmoothScroll at 1 sites
+member ScrollingFrame.VerticalScrollBarInset | GETTABLEKS/SETTABLEKS VerticalScrollBarInset at 36 sites
+member ScrollingFrame.VerticalScrollBarPosition | GETTABLEKS/SETTABLEKS VerticalScrollBarPosition at 5 sites
+member ScrollingFrame.ClearInertialScrolling | NAMECALL/GETTABLEKS ClearInertialScrolling at 1 sites
+member ScrollingFrame.GetSampledInertialVelocity | NAMECALL/GETTABLEKS GetSampledInertialVelocity at 1 sites
+member ScrollingFrame.GetScrollVelocity | NAMECALL/GETTABLEKS GetScrollVelocity at 7 sites
+member ScrollingFrame.ResetScrollVelocity | NAMECALL/GETTABLEKS ResetScrollVelocity at 6 sites
+member ScrollingFrame.ScrollToTop | NAMECALL/GETTABLEKS ScrollToTop at 6 sites
+member Selection.Add | NAMECALL/GETTABLEKS Add at 12 sites
+member ShirtGraphic.Color3 | GETTABLEKS/SETTABLEKS Color3 at 38921 sites
+member ShirtGraphic.TextureContent | GETTABLEKS/SETTABLEKS TextureContent at 10 sites
+member Smoke.LocalTransparencyModifier | GETTABLEKS/SETTABLEKS LocalTransparencyModifier at 8 sites
+member Smoke.FastForward | NAMECALL/GETTABLEKS FastForward at 1 sites
+member SocialService.InvokeGameInvitePromptClosed | NAMECALL/GETTABLEKS InvokeGameInvitePromptClosed at 3 sites
+member SocialService.PromptRsvpToEventCompleted | NAMECALL/GETTABLEKS PromptRsvpToEventCompleted at 6 sites
+member SocialService.SignalFeedbackSubmissionCompleted | NAMECALL/GETTABLEKS SignalFeedbackSubmissionCompleted at 4 sites
+member SocialService.SignalFeedbackSubmissionPermissionDenied | NAMECALL/GETTABLEKS SignalFeedbackSubmissionPermissionDenied at 6 sites
+member SocialService.UpdatePlayerPartyData | NAMECALL/GETTABLEKS UpdatePlayerPartyData at 1 sites
+member SocialService.CanSendGameInviteAsync | NAMECALL/GETTABLEKS CanSendGameInviteAsync at 1 sites
+member SocialService.OpenShareSheetWithLink | GETTABLEKS/SETTABLEKS OpenShareSheetWithLink at 1 sites
+member SocialService.PromptInviteRequested | GETTABLEKS/SETTABLEKS PromptInviteRequested at 1 sites
+member SocialService.SelfViewHidden | GETTABLEKS/SETTABLEKS SelfViewHidden at 1 sites
+member SocialService.SelfViewVisible | GETTABLEKS/SETTABLEKS SelfViewVisible at 1 sites
+member SocialService.ShowPromptFeedbackSubmission | GETTABLEKS/SETTABLEKS ShowPromptFeedbackSubmission at 1 sites
+member SocialService.ShowPromptFeedbackUnavailable | GETTABLEKS/SETTABLEKS ShowPromptFeedbackUnavailable at 1 sites
+member SocialService.ShowPromptRsvpToEvent | GETTABLEKS/SETTABLEKS ShowPromptRsvpToEvent at 1 sites
+member Sound.AssetRepresentation | GETTABLEKS/SETTABLEKS AssetRepresentation at 2 sites
+member Sound.AudioContent | GETTABLEKS/SETTABLEKS AudioContent at 2 sites
+member Sound.IsLoaded | GETTABLEKS/SETTABLEKS IsLoaded at 13 sites
+member Sound.PlaybackRegion | GETTABLEKS/SETTABLEKS PlaybackRegion at 6 sites
+member Sound.PlaybackSpeed | GETTABLEKS/SETTABLEKS PlaybackSpeed at 23 sites
+member Sound.Playing | GETTABLEKS/SETTABLEKS Playing at 35 sites
+member Sound.RollOffGain | GETTABLEKS/SETTABLEKS RollOffGain at 7 sites
+member Sound.RollOffMaxDistance | GETTABLEKS/SETTABLEKS RollOffMaxDistance at 1 sites
+member Sound.RollOffMinDistance | GETTABLEKS/SETTABLEKS RollOffMinDistance at 1 sites
+member Sound.SoundGroup | GETTABLEKS/SETTABLEKS SoundGroup at 21 sites
+member Sound.Loaded | GETTABLEKS/SETTABLEKS Loaded at 34 sites
+member Sound.Resumed | GETTABLEKS/SETTABLEKS Resumed at 1 sites
+member SoundService.DefaultListenerLocation | GETTABLEKS/SETTABLEKS DefaultListenerLocation at 14 sites
+member SoundService.BeginRecording | NAMECALL/GETTABLEKS BeginRecording at 1 sites
+member SoundService.GetAudioInstances | NAMECALL/GETTABLEKS GetAudioInstances at 2 sites
+member SoundService.GetInputDevices | NAMECALL/GETTABLEKS GetInputDevices at 3 sites
+member SoundService.GetOutputDevices | NAMECALL/GETTABLEKS GetOutputDevices at 3 sites
+member SoundService.GetSoundMemoryData | NAMECALL/GETTABLEKS GetSoundMemoryData at 1 sites
+member SoundService.SetInputDevice | NAMECALL/GETTABLEKS SetInputDevice at 1 sites
+member SoundService.SetOutputDevice | NAMECALL/GETTABLEKS SetOutputDevice at 3 sites
+member SoundService.SetSoundEnabled | NAMECALL/GETTABLEKS SetSoundEnabled at 1 sites
+member SoundService.EndRecording | NAMECALL/GETTABLEKS EndRecording at 1 sites
+member SoundService.AudioDeviceInputAdded | GETTABLEKS/SETTABLEKS AudioDeviceInputAdded at 5 sites
+member SoundService.AudioInstanceAdded | GETTABLEKS/SETTABLEKS AudioInstanceAdded at 6 sites
+member SoundService.DeviceListChanged | GETTABLEKS/SETTABLEKS DeviceListChanged at 8 sites
+member Sparkles.LocalTransparencyModifier | GETTABLEKS/SETTABLEKS LocalTransparencyModifier at 8 sites
+member Sparkles.FastForward | NAMECALL/GETTABLEKS FastForward at 1 sites
+member StarterGear.Loaded | GETTABLEKS/SETTABLEKS Loaded at 34 sites
+member StarterGui.ScreenOrientation | string constant ScreenOrientation at 5 sites
+member StarterPlayer.PlayerModuleStatus | GETTABLEKS/SETTABLEKS PlayerModuleStatus at 3 sites
+member StarterPlayer.UserEmotesEnabled | GETTABLEKS/SETTABLEKS UserEmotesEnabled at 3 sites
+member Stats.MemoryTrackingEnabled | GETTABLEKS/SETTABLEKS MemoryTrackingEnabled at 2 sites
+member Stats.GetBrowserTrackerId | NAMECALL/GETTABLEKS GetBrowserTrackerId at 6 sites
+member Stats.GetPaginatedMemoryByTexture | NAMECALL/GETTABLEKS GetPaginatedMemoryByTexture at 4 sites
+member StatsItem.DisplayName | GETTABLEKS/SETTABLEKS DisplayName at 161 sites
+member Studio.Main Volume | string constant Main Volume at 1 sites
+member Studio.PreferredTextSize | GETTABLEKS/SETTABLEKS PreferredTextSize at 16 sites
+member Studio.Theme | GETTABLEKS/SETTABLEKS Theme at 1440 sites
+member Studio.ThemeChanged | GETTABLEKS/SETTABLEKS ThemeChanged at 1 sites
+member SurfaceGui.AlwaysOnTop | GETTABLEKS/SETTABLEKS AlwaysOnTop at 9 sites
+member SurfaceGui.Brightness | GETTABLEKS/SETTABLEKS Brightness at 10 sites
+member SurfaceGui.ClipsDescendants | GETTABLEKS/SETTABLEKS ClipsDescendants at 175 sites
+member SurfaceGui.HorizontalCurvature | GETTABLEKS/SETTABLEKS HorizontalCurvature at 5 sites
+member SurfaceGui.LightInfluence | GETTABLEKS/SETTABLEKS LightInfluence at 4 sites
+member SurfaceGui.MaxDistance | GETTABLEKS/SETTABLEKS MaxDistance at 6 sites
+member SurfaceGui.PixelsPerStud | GETTABLEKS/SETTABLEKS PixelsPerStud at 7 sites
+member SurfaceGui.Shape | GETTABLEKS/SETTABLEKS Shape at 14 sites
+member SurfaceGui.SizingMode | GETTABLEKS/SETTABLEKS SizingMode at 9 sites
+member SurfaceGui.ZOffset | GETTABLEKS/SETTABLEKS ZOffset at 5 sites
+member Team.ChildOrder | GETTABLEKS/SETTABLEKS ChildOrder at 2 sites
+member Team.GetPlayers | NAMECALL/GETTABLEKS GetPlayers at 77 sites
+member Team.PlayerAdded | GETTABLEKS/SETTABLEKS PlayerAdded at 56 sites
+member Team.PlayerRemoved | GETTABLEKS/SETTABLEKS PlayerRemoved at 16 sites
+member TeleportService.Block | NAMECALL/GETTABLEKS Block at 36 sites
+member TeleportService.GetThirdPartyTeleportInfo | NAMECALL/GETTABLEKS GetThirdPartyTeleportInfo at 4 sites
+member TeleportService.PromptExperienceDetailsCompleted | NAMECALL/GETTABLEKS PromptExperienceDetailsCompleted at 2 sites
+member TeleportService.TeleportReconnect | NAMECALL/GETTABLEKS TeleportReconnect at 2 sites
+member TeleportService.TeleportSwitchServer | NAMECALL/GETTABLEKS TeleportSwitchServer at 2 sites
+member TeleportService.TeleportTrustedBackForth | NAMECALL/GETTABLEKS TeleportTrustedBackForth at 3 sites
+member TeleportService.TeleportTrustedBackHistory | NAMECALL/GETTABLEKS TeleportTrustedBackHistory at 1 sites
+member TeleportService.TeleportedUniversesBackHistory | NAMECALL/GETTABLEKS TeleportedUniversesBackHistory at 1 sites
+member TeleportService.TeleportAsync | NAMECALL/GETTABLEKS TeleportAsync at 2 sites
+member TeleportService.UnblockAsync | NAMECALL/GETTABLEKS UnblockAsync at 2 sites
+member TeleportService.MenuTeleportAttempt | GETTABLEKS/SETTABLEKS MenuTeleportAttempt at 2 sites
+member TeleportService.OpenExperienceDetailsPrompt | GETTABLEKS/SETTABLEKS OpenExperienceDetailsPrompt at 1 sites
+member TeleportService.TeleportInitFailed | GETTABLEKS/SETTABLEKS TeleportInitFailed at 4 sites
+member TextBox.ContentText | GETTABLEKS/SETTABLEKS ContentText at 4 sites
+member TextBox.CursorPosition | GETTABLEKS/SETTABLEKS CursorPosition at 73 sites
+member TextBox.FontFace | GETTABLEKS/SETTABLEKS FontFace at 533 sites
+member TextBox.LineHeight | GETTABLEKS/SETTABLEKS LineHeight at 434 sites
+member TextBox.LocalizationMatchIdentifier | GETTABLEKS/SETTABLEKS LocalizationMatchIdentifier at 2 sites
+member TextBox.LocalizationMatchedSourceText | GETTABLEKS/SETTABLEKS LocalizationMatchedSourceText at 2 sites
+member TextBox.ManualFocusRelease | GETTABLEKS/SETTABLEKS ManualFocusRelease at 8 sites
+member TextBox.MaxVisibleGraphemes | GETTABLEKS/SETTABLEKS MaxVisibleGraphemes at 4 sites
+member TextBox.OpenTypeFeatures | GETTABLEKS/SETTABLEKS OpenTypeFeatures at 12 sites
+member TextBox.OpenTypeFeaturesError | string constant OpenTypeFeaturesError at 1 sites
+member TextBox.OverlayNativeInput | GETTABLEKS/SETTABLEKS OverlayNativeInput at 13 sites
+member TextBox.PlaceholderColor3 | GETTABLEKS/SETTABLEKS PlaceholderColor3 at 47 sites
+member TextBox.PlaceholderText | GETTABLEKS/SETTABLEKS PlaceholderText at 123 sites
+member TextBox.ReturnKeyType | GETTABLEKS/SETTABLEKS ReturnKeyType at 7 sites
+member TextBox.RichText | GETTABLEKS/SETTABLEKS RichText at 72 sites
+member TextBox.SelectionStart | GETTABLEKS/SETTABLEKS SelectionStart at 9 sites
+member TextBox.ShouldEmitReturnEvents | GETTABLEKS/SETTABLEKS ShouldEmitReturnEvents at 3 sites
+member TextBox.ShouldEmitUpAndDownArrowEvents | string constant ShouldEmitUpAndDownArrowEvents at 1 sites
+member TextBox.ShowNativeInput | GETTABLEKS/SETTABLEKS ShowNativeInput at 6 sites
+member TextBox.TextDirection | GETTABLEKS/SETTABLEKS TextDirection at 3 sites
+member TextBox.TextEditable | GETTABLEKS/SETTABLEKS TextEditable at 17 sites
+member TextBox.TextInputType | GETTABLEKS/SETTABLEKS TextInputType at 15 sites
+member TextBox.TextSize | GETTABLEKS/SETTABLEKS TextSize at 971 sites
+member TextBox.TextTruncate | GETTABLEKS/SETTABLEKS TextTruncate at 251 sites
+member TextBox.SetTextFromInput | NAMECALL/GETTABLEKS SetTextFromInput at 9 sites
+member TextBox.ReturnPressedFromOnScreenKeyboard | GETTABLEKS/SETTABLEKS ReturnPressedFromOnScreenKeyboard at 10 sites
+member TextButton.ContentText | GETTABLEKS/SETTABLEKS ContentText at 4 sites
+member TextButton.FontFace | GETTABLEKS/SETTABLEKS FontFace at 533 sites
+member TextButton.LineHeight | GETTABLEKS/SETTABLEKS LineHeight at 434 sites
+member TextButton.LocalizationMatchIdentifier | GETTABLEKS/SETTABLEKS LocalizationMatchIdentifier at 2 sites
+member TextButton.LocalizationMatchedSourceText | GETTABLEKS/SETTABLEKS LocalizationMatchedSourceText at 2 sites
+member TextButton.LocalizedText | string constant LocalizedText at 1 sites
+member TextButton.MaxVisibleGraphemes | GETTABLEKS/SETTABLEKS MaxVisibleGraphemes at 4 sites
+member TextButton.OpenTypeFeatures | GETTABLEKS/SETTABLEKS OpenTypeFeatures at 12 sites
+member TextButton.OpenTypeFeaturesError | string constant OpenTypeFeaturesError at 1 sites
+member TextButton.RichText | GETTABLEKS/SETTABLEKS RichText at 72 sites
+member TextButton.TextDirection | GETTABLEKS/SETTABLEKS TextDirection at 3 sites
+member TextButton.TextSize | GETTABLEKS/SETTABLEKS TextSize at 971 sites
+member TextButton.TextTruncate | GETTABLEKS/SETTABLEKS TextTruncate at 251 sites
+member TextButton.SetTextFromInput | NAMECALL/GETTABLEKS SetTextFromInput at 9 sites
+member TextLabel.ContentText | GETTABLEKS/SETTABLEKS ContentText at 4 sites
+member TextLabel.FontFace | GETTABLEKS/SETTABLEKS FontFace at 533 sites
+member TextLabel.LineHeight | GETTABLEKS/SETTABLEKS LineHeight at 434 sites
+member TextLabel.LocalizationMatchIdentifier | GETTABLEKS/SETTABLEKS LocalizationMatchIdentifier at 2 sites
+member TextLabel.LocalizationMatchedSourceText | GETTABLEKS/SETTABLEKS LocalizationMatchedSourceText at 2 sites
+member TextLabel.LocalizedText | string constant LocalizedText at 1 sites
+member TextLabel.MaxVisibleGraphemes | GETTABLEKS/SETTABLEKS MaxVisibleGraphemes at 4 sites
+member TextLabel.OpenTypeFeatures | GETTABLEKS/SETTABLEKS OpenTypeFeatures at 12 sites
+member TextLabel.OpenTypeFeaturesError | string constant OpenTypeFeaturesError at 1 sites
+member TextLabel.RichText | GETTABLEKS/SETTABLEKS RichText at 72 sites
+member TextLabel.TextDirection | GETTABLEKS/SETTABLEKS TextDirection at 3 sites
+member TextLabel.TextSize | GETTABLEKS/SETTABLEKS TextSize at 971 sites
+member TextLabel.TextTruncate | GETTABLEKS/SETTABLEKS TextTruncate at 251 sites
+member TextLabel.SetTextFromInput | NAMECALL/GETTABLEKS SetTextFromInput at 9 sites
+member TextService.GetFontMemoryData | NAMECALL/GETTABLEKS GetFontMemoryData at 1 sites
+member TextService.FilterAndTranslateStringAsync | NAMECALL/GETTABLEKS FilterAndTranslateStringAsync at 1 sites
+member TextService.FilterStringAsync | NAMECALL/GETTABLEKS FilterStringAsync at 2 sites
+member TextService.GetTextBoundsAsync | NAMECALL/GETTABLEKS GetTextBoundsAsync at 11 sites
+member TextService.GetTextSizeOffsetAsync | NAMECALL/GETTABLEKS GetTextSizeOffsetAsync at 2 sites
+member Tool.Deactivate | NAMECALL/GETTABLEKS Deactivate at 2 sites
+member TweenService.Create | NAMECALL/GETTABLEKS Create at 170 sites
+member TweenService.GetValue | NAMECALL/GETTABLEKS GetValue at 22 sites
+member UserGameSettings.BadgeVisible | GETTABLEKS/SETTABLEKS BadgeVisible at 1 sites
+member UserGameSettings.CameraYInverted | GETTABLEKS/SETTABLEKS CameraYInverted at 11 sites
+member UserGameSettings.ChatTranslationEnabled | GETTABLEKS/SETTABLEKS ChatTranslationEnabled at 24 sites
+member UserGameSettings.ChatTranslationFTUXShown | GETTABLEKS/SETTABLEKS ChatTranslationFTUXShown at 2 sites
+member UserGameSettings.ChatTranslationLocale | GETTABLEKS/SETTABLEKS ChatTranslationLocale at 6 sites
+member UserGameSettings.ChatTranslationToggleEnabled | GETTABLEKS/SETTABLEKS ChatTranslationToggleEnabled at 11 sites
+member UserGameSettings.ChatVisible | GETTABLEKS/SETTABLEKS ChatVisible at 19 sites
+member UserGameSettings.DefaultCameraID | GETTABLEKS/SETTABLEKS DefaultCameraID at 2 sites
+member UserGameSettings.FramerateCap | GETTABLEKS/SETTABLEKS FramerateCap at 9 sites
+member UserGameSettings.GamepadCameraSensitivity | GETTABLEKS/SETTABLEKS GamepadCameraSensitivity at 5 sites
+member UserGameSettings.HapticStrength | GETTABLEKS/SETTABLEKS HapticStrength at 10 sites
+member UserGameSettings.HasEverUsedVR | GETTABLEKS/SETTABLEKS HasEverUsedVR at 6 sites
+member UserGameSettings.IsUsingCameraYInverted | GETTABLEKS/SETTABLEKS IsUsingCameraYInverted at 9 sites
+member UserGameSettings.IsUsingGamepadCameraSensitivity | GETTABLEKS/SETTABLEKS IsUsingGamepadCameraSensitivity at 7 sites
+member UserGameSettings.MicroProfilerWebServerEnabled | GETTABLEKS/SETTABLEKS MicroProfilerWebServerEnabled at 10 sites
+member UserGameSettings.MicroProfilerWebServerIP | GETTABLEKS/SETTABLEKS MicroProfilerWebServerIP at 3 sites
+member UserGameSettings.MicroProfilerWebServerPort | GETTABLEKS/SETTABLEKS MicroProfilerWebServerPort at 3 sites
+member UserGameSettings.MouseSensitivityFirstPerson | GETTABLEKS/SETTABLEKS MouseSensitivityFirstPerson at 10 sites
+member UserGameSettings.MouseSensitivityThirdPerson | GETTABLEKS/SETTABLEKS MouseSensitivityThirdPerson at 2 sites
+member UserGameSettings.OnScreenProfilerEnabled | GETTABLEKS/SETTABLEKS OnScreenProfilerEnabled at 18 sites
+member UserGameSettings.PartyVoiceVolume | GETTABLEKS/SETTABLEKS PartyVoiceVolume at 4 sites
+member UserGameSettings.PeoplePageLayout | GETTABLEKS/SETTABLEKS PeoplePageLayout at 2 sites
+member UserGameSettings.PerformanceStatsVisible | GETTABLEKS/SETTABLEKS PerformanceStatsVisible at 21 sites
+member UserGameSettings.PlayerHeight | GETTABLEKS/SETTABLEKS PlayerHeight at 2 sites
+member UserGameSettings.PlayerListVisible | GETTABLEKS/SETTABLEKS PlayerListVisible at 4 sites
+member UserGameSettings.PlayerNamesEnabled | GETTABLEKS/SETTABLEKS PlayerNamesEnabled at 6 sites
+member UserGameSettings.PreferredTextSize | GETTABLEKS/SETTABLEKS PreferredTextSize at 16 sites
+member UserGameSettings.PreferredTransparency | GETTABLEKS/SETTABLEKS PreferredTransparency at 60 sites
+member UserGameSettings.QualityResetLevel | GETTABLEKS/SETTABLEKS QualityResetLevel at 5 sites
+member UserGameSettings.RCCProfilerRecordFrameRate | GETTABLEKS/SETTABLEKS RCCProfilerRecordFrameRate at 6 sites
+member UserGameSettings.RCCProfilerRecordTimeFrame | GETTABLEKS/SETTABLEKS RCCProfilerRecordTimeFrame at 6 sites
+member UserGameSettings.ReducedMotion | GETTABLEKS/SETTABLEKS ReducedMotion at 108 sites
+member UserGameSettings.UIScaleMultiplierHundredths | GETTABLEKS/SETTABLEKS UIScaleMultiplierHundredths at 2 sites
+member UserGameSettings.UiNavigationKeyBindEnabled | GETTABLEKS/SETTABLEKS UiNavigationKeyBindEnabled at 17 sites
+member UserGameSettings.VRComfortSetting | GETTABLEKS/SETTABLEKS VRComfortSetting at 13 sites
+member UserGameSettings.VREnabled | GETTABLEKS/SETTABLEKS VREnabled at 211 sites
+member UserGameSettings.VRSafetyBubbleMode | GETTABLEKS/SETTABLEKS VRSafetyBubbleMode at 12 sites
+member UserGameSettings.VRSmoothRotationEnabled | GETTABLEKS/SETTABLEKS VRSmoothRotationEnabled at 3 sites
+member UserGameSettings.VRSmoothRotationEnabledCustomOption | GETTABLEKS/SETTABLEKS VRSmoothRotationEnabledCustomOption at 1 sites
+member UserGameSettings.VRThirdPersonFollowCamEnabled | GETTABLEKS/SETTABLEKS VRThirdPersonFollowCamEnabled at 2 sites
+member UserGameSettings.VRThirdPersonFollowCamEnabledCustomOption | GETTABLEKS/SETTABLEKS VRThirdPersonFollowCamEnabledCustomOption at 1 sites
+member UserGameSettings.VignetteEnabled | GETTABLEKS/SETTABLEKS VignetteEnabled at 4 sites
+member UserGameSettings.VignetteEnabledCustomOption | GETTABLEKS/SETTABLEKS VignetteEnabledCustomOption at 1 sites
+member UserGameSettings.VoiceChatVolume | GETTABLEKS/SETTABLEKS VoiceChatVolume at 20 sites
+member UserGameSettings.GetDefaultFramerateCap | NAMECALL/GETTABLEKS GetDefaultFramerateCap at 1 sites
+member UserGameSettings.PerformanceStatsVisibleChanged | GETTABLEKS/SETTABLEKS PerformanceStatsVisibleChanged at 5 sites
+member UserInputService.BottomBarSize | GETTABLEKS/SETTABLEKS BottomBarSize at 3 sites
+member UserInputService.MouseIcon | GETTABLEKS/SETTABLEKS MouseIcon at 5 sites
+member UserInputService.NavBarSize | GETTABLEKS/SETTABLEKS NavBarSize at 1 sites
+member UserInputService.OnScreenKeyboardPosition | GETTABLEKS/SETTABLEKS OnScreenKeyboardPosition at 16 sites
+member UserInputService.OnScreenKeyboardSize | GETTABLEKS/SETTABLEKS OnScreenKeyboardSize at 14 sites
+member UserInputService.OnScreenKeyboardVisible | GETTABLEKS/SETTABLEKS OnScreenKeyboardVisible at 37 sites
+member UserInputService.PreferredInput | GETTABLEKS/SETTABLEKS PreferredInput at 109 sites
+member UserInputService.RightBarSize | string constant RightBarSize at 3 sites
+member UserInputService.StatusBarSize | GETTABLEKS/SETTABLEKS StatusBarSize at 10 sites
+member UserInputService.TouchScreenEnabled | GETTABLEKS/SETTABLEKS TouchScreenEnabled at 1 sites
+member UserInputService.GetDeviceLevel | NAMECALL/GETTABLEKS GetDeviceLevel at 4 sites
+member UserInputService.GetDeviceType | NAMECALL/GETTABLEKS GetDeviceType at 4 sites
+member UserInputService.GetImageForKeyCode | NAMECALL/GETTABLEKS GetImageForKeyCode at 23 sites
+member UserInputService.GetMouseButtonsPressed | NAMECALL/GETTABLEKS GetMouseButtonsPressed at 1 sites
+member UserInputService.GetMouseDelta | NAMECALL/GETTABLEKS GetMouseDelta at 1 sites
+member UserInputService.GetMouseLocation | NAMECALL/GETTABLEKS GetMouseLocation at 6 sites
+member UserInputService.GetStringForKeyCode | NAMECALL/GETTABLEKS GetStringForKeyCode at 34 sites
+member UserInputService.IsGamepadButtonDown | NAMECALL/GETTABLEKS IsGamepadButtonDown at 10 sites
+member UserInputService.IsMouseButtonPressed | NAMECALL/GETTABLEKS IsMouseButtonPressed at 6 sites
+member UserInputService.PointerAction | GETTABLEKS/SETTABLEKS PointerAction at 2 sites
+member UserInputService.StatusBarTapped | GETTABLEKS/SETTABLEKS StatusBarTapped at 3 sites
+member UserInputService.TouchDrag | GETTABLEKS/SETTABLEKS TouchDrag at 1 sites
+member VehicleSeat.Sit | NAMECALL/GETTABLEKS Sit at 1 sites
+member Weld.EnableSkinning | GETTABLEKS/SETTABLEKS EnableSkinning at 1 sites
+member Workspace.AuthorityMode | GETTABLEKS/SETTABLEKS AuthorityMode at 3 sites
+member Workspace.Gravity | GETTABLEKS/SETTABLEKS Gravity at 1 sites
+member Workspace.GetServerTimeNow | NAMECALL/GETTABLEKS GetServerTimeNow at 24 sites
+member Workspace.PersistentLoaded | GETTABLEKS/SETTABLEKS PersistentLoaded at 1 sites

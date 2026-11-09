@@ -3,6 +3,7 @@ pub mod animation;
 pub mod bindables;
 pub mod camera;
 pub mod core;
+pub mod flags;
 pub mod gui;
 pub mod http;
 pub mod humanoid;
@@ -77,6 +78,7 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     http::register(&mut r);
     gui::register(&mut r);
     core::register(&mut r);
+    flags::register(&mut r);
     input::register(&mut r);
     actions::register(&mut r);
     tween::register(&mut r);

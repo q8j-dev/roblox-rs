@@ -11,6 +11,8 @@ DATATYPE_ALIASES = {"ContentId": "Content", "Content": "Content", "OptionalCoord
 def type_name(t):
     if t is None:
         return "void"
+    if isinstance(t, list):
+        return "Tuple"
     cat, name = t.get("Category"), t.get("Name")
     if cat == "Primitive":
         return name if name in PRIMITIVES else "void" if name == "null" else name
@@ -119,8 +121,25 @@ def main():
     dump = json.loads(dump_path.read_text(encoding="utf-8"))
     classes = {c["Name"]: c for c in dump["Classes"]}
     enums = {e["Name"]: e for e in dump["Enums"]}
+    old = {c["name"] for c in json.loads((HERE / "api.json").read_text(encoding="utf-8"))["classes"]}
     out_classes = {}
     out_enums = {}
+
+    def add_class(name, evidence):
+        c = classes[name]
+        entry = out_classes.setdefault(name, empty_class(c, evidence))
+        if entry.get("extends"):
+            entry.pop("extends")
+        entry["evidence"] = evidence
+        for m in c["Members"]:
+            if "Deprecated" in tags(m):
+                continue
+            bucket, rec = convert_member(m, evidence)
+            if not any(x["name"] == rec["name"] for x in entry[bucket]):
+                entry[bucket].append(rec)
+        parent = c["Superclass"]
+        if parent not in old and parent in classes and parent not in out_classes:
+            add_class(parent, f"superclass of {name}")
     for raw in (HERE / "backports.txt").read_text(encoding="utf-8").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
@@ -130,19 +149,14 @@ def main():
         target = target.strip()
         evidence = evidence.strip()
         if kind == "class":
-            c = classes[target]
-            entry = out_classes.setdefault(target, empty_class(c, evidence))
-            entry["evidence"] = evidence
-            for m in c["Members"]:
-                if "Deprecated" in tags(m):
-                    continue
-                bucket, rec = convert_member(m, evidence)
-                if not any(x["name"] == rec["name"] for x in entry[bucket]):
-                    entry[bucket].append(rec)
+            add_class(target, evidence)
         elif kind == "member":
             cls, _, name = target.partition(".")
             c = classes[cls]
-            m = next(m for m in c["Members"] if m["Name"] == name)
+            owner = c
+            while not any(m["Name"] == name for m in owner["Members"]):
+                owner = classes[owner["Superclass"]]
+            m = next(m for m in owner["Members"] if m["Name"] == name)
             entry = out_classes.setdefault(cls, {**empty_class(c, None), "extends": True})
             bucket, rec = convert_member(m, evidence)
             entry[bucket].append(rec)

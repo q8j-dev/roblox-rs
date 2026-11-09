@@ -37,6 +37,8 @@ pub struct Instance {
     pub parent_locked: bool,
     pub external_refs: u32,
     pub(crate) values: Vec<Variant>,
+    pub attributes: Vec<(String, Variant)>,
+    pub tags: Vec<String>,
     setting_parent: bool,
     revision: u64,
 }
@@ -465,6 +467,8 @@ impl DataModel {
                 parent_locked: false,
                 external_refs: 0,
                 values,
+                attributes: Vec::new(),
+                tags: Vec::new(),
                 setting_parent: false,
                 revision: self.clock + 1,
             },
@@ -1175,6 +1179,81 @@ impl DataModel {
         self.events.push(DomEvent::PropertyChanged { id, property });
     }
 
+    pub fn attribute(&self, id: InstanceId, name: &str) -> Option<&Variant> {
+        self.instances
+            .get(&id)?
+            .attributes
+            .iter()
+            .find(|(n, _)| n == name)
+            .map(|(_, v)| v)
+    }
+
+    pub fn attributes(&self, id: InstanceId) -> &[(String, Variant)] {
+        self.instances
+            .get(&id)
+            .map(|i| i.attributes.as_slice())
+            .unwrap_or(&[])
+    }
+
+    pub fn set_attribute(&mut self, id: InstanceId, name: &str, value: Variant) -> bool {
+        let Some(inst) = self.instances.get_mut(&id) else {
+            return false;
+        };
+        let at = inst.attributes.iter().position(|(n, _)| n == name);
+        let changed = match (&value, at) {
+            (Variant::Nil, None) => false,
+            (Variant::Nil, Some(i)) => {
+                inst.attributes.remove(i);
+                true
+            }
+            (_, Some(i)) if inst.attributes[i].1 == value => false,
+            (_, Some(i)) => {
+                inst.attributes[i].1 = value;
+                true
+            }
+            (_, None) => {
+                inst.attributes.push((name.to_string(), value));
+                true
+            }
+        };
+        if changed {
+            self.fire_signal(
+                id,
+                "AttributeChanged",
+                vec![Variant::String(name.to_string())],
+            );
+        }
+        changed
+    }
+
+    pub fn tags(&self, id: InstanceId) -> &[String] {
+        self.instances
+            .get(&id)
+            .map(|i| i.tags.as_slice())
+            .unwrap_or(&[])
+    }
+
+    pub fn add_tag(&mut self, id: InstanceId, tag: &str) -> bool {
+        match self.instances.get_mut(&id) {
+            Some(inst) if !inst.tags.iter().any(|t| t == tag) => {
+                inst.tags.push(tag.to_string());
+                true
+            }
+            _ => false,
+        }
+    }
+
+    pub fn remove_tag(&mut self, id: InstanceId, tag: &str) -> bool {
+        match self.instances.get_mut(&id) {
+            Some(inst) => {
+                let before = inst.tags.len();
+                inst.tags.retain(|t| t != tag);
+                before != inst.tags.len()
+            }
+            None => false,
+        }
+    }
+
     pub fn clone_instance(&mut self, id: InstanceId) -> Result<Option<InstanceId>, DomError> {
         let mut map: Vec<(InstanceId, InstanceId)> = Vec::new();
         let root_clone = self.clone_create(id, &mut map)?;
@@ -1223,6 +1302,8 @@ impl DataModel {
             return;
         };
         let name = s.name.clone();
+        let attributes = s.attributes.clone();
+        let tags = s.tags.clone();
         let layout = s.layout;
         let values: Vec<(usize, Variant)> = layout
             .slots
@@ -1239,6 +1320,8 @@ impl DataModel {
             .collect();
         if let Some(d) = self.instances.get_mut(&dst) {
             d.name = name;
+            d.attributes = attributes;
+            d.tags = tags;
             for (i, v) in values {
                 d.values[i] = v;
             }

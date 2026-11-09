@@ -11,7 +11,8 @@ Source: `extracontent-models.zip` → `InExperience/InExperience.rbxm` from the 
   Int64 (`SourceAssetId`), and SharedString (`Source`).
 - 38,258 instances: 1 root Folder `PatchRoot` with `CoreScripts` and `DataModelInstances`
   (`CorePackages`, `CoreGui`), 2,794 Folders, 35,456 ModuleScripts, 2 LocalizationTables,
-  6 StringValues. Full listing: `tree.txt`.
+  6 StringValues. Full listing: `tree.txt`, where `/` in names is shown as `_`
+  (the CoreScripts are named like `CoreScripts/ExperienceChatMain`).
 
 ## Scripts
 

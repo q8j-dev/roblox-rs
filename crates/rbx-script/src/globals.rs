@@ -58,6 +58,8 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
         "debug",
         "utf8",
         "bit32",
+        "buffer",
+        "vector",
         "_VERSION",
     ] {
         let v: Value = base.get(name)?;
@@ -138,6 +140,7 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
         };
         schedule_delay(lua, seconds, f)
     })?;
+    g.set("task", crate::task::create(lua, |f| wrap(lua, f))?)?;
     g.set("delay", delay.clone())?;
     g.set("Delay", delay)?;
     let spawn = lua.create_function(|lua, f: Value| {
@@ -359,6 +362,8 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
         "debug",
         "utf8",
         "bit32",
+        "buffer",
+        "vector",
     ] {
         if let Value::Table(t) = g.get::<Value>(lib)? {
             t.set_readonly(true);

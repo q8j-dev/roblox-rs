@@ -31,6 +31,8 @@ fn main() {
     let mut methods: BTreeMap<String, usize> = BTreeMap::new();
     let mut keys: BTreeMap<String, usize> = BTreeMap::new();
     let mut strings: BTreeMap<String, usize> = BTreeMap::new();
+    let mut services: BTreeMap<String, usize> = BTreeMap::new();
+    let mut created: BTreeMap<String, usize> = BTreeMap::new();
     let mut failed = 0;
     let mut mismatched = 0;
     let mut parsed = 0;
@@ -69,8 +71,33 @@ fn main() {
                 .or_default() += 1;
         }
         for p in 0..m.protos.len() {
+            let mut loaded: BTreeMap<u8, String> = BTreeMap::new();
+            let mut pending: Option<(u8, &str)> = None;
             for (_, insn, aux) in m.instructions(p) {
                 let o = op::op(insn);
+                if o == op::LOADK {
+                    loaded.insert(op::a(insn), constant(&m, p, op::d(insn) as usize));
+                }
+                if o == op::NAMECALL {
+                    let name = constant(&m, p, aux.unwrap_or(0) as usize);
+                    pending = match name.trim_matches('"') {
+                        "GetService" | "FindService" => Some((op::a(insn), "service")),
+                        _ => None,
+                    };
+                }
+                if o == op::GETIMPORT && constant(&m, p, op::d(insn) as usize) == "Instance.new" {
+                    pending = Some((op::a(insn), "new"));
+                }
+                if o == op::CALL
+                    && let Some((base, kind)) = pending.take()
+                    && base == op::a(insn)
+                {
+                    let arg = if kind == "service" { base + 2 } else { base + 1 };
+                    if let Some(v) = loaded.get(&arg) {
+                        let map = if kind == "service" { &mut services } else { &mut created };
+                        *map.entry(v.trim_matches('"').to_string()).or_default() += 1;
+                    }
+                }
                 let k = match o {
                     op::GETIMPORT => Some((&mut globals, op::d(insn) as usize)),
                     op::GETGLOBAL | op::SETGLOBAL => {
@@ -98,6 +125,8 @@ fn main() {
     dump("methods.txt", &methods);
     dump("keys.txt", &keys);
     dump("strings.txt", &strings);
+    dump("services.txt", &services);
+    dump("created.txt", &created);
     println!(
         "parsed {parsed}, failed {failed}, round-trip mismatches {mismatched}, globals {}, methods {}, keys {}",
         globals.len(),

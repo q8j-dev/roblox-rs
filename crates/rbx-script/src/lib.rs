@@ -2,6 +2,7 @@ pub mod api;
 pub mod content;
 mod convert;
 pub mod csg;
+pub mod flags;
 pub mod format;
 mod globals;
 pub mod harness;
@@ -15,6 +16,7 @@ mod runtime;
 mod scripts;
 pub mod security;
 mod signal;
+mod task;
 pub mod types;
 
 pub use convert::{lua_to_variant, variant_to_lua};

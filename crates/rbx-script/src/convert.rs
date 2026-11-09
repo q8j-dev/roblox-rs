@@ -332,3 +332,41 @@ pub fn arg_bool(v: Option<&Value>) -> bool {
 pub fn arg_instance(lua: &Lua, v: Option<&Value>) -> Option<InstanceId> {
     v.and_then(|v| instance_from_value(lua, v))
 }
+
+pub fn infer_variant(v: &Value) -> Option<Variant> {
+    Some(match v {
+        Value::Nil => Variant::Nil,
+        Value::Boolean(b) => Variant::Bool(*b),
+        Value::Number(n) => Variant::Double(*n),
+        Value::Integer(i) => Variant::Double(*i as f64),
+        Value::String(s) => Variant::String(s.to_str().ok()?.to_string()),
+        Value::UserData(ud) => {
+            if let Ok(x) = ud.borrow::<LVector3>() {
+                Variant::Vector3(x.0)
+            } else if let Ok(x) = ud.borrow::<LVector2>() {
+                Variant::Vector2(x.0)
+            } else if let Ok(x) = ud.borrow::<LCFrame>() {
+                Variant::CFrame(x.0)
+            } else if let Ok(x) = ud.borrow::<LColor3>() {
+                Variant::Color3(x.0)
+            } else if let Ok(x) = ud.borrow::<LBrickColor>() {
+                Variant::BrickColor(x.0)
+            } else if let Ok(x) = ud.borrow::<LUDim>() {
+                Variant::UDim(x.0)
+            } else if let Ok(x) = ud.borrow::<LUDim2>() {
+                Variant::UDim2(x.0)
+            } else if let Ok(x) = ud.borrow::<LRect2D>() {
+                Variant::Rect2D(x.0)
+            } else if let Ok(x) = ud.borrow::<LNumberRange>() {
+                Variant::NumberRange(x.0)
+            } else if let Ok(x) = ud.borrow::<LNumberSequence>() {
+                Variant::NumberSequence(x.0.clone())
+            } else if let Ok(x) = ud.borrow::<LColorSequence>() {
+                Variant::ColorSequence(x.0.clone())
+            } else {
+                return None;
+            }
+        }
+        _ => return None,
+    })
+}

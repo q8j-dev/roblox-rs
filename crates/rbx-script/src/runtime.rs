@@ -63,6 +63,7 @@ pub struct Engine {
     pub hooks: Vec<Box<dyn EngineHook>>,
     pub content_root: Option<std::path::PathBuf>,
     pub core_package: Option<std::path::PathBuf>,
+    pub flags: crate::flags::FlagStore,
     pub asset_dirs: Vec<std::path::PathBuf>,
     pub test: crate::api::test::TestState,
     pub world: rbx_physics::SharedWorld,
@@ -191,6 +192,7 @@ impl Engine {
             hooks: Vec::new(),
             content_root: None,
             core_package: None,
+            flags: Default::default(),
             asset_dirs: Vec::new(),
             test: Default::default(),
             world,
@@ -365,6 +367,15 @@ pub struct Sleeper {
     pub wake: f64,
     pub start: f64,
     pub thread: Thread,
+    pub resume: WakeArgs,
+}
+
+#[derive(Clone, Default)]
+pub enum WakeArgs {
+    #[default]
+    ElapsedAndTime,
+    Elapsed,
+    Args(MultiValue),
 }
 
 #[derive(Clone)]
@@ -397,6 +408,7 @@ pub struct State {
     pub waiters: HashMap<(InstanceId, &'static str), Vec<(Thread, u64)>>,
     pub dispatch_seq: Option<u64>,
     pub sleepers: Vec<Sleeper>,
+    pub deferred: Vec<(Thread, MultiValue)>,
     pub ready: VecDeque<(Thread, Resume)>,
     pub threads: HashMap<usize, ThreadInfo>,
     pub script_threads: HashMap<InstanceId, Vec<Thread>>,
@@ -579,6 +591,7 @@ impl ScriptRuntime {
             waiters: HashMap::default(),
             dispatch_seq: None,
             sleepers: Vec::new(),
+            deferred: Vec::new(),
             ready: VecDeque::new(),
             threads: HashMap::default(),
             script_threads: HashMap::default(),
@@ -1682,6 +1695,7 @@ pub fn schedule_wait(lua: &Lua, seconds: f64) {
             wake: now + delay,
             start: now,
             thread,
+            resume: WakeArgs::ElapsedAndTime,
         });
     });
 }
@@ -1703,6 +1717,7 @@ pub fn schedule_delay(lua: &Lua, seconds: f64, func: Function) -> mlua::Result<(
             wake: now + delay,
             start: now,
             thread,
+            resume: WakeArgs::ElapsedAndTime,
         });
     });
     Ok(())
@@ -1745,7 +1760,13 @@ fn resume_sleepers(lua: &Lua) {
     let mut due = due.into_iter();
     for s in due.by_ref() {
         let elapsed = now - s.start;
-        let args = MultiValue::from_vec(vec![Value::Number(elapsed), Value::Number(now)]);
+        let args = match s.resume {
+            WakeArgs::ElapsedAndTime => {
+                MultiValue::from_vec(vec![Value::Number(elapsed), Value::Number(now)])
+            }
+            WakeArgs::Elapsed => MultiValue::from_vec(vec![Value::Number(elapsed)]),
+            WakeArgs::Args(args) => args,
+        };
         resume_thread(lua, &s.thread, args);
         pump(lua);
         if started.elapsed() > budget {
@@ -1901,6 +1922,11 @@ pub fn fire_lua(lua: &Lua, target: InstanceId, event: &'static str, args: MultiV
 
 pub fn pump(lua: &Lua) {
     for _ in 0..1000 {
+        let deferred = with_state(lua, |s| std::mem::take(&mut s.deferred));
+        let resumed_deferred = !deferred.is_empty();
+        for (thread, args) in deferred {
+            resume_thread(lua, &thread, args);
+        }
         let eng = engine(lua);
         let deliveries;
         let (dom, fired) = {
@@ -1935,10 +1961,13 @@ pub fn pump(lua: &Lua) {
             crate::api::remote::process_deliveries(lua, deliveries);
         }
         if dom.is_empty() && fired.is_empty() {
-            if delivered {
+            if delivered || resumed_deferred {
                 continue;
             }
-            return;
+            if with_state(lua, |s| s.deferred.is_empty()) {
+                return;
+            }
+            continue;
         }
         for (i, ev) in dom.iter().enumerate() {
             with_state(lua, |s| s.dispatch_seq = Some(start + i as u64));
@@ -1951,6 +1980,14 @@ pub fn pump(lua: &Lua) {
             with_state(lua, |s| s.dispatch_seq = Some(f.seq));
             fire_lua(lua, f.target, f.event, args);
             with_state(lua, |s| s.dispatch_seq = None);
+            if f.event == "AttributeChanged"
+                && let Some(Variant::String(name)) = f.args.first()
+            {
+                let filtered = crate::signal::filtered_event("AttributeChanged", name);
+                if has_listeners(lua, f.target, filtered) {
+                    fire_lua(lua, f.target, filtered, MultiValue::new());
+                }
+            }
         }
     }
 }
@@ -2030,6 +2067,10 @@ fn dispatch_dom_event_inner(lua: &Lua, ev: &DomEvent) {
                         MultiValue::from_vec(vec![Value::String(s)]),
                     );
                 }
+            }
+            let filtered = crate::signal::filtered_event("Changed", property);
+            if has_listeners(lua, *id, filtered) {
+                fire_lua(lua, *id, filtered, MultiValue::new());
             }
             if *property == "Name" {
                 crate::scripts::on_name_changed(lua, *id);

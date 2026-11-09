@@ -191,3 +191,18 @@ impl UserData for LConnection {
         });
     }
 }
+
+pub fn filtered_event(base: &str, key: &str) -> &'static str {
+    static NAMES: std::sync::LazyLock<parking_lot::Mutex<std::collections::HashSet<&'static str>>> =
+        std::sync::LazyLock::new(Default::default);
+    let full = format!("{base}:{key}");
+    let mut names = NAMES.lock();
+    match names.get(full.as_str()) {
+        Some(s) => s,
+        None => {
+            let leaked: &'static str = Box::leak(full.into_boxed_str());
+            names.insert(leaked);
+            leaked
+        }
+    }
+}

@@ -159,7 +159,7 @@ fn core_source(lua: &Lua, name: &str) -> Option<CoreSource> {
     let packaged = with_state(lua, |s| {
         s.core_package_scripts
             .as_ref()
-            .map(|scripts| scripts.get(&name.replace('/', "_")).cloned())
+            .map(|scripts| scripts.get(name).cloned())
     });
     match packaged {
         Some(found) => found.map(CoreSource::Bytecode),

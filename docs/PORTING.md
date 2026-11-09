@@ -6,7 +6,7 @@ Read `docs/GOAL.md` and this file first after any context reset.
 
 ## Current phase
 
-Phases 1 to 8 are done. Phase 3's test-place run passes 242 of 281 places with tests (and runs all 217 places without tests); the remaining failures and their causes are listed in `docs/BUGS.md`. Phase 9 (finish) is in progress: the audit is clean outside `legacy/`, the optimization pass is recorded in `docs/PERF.md`, and `legacy/` is deleted last.
+Phases 1 to 8 are done. Phase 3's test-place run passes 265 of 281 places with tests and runs all 217 places without tests; the 16 that still fail and their causes are listed at the end of `docs/BUGS.md`. Phase 9 (finish) is in progress: the optimization pass is recorded in `docs/PERF.md`, and `legacy/` is deleted last.
 
 ## Legacy to Rust
 

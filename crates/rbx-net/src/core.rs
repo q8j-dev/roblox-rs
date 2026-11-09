@@ -1,7 +1,7 @@
 use crate::scope;
 use crate::wire::{Message, NetId, NewInstance, PeerId};
 use rbx_dom::{DataModel, InstanceId, Variant, coerce_to, database, default_value};
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
 pub const NIL: NetId = NetId(0);
 const SINGLETONS: &[&str] = &["Terrain"];

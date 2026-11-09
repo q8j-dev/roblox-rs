@@ -8,7 +8,7 @@ use rbx_dom::{DataModel, InstanceId, Variant};
 use rbx_math::{CFrame, Region3, Vec3};
 use rbx_physics::PhysicsWorld;
 use rbx_reflection::ValueType;
-use std::collections::HashSet;
+use rustc_hash::FxHashSet as HashSet;
 
 const AIR_MATERIAL: u32 = 1792;
 
@@ -76,7 +76,7 @@ pub fn objects_arg(lua: &Lua, v: Option<&Value>) -> Result<Vec<InstanceId>> {
 }
 
 fn ignore_set(dm: &DataModel, roots: &[InstanceId]) -> HashSet<InstanceId> {
-    let mut s = HashSet::new();
+    let mut s = HashSet::default();
     for &r in roots {
         if dm.contains(r) {
             s.insert(r);
@@ -286,7 +286,7 @@ fn get_physics_analyzer_issue(lua: &Lua, _id: InstanceId, _: &[Value]) -> Result
 
 fn parts_under(dm: &DataModel, roots: &[InstanceId]) -> Vec<InstanceId> {
     let mut out = Vec::new();
-    let mut seen = HashSet::new();
+    let mut seen = HashSet::default();
     for &r in roots {
         if !dm.contains(r) {
             continue;

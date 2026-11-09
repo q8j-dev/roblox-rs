@@ -8,7 +8,7 @@ use mlua::{Lua, MultiValue, Result, Value};
 use rbx_dom::gui::{Placement, canvas, place_child, placement};
 use rbx_dom::{DataModel, InstanceId, Variant};
 use rbx_math::{CFrame, Ray, Vec2, Vec3};
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 
 pub const MOUSE_BUTTON1: u32 = 0;
 pub const MOUSE_BUTTON2: u32 = 1;
@@ -946,7 +946,7 @@ fn mouse_hit(lua: &Lua, mouse: InstanceId) -> (Ray, Option<(InstanceId, Vec3, Ve
     };
     let dir = ray.direction * MOUSE_RAY_LENGTH;
     let hit = super::physics::with_world(lua, |w, dm| {
-        let mut ignore = std::collections::HashSet::new();
+        let mut ignore = rustc_hash::FxHashSet::default();
         for root in [filter, character].into_iter().flatten() {
             if dm.contains(root) {
                 ignore.insert(root);

@@ -11,7 +11,8 @@ use mlua::{Lua, MultiValue, Result, Thread, Value};
 use rbx_dom::{
     InstanceId, RemoteCall, RemoteDelivery, RemoteKind, RemoteTarget, RemoteValue, Variant,
 };
-use std::collections::{HashMap, VecDeque};
+use rustc_hash::FxHashMap as HashMap;
+use std::collections::VecDeque;
 
 pub const QUEUE_LIMIT: usize = 256;
 const MAX_DEPTH: u32 = 64;

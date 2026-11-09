@@ -4,7 +4,7 @@ use rbx_math::{Vec2, Vec3};
 use rbx_net::wire::SERVER_PEER;
 use rbx_net::{ClientReplicator, Message, PeerId, PhysicsState, ServerReplicator};
 use rbx_physics::world::{NetworkRoot, OwnershipGroup};
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 
 pub const SEND_INTERVAL: u32 = 2;
 const CHUNK: usize = 64;
@@ -164,7 +164,7 @@ impl ServerPhysics {
     ) {
         let by_player =
             |p: Option<InstanceId>| p.and_then(|p| clients.iter().find(|c| c.player == p));
-        let moving: std::collections::HashSet<InstanceId> = groups
+        let moving: rustc_hash::FxHashSet<InstanceId> = groups
             .iter()
             .flat_map(|g| g.parts.iter().copied())
             .collect();

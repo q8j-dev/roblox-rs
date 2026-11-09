@@ -7,7 +7,7 @@ use mlua::{Lua, MultiValue, Result, Value};
 use rbx_dom::{DataModel, InstanceId, Variant};
 use rbx_math::{Mat3, Vec3};
 use rbx_reflection::ValueType;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 
 pub const PRIORITY_CORE: u32 = 1000;
 const AUTO_STOP_FADE: f64 = 0.3;
@@ -729,7 +729,7 @@ pub fn step(lua: &Lua) {
             if joints.is_empty() {
                 continue;
             }
-            let mut caches: HashMap<InstanceId, SequenceCache> = HashMap::new();
+            let mut caches: HashMap<InstanceId, SequenceCache> = HashMap::default();
             let mut layers: Vec<Vec<CachedPose>> = Vec::new();
             for prio in [PRIORITY_CORE, 0, 1, 2] {
                 let mut poses: Vec<CachedPose> = Vec::new();

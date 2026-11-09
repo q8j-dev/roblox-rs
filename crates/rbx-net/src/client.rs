@@ -3,7 +3,7 @@ use crate::wire::{Message, NetId, NewInstance, PROTOCOL_VERSION, PeerId, Physics
 use rbx_dom::{
     DataModel, DomEvent, EventCursor, InstanceId, RemoteDelivery, RemoteKind, RemoteTarget, Variant,
 };
-use std::collections::HashSet;
+use rustc_hash::FxHashSet as HashSet;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum ClientState {
@@ -38,7 +38,7 @@ impl ClientReplicator {
                 protocol: PROTOCOL_VERSION,
             }],
             physics_in: Vec::new(),
-            owned: HashSet::new(),
+            owned: HashSet::default(),
         }
     }
 

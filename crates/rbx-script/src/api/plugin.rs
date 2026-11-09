@@ -5,7 +5,7 @@ use crate::runtime::{engine, fire_lua};
 use crate::types::rt;
 use mlua::{Lua, MultiValue, RegistryKey, Result, Value};
 use rbx_dom::InstanceId;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 use std::path::PathBuf;
 
 #[derive(Clone, Debug)]

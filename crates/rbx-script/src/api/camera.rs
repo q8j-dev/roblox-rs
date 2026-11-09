@@ -23,7 +23,7 @@ pub struct CameraInterpolation {
 #[derive(Default)]
 pub struct CameraState {
     pub interpolation: Option<CameraInterpolation>,
-    pub roll: std::collections::HashMap<InstanceId, f32>,
+    pub roll: rustc_hash::FxHashMap<InstanceId, f32>,
 }
 
 #[derive(Clone, Copy)]

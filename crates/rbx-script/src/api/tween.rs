@@ -6,7 +6,7 @@ use mlua::{FromLua, Function, Lua, MultiValue, RegistryKey, Result, Value};
 use rbx_dom::{InstanceId, Variant};
 use rbx_math::{UDim, UDim2};
 use rbx_reflection::ValueType;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 
 pub struct Tween {
     start: UDim2,

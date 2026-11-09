@@ -6,7 +6,7 @@ use crate::types::{LVector2, rt};
 use mlua::{FromLua, Lua, MultiValue, Result, Value};
 use rbx_dom::{InstanceId, Variant};
 use rbx_math::Vec2;
-use std::collections::{HashMap, HashSet};
+use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
 pub struct GuiState {
     pub topbar_transparency: f32,
@@ -27,15 +27,15 @@ impl Default for GuiState {
     fn default() -> Self {
         GuiState {
             topbar_transparency: 0.5,
-            core_gui_disabled: HashSet::new(),
-            keys: HashSet::new(),
-            special_keys: HashSet::new(),
+            core_gui_disabled: HashSet::default(),
+            keys: HashSet::default(),
+            special_keys: HashSet::default(),
             error_message: String::new(),
             ui_message: (0, String::new()),
             menu_open: false,
             center_dialogs: Vec::new(),
-            selection_groups: HashMap::new(),
-            button_verbs: HashMap::new(),
+            selection_groups: HashMap::default(),
+            button_verbs: HashMap::default(),
             requested_verbs: Vec::new(),
             last_view: None,
         }

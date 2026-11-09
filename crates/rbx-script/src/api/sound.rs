@@ -8,7 +8,7 @@ use rbx_audio::{PlayParams, VoiceId, VoiceState, inverse_rolloff};
 use rbx_dom::{DataModel, InstanceId, Variant};
 use rbx_math::CFrame;
 use rbx_reflection::ValueType;
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 
 #[derive(Clone, Debug, Default)]
 pub struct SoundState {

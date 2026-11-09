@@ -27,7 +27,7 @@ pub mod verbs;
 use crate::types::rt;
 use mlua::{IntoLuaMulti, Lua, MultiValue, Result, Value};
 use rbx_dom::{InstanceId, Variant, database};
-use std::collections::HashMap;
+use rustc_hash::FxHashMap as HashMap;
 use std::sync::LazyLock;
 
 pub enum Ret {
@@ -59,7 +59,7 @@ impl Registry {
 
 static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     let mut r = Registry {
-        methods: HashMap::new(),
+        methods: HashMap::default(),
     };
     instance::register(&mut r);
     services::register(&mut r);

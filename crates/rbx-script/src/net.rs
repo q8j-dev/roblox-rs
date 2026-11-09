@@ -4,7 +4,7 @@ use rbx_dom::InstanceId;
 use rbx_net::{
     Channel, ClientReplicator, ClientState, Connection, Message, PeerId, ServerReplicator,
 };
-use std::collections::HashSet;
+use rustc_hash::FxHashSet as HashSet;
 
 #[derive(Default, Clone, Copy)]
 struct Counters {
@@ -37,7 +37,7 @@ impl Counters {
 
 #[derive(Default)]
 struct NetMeter {
-    counters: std::collections::HashMap<PeerId, Counters>,
+    counters: rustc_hash::FxHashMap<PeerId, Counters>,
     window_start: f64,
     rates: Vec<(PeerId, NetPeerStats)>,
 }
@@ -101,7 +101,7 @@ impl NetServer {
             rep,
             meter: NetMeter::default(),
             conns: Vec::new(),
-            installed: HashSet::new(),
+            installed: HashSet::default(),
             physics: ServerPhysics::default(),
         }
     }

@@ -30,7 +30,7 @@ Phases 1 to 8 are done. Phase 3's test-place run passes 242 of 281 places with t
 | `App/voxel`, `App/voxel2` | `rbx-terrain`, `rbx-physics`, `rbx-render` | ported | legacy and smooth terrain storage, contacts, meshing, water and light grid voxelization |
 | `App/util` | `rbx-base`, `rbx-dom` | ported | spread over `rbx-math` (BrickColor, Region3, UDim, Axes, Faces), `rbx-script` (content providers, HTTP, LuaWebService), `rbx-audio` (sounds) and `rbx-base` (thread pool, profiling); analytics and machine-id upload removed |
 | `App/security` | `rbx-script` | ported | script identity levels in `rbx-script/src/security.rs` |
-| `CSG/` (sgCore) | `rbx-csg` | in progress | union and negate parts load, render and collide (mesh data, physics data, decomposition); Studio's Union, Negate and Separate operations need the sgCore boolean kernel and raise an error |
+| `CSG/` (sgCore) | `rbx-csg` | in progress | union and negate parts load, render from their CSG mesh (vertex colours, part colour, negate tint) and collide (physics data, decomposition); Studio's Union, Negate and Separate operations need the sgCore boolean kernel and raise an error |
 | `Network/` (replicators, players, filtering) | `rbx-net`, `rbx-script/src/net*.rs` | ported | replicator, basic and strict filters, remote events and functions, network ownership and physics replication; streaming is not ported |
 | `Network/raknet` | `rbx-net` (quinn, WebTransport, WebSocket) | ported | new wire format over QUIC (quinn) with pinned self-signed certificates; WebSocket for the web player |
 | `Rendering/g3d`, `Rendering/RbxG3D` | `rbx-math` | ported |  |

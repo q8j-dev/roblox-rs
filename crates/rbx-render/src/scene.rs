@@ -44,6 +44,16 @@ pub struct PartDraw {
     pub caster: bool,
     pub seed: u32,
     pub randomize: bool,
+    pub csg: Option<std::sync::Arc<CsgPiece>>,
+}
+
+#[derive(Debug)]
+pub struct CsgPiece {
+    pub key: u64,
+    pub vertices: Vec<crate::geometry::Vertex>,
+    pub indices: Vec<u32>,
+    pub min: Vec3,
+    pub max: Vec3,
 }
 
 #[derive(Clone, Debug)]
@@ -364,7 +374,7 @@ type PartKey = (u64, u64, u64, bool);
 struct CachedPart {
     key: PartKey,
     frame: u64,
-    draw: Option<PartDraw>,
+    draws: Vec<PartDraw>,
     composite: Option<crate::character::CompositeDesc>,
 }
 
@@ -424,9 +434,7 @@ fn collect_parts(
             && c.key == key
         {
             c.frame = frame;
-            if let Some(d) = &c.draw {
-                out.push(d.clone());
-            }
+            out.extend(c.draws.iter().cloned());
             if let Some(desc) = &c.composite
                 && !composites.iter().any(|d| d.url == desc.url)
             {
@@ -442,7 +450,7 @@ fn collect_parts(
                 CachedPart {
                     key,
                     frame,
-                    draw: None,
+                    draws: Vec::new(),
                     composite: None,
                 },
             );
@@ -454,6 +462,19 @@ fn collect_parts(
             .ok()
             .and_then(|v| v.as_vec3())
             .unwrap_or(Vec3::ONE);
+        if let Some(draws) = union_draws(dm, id, class, size, cframe, transparency) {
+            out.extend(draws.iter().cloned());
+            cache.entries.insert(
+                id,
+                CachedPart {
+                    key,
+                    frame,
+                    draws,
+                    composite: None,
+                },
+            );
+            continue;
+        }
         let mut shape = match class {
             "WedgePart" => Shape::Wedge,
             "CornerWedgePart" => Shape::CornerWedge,
@@ -586,6 +607,7 @@ fn collect_parts(
             caster,
             seed,
             randomize,
+            csg: None,
         };
         out.push(draw.clone());
         cache.entries.insert(
@@ -593,7 +615,7 @@ fn collect_parts(
             CachedPart {
                 key,
                 frame,
-                draw: Some(draw),
+                draws: vec![draw],
                 composite: part_composite,
             },
         );
@@ -807,6 +829,204 @@ fn collect_lights(dm: &DataModel, root: InstanceId) -> Vec<crate::lightgrid::Lig
         out.push(light);
     }
     out
+}
+
+fn csg_bytes(dm: &DataModel, id: InstanceId, prop: &str) -> Vec<u8> {
+    let data = match dm.get_raw(id, prop) {
+        Some(Variant::BinaryString(b)) => b.clone(),
+        Some(Variant::String(s)) | Some(Variant::Content(s)) => s.as_bytes().to_vec(),
+        _ => return Vec::new(),
+    };
+    let Some(key) = rbx_csg::hash_key_of(&data) else {
+        return data;
+    };
+    let key = String::from_utf8_lossy(key).into_owned();
+    for service in ["CSGDictionaryService", "NonReplicatedCSGDictionaryService"] {
+        let Some(s) = dm.find_service(service) else {
+            continue;
+        };
+        for &c in dm.children_of(s) {
+            if dm.class_of(c) != Some("BinaryStringValue") {
+                continue;
+            }
+            let value = match dm.get_raw(c, "Value") {
+                Some(Variant::BinaryString(b)) => b.clone(),
+                Some(Variant::String(s)) => s.as_bytes().to_vec(),
+                _ => continue,
+            };
+            if rbx_csg::md5_hex(&value) == key {
+                return value;
+            }
+        }
+    }
+    Vec::new()
+}
+
+fn generated_uv(kind: u8, pos: Vec3, uv: [f32; 2]) -> [f32; 2] {
+    match kind {
+        1 => [-pos.z, -pos.y],
+        2 => [-pos.x, -pos.z],
+        3 => [pos.x, -pos.y],
+        4 => [pos.z, -pos.y],
+        5 => [pos.x, -pos.z],
+        6 => [-pos.x, -pos.y],
+        _ => uv,
+    }
+}
+
+type ColorGroup = (
+    Vec<crate::geometry::Vertex>,
+    Vec<u32>,
+    rustc_hash::FxHashMap<u32, u32>,
+);
+
+fn union_draws(
+    dm: &DataModel,
+    id: InstanceId,
+    class: &str,
+    size: Vec3,
+    cframe: CFrame,
+    transparency: f32,
+) -> Option<Vec<PartDraw>> {
+    use crate::geometry::{NO_OUTLINES, Vertex};
+    use std::hash::{Hash, Hasher};
+    if !dm.is_a(id, "PartOperation") {
+        return None;
+    }
+    let raw = csg_bytes(dm, id, "MeshData");
+    let mesh = rbx_csg::CsgMesh::from_binary(&raw).filter(|m| m.is_not_empty())?;
+    let negate = dm.is_a(id, "NegateOperation");
+    let use_part_color = dm.get_bool(id, "UsePartColor");
+    let initial = dm
+        .get_raw(id, "InitialSize")
+        .and_then(|v| v.as_vec3())
+        .unwrap_or(size);
+    let axis = |s: f32, i: f32| if i.abs() > 1e-6 { s / i } else { 1.0 };
+    let scale = Vec3::new(
+        axis(size.x, initial.x),
+        axis(size.y, initial.y),
+        axis(size.z, initial.z),
+    );
+    let scaled = initial != size;
+    let material = dm
+        .get_raw(id, "Material")
+        .and_then(|v| v.as_enum())
+        .unwrap_or(256);
+    let shading = match material {
+        256 => Shading::Plastic,
+        272 => Shading::SmoothPlastic,
+        288 => Shading::Neon,
+        m if material_folder(m).is_some() => Shading::Textured(m),
+        _ => Shading::Plastic,
+    };
+    let seed = appearance_seed(id);
+    let (tile, offset) = match shading {
+        Shading::Textured(m) => (
+            tiling(m),
+            crate::geometry::surface_offset(size, seed, m == 848 || m == 528),
+        ),
+        _ => (1.0, rbx_math::Vec2::ZERO),
+    };
+    let part = part_color(dm, id);
+    let to_u8 = |v: f32| (v.clamp(0.0, 1.0) * 255.0).round() as u8;
+    let part_rgb = [to_u8(part.r), to_u8(part.g), to_u8(part.b)];
+    let alpha = if negate {
+        150.0 / 255.0
+    } else {
+        1.0 - transparency
+    };
+    let mut groups: rustc_hash::FxHashMap<[u8; 3], ColorGroup> = Default::default();
+    let mut order: Vec<[u8; 3]> = Vec::new();
+    for tri in mesh.indices.as_chunks::<3>().0 {
+        if tri.iter().any(|&i| i as usize >= mesh.vertices.len()) {
+            continue;
+        }
+        let first = &mesh.vertices[tri[0] as usize];
+        let rgb = if negate {
+            [255, 154, 161]
+        } else if use_part_color {
+            part_rgb
+        } else {
+            [first.color[0], first.color[1], first.color[2]]
+        };
+        let entry = groups.entry(rgb).or_insert_with(|| {
+            order.push(rgb);
+            Default::default()
+        });
+        for &i in tri {
+            let next = entry.0.len() as u32;
+            let index = *entry.2.entry(i).or_insert_with(|| {
+                let v = &mesh.vertices[i as usize];
+                let pos = v.pos * scale;
+                let base = [v.uv.x, v.uv.y];
+                let uv = if scaled {
+                    generated_uv(v.extra[0], pos, base)
+                } else {
+                    base
+                };
+                entry.0.push(Vertex {
+                    pos: pos.to_array(),
+                    normal: v.normal.to_array(),
+                    uv: [uv[0] * tile + offset.x, uv[1] * tile + offset.y],
+                    uv_studs: [0.0, 0.0],
+                    tangent: v.tangent.to_array(),
+                    edge: [NO_OUTLINES; 4],
+                });
+                next
+            });
+            entry.1.push(index);
+        }
+    }
+    let (voxel, voxel_transparency) = voxel_shape(dm, id, class, transparency);
+    let mut out = Vec::with_capacity(order.len());
+    for rgb in order {
+        let Some((vertices, indices, _)) = groups.remove(&rgb) else {
+            continue;
+        };
+        let mut min = Vec3::splat(f32::INFINITY);
+        let mut max = Vec3::splat(f32::NEG_INFINITY);
+        for v in &vertices {
+            let p = Vec3::from_array(v.pos);
+            min = min.min(p);
+            max = max.max(p);
+        }
+        let mut h = rustc_hash::FxHasher::default();
+        raw.hash(&mut h);
+        rgb.hash(&mut h);
+        [scale.x, scale.y, scale.z, tile, offset.x, offset.y]
+            .map(f32::to_bits)
+            .hash(&mut h);
+        let c = |b: u8| b as f32 / 255.0;
+        out.push(PartDraw {
+            id,
+            shape: Shape::File,
+            size,
+            cframe,
+            mesh_scale: Vec3::ONE,
+            mesh_offset: Vec3::ZERO,
+            color: [c(rgb[0]), c(rgb[1]), c(rgb[2]), alpha],
+            surfaces: [Surface::Smooth; 6],
+            shading,
+            specular: specular(material),
+            reflectance: get_f32(dm, id, "Reflectance", 0.0).clamp(0.0, 1.0),
+            file: None,
+            texture: None,
+            decals: Vec::new(),
+            voxel,
+            voxel_transparency,
+            caster: false,
+            seed,
+            randomize: false,
+            csg: Some(std::sync::Arc::new(CsgPiece {
+                key: h.finish() | 1,
+                vertices,
+                indices,
+                min,
+                max,
+            })),
+        });
+    }
+    Some(out)
 }
 
 fn voxel_shape(

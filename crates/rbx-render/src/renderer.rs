@@ -1015,19 +1015,23 @@ impl Renderer {
             Shading::Textured(m) => scene::tiling(m),
             _ => 1.0,
         };
-        let file_hash = part.file.as_ref().map_or(0, |f| {
-            use std::hash::{Hash, Hasher};
-            let mut h = std::collections::hash_map::DefaultHasher::new();
-            f.url.hash(&mut h);
-            [
-                f.scale.x.to_bits(),
-                f.scale.y.to_bits(),
-                f.scale.z.to_bits(),
-            ]
-            .hash(&mut h);
-            f.uv.map(|r| r.map(f32::to_bits)).hash(&mut h);
-            h.finish() | 1
-        });
+        let file_hash = if let Some(c) = &part.csg {
+            c.key
+        } else {
+            part.file.as_ref().map_or(0, |f| {
+                use std::hash::{Hash, Hasher};
+                let mut h = std::collections::hash_map::DefaultHasher::new();
+                f.url.hash(&mut h);
+                [
+                    f.scale.x.to_bits(),
+                    f.scale.y.to_bits(),
+                    f.scale.z.to_bits(),
+                ]
+                .hash(&mut h);
+                f.uv.map(|r| r.map(f32::to_bits)).hash(&mut h);
+                h.finish() | 1
+            })
+        };
         let randomized_block = part.randomize && part.shape == Shape::Block;
         let textured = matches!(part.shading, Shading::Textured(_));
         let normal_variant = if randomized_block {
@@ -1089,7 +1093,14 @@ impl Renderer {
                     normal_offset,
                 })
             };
+            let csg_mesh = part.csg.as_ref().map(|c| crate::geometry::Mesh {
+                vertices: c.vertices.clone(),
+                indices: c.indices.clone(),
+                min: c.min,
+                max: c.max,
+            });
             let mesh = match part.shape {
+                Shape::File if csg_mesh.is_some() => csg_mesh.unwrap_or_else(|| block(true)),
                 Shape::File => file_mesh.unwrap_or_else(|| block(true)),
                 Shape::Block => block(ignore_studs),
                 Shape::Wedge => Mesh::wedge(size, &part.surfaces, tiling),

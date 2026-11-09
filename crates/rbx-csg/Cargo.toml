@@ -9,5 +9,6 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+boolmesh = { version = "0.2.2", features = ["f32"] }
 md-5 = "0.11.0"
 rbx-math = { version = "0.1.0", path = "../rbx-math" }

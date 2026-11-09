@@ -9,6 +9,7 @@ publish.workspace = true
 workspace = true
 
 [dependencies]
+rbx-csg = { version = "0.1.0", path = "../rbx-csg" }
 rustc-hash = "2.1.3"
 rbx-base = { version = "0.1.0", path = "../rbx-base" }
 bytemuck = { version = "1.25.2", features = ["derive"] }

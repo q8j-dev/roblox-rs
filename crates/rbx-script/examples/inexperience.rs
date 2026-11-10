@@ -56,8 +56,62 @@ fn main() {
     rbx_script::api::players::load_character(&rt.lua, p, true, "").expect("character");
     rt.start_core_scripts("StarterScript")
         .expect("core scripts");
-    for _ in 0..frames {
+    let keys: Vec<(usize, u32)> = std::env::var("KEYS")
+        .unwrap_or_default()
+        .split(',')
+        .filter_map(|s| {
+            let (k, f) = s.split_once('@')?;
+            Some((f.parse().ok()?, k.parse().ok()?))
+        })
+        .collect();
+    for frame in 0..frames {
+        for &(_, code) in keys.iter().filter(|(f, _)| *f == frame) {
+            use rbx_script::api::user_input::{InputEvent, InputKind, KEYBOARD};
+            for kind in [InputKind::Began, InputKind::Ended] {
+                rt.input(InputEvent {
+                    kind,
+                    input_type: KEYBOARD,
+                    key_code: code,
+                    position: rbx_math::Vec3::ZERO,
+                    delta: rbx_math::Vec3::ZERO,
+                    text: None,
+                });
+            }
+        }
         rt.step(1.0 / 60.0);
+    }
+    if let Ok(src) = std::env::var("EXEC") {
+        let r = rt.execute(
+            &src,
+            "exec",
+            rbx_script::security::Identity::RobloxGameScript,
+        );
+        println!("EXEC {r:?}");
+        rt.step(1.0 / 60.0);
+    }
+    if let Ok(path) = std::env::var("FIND") {
+        let e = rt.engine.lock();
+        let root = e.dm.root();
+        for d in e.dm.descendants(root) {
+            let full = e.dm.full_name(d);
+            if full.ends_with(&path) {
+                let props: Vec<String> = [
+                    "Visible",
+                    "Enabled",
+                    "BackgroundTransparency",
+                    "BackgroundColor3",
+                    "Size",
+                    "TextSize",
+                    "Text",
+                    "TextTransparency",
+                    "GroupTransparency",
+                ]
+                .iter()
+                .filter_map(|p| e.dm.get(d, p).ok().map(|v| format!("{p}={v:?}")))
+                .collect();
+                println!("FOUND {full} {}", props.join(" "));
+            }
+        }
     }
     for w in rt.describe_waiting() {
         println!("WAIT {w}");

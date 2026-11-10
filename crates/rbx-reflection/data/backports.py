@@ -194,6 +194,12 @@ def main():
             }
         else:
             raise ValueError(line)
+    studio = json.loads((HERE / "studio_defaults.json").read_text(encoding="utf-8"))
+    for cls, entry in out_classes.items():
+        for rec in entry["properties"]:
+            value = studio.get(cls, {}).get(rec["name"])
+            if value is not None:
+                rec["default"] = value
     result = {
         "source": dump_path.name,
         "classes": list(out_classes.values()),

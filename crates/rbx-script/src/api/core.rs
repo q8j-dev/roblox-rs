@@ -332,6 +332,25 @@ pub fn load_core_package(lua: &Lua, path: &Path) -> Result<()> {
             e.content_overlays.insert(0, dir.to_path_buf());
         }
     }
+    {
+        let roots = {
+            let eng = engine(lua);
+            let e = eng.lock();
+            let mut roots = e.content_overlays.clone();
+            roots.extend(e.content_root.clone());
+            roots
+        };
+        rbx_text::set_loader(move |url: &str| {
+            let rel = url.strip_prefix("rbxasset://").unwrap_or(url);
+            roots.iter().find_map(|root| {
+                let p = rel
+                    .split(['/', '\\'])
+                    .filter(|s| !s.is_empty() && *s != "..")
+                    .fold(root.clone(), |p, s| p.join(s));
+                rbx_base::vfs::read(&p).ok()
+            })
+        });
+    }
     if let Some(dir) = path.parent()
         && let Ok(text) = rbx_base::vfs::read_to_string(&dir.join("VERSION"))
         && let Some(version) = text.lines().nth(1)
@@ -343,6 +362,18 @@ pub fn load_core_package(lua: &Lua, path: &Path) -> Result<()> {
         && let Err(err) = engine(lua).lock().flags.load_engine_defaults_json(&text)
     {
         tracing::warn!("EngineFlagDefaults.json: {err}");
+    }
+    if let Some(dir) = path.parent()
+        && let Ok(text) = rbx_base::vfs::read_to_string(&dir.join("IxpSettings.json"))
+        && let Err(err) = engine(lua).lock().flags.load_ixp_values_json(&text)
+    {
+        tracing::warn!("IxpSettings.json: {err}");
+    }
+    if let Some(dir) = path.parent()
+        && let Ok(text) = rbx_base::vfs::read_to_string(&dir.join("EngineFeatures.json"))
+        && let Err(err) = engine(lua).lock().flags.load_engine_features_json(&text)
+    {
+        tracing::warn!("EngineFeatures.json: {err}");
     }
     let data = rbx_base::vfs::read(path).map_err(|err| {
         rt(format!(
@@ -481,6 +512,9 @@ fn ensure_robloxgui(lua: &Lua) -> Result<InstanceId> {
                 e.dm.create_internal("ScreenGui")
                     .map_err(|err| rt(err.to_string()))?;
             e.dm.set_name(g, "RobloxGui");
+            if e.core_package.is_some() {
+                let _ = e.dm.set(g, "ZIndexBehavior", Variant::Enum(1));
+            }
             let _ = e.dm.set_parent_ignore_lock(g, Some(core));
             g
         }

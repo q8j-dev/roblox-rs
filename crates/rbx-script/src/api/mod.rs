@@ -231,5 +231,74 @@ pub fn set_property(
         }
         return Ok(true);
     }
+    if name == "Font"
+        && let Variant::Enum(v) = value
+        && let Some(face) = crate::datatypes::font_from_enum(*v)
+    {
+        let eng = crate::runtime::engine(lua);
+        let mut e = eng.lock();
+        if e.dm.property_descriptor(id, "FontFace").is_some() {
+            e.dm.set(id, "Font", value.clone())
+                .map_err(|err| crate::types::rt(err.to_string()))?;
+            let _ = e.dm.set(id, "FontFace", Variant::Font(face));
+            return Ok(true);
+        }
+    }
+    if name == "FontFace"
+        && let Variant::Font(face) = value
+    {
+        let eng = crate::runtime::engine(lua);
+        let mut e = eng.lock();
+        if e.dm.property_descriptor(id, "Font").is_some() {
+            e.dm.set(id, "FontFace", value.clone())
+                .map_err(|err| crate::types::rt(err.to_string()))?;
+            let matched = crate::datatypes::font_enum_for(face).or_else(|| {
+                rbx_reflection::database()
+                    .enum_desc("Font")
+                    .and_then(|d| d.from_name("Unknown"))
+            });
+            if let Some(v) = matched {
+                let _ = e.dm.set(id, "Font", Variant::Enum(v));
+            }
+            return Ok(true);
+        }
+    }
+    if class == "UICorner" && name == "CornerRadius" {
+        let eng = crate::runtime::engine(lua);
+        let mut e = eng.lock();
+        for n in [
+            "CornerRadius",
+            "TopLeftRadius",
+            "TopRightRadius",
+            "BottomRightRadius",
+            "BottomLeftRadius",
+        ] {
+            if e.dm.property_descriptor(id, n).is_some() {
+                e.dm.set(id, n, value.clone())
+                    .map_err(|err| crate::types::rt(err.to_string()))?;
+            }
+        }
+        return Ok(true);
+    }
+    if class == "UICorner" && name == "TopLeftRadius" {
+        let eng = crate::runtime::engine(lua);
+        let mut e = eng.lock();
+        e.dm.set(id, name, value.clone())
+            .map_err(|err| crate::types::rt(err.to_string()))?;
+        let _ = e.dm.set(id, "CornerRadius", value.clone());
+        return Ok(true);
+    }
+    if name == "TextSize"
+        && let Variant::Float(v) = value
+        && !(1.0..=100.0).contains(v)
+    {
+        let clamped = Variant::Float(v.clamp(1.0, 100.0));
+        crate::runtime::engine(lua)
+            .lock()
+            .dm
+            .set(id, name, clamped)
+            .map_err(|e| crate::types::rt(e.to_string()))?;
+        return Ok(true);
+    }
     Ok(false)
 }

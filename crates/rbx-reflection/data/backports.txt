@@ -12,6 +12,14 @@ class AppUpdateService | GetService("AppUpdateService") at 1 call sites (docs/in
 class AssetQualityService | GetService("AssetQualityService") at 2 call sites (docs/inexperience/services.txt)
 class AudioFocusService | GetService("AudioFocusService") at 7 call sites (docs/inexperience/services.txt)
 class AvatarChatService | GetService("AvatarChatService") at 10 call sites (docs/inexperience/services.txt)
+member Instance.GetStyled | NAMECALL GetStyled at 8 sites (docs/inexperience/methods.txt)
+member Instance.GetStyledPropertyChangedSignal | NAMECALL GetStyledPropertyChangedSignal at 2 sites (docs/inexperience/methods.txt)
+member Instance.StyledPropertiesChanged | API dump event paired with Instance.GetStyled
+member AvatarChatService.GetClientFeaturesAsync | NAMECALL GetClientFeaturesAsync on self.AvatarChatService in VoiceChatCore.CoreVoiceManager
+member AvatarChatService.IsEnabled | NAMECALL IsEnabled on self.AvatarChatService in VoiceChatCore.CoreVoiceManager
+member AvatarChatService.PollClientFeatures | NAMECALL PollClientFeatures on self.AvatarChatService in VoiceChatCore.CoreVoiceManager
+member AvatarChatService.ClientFeatures | NAMECALL ClientFeatures on self.AvatarChatService in VoiceChatCore.CoreVoiceManager
+member AvatarChatService.ClientFeaturesInitialized | NAMECALL ClientFeaturesInitialized on self.AvatarChatService in VoiceChatCore.CoreVoiceManager
 class AvatarCreationService | GetService("AvatarCreationService") at 6 call sites (docs/inexperience/services.txt)
 class AvatarEditorService | GetService("AvatarEditorService") at 36 call sites (docs/inexperience/services.txt)
 class BrowserService | GetService("BrowserService") at 17 call sites (docs/inexperience/services.txt)
@@ -180,6 +188,12 @@ member Chat.ChatLocal | NAMECALL/GETTABLEKS ChatLocal at 1 sites
 member Chat.InvokeChatCallback | NAMECALL/GETTABLEKS InvokeChatCallback at 4 sites
 member Chat.ReconcileCommunicationAccess | NAMECALL/GETTABLEKS ReconcileCommunicationAccess at 1 sites
 member Chat.RequestModerationModeEnabled | NAMECALL/GETTABLEKS RequestModerationModeEnabled at 2 sites
+member Chat.ModerationModeEnabledChanged | fired by Chat.RequestModerationModeEnabled (API dump event)
+member Player.PlayerChatTranslationSettingsLocaleSetFromLua | fired by Player.SetChatTranslationSettingsLocaleId (API dump event)
+member Player.SetChatTranslationSettingsLocaleId | NAMECALL SetChatTranslationSettingsLocaleId in Settings.Pages.GameSettingsRowInitializers.ChatTranslationOptionsWithChatLanguageSwitcherInitializer
+member Player.IsInGroupAsync | NAMECALL IsInGroupAsync in Modules.Common.GetHasGuiHidingPermission
+member TextChatService.HasAllocatedUniverseChatContext | NAMECALL HasAllocatedUniverseChatContext in ExpChat.mountClientApp
+member UserGameSettings.ChatTranslationLocale | written by Player.SetChatTranslationSettingsLocaleId
 member Chat.CanUserChatAsync | NAMECALL/GETTABLEKS CanUserChatAsync at 9 sites
 member Chat.CanUsersChatAsync | NAMECALL/GETTABLEKS CanUsersChatAsync at 3 sites
 member Chat.FilterStringAsync | NAMECALL/GETTABLEKS FilterStringAsync at 2 sites
@@ -1111,7 +1125,3 @@ member ReflectionMetadataMember.Deprecated | inherited from ReflectionMetadataIt
 member ReflectionMetadataMember.ScriptContext | inherited from ReflectionMetadataItem (a class added after 2016); used at 14 sites
 member Workspace.GetPartBoundsInRadius | inherited from WorldRoot (a class added after 2016); used at 1 sites
 member Workspace.Raycast | inherited from WorldRoot (a class added after 2016); used at 6 sites
-default LayerCollector.Enabled = true | create.roblox.com LayerCollector.Enabled default true; the dump omits defaults for non-creatable classes
-default LayerCollector.ResetOnSpawn = true | create.roblox.com LayerCollector.ResetOnSpawn default true
-default GuiObject.Interactable = true | create.roblox.com GuiObject.Interactable default true
-default GuiBase2d.AutoLocalize = true | create.roblox.com GuiBase2d.AutoLocalize default true

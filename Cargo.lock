@@ -3527,6 +3527,7 @@ dependencies = [
  "rbx-math",
  "rbx-reflection",
  "rbx-terrain",
+ "rbx-text",
  "rustc-hash 2.1.3",
  "serde",
  "serde_json",
@@ -3649,6 +3650,7 @@ dependencies = [
  "rbx-net",
  "rbx-physics",
  "rbx-reflection",
+ "rbx-render",
  "rbx-text",
  "rustc-hash 2.1.3",
  "serde_json",
@@ -3682,6 +3684,8 @@ name = "rbx-text"
 version = "0.1.0"
 dependencies = [
  "ab_glyph",
+ "serde_json",
+ "ttf-parser",
 ]
 
 [[package]]

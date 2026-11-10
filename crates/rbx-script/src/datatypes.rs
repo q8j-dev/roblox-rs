@@ -80,6 +80,17 @@ pub fn font_from_enum(value: u32) -> Option<FontFace> {
         })
 }
 
+pub fn font_enum_for(face: &FontFace) -> Option<u32> {
+    FONT_ENUM
+        .iter()
+        .find(|&&(_, family, weight, style, _)| {
+            face.family.eq_ignore_ascii_case(&font_family_path(family))
+                && face.weight == weight
+                && face.style == style
+        })
+        .map(|f| f.0)
+}
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct LFont(pub FontFace);
 

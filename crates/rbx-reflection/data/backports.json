@@ -1327,6 +1327,33 @@
      ],
      "return": "bool",
      "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL IsEnabled on self.AvatarChatService in VoiceChatCore.CoreVoiceManager",
+     "name": "IsEnabled",
+     "params": [
+      {
+       "default": null,
+       "name": "mask",
+       "type": "int"
+      },
+      {
+       "default": null,
+       "name": "feature",
+       "type": "Enum:AvatarChatServiceFeature"
+      }
+     ],
+     "return": "bool",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL PollClientFeatures on self.AvatarChatService in VoiceChatCore.CoreVoiceManager",
+     "name": "PollClientFeatures",
+     "params": [],
+     "return": "int",
+     "security": "RobloxScript"
     }
    ],
    "name": "AvatarChatService",
@@ -1366,6 +1393,30 @@
      "read_only": false,
      "security": "RobloxScript",
      "type": "int"
+    },
+    {
+     "category": "State",
+     "default": "0",
+     "deprecated_by": null,
+     "evidence": "NAMECALL ClientFeatures on self.AvatarChatService in VoiceChatCore.CoreVoiceManager",
+     "flags": 16,
+     "getter": null,
+     "name": "ClientFeatures",
+     "read_only": true,
+     "security": "RobloxScript",
+     "type": "int"
+    },
+    {
+     "category": "State",
+     "default": "false",
+     "deprecated_by": null,
+     "evidence": "NAMECALL ClientFeaturesInitialized on self.AvatarChatService in VoiceChatCore.CoreVoiceManager",
+     "flags": 16,
+     "getter": null,
+     "name": "ClientFeaturesInitialized",
+     "read_only": true,
+     "security": "RobloxScript",
+     "type": "bool"
     }
    ],
    "security": null,
@@ -1387,8 +1438,312 @@
      "params": [],
      "return": "int",
      "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL GetClientFeaturesAsync on self.AvatarChatService in VoiceChatCore.CoreVoiceManager",
+     "name": "GetClientFeaturesAsync",
+     "params": [],
+     "return": "int",
+     "security": "RobloxScript"
     }
    ]
+  },
+  {
+   "callbacks": [],
+   "creatable": false,
+   "events": [
+    {
+     "deprecated_by": null,
+     "evidence": "API dump event paired with Instance.GetStyled",
+     "kind": "RemoteEventDesc",
+     "name": "StyledPropertiesChanged",
+     "params": [],
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "event behind GetAttributeChangedSignal; key AttributeChanged in the bytecode key list",
+     "kind": "RemoteEventDesc",
+     "name": "AttributeChanged",
+     "params": [
+      {
+       "default": null,
+       "name": "attribute",
+       "type": "string"
+      }
+     ],
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS Destroying at 23 sites",
+     "kind": "RemoteEventDesc",
+     "name": "Destroying",
+     "params": [],
+     "security": null
+    }
+   ],
+   "evidence": null,
+   "extends": true,
+   "flags": [],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL GetStyled at 8 sites (docs/inexperience/methods.txt)",
+     "name": "GetStyled",
+     "params": [
+      {
+       "default": null,
+       "name": "name",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "selector",
+       "type": "string?"
+      }
+     ],
+     "return": "Variant",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL GetStyledPropertyChangedSignal at 2 sites (docs/inexperience/methods.txt)",
+     "name": "GetStyledPropertyChangedSignal",
+     "params": [
+      {
+       "default": null,
+       "name": "property",
+       "type": "string"
+      }
+     ],
+     "return": "RBXScriptSignal",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL FindFirstAncestor at 9667 call sites (docs/inexperience/methods.txt)",
+     "name": "FindFirstAncestor",
+     "params": [
+      {
+       "default": null,
+       "name": "name",
+       "type": "string"
+      }
+     ],
+     "return": "Instance:Instance",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL FindFirstAncestorOfClass at 26 call sites (docs/inexperience/methods.txt)",
+     "name": "FindFirstAncestorOfClass",
+     "params": [
+      {
+       "default": null,
+       "name": "className",
+       "type": "string"
+      }
+     ],
+     "return": "Instance:Instance",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL FindFirstAncestorWhichIsA at 73 call sites (docs/inexperience/methods.txt)",
+     "name": "FindFirstAncestorWhichIsA",
+     "params": [
+      {
+       "default": null,
+       "name": "className",
+       "type": "string"
+      }
+     ],
+     "return": "Instance:Instance",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL FindFirstChildOfClass at 190 call sites (docs/inexperience/methods.txt)",
+     "name": "FindFirstChildOfClass",
+     "params": [
+      {
+       "default": null,
+       "name": "className",
+       "type": "string"
+      }
+     ],
+     "return": "Instance:Instance",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL FindFirstChildWhichIsA at 108 call sites (docs/inexperience/methods.txt)",
+     "name": "FindFirstChildWhichIsA",
+     "params": [
+      {
+       "default": null,
+       "name": "className",
+       "type": "string"
+      },
+      {
+       "default": "false",
+       "name": "recursive",
+       "type": "bool"
+      }
+     ],
+     "return": "Instance:Instance",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL GetDescendants at 145 call sites (docs/inexperience/methods.txt)",
+     "name": "GetDescendants",
+     "params": [],
+     "return": "Instances",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL GetAttribute at 55 call sites (docs/inexperience/methods.txt)",
+     "name": "GetAttribute",
+     "params": [
+      {
+       "default": null,
+       "name": "attribute",
+       "type": "string"
+      }
+     ],
+     "return": "Variant",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL GetAttributes at 10 call sites (docs/inexperience/methods.txt)",
+     "name": "GetAttributes",
+     "params": [],
+     "return": "Dictionary",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL SetAttribute at 68 call sites (docs/inexperience/methods.txt)",
+     "name": "SetAttribute",
+     "params": [
+      {
+       "default": null,
+       "name": "attribute",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "value",
+       "type": "Variant"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL GetAttributeChangedSignal at 4 call sites (docs/inexperience/methods.txt)",
+     "name": "GetAttributeChangedSignal",
+     "params": [
+      {
+       "default": null,
+       "name": "attribute",
+       "type": "string"
+      }
+     ],
+     "return": "RBXScriptSignal",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL GetPropertyChangedSignal at 802 call sites (docs/inexperience/methods.txt)",
+     "name": "GetPropertyChangedSignal",
+     "params": [
+      {
+       "default": null,
+       "name": "property",
+       "type": "string"
+      }
+     ],
+     "return": "RBXScriptSignal",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL AddTag at 10 call sites (docs/inexperience/methods.txt)",
+     "name": "AddTag",
+     "params": [
+      {
+       "default": null,
+       "name": "tag",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL RemoveTag at 13 call sites (docs/inexperience/methods.txt)",
+     "name": "RemoveTag",
+     "params": [
+      {
+       "default": null,
+       "name": "tag",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL HasTag at 11 call sites (docs/inexperience/methods.txt)",
+     "name": "HasTag",
+     "params": [
+      {
+       "default": null,
+       "name": "tag",
+       "type": "string"
+      }
+     ],
+     "return": "bool",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL GetTags at 12 call sites (docs/inexperience/methods.txt)",
+     "name": "GetTags",
+     "params": [],
+     "return": "Array",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "React-Roblox resets props bound to nil (Error applying initial props to DismissButton); not in methods.txt because it is called through a stored function",
+     "name": "ResetPropertyToDefault",
+     "params": [
+      {
+       "default": null,
+       "name": "property",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
+    }
+   ],
+   "name": "Instance",
+   "properties": [],
+   "security": null,
+   "service": false,
+   "superclass": "Object",
+   "yield_functions": []
   },
   {
    "callbacks": [],
@@ -7130,7 +7485,7 @@
     },
     {
      "category": "Localization",
-     "default": "",
+     "default": "en-us",
      "deprecated_by": null,
      "evidence": "GetService(\"LocalizationService\") at 235 call sites (docs/inexperience/services.txt)",
      "flags": 17,
@@ -7166,7 +7521,7 @@
     },
     {
      "category": "Localization",
-     "default": "",
+     "default": "en-us",
      "deprecated_by": null,
      "evidence": "GetService(\"LocalizationService\") at 235 call sites (docs/inexperience/services.txt)",
      "flags": 17,
@@ -12452,6 +12807,20 @@
      ],
      "return": "bool",
      "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL HasAllocatedUniverseChatContext in ExpChat.mountClientApp",
+     "name": "HasAllocatedUniverseChatContext",
+     "params": [
+      {
+       "default": null,
+       "name": "context",
+       "type": "string"
+      }
+     ],
+     "return": "bool",
+     "security": "RobloxScript"
     }
    ],
    "name": "TextChatService",
@@ -12494,7 +12863,7 @@
     },
     {
      "category": "Data",
-     "default": "LegacyChatService",
+     "default": "TextChatService",
      "deprecated_by": null,
      "evidence": "GetService(\"TextChatService\") at 71 call sites (docs/inexperience/services.txt)",
      "flags": 31,
@@ -16657,7 +17026,7 @@
     },
     {
      "category": "Behavior",
-     "default": "Automatic",
+     "default": "Enabled",
      "deprecated_by": null,
      "evidence": "GetService(\"VoiceChatService\") at 19 call sites (docs/inexperience/services.txt)",
      "flags": 31,
@@ -17345,261 +17714,6 @@
    "security": null,
    "service": false,
    "superclass": "ServiceProvider",
-   "yield_functions": []
-  },
-  {
-   "callbacks": [],
-   "creatable": false,
-   "events": [
-    {
-     "deprecated_by": null,
-     "evidence": "event behind GetAttributeChangedSignal; key AttributeChanged in the bytecode key list",
-     "kind": "RemoteEventDesc",
-     "name": "AttributeChanged",
-     "params": [
-      {
-       "default": null,
-       "name": "attribute",
-       "type": "string"
-      }
-     ],
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS Destroying at 23 sites",
-     "kind": "RemoteEventDesc",
-     "name": "Destroying",
-     "params": [],
-     "security": null
-    }
-   ],
-   "evidence": null,
-   "extends": true,
-   "flags": [],
-   "functions": [
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL FindFirstAncestor at 9667 call sites (docs/inexperience/methods.txt)",
-     "name": "FindFirstAncestor",
-     "params": [
-      {
-       "default": null,
-       "name": "name",
-       "type": "string"
-      }
-     ],
-     "return": "Instance:Instance",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL FindFirstAncestorOfClass at 26 call sites (docs/inexperience/methods.txt)",
-     "name": "FindFirstAncestorOfClass",
-     "params": [
-      {
-       "default": null,
-       "name": "className",
-       "type": "string"
-      }
-     ],
-     "return": "Instance:Instance",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL FindFirstAncestorWhichIsA at 73 call sites (docs/inexperience/methods.txt)",
-     "name": "FindFirstAncestorWhichIsA",
-     "params": [
-      {
-       "default": null,
-       "name": "className",
-       "type": "string"
-      }
-     ],
-     "return": "Instance:Instance",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL FindFirstChildOfClass at 190 call sites (docs/inexperience/methods.txt)",
-     "name": "FindFirstChildOfClass",
-     "params": [
-      {
-       "default": null,
-       "name": "className",
-       "type": "string"
-      }
-     ],
-     "return": "Instance:Instance",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL FindFirstChildWhichIsA at 108 call sites (docs/inexperience/methods.txt)",
-     "name": "FindFirstChildWhichIsA",
-     "params": [
-      {
-       "default": null,
-       "name": "className",
-       "type": "string"
-      },
-      {
-       "default": "false",
-       "name": "recursive",
-       "type": "bool"
-      }
-     ],
-     "return": "Instance:Instance",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL GetDescendants at 145 call sites (docs/inexperience/methods.txt)",
-     "name": "GetDescendants",
-     "params": [],
-     "return": "Instances",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL GetAttribute at 55 call sites (docs/inexperience/methods.txt)",
-     "name": "GetAttribute",
-     "params": [
-      {
-       "default": null,
-       "name": "attribute",
-       "type": "string"
-      }
-     ],
-     "return": "Variant",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL GetAttributes at 10 call sites (docs/inexperience/methods.txt)",
-     "name": "GetAttributes",
-     "params": [],
-     "return": "Dictionary",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL SetAttribute at 68 call sites (docs/inexperience/methods.txt)",
-     "name": "SetAttribute",
-     "params": [
-      {
-       "default": null,
-       "name": "attribute",
-       "type": "string"
-      },
-      {
-       "default": null,
-       "name": "value",
-       "type": "Variant"
-      }
-     ],
-     "return": "void",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL GetAttributeChangedSignal at 4 call sites (docs/inexperience/methods.txt)",
-     "name": "GetAttributeChangedSignal",
-     "params": [
-      {
-       "default": null,
-       "name": "attribute",
-       "type": "string"
-      }
-     ],
-     "return": "RBXScriptSignal",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL GetPropertyChangedSignal at 802 call sites (docs/inexperience/methods.txt)",
-     "name": "GetPropertyChangedSignal",
-     "params": [
-      {
-       "default": null,
-       "name": "property",
-       "type": "string"
-      }
-     ],
-     "return": "RBXScriptSignal",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL AddTag at 10 call sites (docs/inexperience/methods.txt)",
-     "name": "AddTag",
-     "params": [
-      {
-       "default": null,
-       "name": "tag",
-       "type": "string"
-      }
-     ],
-     "return": "void",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL RemoveTag at 13 call sites (docs/inexperience/methods.txt)",
-     "name": "RemoveTag",
-     "params": [
-      {
-       "default": null,
-       "name": "tag",
-       "type": "string"
-      }
-     ],
-     "return": "void",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL HasTag at 11 call sites (docs/inexperience/methods.txt)",
-     "name": "HasTag",
-     "params": [
-      {
-       "default": null,
-       "name": "tag",
-       "type": "string"
-      }
-     ],
-     "return": "bool",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL GetTags at 12 call sites (docs/inexperience/methods.txt)",
-     "name": "GetTags",
-     "params": [],
-     "return": "Array",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "React-Roblox resets props bound to nil (Error applying initial props to DismissButton); not in methods.txt because it is called through a stored function",
-     "name": "ResetPropertyToDefault",
-     "params": [
-      {
-       "default": null,
-       "name": "property",
-       "type": "string"
-      }
-     ],
-     "return": "void",
-     "security": null
-    }
-   ],
-   "name": "Instance",
-   "properties": [],
-   "security": null,
-   "service": false,
-   "superclass": "Object",
    "yield_functions": []
   },
   {
@@ -18685,7 +18799,7 @@
     },
     {
      "category": "Data",
-     "default": "INF",
+     "default": "inf",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS MaxDistance at 6 sites",
      "flags": 31,
@@ -18799,6 +18913,20 @@
    "callbacks": [],
    "creatable": false,
    "events": [
+    {
+     "deprecated_by": null,
+     "evidence": "fired by Chat.RequestModerationModeEnabled (API dump event)",
+     "kind": "RemoteEventDesc",
+     "name": "ModerationModeEnabledChanged",
+     "params": [
+      {
+       "default": null,
+       "name": "enabled",
+       "type": "bool"
+      }
+     ],
+     "security": "Roblox"
+    },
     {
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS BubbleChatSettingsChanged at 6 sites",
@@ -18923,7 +19051,7 @@
    "properties": [
     {
      "category": "Behavior",
-     "default": "false",
+     "default": "true",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS BubbleChatEnabled at 21 sites",
      "flags": 31,
@@ -19051,6 +19179,982 @@
      "security": null
     }
    ]
+  },
+  {
+   "callbacks": [],
+   "creatable": true,
+   "events": [
+    {
+     "deprecated_by": null,
+     "evidence": "fired by Player.SetChatTranslationSettingsLocaleId (API dump event)",
+     "kind": "RemoteEventDesc",
+     "name": "PlayerChatTranslationSettingsLocaleSetFromLua",
+     "params": [
+      {
+       "default": null,
+       "name": "newLocaleId",
+       "type": "string"
+      }
+     ],
+     "security": "Roblox"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS BlockListChanged at 1 sites",
+     "kind": "RemoteEventDesc",
+     "name": "BlockListChanged",
+     "params": [],
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS EmotesLoaded at 4 sites",
+     "kind": "RemoteEventDesc",
+     "name": "EmotesLoaded",
+     "params": [],
+     "security": null
+    }
+   ],
+   "evidence": null,
+   "extends": true,
+   "flags": [],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL SetChatTranslationSettingsLocaleId in Settings.Pages.GameSettingsRowInitializers.ChatTranslationOptionsWithChatLanguageSwitcherInitializer",
+     "name": "SetChatTranslationSettingsLocaleId",
+     "params": [
+      {
+       "default": null,
+       "name": "locale",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS AddToBlockList at 2 sites",
+     "name": "AddToBlockList",
+     "params": [
+      {
+       "default": null,
+       "name": "userIds",
+       "type": "Array"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS GetBlockListInitialized at 1 sites",
+     "name": "GetBlockListInitialized",
+     "params": [],
+     "return": "bool",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS GetData at 4 sites",
+     "name": "GetData",
+     "params": [],
+     "return": "Instance:PlayerData",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS GetJoinData at 3 sites",
+     "name": "GetJoinData",
+     "params": [],
+     "return": "Dictionary",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS HasBlockedPlayer at 2 sites",
+     "name": "HasBlockedPlayer",
+     "params": [
+      {
+       "default": null,
+       "name": "fromPlayer",
+       "type": "int64"
+      }
+     ],
+     "return": "bool",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS NotifyAgeCheckPassed at 1 sites",
+     "name": "NotifyAgeCheckPassed",
+     "params": [],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS RequestTool at 2 sites",
+     "name": "RequestTool",
+     "params": [
+      {
+       "default": null,
+       "name": "instance",
+       "type": "Instance:Instance"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS SetBlockListInitialized at 2 sites",
+     "name": "SetBlockListInitialized",
+     "params": [],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS SetChatTranslationSettingsLocaleId at 2 sites",
+     "name": "SetChatTranslationSettingsLocaleId",
+     "params": [
+      {
+       "default": null,
+       "name": "locale",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS SetExperienceSettingsLocaleId at 16 sites",
+     "name": "SetExperienceSettingsLocaleId",
+     "params": [
+      {
+       "default": null,
+       "name": "locale",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS UpdatePlayerBlocked at 2 sites",
+     "name": "UpdatePlayerBlocked",
+     "params": [
+      {
+       "default": null,
+       "name": "userId",
+       "type": "int64"
+      },
+      {
+       "default": null,
+       "name": "blocked",
+       "type": "bool"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    }
+   ],
+   "name": "Player",
+   "properties": [
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS ChatAvailabilityStatus at 6 sites",
+     "flags": 16,
+     "getter": null,
+     "name": "ChatAvailabilityStatus",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "string"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS DisplayName at 161 sites",
+     "flags": 19,
+     "getter": null,
+     "name": "DisplayName",
+     "read_only": false,
+     "security": null,
+     "type": "string"
+    },
+    {
+     "category": "Behavior",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS GameplayPaused at 7 sites",
+     "flags": 18,
+     "getter": null,
+     "name": "GameplayPaused",
+     "read_only": false,
+     "security": null,
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS HasRobloxSubscription at 18 sites",
+     "flags": 19,
+     "getter": null,
+     "name": "HasRobloxSubscription",
+     "read_only": false,
+     "security": null,
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS HasVerifiedBadge at 16 sites",
+     "flags": 19,
+     "getter": null,
+     "name": "HasVerifiedBadge",
+     "read_only": false,
+     "security": null,
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS LocaleId at 28 sites",
+     "flags": 16,
+     "getter": null,
+     "name": "LocaleId",
+     "read_only": true,
+     "security": null,
+     "type": "string"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS PartyId at 1 sites",
+     "flags": 16,
+     "getter": null,
+     "name": "PartyId",
+     "read_only": false,
+     "security": null,
+     "type": "string"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS PlatformName at 5 sites",
+     "flags": 18,
+     "getter": null,
+     "name": "PlatformName",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "string"
+    },
+    {
+     "category": "Team",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS Team at 33 sites",
+     "flags": 29,
+     "getter": null,
+     "name": "Team",
+     "read_only": false,
+     "security": null,
+     "type": "Instance:Team"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS User at 163 sites",
+     "flags": 19,
+     "getter": null,
+     "name": "User",
+     "read_only": false,
+     "security": null,
+     "type": "User"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VREnabled at 211 sites",
+     "flags": 16,
+     "getter": null,
+     "name": "VREnabled",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VoiceChatVolume at 20 sites",
+     "flags": 16,
+     "getter": null,
+     "name": "VoiceChatVolume",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "float"
+    }
+   ],
+   "security": null,
+   "service": false,
+   "superclass": "Instance",
+   "yield_functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL IsInGroupAsync in Modules.Common.GetHasGuiHidingPermission",
+     "name": "IsInGroupAsync",
+     "params": [
+      {
+       "default": null,
+       "name": "groupId",
+       "type": "int64"
+      }
+     ],
+     "return": "bool",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS GetCanManageAsync at 3 sites",
+     "name": "GetCanManageAsync",
+     "params": [],
+     "return": "bool",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS IsFriendsWithAsync at 6 sites",
+     "name": "IsFriendsWithAsync",
+     "params": [
+      {
+       "default": null,
+       "name": "userId",
+       "type": "User"
+      }
+     ],
+     "return": "bool",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS IsInGroupAsync at 2 sites",
+     "name": "IsInGroupAsync",
+     "params": [
+      {
+       "default": null,
+       "name": "groupId",
+       "type": "int64"
+      }
+     ],
+     "return": "bool",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS LoadCharacterAsync at 1 sites",
+     "name": "LoadCharacterAsync",
+     "params": [],
+     "return": "void",
+     "security": null
+    }
+   ]
+  },
+  {
+   "callbacks": [],
+   "creatable": false,
+   "events": [
+    {
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS PerformanceStatsVisibleChanged at 5 sites",
+     "kind": "RemoteEventDesc",
+     "name": "PerformanceStatsVisibleChanged",
+     "params": [
+      {
+       "default": null,
+       "name": "isPerformanceStatsVisible",
+       "type": "bool"
+      }
+     ],
+     "security": "RobloxScript"
+    }
+   ],
+   "evidence": null,
+   "extends": true,
+   "flags": [
+    "PERSISTENT_LOCAL"
+   ],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "NAMECALL/GETTABLEKS GetDefaultFramerateCap at 1 sites",
+     "name": "GetDefaultFramerateCap",
+     "params": [],
+     "return": "int",
+     "security": "RobloxScript"
+    }
+   ],
+   "name": "UserGameSettings",
+   "properties": [
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "written by Player.SetChatTranslationSettingsLocaleId",
+     "flags": 28,
+     "getter": null,
+     "name": "ChatTranslationLocale",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "string"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS BadgeVisible at 1 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "BadgeVisible",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS CameraYInverted at 11 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "CameraYInverted",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS ChatTranslationEnabled at 24 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "ChatTranslationEnabled",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS ChatTranslationFTUXShown at 2 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "ChatTranslationFTUXShown",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS ChatTranslationLocale at 6 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "ChatTranslationLocale",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "string"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS ChatTranslationToggleEnabled at 11 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "ChatTranslationToggleEnabled",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS ChatVisible at 19 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "ChatVisible",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS DefaultCameraID at 2 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "DefaultCameraID",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "string"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS FramerateCap at 9 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "FramerateCap",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "int"
+    },
+    {
+     "category": "Data",
+     "default": "1",
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS GamepadCameraSensitivity at 5 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "GamepadCameraSensitivity",
+     "read_only": false,
+     "security": null,
+     "type": "float"
+    },
+    {
+     "category": "Control",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS HapticStrength at 10 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "HapticStrength",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "float"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS HasEverUsedVR at 6 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "HasEverUsedVR",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS IsUsingCameraYInverted at 9 sites",
+     "flags": 24,
+     "getter": null,
+     "name": "IsUsingCameraYInverted",
+     "read_only": true,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS IsUsingGamepadCameraSensitivity at 7 sites",
+     "flags": 24,
+     "getter": null,
+     "name": "IsUsingGamepadCameraSensitivity",
+     "read_only": true,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS MicroProfilerWebServerEnabled at 10 sites",
+     "flags": 30,
+     "getter": null,
+     "name": "MicroProfilerWebServerEnabled",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS MicroProfilerWebServerIP at 3 sites",
+     "flags": 24,
+     "getter": null,
+     "name": "MicroProfilerWebServerIP",
+     "read_only": true,
+     "security": "RobloxScript",
+     "type": "string"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS MicroProfilerWebServerPort at 3 sites",
+     "flags": 24,
+     "getter": null,
+     "name": "MicroProfilerWebServerPort",
+     "read_only": true,
+     "security": "RobloxScript",
+     "type": "int"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS MouseSensitivityFirstPerson at 10 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "MouseSensitivityFirstPerson",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "Vector2"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS MouseSensitivityThirdPerson at 2 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "MouseSensitivityThirdPerson",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "Vector2"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS OnScreenProfilerEnabled at 18 sites",
+     "flags": 30,
+     "getter": null,
+     "name": "OnScreenProfilerEnabled",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS PartyVoiceVolume at 4 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "PartyVoiceVolume",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "float"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS PeoplePageLayout at 2 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "PeoplePageLayout",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "Enum:PeoplePageLayout"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS PerformanceStatsVisible at 21 sites",
+     "flags": 30,
+     "getter": null,
+     "name": "PerformanceStatsVisible",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS PlayerHeight at 2 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "PlayerHeight",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "float"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS PlayerListVisible at 4 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "PlayerListVisible",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS PlayerNamesEnabled at 6 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "PlayerNamesEnabled",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": "Medium",
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS PreferredTextSize at 16 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "PreferredTextSize",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "Enum:PreferredTextSize"
+    },
+    {
+     "category": "Data",
+     "default": "1",
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS PreferredTransparency at 60 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "PreferredTransparency",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "float"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS QualityResetLevel at 5 sites",
+     "flags": 30,
+     "getter": null,
+     "name": "QualityResetLevel",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "int"
+    },
+    {
+     "category": "Data",
+     "default": "1",
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS RCCProfilerRecordFrameRate at 6 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "RCCProfilerRecordFrameRate",
+     "read_only": false,
+     "security": null,
+     "type": "int"
+    },
+    {
+     "category": "Data",
+     "default": "1",
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS RCCProfilerRecordTimeFrame at 6 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "RCCProfilerRecordTimeFrame",
+     "read_only": false,
+     "security": null,
+     "type": "int"
+    },
+    {
+     "category": "Data",
+     "default": "false",
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS ReducedMotion at 108 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "ReducedMotion",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS UIScaleMultiplierHundredths at 2 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "UIScaleMultiplierHundredths",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "int"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS UiNavigationKeyBindEnabled at 17 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "UiNavigationKeyBindEnabled",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Control",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VRComfortSetting at 13 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "VRComfortSetting",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "Enum:VRComfortSetting"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VREnabled at 211 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "VREnabled",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Control",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VRSafetyBubbleMode at 12 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "VRSafetyBubbleMode",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "Enum:VRSafetyBubbleMode"
+    },
+    {
+     "category": "Data",
+     "default": "false",
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VRSmoothRotationEnabled at 3 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "VRSmoothRotationEnabled",
+     "read_only": false,
+     "security": null,
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VRSmoothRotationEnabledCustomOption at 1 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "VRSmoothRotationEnabledCustomOption",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VRThirdPersonFollowCamEnabled at 2 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "VRThirdPersonFollowCamEnabled",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VRThirdPersonFollowCamEnabledCustomOption at 1 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "VRThirdPersonFollowCamEnabledCustomOption",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": "true",
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VignetteEnabled at 4 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "VignetteEnabled",
+     "read_only": false,
+     "security": null,
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VignetteEnabledCustomOption at 1 sites",
+     "flags": 28,
+     "getter": null,
+     "name": "VignetteEnabledCustomOption",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "bool"
+    },
+    {
+     "category": "Data",
+     "default": null,
+     "deprecated_by": null,
+     "evidence": "GETTABLEKS/SETTABLEKS VoiceChatVolume at 20 sites",
+     "flags": 31,
+     "getter": null,
+     "name": "VoiceChatVolume",
+     "read_only": false,
+     "security": "RobloxScript",
+     "type": "float"
+    }
+   ],
+   "security": null,
+   "service": true,
+   "superclass": "Instance",
+   "yield_functions": []
   },
   {
    "callbacks": [],
@@ -20288,7 +21392,7 @@
     },
     {
      "category": "Selection",
-     "default": null,
+     "default": "Escape",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS SelectionBehaviorDown at 70 sites",
      "flags": 31,
@@ -20300,7 +21404,7 @@
     },
     {
      "category": "Selection",
-     "default": null,
+     "default": "Escape",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS SelectionBehaviorLeft at 65 sites",
      "flags": 31,
@@ -20312,7 +21416,7 @@
     },
     {
      "category": "Selection",
-     "default": null,
+     "default": "Escape",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS SelectionBehaviorRight at 65 sites",
      "flags": 31,
@@ -20324,7 +21428,7 @@
     },
     {
      "category": "Selection",
-     "default": null,
+     "default": "Escape",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS SelectionBehaviorUp at 74 sites",
      "flags": 31,
@@ -20336,7 +21440,7 @@
     },
     {
      "category": "Selection",
-     "default": null,
+     "default": "false",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS SelectionGroup at 46 sites",
      "flags": 31,
@@ -20509,7 +21613,7 @@
    "properties": [
     {
      "category": "Data",
-     "default": null,
+     "default": "0, 0",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS AnchorPoint at 1678 sites",
      "flags": 31,
@@ -20521,7 +21625,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "None",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS AutomaticSize at 1366 sites",
      "flags": 31,
@@ -20533,7 +21637,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "Outline",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS BorderMode at 6 sites",
      "flags": 31,
@@ -20545,7 +21649,7 @@
     },
     {
      "category": "State",
-     "default": null,
+     "default": "Idle",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS GuiState at 14 sites",
      "flags": 25,
@@ -20557,7 +21661,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "None",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS InputSink at 13 sites",
      "flags": 17,
@@ -20581,7 +21685,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "0",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS LayoutOrder at 3285 sites",
      "flags": 31,
@@ -20593,7 +21697,7 @@
     },
     {
      "category": "Selection",
-     "default": null,
+     "default": "0",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS SelectionOrder at 39 sites",
      "flags": 31,
@@ -21184,7 +22288,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "Medium",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS PreferredTextSize at 16 sites",
      "flags": 17,
@@ -21196,7 +22300,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "1",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS PreferredTransparency at 60 sites",
      "flags": 16,
@@ -21220,7 +22324,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "true",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS TouchControlsEnabled at 2 sites",
      "flags": 19,
@@ -21232,7 +22336,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "Medium",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS ViewportDisplaySize at 47 sites",
      "flags": 17,
@@ -21840,7 +22944,7 @@
     },
     {
      "category": "Image",
-     "default": null,
+     "default": "",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS ImageContent at 36 sites",
      "flags": 31,
@@ -22147,7 +23251,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "Global",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS ZIndexBehavior at 130 sites",
      "flags": 31,
@@ -24197,358 +25301,6 @@
   },
   {
    "callbacks": [],
-   "creatable": true,
-   "events": [
-    {
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS BlockListChanged at 1 sites",
-     "kind": "RemoteEventDesc",
-     "name": "BlockListChanged",
-     "params": [],
-     "security": "RobloxScript"
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS EmotesLoaded at 4 sites",
-     "kind": "RemoteEventDesc",
-     "name": "EmotesLoaded",
-     "params": [],
-     "security": null
-    }
-   ],
-   "evidence": null,
-   "extends": true,
-   "flags": [],
-   "functions": [
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS AddToBlockList at 2 sites",
-     "name": "AddToBlockList",
-     "params": [
-      {
-       "default": null,
-       "name": "userIds",
-       "type": "Array"
-      }
-     ],
-     "return": "void",
-     "security": "RobloxScript"
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS GetBlockListInitialized at 1 sites",
-     "name": "GetBlockListInitialized",
-     "params": [],
-     "return": "bool",
-     "security": "RobloxScript"
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS GetData at 4 sites",
-     "name": "GetData",
-     "params": [],
-     "return": "Instance:PlayerData",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS GetJoinData at 3 sites",
-     "name": "GetJoinData",
-     "params": [],
-     "return": "Dictionary",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS HasBlockedPlayer at 2 sites",
-     "name": "HasBlockedPlayer",
-     "params": [
-      {
-       "default": null,
-       "name": "fromPlayer",
-       "type": "int64"
-      }
-     ],
-     "return": "bool",
-     "security": "RobloxScript"
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS NotifyAgeCheckPassed at 1 sites",
-     "name": "NotifyAgeCheckPassed",
-     "params": [],
-     "return": "void",
-     "security": "RobloxScript"
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS RequestTool at 2 sites",
-     "name": "RequestTool",
-     "params": [
-      {
-       "default": null,
-       "name": "instance",
-       "type": "Instance:Instance"
-      }
-     ],
-     "return": "void",
-     "security": "RobloxScript"
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS SetBlockListInitialized at 2 sites",
-     "name": "SetBlockListInitialized",
-     "params": [],
-     "return": "void",
-     "security": "RobloxScript"
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS SetChatTranslationSettingsLocaleId at 2 sites",
-     "name": "SetChatTranslationSettingsLocaleId",
-     "params": [
-      {
-       "default": null,
-       "name": "locale",
-       "type": "string"
-      }
-     ],
-     "return": "void",
-     "security": "RobloxScript"
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS SetExperienceSettingsLocaleId at 16 sites",
-     "name": "SetExperienceSettingsLocaleId",
-     "params": [
-      {
-       "default": null,
-       "name": "locale",
-       "type": "string"
-      }
-     ],
-     "return": "void",
-     "security": "RobloxScript"
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS UpdatePlayerBlocked at 2 sites",
-     "name": "UpdatePlayerBlocked",
-     "params": [
-      {
-       "default": null,
-       "name": "userId",
-       "type": "int64"
-      },
-      {
-       "default": null,
-       "name": "blocked",
-       "type": "bool"
-      }
-     ],
-     "return": "void",
-     "security": "RobloxScript"
-    }
-   ],
-   "name": "Player",
-   "properties": [
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS ChatAvailabilityStatus at 6 sites",
-     "flags": 16,
-     "getter": null,
-     "name": "ChatAvailabilityStatus",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "string"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS DisplayName at 161 sites",
-     "flags": 19,
-     "getter": null,
-     "name": "DisplayName",
-     "read_only": false,
-     "security": null,
-     "type": "string"
-    },
-    {
-     "category": "Behavior",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS GameplayPaused at 7 sites",
-     "flags": 18,
-     "getter": null,
-     "name": "GameplayPaused",
-     "read_only": false,
-     "security": null,
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS HasRobloxSubscription at 18 sites",
-     "flags": 19,
-     "getter": null,
-     "name": "HasRobloxSubscription",
-     "read_only": false,
-     "security": null,
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS HasVerifiedBadge at 16 sites",
-     "flags": 19,
-     "getter": null,
-     "name": "HasVerifiedBadge",
-     "read_only": false,
-     "security": null,
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS LocaleId at 28 sites",
-     "flags": 16,
-     "getter": null,
-     "name": "LocaleId",
-     "read_only": true,
-     "security": null,
-     "type": "string"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS PartyId at 1 sites",
-     "flags": 16,
-     "getter": null,
-     "name": "PartyId",
-     "read_only": false,
-     "security": null,
-     "type": "string"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS PlatformName at 5 sites",
-     "flags": 18,
-     "getter": null,
-     "name": "PlatformName",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "string"
-    },
-    {
-     "category": "Team",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS Team at 33 sites",
-     "flags": 29,
-     "getter": null,
-     "name": "Team",
-     "read_only": false,
-     "security": null,
-     "type": "Instance:Team"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS User at 163 sites",
-     "flags": 19,
-     "getter": null,
-     "name": "User",
-     "read_only": false,
-     "security": null,
-     "type": "User"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VREnabled at 211 sites",
-     "flags": 16,
-     "getter": null,
-     "name": "VREnabled",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VoiceChatVolume at 20 sites",
-     "flags": 16,
-     "getter": null,
-     "name": "VoiceChatVolume",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "float"
-    }
-   ],
-   "security": null,
-   "service": false,
-   "superclass": "Instance",
-   "yield_functions": [
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS GetCanManageAsync at 3 sites",
-     "name": "GetCanManageAsync",
-     "params": [],
-     "return": "bool",
-     "security": "RobloxScript"
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS IsFriendsWithAsync at 6 sites",
-     "name": "IsFriendsWithAsync",
-     "params": [
-      {
-       "default": null,
-       "name": "userId",
-       "type": "User"
-      }
-     ],
-     "return": "bool",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS IsInGroupAsync at 2 sites",
-     "name": "IsInGroupAsync",
-     "params": [
-      {
-       "default": null,
-       "name": "groupId",
-       "type": "int64"
-      }
-     ],
-     "return": "bool",
-     "security": null
-    },
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS LoadCharacterAsync at 1 sites",
-     "name": "LoadCharacterAsync",
-     "params": [],
-     "return": "void",
-     "security": null
-    }
-   ]
-  },
-  {
-   "callbacks": [],
    "creatable": false,
    "events": [],
    "evidence": null,
@@ -26307,7 +27059,7 @@
    "properties": [
     {
      "category": "Listening",
-     "default": "Default",
+     "default": "Camera",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS DefaultListenerLocation at 14 sites",
      "flags": 31,
@@ -26492,7 +27244,7 @@
    "properties": [
     {
      "category": "Data",
-     "default": null,
+     "default": "true",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS MemoryTrackingEnabled at 2 sites",
      "flags": 17,
@@ -27091,7 +27843,7 @@
     },
     {
      "category": "Text",
-     "default": null,
+     "default": "font:rbxasset://fonts/families/LegacyArial.json|400|0",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS FontFace at 533 sites",
      "flags": 31,
@@ -27398,7 +28150,7 @@
     },
     {
      "category": "Text",
-     "default": null,
+     "default": "font:rbxasset://fonts/families/LegacyArial.json|400|0",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS FontFace at 533 sites",
      "flags": 31,
@@ -27585,7 +28337,7 @@
     },
     {
      "category": "Text",
-     "default": null,
+     "default": "font:rbxasset://fonts/families/LegacyArial.json|400|0",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS FontFace at 533 sites",
      "flags": 31,
@@ -27940,576 +28692,6 @@
    "events": [
     {
      "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS PerformanceStatsVisibleChanged at 5 sites",
-     "kind": "RemoteEventDesc",
-     "name": "PerformanceStatsVisibleChanged",
-     "params": [
-      {
-       "default": null,
-       "name": "isPerformanceStatsVisible",
-       "type": "bool"
-      }
-     ],
-     "security": "RobloxScript"
-    }
-   ],
-   "evidence": null,
-   "extends": true,
-   "flags": [
-    "PERSISTENT_LOCAL"
-   ],
-   "functions": [
-    {
-     "deprecated_by": null,
-     "evidence": "NAMECALL/GETTABLEKS GetDefaultFramerateCap at 1 sites",
-     "name": "GetDefaultFramerateCap",
-     "params": [],
-     "return": "int",
-     "security": "RobloxScript"
-    }
-   ],
-   "name": "UserGameSettings",
-   "properties": [
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS BadgeVisible at 1 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "BadgeVisible",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS CameraYInverted at 11 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "CameraYInverted",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS ChatTranslationEnabled at 24 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "ChatTranslationEnabled",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS ChatTranslationFTUXShown at 2 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "ChatTranslationFTUXShown",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS ChatTranslationLocale at 6 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "ChatTranslationLocale",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "string"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS ChatTranslationToggleEnabled at 11 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "ChatTranslationToggleEnabled",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS ChatVisible at 19 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "ChatVisible",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS DefaultCameraID at 2 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "DefaultCameraID",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "string"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS FramerateCap at 9 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "FramerateCap",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "int"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS GamepadCameraSensitivity at 5 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "GamepadCameraSensitivity",
-     "read_only": false,
-     "security": null,
-     "type": "float"
-    },
-    {
-     "category": "Control",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS HapticStrength at 10 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "HapticStrength",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "float"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS HasEverUsedVR at 6 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "HasEverUsedVR",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS IsUsingCameraYInverted at 9 sites",
-     "flags": 24,
-     "getter": null,
-     "name": "IsUsingCameraYInverted",
-     "read_only": true,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS IsUsingGamepadCameraSensitivity at 7 sites",
-     "flags": 24,
-     "getter": null,
-     "name": "IsUsingGamepadCameraSensitivity",
-     "read_only": true,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS MicroProfilerWebServerEnabled at 10 sites",
-     "flags": 30,
-     "getter": null,
-     "name": "MicroProfilerWebServerEnabled",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS MicroProfilerWebServerIP at 3 sites",
-     "flags": 24,
-     "getter": null,
-     "name": "MicroProfilerWebServerIP",
-     "read_only": true,
-     "security": "RobloxScript",
-     "type": "string"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS MicroProfilerWebServerPort at 3 sites",
-     "flags": 24,
-     "getter": null,
-     "name": "MicroProfilerWebServerPort",
-     "read_only": true,
-     "security": "RobloxScript",
-     "type": "int"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS MouseSensitivityFirstPerson at 10 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "MouseSensitivityFirstPerson",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "Vector2"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS MouseSensitivityThirdPerson at 2 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "MouseSensitivityThirdPerson",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "Vector2"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS OnScreenProfilerEnabled at 18 sites",
-     "flags": 30,
-     "getter": null,
-     "name": "OnScreenProfilerEnabled",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS PartyVoiceVolume at 4 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "PartyVoiceVolume",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "float"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS PeoplePageLayout at 2 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "PeoplePageLayout",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "Enum:PeoplePageLayout"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS PerformanceStatsVisible at 21 sites",
-     "flags": 30,
-     "getter": null,
-     "name": "PerformanceStatsVisible",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS PlayerHeight at 2 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "PlayerHeight",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "float"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS PlayerListVisible at 4 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "PlayerListVisible",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS PlayerNamesEnabled at 6 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "PlayerNamesEnabled",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS PreferredTextSize at 16 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "PreferredTextSize",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "Enum:PreferredTextSize"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS PreferredTransparency at 60 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "PreferredTransparency",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "float"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS QualityResetLevel at 5 sites",
-     "flags": 30,
-     "getter": null,
-     "name": "QualityResetLevel",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "int"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS RCCProfilerRecordFrameRate at 6 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "RCCProfilerRecordFrameRate",
-     "read_only": false,
-     "security": null,
-     "type": "int"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS RCCProfilerRecordTimeFrame at 6 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "RCCProfilerRecordTimeFrame",
-     "read_only": false,
-     "security": null,
-     "type": "int"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS ReducedMotion at 108 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "ReducedMotion",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS UIScaleMultiplierHundredths at 2 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "UIScaleMultiplierHundredths",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "int"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS UiNavigationKeyBindEnabled at 17 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "UiNavigationKeyBindEnabled",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Control",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VRComfortSetting at 13 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "VRComfortSetting",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "Enum:VRComfortSetting"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VREnabled at 211 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "VREnabled",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Control",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VRSafetyBubbleMode at 12 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "VRSafetyBubbleMode",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "Enum:VRSafetyBubbleMode"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VRSmoothRotationEnabled at 3 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "VRSmoothRotationEnabled",
-     "read_only": false,
-     "security": null,
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VRSmoothRotationEnabledCustomOption at 1 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "VRSmoothRotationEnabledCustomOption",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VRThirdPersonFollowCamEnabled at 2 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "VRThirdPersonFollowCamEnabled",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VRThirdPersonFollowCamEnabledCustomOption at 1 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "VRThirdPersonFollowCamEnabledCustomOption",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VignetteEnabled at 4 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "VignetteEnabled",
-     "read_only": false,
-     "security": null,
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VignetteEnabledCustomOption at 1 sites",
-     "flags": 28,
-     "getter": null,
-     "name": "VignetteEnabledCustomOption",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "bool"
-    },
-    {
-     "category": "Data",
-     "default": null,
-     "deprecated_by": null,
-     "evidence": "GETTABLEKS/SETTABLEKS VoiceChatVolume at 20 sites",
-     "flags": 31,
-     "getter": null,
-     "name": "VoiceChatVolume",
-     "read_only": false,
-     "security": "RobloxScript",
-     "type": "float"
-    }
-   ],
-   "security": null,
-   "service": true,
-   "superclass": "Instance",
-   "yield_functions": []
-  },
-  {
-   "callbacks": [],
-   "creatable": false,
-   "events": [
-    {
-     "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS PointerAction at 2 sites",
      "kind": "RemoteEventDesc",
      "name": "PointerAction",
@@ -28729,7 +28911,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "0, 0",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS OnScreenKeyboardPosition at 16 sites",
      "flags": 17,
@@ -28741,7 +28923,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "0, 0",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS OnScreenKeyboardSize at 14 sites",
      "flags": 17,
@@ -28753,7 +28935,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "false",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS OnScreenKeyboardVisible at 37 sites",
      "flags": 17,
@@ -28765,7 +28947,7 @@
     },
     {
      "category": "Data",
-     "default": null,
+     "default": "KeyboardAndMouse",
      "deprecated_by": null,
      "evidence": "GETTABLEKS/SETTABLEKS PreferredInput at 109 sites",
      "flags": 25,
@@ -39991,7 +40173,7 @@
     },
     {
      "category": "Behavior",
-     "default": null,
+     "default": "Horizontal",
      "deprecated_by": null,
      "evidence": "superclass of UIGridLayout",
      "flags": 31,
@@ -40003,7 +40185,7 @@
     },
     {
      "category": "Alignment",
-     "default": null,
+     "default": "Left",
      "deprecated_by": null,
      "evidence": "superclass of UIGridLayout",
      "flags": 31,
@@ -40015,7 +40197,7 @@
     },
     {
      "category": "Behavior",
-     "default": null,
+     "default": "Name",
      "deprecated_by": null,
      "evidence": "superclass of UIGridLayout",
      "flags": 31,
@@ -40027,7 +40209,7 @@
     },
     {
      "category": "Alignment",
-     "default": null,
+     "default": "Top",
      "deprecated_by": null,
      "evidence": "superclass of UIGridLayout",
      "flags": 31,

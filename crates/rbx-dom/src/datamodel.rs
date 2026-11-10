@@ -101,6 +101,9 @@ pub struct DataModel {
     pub particle_emits: HashMap<InstanceId, u64>,
     clock: u64,
     gui_cache: std::sync::Mutex<Option<GuiCache>>,
+    style_rules: HashMap<InstanceId, Vec<(String, Variant)>>,
+    style_derives: HashMap<InstanceId, Vec<InstanceId>>,
+    style_cache: std::sync::Mutex<Option<(u64, std::sync::Arc<crate::styles::Styles>)>>,
 }
 
 type GuiCache = (
@@ -152,6 +155,9 @@ impl DataModel {
             particle_emits: HashMap::new(),
             clock: 0,
             gui_cache: std::sync::Mutex::new(None),
+            style_rules: HashMap::new(),
+            style_derives: HashMap::new(),
+            style_cache: std::sync::Mutex::new(None),
         };
         let root = match dm.create_internal(class) {
             Ok(id) => id,
@@ -271,6 +277,71 @@ impl DataModel {
         let layout = std::sync::Arc::new(crate::gui_layout::compute(self));
         *cache = Some((self.clock, self.gui_view, layout.clone()));
         layout
+    }
+
+    pub fn styles(&self) -> std::sync::Arc<crate::styles::Styles> {
+        let mut cache = match self.style_cache.lock() {
+            Ok(c) => c,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+        if let Some((clock, styles)) = cache.as_ref()
+            && *clock == self.clock
+        {
+            return styles.clone();
+        }
+        let styles = std::sync::Arc::new(crate::styles::compute(self));
+        *cache = Some((self.clock, styles.clone()));
+        styles
+    }
+
+    pub fn set_style_properties(&mut self, rule: InstanceId, props: Vec<(String, Variant)>) {
+        self.style_rules.insert(rule, props);
+        self.touch(rule);
+    }
+
+    pub fn style_properties(&self, rule: InstanceId) -> &[(String, Variant)] {
+        self.style_rules.get(&rule).map_or(&[], |v| v.as_slice())
+    }
+
+    pub fn set_style_derives(&mut self, sheet: InstanceId, derives: Vec<InstanceId>) {
+        self.style_derives.insert(sheet, derives);
+        self.touch(sheet);
+    }
+
+    pub fn style_derives(&self, sheet: InstanceId) -> &[InstanceId] {
+        self.style_derives.get(&sheet).map_or(&[], |v| v.as_slice())
+    }
+
+    pub fn styled_component(
+        &self,
+        id: InstanceId,
+        class: &str,
+    ) -> Option<HashMap<String, Variant>> {
+        self.styles().pseudo.get(&(id, class.to_string())).cloned()
+    }
+
+    pub fn styled(&self, id: InstanceId, name: &str) -> Option<Variant> {
+        self.styles().props.get(&id)?.get(name).cloned()
+    }
+
+    pub fn effective(&self, id: InstanceId, name: &str) -> Result<Variant, DomError> {
+        let value = self.get(id, name)?;
+        let styles = self.styles();
+        if styles.is_empty() {
+            return Ok(value);
+        }
+        let Some(styled) = styles.props.get(&id).and_then(|m| m.get(name)) else {
+            return Ok(value);
+        };
+        let Some(prop) = self.property_descriptor(id, name) else {
+            return Ok(value);
+        };
+        let class = self.class_of(id).unwrap_or("Instance");
+        if value == crate::defaults::default_value(class, prop) {
+            Ok(styled.clone())
+        } else {
+            Ok(value)
+        }
     }
 
     fn touch(&mut self, id: InstanceId) {
@@ -1241,6 +1312,7 @@ impl DataModel {
             }
         };
         if changed {
+            self.touch(id);
             self.fire_signal(
                 id,
                 "AttributeChanged",
@@ -1261,6 +1333,7 @@ impl DataModel {
         match self.instances.get_mut(&id) {
             Some(inst) if !inst.tags.iter().any(|t| t == tag) => {
                 inst.tags.push(tag.to_string());
+                self.touch(id);
                 true
             }
             _ => false,
@@ -1272,7 +1345,11 @@ impl DataModel {
             Some(inst) => {
                 let before = inst.tags.len();
                 inst.tags.retain(|t| t != tag);
-                before != inst.tags.len()
+                let changed = before != inst.tags.len();
+                if changed {
+                    self.touch(id);
+                }
+                changed
             }
             None => false,
         }

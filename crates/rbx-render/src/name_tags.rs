@@ -143,6 +143,7 @@ fn health_color(relative: f32) -> [f32; 3] {
 
 fn rect_item(r: Rect, color: [f32; 4]) -> GuiItem {
     GuiItem {
+        shape: None,
         cmd: GuiCmd::Rect { rect: r, color },
         clip: None,
         rotation: 0.0,
@@ -259,6 +260,7 @@ pub fn extract(
             };
             let pos = Vec2::new(screen.x, screen.y - 2.0);
             items.push(GuiItem {
+                shape: None,
                 cmd: GuiCmd::Text(TextCmd {
                     text: name,
                     font: rbx_text::Font::SourceSans,

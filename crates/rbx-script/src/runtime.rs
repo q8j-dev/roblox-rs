@@ -443,7 +443,6 @@ pub struct State {
     pub telemetry: crate::api::telemetry::TelemetryState,
     pub tween_service: crate::api::tween_service::TweenServiceState,
     pub client_services: crate::api::client_services::ClientServicesState,
-    pub styles: crate::api::styling::StyleState,
     pub core_sources: HashMap<InstanceId, String>,
     pub core_bytecode: HashMap<InstanceId, Arc<Vec<u8>>>,
     pub core_package_scripts: Option<HashMap<String, Arc<Vec<u8>>>>,
@@ -661,7 +660,6 @@ impl ScriptRuntime {
             telemetry: Default::default(),
             tween_service: Default::default(),
             client_services: Default::default(),
-            styles: Default::default(),
             core_sources: HashMap::default(),
             core_bytecode: HashMap::default(),
             core_package_scripts: None,
@@ -1496,6 +1494,16 @@ pub fn resume_thread_result(
         }
     }
     let key = thread_key(thread);
+    if std::env::var("TRACE_MODULE_YIELD").is_ok()
+        && thread.status() == ThreadStatus::Resumable
+        && (std::env::var("TRACE_ALL_YIELD").is_ok()
+            || with_state(lua, |s| s.module_threads.contains_key(&key)))
+        && let Ok(debug) = lua.globals().get::<Table>("debug")
+        && let Ok(tb) = debug.get::<Function>("traceback")
+        && let Ok(text) = tb.call::<String>((thread.clone(), "module yield"))
+    {
+        eprintln!("{text}");
+    }
     let mut error_text = None;
     if let Err(e) = &result {
         let mut text = format_error(e);
@@ -1717,11 +1725,20 @@ pub fn require_module(lua: &Lua, m: Value) -> mlua::Result<Value> {
 }
 
 pub fn spawn_function(lua: &Lua, func: Function, args: MultiValue, info: ThreadInfo) {
+    spawn_function_result(lua, func, args, info);
+}
+
+pub fn spawn_function_result(
+    lua: &Lua,
+    func: Function,
+    args: MultiValue,
+    info: ThreadInfo,
+) -> Option<Result<MultiValue, String>> {
     let thread = match lua.create_thread(func) {
         Ok(t) => t,
         Err(e) => {
             report_error(lua, &e);
-            return;
+            return None;
         }
     };
     let key = thread_key(&thread);
@@ -1734,7 +1751,11 @@ pub fn spawn_function(lua: &Lua, func: Function, args: MultiValue, info: ThreadI
                 .push(thread.clone());
         }
     });
-    resume_thread(lua, &thread, args);
+    let out = resume_thread_result(lua, &thread, args);
+    if thread.status() == ThreadStatus::Resumable {
+        return None;
+    }
+    out
 }
 
 pub fn schedule_wait(lua: &Lua, seconds: f64) {
@@ -1972,8 +1993,13 @@ pub fn fire_lua(lua: &Lua, target: InstanceId, event: &'static str, args: MultiV
 }
 
 pub fn pump(lua: &Lua) {
+    let nested = with_state(lua, |s| s.watchdog.clone()).lock().depth > 0;
     for _ in 0..1000 {
-        let deferred = with_state(lua, |s| std::mem::take(&mut s.deferred));
+        let deferred = if nested {
+            Vec::new()
+        } else {
+            with_state(lua, |s| std::mem::take(&mut s.deferred))
+        };
         let resumed_deferred = !deferred.is_empty();
         for (thread, args) in deferred {
             resume_thread(lua, &thread, args);
@@ -2015,7 +2041,7 @@ pub fn pump(lua: &Lua) {
             if delivered || resumed_deferred {
                 continue;
             }
-            if with_state(lua, |s| s.deferred.is_empty()) {
+            if nested || with_state(lua, |s| s.deferred.is_empty()) {
                 return;
             }
             continue;

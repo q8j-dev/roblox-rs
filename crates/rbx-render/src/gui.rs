@@ -1,4 +1,5 @@
 use rbx_dom::gui::{Placement, canvas, place_child, placement};
+use rbx_dom::styles::Component;
 use rbx_dom::{DataModel, InstanceId, Variant};
 use rbx_math::{Rect2D, Vec2};
 
@@ -98,8 +99,16 @@ pub enum GuiCmd {
     Text(TextCmd),
 }
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct Shape {
+    pub rect: Rect,
+    pub radii: [f32; 4],
+    pub stroke: f32,
+}
+
 #[derive(Clone, Debug)]
 pub struct GuiItem {
+    pub shape: Option<Shape>,
     pub cmd: GuiCmd,
     pub clip: Option<Rect>,
     pub rotation: f32,
@@ -107,14 +116,14 @@ pub struct GuiItem {
 }
 
 pub(crate) fn get_bool(dm: &DataModel, id: InstanceId, name: &str, default: bool) -> bool {
-    match dm.get(id, name) {
+    match dm.effective(id, name) {
         Ok(Variant::Bool(b)) => b,
         _ => default,
     }
 }
 
 pub(crate) fn get_f32(dm: &DataModel, id: InstanceId, name: &str) -> f32 {
-    match dm.get(id, name) {
+    match dm.effective(id, name) {
         Ok(Variant::Float(v)) => v,
         Ok(Variant::Double(v)) => v as f32,
         Ok(Variant::Int(v)) => v as f32,
@@ -123,7 +132,7 @@ pub(crate) fn get_f32(dm: &DataModel, id: InstanceId, name: &str) -> f32 {
 }
 
 pub(crate) fn get_i64(dm: &DataModel, id: InstanceId, name: &str) -> i64 {
-    match dm.get(id, name) {
+    match dm.effective(id, name) {
         Ok(Variant::Int(v)) => v as i64,
         Ok(Variant::Int64(v)) => v,
         Ok(Variant::Enum(v)) => v as i64,
@@ -133,7 +142,7 @@ pub(crate) fn get_i64(dm: &DataModel, id: InstanceId, name: &str) -> i64 {
 }
 
 fn get_color(dm: &DataModel, id: InstanceId, name: &str) -> [f32; 3] {
-    match dm.get(id, name) {
+    match dm.effective(id, name) {
         Ok(Variant::Color3(c)) => [c.r, c.g, c.b],
         Ok(Variant::BrickColor(b)) => {
             let c = b.color3();
@@ -144,14 +153,14 @@ fn get_color(dm: &DataModel, id: InstanceId, name: &str) -> [f32; 3] {
 }
 
 pub(crate) fn get_string(dm: &DataModel, id: InstanceId, name: &str) -> String {
-    match dm.get(id, name) {
+    match dm.effective(id, name) {
         Ok(Variant::String(s)) | Ok(Variant::Content(s)) => s,
         _ => String::new(),
     }
 }
 
 pub(crate) fn get_vec2(dm: &DataModel, id: InstanceId, name: &str) -> Vec2 {
-    match dm.get(id, name) {
+    match dm.effective(id, name) {
         Ok(Variant::Vector2(v)) => v,
         _ => Vec2::ZERO,
     }
@@ -174,6 +183,7 @@ struct Entry {
 struct Collector<'a> {
     dm: &'a DataModel,
     layers: Vec<(Vec<Entry>, Vec<Entry>)>,
+    global: std::collections::BTreeMap<i64, (Vec<Entry>, Vec<Entry>)>,
     layout: std::sync::Arc<rbx_dom::gui_layout::GuiLayout>,
     sibling: bool,
     order: usize,
@@ -196,21 +206,22 @@ impl Collector<'_> {
             Some(p) => *p,
             None => place_child(dm, id, parent),
         };
-        let z = if self.sibling {
-            self.order += 1;
-            self.order.min(self.layers.len() - 1)
-        } else {
-            get_i64(dm, id, "ZIndex").clamp(0, 10) as usize
-        };
         let entry = Entry {
             id,
             placement: p,
             clip,
         };
-        if is_text(class) {
-            self.layers[z].1.push(entry);
+        let layer = if self.sibling {
+            self.order += 1;
+            let z = self.order.min(self.layers.len() - 1);
+            &mut self.layers[z]
         } else {
-            self.layers[z].0.push(entry);
+            self.global.entry(get_i64(dm, id, "ZIndex")).or_default()
+        };
+        if is_text(class) {
+            layer.1.push(entry);
+        } else {
+            layer.0.push(entry);
         }
         let own = Rect::from_placement(&p);
         let child_clip = if get_bool(dm, id, "ClipsDescendants", false) || class == "ScrollingFrame"
@@ -315,7 +326,10 @@ fn styled(dm: &DataModel, id: InstanceId, class: &str, rect: Rect, out: &mut Vec
 }
 
 fn image(dm: &DataModel, id: InstanceId, rect: Rect, out: &mut Vec<GuiCmd>) {
-    let url = get_string(dm, id, "Image");
+    let mut url = get_string(dm, id, "Image");
+    if url.trim().is_empty() {
+        url = get_string(dm, id, "ImageContent");
+    }
     let alpha = 1.0 - get_f32(dm, id, "ImageTransparency");
     if url.trim().is_empty() || alpha <= 0.0 {
         return;
@@ -331,7 +345,7 @@ fn image(dm: &DataModel, id: InstanceId, rect: Rect, out: &mut Vec<GuiCmd>) {
         ImageUv::Full
     };
     if get_i64(dm, id, "ScaleType") == 1 {
-        let center = match dm.get(id, "SliceCenter") {
+        let center = match dm.effective(id, "SliceCenter") {
             Ok(Variant::Rect2D(r)) => r,
             _ => Rect2D::default(),
         };
@@ -352,26 +366,161 @@ fn image(dm: &DataModel, id: InstanceId, rect: Rect, out: &mut Vec<GuiCmd>) {
     }
 }
 
+fn rich_text(s: &str) -> (String, Option<rbx_text::Font>) {
+    let mut font = None;
+    if let Some(start) = s.find("<font")
+        && let Some(close) = s[start..].find('>')
+    {
+        let tag = &s[start..start + close];
+        let attr = |name: &str| {
+            let at = tag.find(&format!("{name}="))? + name.len() + 1;
+            let quote = tag[at..].chars().next()?;
+            let rest = &tag[at + 1..];
+            Some(rest[..rest.find(quote)?].to_string())
+        };
+        if let Some(family) = attr("family") {
+            let weight = attr("weight").and_then(|w| w.parse().ok()).unwrap_or(400);
+            font = rbx_text::face(&family, weight, false);
+        }
+    }
+    let mut out = String::with_capacity(s.len());
+    let mut in_tag = false;
+    for c in s.chars() {
+        match c {
+            '<' => in_tag = true,
+            '>' if in_tag => in_tag = false,
+            _ if !in_tag => out.push(c),
+            _ => {}
+        }
+    }
+    let out = out
+        .replace("&lt;", "<")
+        .replace("&gt;", ">")
+        .replace("&quot;", "\"")
+        .replace("&apos;", "'")
+        .replace("&amp;", "&");
+    (out, font)
+}
+
 fn text(dm: &DataModel, id: InstanceId, rect: Rect, out: &mut Vec<GuiCmd>) {
     let alpha = 1.0 - get_f32(dm, id, "TextTransparency");
     let s = get_string(dm, id, "Text");
     if alpha <= 0.0 || s.is_empty() {
         return;
     }
-    let stroke_alpha = (1.0 - get_f32(dm, id, "TextStrokeTransparency")) * alpha;
+    let (s, rich_font) = if get_bool(dm, id, "RichText", false) {
+        rich_text(&s)
+    } else {
+        (s, None)
+    };
+    let mut stroke_alpha = (1.0 - get_f32(dm, id, "TextStrokeTransparency")) * alpha;
+    let mut stroke_color = get_color(dm, id, "TextStrokeColor3");
+    if let Some(stroke) = component(dm, id, "UIStroke")
+        && stroke.enum_value(dm, "ApplyStrokeMode") == 0
+    {
+        stroke_alpha = (1.0 - stroke.f32(dm, "Transparency")) * alpha;
+        stroke_color = comp_color(dm, &stroke, "Color");
+    }
     out.push(GuiCmd::Text(TextCmd {
         text: s,
-        font: rbx_text::Font::from_enum(get_i64(dm, id, "Font")).unwrap_or(rbx_text::Font::Legacy),
-        size: rbx_text::font_size(get_i64(dm, id, "FontSize")),
+        font: rich_font.unwrap_or_else(|| rbx_dom::gui_layout::font_for(dm, id)),
+        size: rbx_dom::gui_layout::text_size(dm, id),
         scaled: get_bool(dm, id, "TextScaled", false),
         wrapped: get_bool(dm, id, "TextWrapped", false) || get_bool(dm, id, "TextWrap", false),
         xalign: rbx_text::XAlign::from_enum(get_i64(dm, id, "TextXAlignment")),
         yalign: rbx_text::YAlign::from_enum(get_i64(dm, id, "TextYAlignment")),
         rect,
         color: rgba(get_color(dm, id, "TextColor3"), alpha),
-        stroke: (stroke_alpha > 0.05)
-            .then(|| rgba(get_color(dm, id, "TextStrokeColor3"), stroke_alpha)),
+        stroke: (stroke_alpha > 0.05).then(|| rgba(stroke_color, stroke_alpha)),
     }));
+}
+
+fn component(dm: &DataModel, id: InstanceId, class: &str) -> Option<Component> {
+    rbx_dom::styles::component(dm, id, class)
+}
+
+fn comp_color(dm: &DataModel, c: &Component, name: &str) -> [f32; 3] {
+    match c.get(dm, name) {
+        Variant::Color3(c) => [c.r, c.g, c.b],
+        _ => [1.0, 1.0, 1.0],
+    }
+}
+
+fn comp_udim(dm: &DataModel, c: &Component, name: &str, basis: f32) -> f32 {
+    match c.get(dm, name) {
+        Variant::UDim(u) => u.scale * basis + u.offset as f32,
+        _ => 0.0,
+    }
+}
+
+fn corner_shape(dm: &DataModel, id: InstanceId, rect: Rect) -> Option<Shape> {
+    let corner = component(dm, id, "UICorner")?;
+    let basis = rect.width().min(rect.height());
+    let whole = corner.get(dm, "CornerRadius");
+    let synced = whole == corner.get(dm, "TopLeftRadius");
+    let names = [
+        "TopLeftRadius",
+        "TopRightRadius",
+        "BottomRightRadius",
+        "BottomLeftRadius",
+    ];
+    let radii = names.map(|n| {
+        let r = if synced {
+            comp_udim(dm, &corner, n, basis)
+        } else {
+            comp_udim(dm, &corner, "CornerRadius", basis)
+        };
+        r.max(0.0).min(basis * 0.5)
+    });
+    Some(Shape {
+        rect,
+        radii,
+        stroke: 0.0,
+    })
+}
+
+fn stroke_items(dm: &DataModel, e: &Entry, items: &mut Vec<GuiItem>) {
+    let Some(stroke) = component(dm, e.id, "UIStroke") else {
+        return;
+    };
+    let class = dm.class_of(e.id).unwrap_or("");
+    if stroke.enum_value(dm, "ApplyStrokeMode") == 0 && is_text(class) {
+        return;
+    }
+    let alpha = 1.0 - stroke.f32(dm, "Transparency");
+    let t = stroke.f32(dm, "Thickness");
+    if alpha <= 0.0 || t <= 0.0 {
+        return;
+    }
+    let rect = Rect::from_placement(&e.placement);
+    let grow = match stroke.enum_value(dm, "BorderStrokePosition") {
+        1 => t * 0.5,
+        2 => 0.0,
+        _ => t,
+    };
+    let outer = Rect {
+        x0: rect.x0 - grow,
+        y0: rect.y0 - grow,
+        x1: rect.x1 + grow,
+        y1: rect.y1 + grow,
+    };
+    let radii = corner_shape(dm, e.id, rect)
+        .map(|s| s.radii.map(|r| r + grow))
+        .unwrap_or([0.0; 4]);
+    items.push(GuiItem {
+        shape: Some(Shape {
+            rect: outer,
+            radii,
+            stroke: t,
+        }),
+        cmd: GuiCmd::Rect {
+            rect: outer,
+            color: rgba(comp_color(dm, &stroke, "Color"), alpha),
+        },
+        clip: e.clip,
+        rotation: e.placement.rotation,
+        pivot: e.placement.position + e.placement.size * 0.5,
+    });
 }
 
 fn screen_guis(dm: &DataModel) -> Vec<InstanceId> {
@@ -427,9 +576,10 @@ pub(crate) fn collect_root(
         let sibling = get_i64(dm, root, "ZIndexBehavior") == 1;
         let mut c = Collector {
             dm,
-            layers: (0..if sibling { 4096 } else { 11 })
+            layers: (0..if sibling { 4096 } else { 0 })
                 .map(|_| (Vec::new(), Vec::new()))
                 .collect(),
+            global: Default::default(),
             layout: dm.gui_layout(),
             sibling,
             order: 0,
@@ -444,11 +594,20 @@ pub(crate) fn collect_root(
             for &child in dm.children_of(root) {
                 c.load(child, base, clip);
             }
+            c.layers = std::mem::take(&mut c.global).into_values().collect();
         }
         for (general, texts) in &c.layers {
             let mut push = |e: &Entry, cmds: Vec<GuiCmd>| {
+                let rect = Rect::from_placement(&e.placement);
+                let shape = corner_shape(dm, e.id, rect);
                 for cmd in cmds {
+                    let shape = if matches!(cmd, GuiCmd::Text(_)) {
+                        None
+                    } else {
+                        shape
+                    };
                     items.push(GuiItem {
+                        shape,
                         cmd,
                         clip: e.clip,
                         rotation: e.placement.rotation,
@@ -483,6 +642,9 @@ pub(crate) fn collect_root(
                 text(dm, e.id, rect, &mut cmds);
                 push(e, cmds);
             }
+            for e in general.iter().chain(texts.iter()) {
+                stroke_items(dm, e, items);
+            }
         }
     }
 }
@@ -504,6 +666,7 @@ fn messages(dm: &DataModel, items: &mut Vec<GuiItem>) {
                     y1: area.y0 + 20.0,
                 };
                 items.push(GuiItem {
+                    shape: None,
                     cmd: GuiCmd::Rect {
                         rect: bar,
                         color: [0.0, 0.0, 0.0, 1.0],
@@ -514,6 +677,7 @@ fn messages(dm: &DataModel, items: &mut Vec<GuiItem>) {
                 });
                 if !s.is_empty() {
                     items.push(GuiItem {
+                        shape: None,
                         cmd: GuiCmd::Text(TextCmd {
                             text: s,
                             font: rbx_text::Font::Legacy,
@@ -540,6 +704,7 @@ fn messages(dm: &DataModel, items: &mut Vec<GuiItem>) {
                     y1: area.y1 - 100.0,
                 };
                 items.push(GuiItem {
+                    shape: None,
                     cmd: GuiCmd::Rect {
                         rect: inner,
                         color: [0.5, 0.5, 0.5, 0.5],
@@ -549,6 +714,7 @@ fn messages(dm: &DataModel, items: &mut Vec<GuiItem>) {
                     pivot: Vec2::ZERO,
                 });
                 items.push(GuiItem {
+                    shape: None,
                     cmd: GuiCmd::Text(TextCmd {
                         text: s,
                         font: rbx_text::Font::Legacy,
@@ -591,11 +757,19 @@ pub fn text_quads(cmd: &TextCmd) -> rbx_text::TextDraw {
     } else {
         [0.0, 0.0]
     };
+    let (size, scaled) = if cmd.scaled && !cmd.wrapped {
+        let reference = 100.0;
+        let (m, _) = t.measure(&cmd.text, reference, [0.0, 0.0]);
+        let fit = (r.width() / m[0].max(1.0)).min(r.height() / m[1].max(1.0)) * reference;
+        (fit.clamp(1.0, 100.0).floor(), false)
+    } else {
+        (cmd.size, cmd.scaled)
+    };
     t.draw(
         &cmd.text,
         pos,
-        cmd.size,
-        cmd.scaled,
+        size,
+        scaled,
         cmd.xalign,
         cmd.yalign,
         space,

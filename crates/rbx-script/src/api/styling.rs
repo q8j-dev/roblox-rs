@@ -1,17 +1,9 @@
 use super::{Registry, Ret, none, ret};
 use crate::convert::{arg_string, infer_variant};
-use crate::runtime::{engine, instance_from_value, with_state};
+use crate::runtime::{engine, instance_from_value};
 use crate::types::rt;
 use mlua::{Lua, Result, Value};
 use rbx_dom::{InstanceId, Variant};
-use std::collections::HashMap;
-
-#[derive(Default)]
-pub struct StyleState {
-    pub rule_properties: HashMap<InstanceId, Vec<(String, Variant)>>,
-    pub derives: HashMap<InstanceId, Vec<InstanceId>>,
-    pub dirty: bool,
-}
 
 pub fn register(r: &mut Registry) {
     r.add("StyleRule", &["SetProperties"], set_properties);
@@ -29,6 +21,51 @@ pub fn register(r: &mut Registry) {
     r.add("StyleSheet", &["SetDerives"], set_derives);
     r.add("StyleSheet", &["GetDerives"], get_derives);
     r.add("StyleBase", &["GetStyleRules"], get_style_rules);
+    r.add("Instance", &["GetStyled"], get_styled);
+    r.add(
+        "Instance",
+        &["GetStyledPropertyChangedSignal"],
+        styled_changed_signal,
+    );
+}
+
+fn get_styled(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let name = arg_string(args.first()).ok_or_else(|| rt("Argument 1 missing or nil"))?;
+    let selector = arg_string(args.get(1)).unwrap_or_default();
+    let value = {
+        let eng = engine(lua);
+        let e = eng.lock();
+        match selector.trim().strip_prefix("::") {
+            Some(class) => {
+                let class = class.trim();
+                let ty = rbx_reflection::database()
+                    .find_property(class, &name)
+                    .map(|p| p.ty.clone());
+                rbx_dom::styles::component(&e.dm, id, class)
+                    .map(|c| c.get(&e.dm, &name))
+                    .filter(|v| !matches!(v, Variant::Nil))
+                    .map(|v| (v, ty))
+            }
+            None => {
+                e.dm.effective(id, &name)
+                    .ok()
+                    .map(|v| (v, e.dm.property_descriptor(id, &name).map(|p| p.ty.clone())))
+            }
+        }
+    };
+    match value {
+        Some((v, ty)) => ret(lua, crate::convert::variant_to_lua(lua, &v, ty.as_ref())?),
+        None => Err(rt(format!("GetStyled(): No such property named `{name}`"))),
+    }
+}
+
+fn styled_changed_signal(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let name = arg_string(args.first()).ok_or_else(|| rt("Argument 1 missing or nil"))?;
+    let signal = crate::signal::LSignal {
+        target: id,
+        event: crate::signal::filtered_event("Changed", &name),
+    };
+    ret(lua, lua.create_userdata(signal)?)
 }
 
 fn style_value(lua: &Lua, v: &Value) -> Result<Variant> {
@@ -58,29 +95,26 @@ fn set_properties(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
         props.push((k, style_value(lua, &v)?));
     }
     props.sort_by(|a, b| a.0.cmp(&b.0));
-    with_state(lua, |s| {
-        s.styles.rule_properties.insert(id, props);
-        s.styles.dirty = true;
-    });
+    engine(lua).lock().dm.set_style_properties(id, props);
     none()
 }
 
 fn set_property(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
     let name = arg_string(args.first()).ok_or_else(|| rt("Argument 1 missing or nil"))?;
     let value = style_value(lua, args.get(1).unwrap_or(&Value::Nil))?;
-    with_state(lua, |s| {
-        let props = s.styles.rule_properties.entry(id).or_default();
-        props.retain(|(k, _)| *k != name);
-        if !matches!(value, Variant::Nil) {
-            props.push((name, value));
-        }
-        s.styles.dirty = true;
-    });
+    let eng = engine(lua);
+    let mut e = eng.lock();
+    let mut props = e.dm.style_properties(id).to_vec();
+    props.retain(|(k, _)| *k != name);
+    if !matches!(value, Variant::Nil) {
+        props.push((name, value));
+    }
+    e.dm.set_style_properties(id, props);
     none()
 }
 
 fn get_properties(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
-    let props = with_state(lua, |s| s.styles.rule_properties.get(&id).cloned()).unwrap_or_default();
+    let props = engine(lua).lock().dm.style_properties(id).to_vec();
     let t = lua.create_table()?;
     for (k, v) in props {
         t.set(k, crate::convert::variant_to_lua(lua, &v, None)?)?;
@@ -90,12 +124,13 @@ fn get_properties(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
 
 fn get_property(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
     let name = arg_string(args.first()).unwrap_or_default();
-    let v = with_state(lua, |s| {
-        s.styles
-            .rule_properties
-            .get(&id)
-            .and_then(|p| p.iter().find(|(k, _)| *k == name).map(|(_, v)| v.clone()))
-    });
+    let v = engine(lua)
+        .lock()
+        .dm
+        .style_properties(id)
+        .iter()
+        .find(|(k, _)| *k == name)
+        .map(|(_, v)| v.clone());
     match v {
         Some(v) => ret(lua, crate::convert::variant_to_lua(lua, &v, None)?),
         None => ret(lua, Value::Nil),
@@ -111,15 +146,12 @@ fn set_derives(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
             }
         }
     }
-    with_state(lua, |s| {
-        s.styles.derives.insert(id, list);
-        s.styles.dirty = true;
-    });
+    engine(lua).lock().dm.set_style_derives(id, list);
     none()
 }
 
 fn get_derives(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
-    let list = with_state(lua, |s| s.styles.derives.get(&id).cloned()).unwrap_or_default();
+    let list = engine(lua).lock().dm.style_derives(id).to_vec();
     let t = lua.create_sequence_from(crate::instance::push_instances(lua, &list)?)?;
     ret(lua, t)
 }

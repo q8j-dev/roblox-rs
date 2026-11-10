@@ -13,11 +13,41 @@ struct GuiVertex {
     pos: [f32; 4],
     uv: [f32; 2],
     color: [f32; 4],
+    local: [f32; 2],
+    shape: [f32; 4],
+    radii: [f32; 4],
 }
 
 impl GuiVertex {
-    const ATTRIBUTES: [wgpu::VertexAttribute; 3] =
-        wgpu::vertex_attr_array![0 => Float32x4, 1 => Float32x2, 2 => Float32x4];
+    const ATTRIBUTES: [wgpu::VertexAttribute; 6] = wgpu::vertex_attr_array![
+        0 => Float32x4,
+        1 => Float32x2,
+        2 => Float32x4,
+        3 => Float32x2,
+        4 => Float32x4,
+        5 => Float32x4
+    ];
+}
+
+fn shape_data(item: &GuiItem, r: Rect) -> ([[f32; 2]; 4], [f32; 4], [f32; 4]) {
+    match item.shape {
+        Some(s) => {
+            let cx = (s.rect.x0 + s.rect.x1) * 0.5;
+            let cy = (s.rect.y0 + s.rect.y1) * 0.5;
+            let local = [
+                [r.x0 - cx, r.y0 - cy],
+                [r.x1 - cx, r.y0 - cy],
+                [r.x1 - cx, r.y1 - cy],
+                [r.x0 - cx, r.y1 - cy],
+            ];
+            (
+                local,
+                [s.rect.width() * 0.5, s.rect.height() * 0.5, s.stroke, 1.0],
+                s.radii,
+            )
+        }
+        None => ([[0.0; 2]; 4], [0.0; 4], [0.0; 4]),
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -583,13 +613,17 @@ impl GuiRenderer {
                     texture: TextureKey,
                     clip: Option<[u32; 4]>,
                     corners: [([f32; 4], [f32; 2]); 4],
-                    color: [f32; 4]| {
+                    color: [f32; 4],
+                    shape: ([[f32; 2]; 4], [f32; 4], [f32; 4])| {
             let start = vertices.len() as u32;
             for i in [0usize, 1, 2, 0, 2, 3] {
                 vertices.push(GuiVertex {
                     pos: corners[i].0,
                     uv: corners[i].1,
                     color,
+                    local: shape.0[i],
+                    shape: shape.1,
+                    radii: shape.2,
                 });
             }
             match batches.last_mut() {
@@ -632,6 +666,7 @@ impl GuiRenderer {
                         (r, uv)
                     };
                     let corners = rotated_corners(item, r, uv).map(|(p, t)| (to_clip(p), t));
+                    let sd = shape_data(item, r);
                     push(
                         &mut vertices,
                         &mut batches,
@@ -640,6 +675,7 @@ impl GuiRenderer {
                         None,
                         corners,
                         color,
+                        sd,
                     );
                 }
             }
@@ -659,6 +695,7 @@ impl GuiRenderer {
             }
             for (texture, r, uv, color) in self.quads(device, queue, item, scale, false, load) {
                 let corners = rotated_corners(item, r, uv).map(|(p, t)| (to_ndc(p), t));
+                let sd = shape_data(item, r);
                 push(
                     &mut vertices,
                     &mut batches,
@@ -667,6 +704,7 @@ impl GuiRenderer {
                     clip,
                     corners,
                     color,
+                    sd,
                 );
             }
         }

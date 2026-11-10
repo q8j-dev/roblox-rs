@@ -25,6 +25,7 @@ pub enum Font {
     SourceSansBold,
     SourceSansLight,
     SourceSansItalic,
+    Face(u16),
 }
 
 impl Font {
@@ -43,7 +44,16 @@ impl Font {
     }
 
     pub fn index(self) -> usize {
-        self as usize
+        match self {
+            Font::Legacy => 0,
+            Font::Arial => 1,
+            Font::ArialBold => 2,
+            Font::SourceSans => 3,
+            Font::SourceSansBold => 4,
+            Font::SourceSansLight => 5,
+            Font::SourceSansItalic => 6,
+            Font::Face(n) => 7 + n as usize,
+        }
     }
 }
 
@@ -152,6 +162,49 @@ pub struct Typesetter {
     face: FontRef<'static>,
     legacy_height_scale: f32,
     glyphs: Mutex<HashMap<(char, u32), Glyph>>,
+    ligatures: HashMap<u16, Vec<(Vec<u16>, u16)>>,
+    private: HashMap<char, GlyphId>,
+    private_by_glyph: HashMap<u16, char>,
+}
+
+const PRIVATE_BASE: u32 = 0xF0000;
+
+fn read_ligatures(data: &[u8]) -> HashMap<u16, Vec<(Vec<u16>, u16)>> {
+    let mut out: HashMap<u16, Vec<(Vec<u16>, u16)>> = HashMap::new();
+    let Ok(face) = ttf_parser::Face::parse(data, 0) else {
+        return out;
+    };
+    let Some(gsub) = face.tables().gsub else {
+        return out;
+    };
+    let glyphs = face.number_of_glyphs();
+    for lookup in gsub.lookups {
+        for i in 0..lookup.subtables.len() {
+            let Some(ttf_parser::gsub::SubstitutionSubtable::Ligature(lig)) =
+                lookup
+                    .subtables
+                    .get::<ttf_parser::gsub::SubstitutionSubtable>(i)
+            else {
+                continue;
+            };
+            for g in 0..glyphs {
+                let Some(index) = lig.coverage.get(ttf_parser::GlyphId(g)) else {
+                    continue;
+                };
+                let Some(set) = lig.ligature_sets.get(index) else {
+                    continue;
+                };
+                for l in set {
+                    let comps: Vec<u16> = l.components.into_iter().map(|c| c.0).collect();
+                    out.entry(g).or_default().push((comps, l.glyph.0));
+                }
+            }
+        }
+    }
+    for list in out.values_mut() {
+        list.sort_by_key(|(c, _)| std::cmp::Reverse(c.len()));
+    }
+    out
 }
 
 fn is_whitespace(c: char) -> bool {
@@ -188,11 +241,74 @@ fn adjust_y(y: f32, height: i32, scale: f32, align: YAlign) -> f32 {
 
 impl Typesetter {
     fn new(data: &'static [u8], legacy_height_scale: f32) -> Typesetter {
-        Typesetter {
-            face: FontRef::try_from_slice(data).expect("bundled font"),
+        Typesetter::from_bytes(data, legacy_height_scale).expect("bundled font")
+    }
+
+    fn from_bytes(data: &'static [u8], legacy_height_scale: f32) -> Option<Typesetter> {
+        let face = FontRef::try_from_slice(data).ok()?;
+        let ligatures = read_ligatures(data);
+        let mut private = HashMap::new();
+        let mut private_by_glyph = HashMap::new();
+        let mut next = PRIVATE_BASE;
+        for list in ligatures.values() {
+            for (_, glyph) in list {
+                if let std::collections::hash_map::Entry::Vacant(e) = private_by_glyph.entry(*glyph)
+                    && let Some(c) = char::from_u32(next)
+                {
+                    e.insert(c);
+                    private.insert(c, GlyphId(*glyph));
+                    next += 1;
+                }
+            }
+        }
+        Some(Typesetter {
+            face,
             legacy_height_scale,
             glyphs: Mutex::new(HashMap::new()),
+            ligatures,
+            private,
+            private_by_glyph,
+        })
+    }
+
+    fn gid(&self, ch: char) -> GlyphId {
+        match self.private.get(&ch) {
+            Some(g) => *g,
+            None => self.face.glyph_id(ch),
         }
+    }
+
+    pub fn shape(&self, s: &str) -> Vec<char> {
+        let chars: Vec<char> = s.chars().collect();
+        if self.ligatures.is_empty() {
+            return chars;
+        }
+        let ids: Vec<u16> = chars.iter().map(|c| self.face.glyph_id(*c).0).collect();
+        let mut out = Vec::with_capacity(chars.len());
+        let mut i = 0;
+        while i < chars.len() {
+            let mut matched = None;
+            if let Some(list) = self.ligatures.get(&ids[i]) {
+                for (comps, glyph) in list {
+                    let end = i + 1 + comps.len();
+                    if end <= ids.len() && ids[i + 1..end] == comps[..] {
+                        matched = Some((end, *glyph));
+                        break;
+                    }
+                }
+            }
+            match matched.and_then(|(end, g)| self.private_by_glyph.get(&g).map(|c| (end, *c))) {
+                Some((end, c)) => {
+                    out.push(c);
+                    i = end;
+                }
+                None => {
+                    out.push(chars[i]);
+                    i += 1;
+                }
+            }
+        }
+        out
     }
 
     fn face_height(&self) -> f32 {
@@ -214,7 +330,7 @@ impl Typesetter {
             return *g;
         }
         let scaled = self.face.as_scaled(Self::scale(size));
-        let id = self.face.glyph_id(ch);
+        let id = self.gid(ch);
         let glyph = id.with_scale_and_position(Self::scale(size), ab_glyph::point(0.0, 0.0));
         let mut g = Glyph {
             xadvance: scaled.h_advance(id).round() as i32,
@@ -236,15 +352,14 @@ impl Typesetter {
             return 0;
         }
         let mult = (size as f32 + FONT_SIZE_PADDING) / self.face_height();
-        let a: GlyphId = self.face.glyph_id(previous);
-        let b: GlyphId = self.face.glyph_id(current);
+        let a: GlyphId = self.gid(previous);
+        let b: GlyphId = self.gid(current);
         (self.face.kern_unscaled(a, b) * mult).round() as i32
     }
 
     pub fn rasterize(&self, ch: char, size: u32) -> Option<Bitmap> {
         let glyph = self
-            .face
-            .glyph_id(ch)
+            .gid(ch)
             .with_scale_and_position(Self::scale(size), ab_glyph::point(0.0, 0.0));
         let outline = self.face.outline_glyph(glyph)?;
         let b = outline.px_bounds();
@@ -382,7 +497,7 @@ impl Typesetter {
     }
 
     pub fn measure(&self, s: &str, size: f32, available: [f32; 2]) -> ([f32; 2], bool) {
-        let text: Vec<char> = s.chars().collect();
+        let text: Vec<char> = self.shape(s);
         let use_available = available[0] != 0.0;
         let height = self.height_for(size);
         let avail = use_available.then_some((available[0] as i32, available[1] as i32));
@@ -516,7 +631,7 @@ impl Typesetter {
         available: [f32; 2],
         stroke: bool,
     ) -> TextDraw {
-        let text: Vec<char> = s.chars().collect();
+        let text: Vec<char> = self.shape(s);
         let use_available = available[0] != 0.0;
         let mut lines = Vec::new();
         let mut out = TextDraw {
@@ -616,8 +731,65 @@ static TYPESETTERS: LazyLock<[Typesetter; 7]> = LazyLock::new(|| {
     ]
 });
 
+type Loader = Box<dyn Fn(&str) -> Option<Vec<u8>> + Send + Sync>;
+
+static LOADER: std::sync::OnceLock<Loader> = std::sync::OnceLock::new();
+static FACES: LazyLock<Mutex<Vec<&'static Typesetter>>> = LazyLock::new(|| Mutex::new(Vec::new()));
+static FACE_KEYS: LazyLock<Mutex<HashMap<String, Option<Font>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+pub fn set_loader(loader: impl Fn(&str) -> Option<Vec<u8>> + Send + Sync + 'static) {
+    let _ = LOADER.set(Box::new(loader));
+}
+
+fn load_file(path: &str) -> Option<Font> {
+    let bytes = (LOADER.get()?)(path)?;
+    let data: &'static [u8] = Box::leak(bytes.into_boxed_slice());
+    let t: &'static Typesetter = Box::leak(Box::new(Typesetter::from_bytes(data, 1.0)?));
+    let mut faces = FACES.lock().ok()?;
+    faces.push(t);
+    Some(Font::Face((faces.len() - 1) as u16))
+}
+
+pub fn face(family: &str, weight: u16, italic: bool) -> Option<Font> {
+    let key = format!("{family}|{weight}|{italic}");
+    if let Some(found) = FACE_KEYS.lock().ok()?.get(&key) {
+        return *found;
+    }
+    let resolved = (|| {
+        let json = (LOADER.get()?)(family)?;
+        let v: serde_json::Value = serde_json::from_slice(&json).ok()?;
+        let faces = v.get("faces")?.as_array()?;
+        let best = faces
+            .iter()
+            .filter_map(|f| {
+                let w = f.get("weight")?.as_u64()? as i32;
+                let style_italic = f.get("style")?.as_str()? == "italic";
+                let asset = f.get("assetId")?.as_str()?;
+                let penalty =
+                    (w - weight as i32).abs() + if style_italic == italic { 0 } else { 10000 };
+                Some((penalty, asset.to_string()))
+            })
+            .min_by_key(|(p, _)| *p)?;
+        let file_key = format!("file|{}", best.1);
+        if let Some(found) = FACE_KEYS.lock().ok()?.get(&file_key) {
+            return *found;
+        }
+        let font = load_file(&best.1);
+        FACE_KEYS.lock().ok()?.insert(file_key, font);
+        font
+    })();
+    FACE_KEYS.lock().ok()?.insert(key, resolved);
+    resolved
+}
+
 pub fn typesetter(font: Font) -> &'static Typesetter {
-    &TYPESETTERS[font.index()]
+    if let Font::Face(n) = font
+        && let Some(t) = FACES.lock().ok().and_then(|f| f.get(n as usize).copied())
+    {
+        return t;
+    }
+    &TYPESETTERS[font.index().min(6)]
 }
 
 #[cfg(test)]

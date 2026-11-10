@@ -69,6 +69,8 @@ pub struct FlagStore {
     baseline: BTreeMap<String, serde_json::Value>,
     engine_defaults: BTreeMap<String, serde_json::Value>,
     engine_features: BTreeMap<String, bool>,
+    feature_defaults: BTreeMap<String, bool>,
+    ixp_values: BTreeMap<String, serde_json::Value>,
     ixp: BTreeMap<String, serde_json::Map<String, serde_json::Value>>,
     versions: BTreeMap<String, i64>,
     pub reads: BTreeMap<String, FlagRead>,
@@ -128,6 +130,20 @@ impl FlagStore {
         Ok(count)
     }
 
+    pub fn load_engine_features_json(&mut self, text: &str) -> Result<usize, String> {
+        let value: serde_json::Value = serde_json::from_str(text).map_err(|e| e.to_string())?;
+        let serde_json::Value::Object(map) = value else {
+            return Err("engine features must be a JSON object".into());
+        };
+        let count = map.len();
+        for (name, on) in map {
+            if let Some(on) = on.as_bool() {
+                self.feature_defaults.insert(name, on);
+            }
+        }
+        Ok(count)
+    }
+
     pub fn load_engine_defaults_json(&mut self, text: &str) -> Result<usize, String> {
         let value: serde_json::Value = serde_json::from_str(text).map_err(|e| e.to_string())?;
         let serde_json::Value::Object(map) = value else {
@@ -139,7 +155,28 @@ impl FlagStore {
     }
 
     fn raw(&self, name: &str) -> Option<&serde_json::Value> {
-        self.overrides.get(name).or_else(|| self.baseline.get(name))
+        self.overrides
+            .get(name)
+            .or_else(|| self.ixp_values.get(name))
+            .or_else(|| self.baseline.get(name))
+    }
+
+    pub fn load_ixp_values_json(&mut self, text: &str) -> Result<usize, String> {
+        let value: serde_json::Value = serde_json::from_str(text).map_err(|e| e.to_string())?;
+        let serde_json::Value::Object(map) = value else {
+            return Err("ixp settings must be a JSON object".into());
+        };
+        let mut count = 0;
+        for (key, v) in map {
+            let (Some(flag), Some(text)) = (key.strip_suffix("_IXPValue"), v.as_str()) else {
+                continue;
+            };
+            let assigned = text.split(';').next().unwrap_or("").to_string();
+            self.ixp_values
+                .insert(bare(flag).to_string(), serde_json::Value::String(assigned));
+            count += 1;
+        }
+        Ok(count)
     }
 
     fn override_for(&self, kind: FlagKind, name: &str) -> Option<FlagValue> {
@@ -241,7 +278,12 @@ impl FlagStore {
     }
 
     pub fn engine_feature(&mut self, name: &str) -> bool {
-        let on = self.engine_features.get(name).copied().unwrap_or(false);
+        let on = self
+            .engine_features
+            .get(name)
+            .or_else(|| self.feature_defaults.get(name))
+            .copied()
+            .unwrap_or(false);
         self.reads.insert(
             format!("EngineFeature:{name}"),
             FlagRead {

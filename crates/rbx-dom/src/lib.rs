@@ -9,6 +9,7 @@ pub mod history;
 mod layout;
 mod load;
 mod remote;
+pub mod styles;
 
 pub use behavior::{Behavior, SetOutcome, behaviors_for};
 pub use classes::parts::{clamp_size, min_size, specific_gravity};

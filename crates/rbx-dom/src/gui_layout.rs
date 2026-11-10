@@ -1,5 +1,6 @@
 use crate::DataModel;
 use crate::gui::{GuiView, Placement};
+use crate::styles::Component;
 use rbx_math::{UDim, UDim2, Vec2};
 use rbx_reflection::{InstanceId, Variant};
 use rustc_hash::FxHashMap as HashMap;
@@ -12,29 +13,29 @@ pub struct GuiLayout {
     pub text_bounds: HashMap<InstanceId, Vec2>,
 }
 
-fn udim2(dm: &DataModel, id: InstanceId, name: &str) -> UDim2 {
-    match dm.get(id, name) {
+fn udim2(dm: &DataModel, id: impl Src, name: &str) -> UDim2 {
+    match id.read(dm, name) {
         Ok(Variant::UDim2(u)) => u,
         _ => UDim2::default(),
     }
 }
 
-fn udim(dm: &DataModel, id: InstanceId, name: &str) -> UDim {
-    match dm.get(id, name) {
+fn udim(dm: &DataModel, id: impl Src, name: &str) -> UDim {
+    match id.read(dm, name) {
         Ok(Variant::UDim(u)) => u,
         _ => UDim::default(),
     }
 }
 
-fn vec2(dm: &DataModel, id: InstanceId, name: &str) -> Vec2 {
-    match dm.get(id, name) {
+fn vec2(dm: &DataModel, id: impl Src, name: &str) -> Vec2 {
+    match id.read(dm, name) {
         Ok(Variant::Vector2(v)) => v,
         _ => Vec2::ZERO,
     }
 }
 
-fn number(dm: &DataModel, id: InstanceId, name: &str) -> f32 {
-    match dm.get(id, name) {
+fn number(dm: &DataModel, id: impl Src, name: &str) -> f32 {
+    match id.read(dm, name) {
         Ok(Variant::Float(v)) => v,
         Ok(Variant::Double(v)) => v as f32,
         Ok(Variant::Int(v)) => v as f32,
@@ -43,17 +44,33 @@ fn number(dm: &DataModel, id: InstanceId, name: &str) -> f32 {
     }
 }
 
-fn enum_value(dm: &DataModel, id: InstanceId, name: &str) -> u32 {
-    match dm.get(id, name) {
+fn enum_value(dm: &DataModel, id: impl Src, name: &str) -> u32 {
+    match id.read(dm, name) {
         Ok(Variant::Enum(v)) => v,
         _ => 0,
     }
 }
 
-fn boolean(dm: &DataModel, id: InstanceId, name: &str, default: bool) -> bool {
-    match dm.get(id, name) {
+fn boolean(dm: &DataModel, id: impl Src, name: &str, default: bool) -> bool {
+    match id.read(dm, name) {
         Ok(Variant::Bool(b)) => b,
         _ => default,
+    }
+}
+
+trait Src {
+    fn read(&self, dm: &DataModel, name: &str) -> Result<Variant, crate::DomError>;
+}
+
+impl Src for InstanceId {
+    fn read(&self, dm: &DataModel, name: &str) -> Result<Variant, crate::DomError> {
+        dm.effective(*self, name)
+    }
+}
+
+impl Src for &Component {
+    fn read(&self, dm: &DataModel, name: &str) -> Result<Variant, crate::DomError> {
+        Ok(self.get(dm, name))
     }
 }
 
@@ -68,20 +85,30 @@ fn resolve1(u: UDim, size: f32) -> f32 {
     u.scale * size + u.offset as f32
 }
 
-fn component_child(dm: &DataModel, id: InstanceId, class: &str) -> Option<InstanceId> {
-    dm.children_of(id)
-        .iter()
-        .copied()
-        .find(|c| dm.class_of(*c) == Some(class))
+fn component_child(dm: &DataModel, id: InstanceId, class: &str) -> Option<Component> {
+    crate::styles::component(dm, id, class)
 }
 
-fn layout_child(dm: &DataModel, id: InstanceId) -> Option<InstanceId> {
-    dm.children_of(id).iter().copied().find(|c| {
+fn layout_child(dm: &DataModel, id: InstanceId) -> Option<Component> {
+    let real = dm.children_of(id).iter().copied().find(|c| {
         matches!(
             dm.class_of(*c),
             Some("UIListLayout" | "UIGridLayout" | "UIPageLayout")
         )
-    })
+    });
+    if let Some(c) = real {
+        return Some(Component::Real(c));
+    }
+    ["UIListLayout", "UIGridLayout"]
+        .iter()
+        .find_map(|class| component_child(dm, id, class))
+}
+
+fn component_class<'a>(dm: &'a DataModel, c: &'a Component) -> &'a str {
+    match c {
+        Component::Real(id) => dm.class_of(*id).unwrap_or(""),
+        Component::Phantom(class, _) => class.as_str(),
+    }
 }
 
 fn gui_children(dm: &DataModel, id: InstanceId, out: &mut Vec<InstanceId>) {
@@ -97,10 +124,10 @@ fn gui_children(dm: &DataModel, id: InstanceId, out: &mut Vec<InstanceId>) {
 fn padding(dm: &DataModel, id: InstanceId, size: Vec2) -> [f32; 4] {
     match component_child(dm, id, "UIPadding") {
         Some(p) => [
-            resolve1(udim(dm, p, "PaddingLeft"), size.x),
-            resolve1(udim(dm, p, "PaddingTop"), size.y),
-            resolve1(udim(dm, p, "PaddingRight"), size.x),
-            resolve1(udim(dm, p, "PaddingBottom"), size.y),
+            resolve1(udim(dm, &p, "PaddingLeft"), size.x),
+            resolve1(udim(dm, &p, "PaddingTop"), size.y),
+            resolve1(udim(dm, &p, "PaddingRight"), size.x),
+            resolve1(udim(dm, &p, "PaddingBottom"), size.y),
         ],
         None => [0.0; 4],
     }
@@ -120,8 +147,8 @@ fn content_rect(dm: &DataModel, id: InstanceId, p: Placement) -> Placement {
 
 fn apply_constraints(dm: &DataModel, id: InstanceId, mut size: Vec2, parent: Vec2) -> Vec2 {
     if let Some(c) = component_child(dm, id, "UISizeConstraint") {
-        let min = vec2(dm, c, "MinSize");
-        let max = vec2(dm, c, "MaxSize");
+        let min = vec2(dm, &c, "MinSize");
+        let max = vec2(dm, &c, "MaxSize");
         let max = Vec2::new(
             if max.x <= 0.0 { f32::INFINITY } else { max.x },
             if max.y <= 0.0 { f32::INFINITY } else { max.y },
@@ -129,9 +156,9 @@ fn apply_constraints(dm: &DataModel, id: InstanceId, mut size: Vec2, parent: Vec
         size = size.max(min).min(max.max(min));
     }
     if let Some(c) = component_child(dm, id, "UIAspectRatioConstraint") {
-        let ratio = number(dm, c, "AspectRatio").max(1e-4);
-        let scale_with_parent = enum_value(dm, c, "AspectType") == 1;
-        let height_dominant = enum_value(dm, c, "DominantAxis") == 1;
+        let ratio = number(dm, &c, "AspectRatio").max(1e-4);
+        let scale_with_parent = enum_value(dm, &c, "AspectType") == 1;
+        let height_dominant = enum_value(dm, &c, "DominantAxis") == 1;
         if scale_with_parent {
             if height_dominant {
                 size = Vec2::new(size.y * ratio, size.y);
@@ -153,7 +180,7 @@ fn apply_constraints(dm: &DataModel, id: InstanceId, mut size: Vec2, parent: Vec
 
 fn ui_scale(dm: &DataModel, id: InstanceId) -> f32 {
     component_child(dm, id, "UIScale")
-        .map(|s| number(dm, s, "Scale"))
+        .map(|s| number(dm, &s, "Scale"))
         .unwrap_or(1.0)
 }
 
@@ -162,7 +189,10 @@ fn is_text(class: &str) -> bool {
 }
 
 pub fn font_for(dm: &DataModel, id: InstanceId) -> rbx_text::Font {
-    if let Ok(Variant::Font(face)) = dm.get(id, "FontFace") {
+    if let Ok(Variant::Font(face)) = dm.effective(id, "FontFace") {
+        if let Some(f) = rbx_text::face(&face.family, face.weight, face.style == 1) {
+            return f;
+        }
         let bold = face.weight >= 600;
         let light = face.weight <= 300;
         let italic = face.style == 1;
@@ -177,7 +207,7 @@ pub fn font_for(dm: &DataModel, id: InstanceId) -> rbx_text::Font {
             _ => rbx_text::Font::SourceSans,
         };
     }
-    let value = match dm.get(id, "Font") {
+    let value = match dm.effective(id, "Font") {
         Ok(Variant::Enum(v)) => v as i64,
         _ => 0,
     };
@@ -191,14 +221,14 @@ pub fn text_size(dm: &DataModel, id: InstanceId) -> f32 {
             return s;
         }
     }
-    rbx_text::font_size(match dm.get(id, "FontSize") {
+    rbx_text::font_size(match dm.effective(id, "FontSize") {
         Ok(Variant::Enum(v)) => v as i64,
         _ => 0,
     })
 }
 
 fn measure_text(dm: &DataModel, id: InstanceId, width: f32) -> Vec2 {
-    let text = match dm.get(id, "Text") {
+    let text = match dm.effective(id, "Text") {
         Ok(v) => v.as_str().unwrap_or("").to_string(),
         Err(_) => String::new(),
     };
@@ -278,14 +308,14 @@ impl Ctx<'_> {
         gui_children(dm, id, &mut kids);
         let child_scale = scale * ui_scale(dm, id);
         match layout_child(dm, id) {
-            Some(layout) if dm.class_of(layout) != Some("UIPageLayout") => {
+            Some(layout) if component_class(dm, &layout) != "UIPageLayout" => {
                 let items: Vec<Item> = self.items(&kids, inner, child_scale);
                 let rect = Placement {
                     position: Vec2::ZERO,
                     size: inner,
                     rotation: 0.0,
                 };
-                let (_, content) = self.arrange(layout, &items, rect, true);
+                let (_, content) = self.arrange(&layout, &items, rect, true);
                 extent = extent.max(content);
             }
             _ => {
@@ -318,7 +348,7 @@ impl Ctx<'_> {
             .collect()
     }
 
-    fn sort(&self, layout: InstanceId, items: &mut [Item]) {
+    fn sort(&self, layout: &Component, items: &mut [Item]) {
         let dm = self.dm;
         match enum_value(dm, layout, "SortOrder") {
             0 => items.sort_by(|a, b| dm.name_of(a.id).cmp(dm.name_of(b.id))),
@@ -329,7 +359,7 @@ impl Ctx<'_> {
 
     fn arrange(
         &mut self,
-        layout: InstanceId,
+        layout: &Component,
         items: &[Item],
         rect: Placement,
         measuring: bool,
@@ -343,7 +373,7 @@ impl Ctx<'_> {
             })
             .collect();
         self.sort(layout, &mut items);
-        let class = dm.class_of(layout).unwrap_or("");
+        let class = component_class(dm, layout);
         let vertical = enum_value(dm, layout, "FillDirection") == 1;
         let halign = enum_value(dm, layout, "HorizontalAlignment");
         let valign = enum_value(dm, layout, "VerticalAlignment");
@@ -400,7 +430,9 @@ impl Ctx<'_> {
                 placed.push((item.id, pos, cell));
             }
             if !measuring {
-                self.out.content_sizes.insert(layout, content);
+                if let Some(id) = layout.id() {
+                    self.out.content_sizes.insert(id, content);
+                }
             }
             return (placed, content);
         }
@@ -460,8 +492,13 @@ impl Ctx<'_> {
                 .iter()
                 .enumerate()
                 .filter_map(|(n, &i)| {
-                    component_child(dm, items[i].id, "UIFlexItem")
-                        .map(|f| (n, enum_value(dm, f, "FlexMode"), number(dm, f, "GrowRatio")))
+                    component_child(dm, items[i].id, "UIFlexItem").map(|f| {
+                        (
+                            n,
+                            enum_value(dm, &f, "FlexMode"),
+                            number(dm, &f, "GrowRatio"),
+                        )
+                    })
                 })
                 .collect();
             if !measuring && free > 0.0 && !flex_items.is_empty() {
@@ -545,7 +582,9 @@ impl Ctx<'_> {
             cross_cursor += line_cross + line_gap;
         }
         if !measuring {
-            self.out.content_sizes.insert(layout, content);
+            if let Some(id) = layout.id() {
+                self.out.content_sizes.insert(id, content);
+            }
         }
         (placed, content)
     }
@@ -579,9 +618,9 @@ impl Ctx<'_> {
         let mut kids = Vec::new();
         gui_children(dm, id, &mut kids);
         match layout_child(dm, id) {
-            Some(layout) if dm.class_of(layout) != Some("UIPageLayout") => {
+            Some(layout) if component_class(dm, &layout) != "UIPageLayout" => {
                 let items = self.items(&kids, inner.size, child_scale);
-                let (placed, _) = self.arrange(layout, &items, inner, false);
+                let (placed, _) = self.arrange(&layout, &items, inner, false);
                 for (child, pos, size) in placed {
                     let p = Placement {
                         position: pos,

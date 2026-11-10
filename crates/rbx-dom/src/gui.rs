@@ -48,21 +48,21 @@ impl Placement {
 }
 
 fn udim2(dm: &DataModel, id: InstanceId, name: &str) -> UDim2 {
-    match dm.get(id, name) {
+    match dm.effective(id, name) {
         Ok(Variant::UDim2(u)) => u,
         _ => UDim2::default(),
     }
 }
 
 fn vec2(dm: &DataModel, id: InstanceId, name: &str) -> Vec2 {
-    match dm.get(id, name) {
+    match dm.effective(id, name) {
         Ok(Variant::Vector2(v)) => v,
         _ => Vec2::ZERO,
     }
 }
 
 fn number(dm: &DataModel, id: InstanceId, name: &str) -> f32 {
-    match dm.get(id, name) {
+    match dm.effective(id, name) {
         Ok(Variant::Float(v)) => v,
         Ok(Variant::Double(v)) => v as f32,
         Ok(Variant::Int(v)) => v as f32,
@@ -71,7 +71,7 @@ fn number(dm: &DataModel, id: InstanceId, name: &str) -> f32 {
 }
 
 fn enum_value(dm: &DataModel, id: InstanceId, name: &str) -> u32 {
-    match dm.get(id, name) {
+    match dm.effective(id, name) {
         Ok(Variant::Enum(v)) => v,
         _ => 0,
     }

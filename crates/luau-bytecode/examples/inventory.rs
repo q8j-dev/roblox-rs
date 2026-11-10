@@ -92,9 +92,17 @@ fn main() {
                     && let Some((base, kind)) = pending.take()
                     && base == op::a(insn)
                 {
-                    let arg = if kind == "service" { base + 2 } else { base + 1 };
+                    let arg = if kind == "service" {
+                        base + 2
+                    } else {
+                        base + 1
+                    };
                     if let Some(v) = loaded.get(&arg) {
-                        let map = if kind == "service" { &mut services } else { &mut created };
+                        let map = if kind == "service" {
+                            &mut services
+                        } else {
+                            &mut created
+                        };
                         *map.entry(v.trim_matches('"').to_string()).or_default() += 1;
                     }
                 }

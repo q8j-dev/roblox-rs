@@ -208,6 +208,10 @@ pub fn stop_script(lua: &Lua, id: InstanceId) {
 }
 
 pub fn reevaluate(lua: &Lua, id: InstanceId) {
+    reevaluate_with(lua, id, true);
+}
+
+fn reevaluate_with(lua: &Lua, id: InstanceId, may_queue: bool) {
     let verdict = {
         let eng = engine(lua);
         let e = eng.lock();
@@ -230,7 +234,20 @@ pub fn reevaluate(lua: &Lua, id: InstanceId) {
         return;
     }
     match (verdict, running) {
-        (Some(identity), false) => start_script(lua, id, identity),
+        (Some(identity), false) => {
+            let nested = with_state(lua, |s| s.watchdog.clone()).lock().depth > 0;
+            if nested && may_queue {
+                let queued = lua.create_function(move |lua, ()| {
+                    reevaluate_with(lua, id, false);
+                    Ok(())
+                });
+                if let Ok(thread) = queued.and_then(|f| lua.create_thread(f)) {
+                    with_state(lua, |s| s.deferred.push((thread, MultiValue::new())));
+                }
+            } else {
+                start_script(lua, id, identity)
+            }
+        }
         (None, true) => stop_script(lua, id),
         _ => {}
     }

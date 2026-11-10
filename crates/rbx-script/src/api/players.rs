@@ -99,6 +99,9 @@ pub fn make_local_player(
         let gear = e.dm.create("StarterGear").map_err(|x| rt(x.to_string()))?;
         let _ = e.dm.set_parent(gear, Some(p));
         create_player_gui(&mut e, p);
+        if e.running && e.dm.find_service("NetworkServer").is_none() {
+            ensure_player_scripts(&mut e);
+        }
         p
     };
     pump(lua);
@@ -909,6 +912,7 @@ pub fn register(r: &mut Registry) {
             "isFriendsWith",
             "IsBestFriendsWith",
             "IsInGroup",
+            "IsInGroupAsync",
         ],
         web_false,
     );

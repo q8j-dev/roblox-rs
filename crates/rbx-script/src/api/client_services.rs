@@ -41,6 +41,14 @@ pub fn register(r: &mut Registry) {
         ignore,
     );
     r.add("Player", &["GetUnder13"], no);
+    r.add(
+        "PolicyService",
+        &[
+            "GetPolicyInfoForPlayerAsync",
+            "GetPolicyInfoForServerRobloxOnlyAsync",
+        ],
+        local_policy,
+    );
     r.add("FaceAnimatorService", &["IsStarted"], no);
     r.add("FaceAnimatorService", &["Init", "Start", "Stop"], ignore);
     r.add(
@@ -543,4 +551,14 @@ fn request_start(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
         current_info(lua),
     );
     none()
+}
+
+fn local_policy(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let t = lua.create_table()?;
+    t.set("IsSubjectToChinaPolicies", false)?;
+    t.set("IsContentSharingAllowed", false)?;
+    t.set("IsPaidItemTradingAllowed", false)?;
+    t.set("ArePaidRandomItemsRestricted", false)?;
+    t.set("AllowedExternalLinkReferences", lua.create_table()?)?;
+    ret(lua, t)
 }

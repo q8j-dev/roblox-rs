@@ -495,40 +495,53 @@ pub fn dispatch(
     core: bool,
     menu_open: bool,
 ) -> bool {
-    let target = with_state(lua, |s| {
+    let mut targets = with_state(lua, |s| {
         s.actions
             .actions
             .iter()
             .enumerate()
             .filter(|(_, a)| a.core == core)
             .filter_map(|(i, a)| {
-                binding_matches(&a.inputs, input, input_type).map(|sink| (i, a, sink))
+                let sink = binding_matches(&a.inputs, input, input_type)?;
+                let f = lua.registry_value::<Function>(&a.func).ok()?;
+                Some(((a.priority, i), a.name.clone(), f, sink))
             })
-            .max_by_key(|(i, a, _)| (a.priority, *i))
-            .and_then(|(_, a, sink)| {
-                lua.registry_value::<Function>(&a.func)
-                    .ok()
-                    .map(|f| (a.name.clone(), f, sink))
-            })
+            .collect::<Vec<_>>()
     });
-    let Some((name, func, sink)) = target else {
-        return false;
-    };
+    targets.sort_by(|a, b| b.0.cmp(&a.0));
     let state = if menu_open { 3 } else { state };
+    for (_, name, func, sink) in targets {
+        match call_action(lua, &name, func, state, object, core) {
+            Some(true) => continue,
+            Some(false) => return sink,
+            None => return false,
+        }
+    }
+    false
+}
+
+fn call_action(
+    lua: &Lua,
+    name: &str,
+    func: Function,
+    state: u32,
+    object: InstanceId,
+    core: bool,
+) -> Option<bool> {
     let Ok(state_value) = variant_to_lua(
         lua,
         &Variant::Enum(state),
         Some(&ValueType::Enum("UserInputState".into())),
     ) else {
-        return false;
+        return None;
     };
     let Ok(obj) = crate::instance::push_instance(lua, object) else {
-        return false;
+        return None;
     };
-    let Ok(name_value) = lua.create_string(&name) else {
-        return false;
+    let Ok(name_value) = lua.create_string(name) else {
+        return None;
     };
-    crate::runtime::spawn_function(
+    let result = crate::runtime::spawn_function_result(
         lua,
         func,
         MultiValue::from_vec(vec![Value::String(name_value), state_value, obj]),
@@ -541,7 +554,14 @@ pub fn dispatch(
             },
         },
     );
-    sink
+    let pass = match result {
+        Some(Ok(values)) => values.into_iter().next().is_some_and(|v| {
+            LEnumItem::from_lua(v, lua)
+                .is_ok_and(|e| e.enum_name == "ContextActionResult" && e.value == 1)
+        }),
+        _ => false,
+    };
+    Some(pass)
 }
 
 fn get_topbar_transparency(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {

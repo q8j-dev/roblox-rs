@@ -30,11 +30,15 @@ pub struct TweenState {
 }
 
 pub fn register(r: &mut Registry) {
-    r.add("GuiObject", &["TweenPosition"], tween_position);
-    r.add("GuiObject", &["TweenSize"], tween_size);
     r.add(
         "GuiObject",
-        &["TweenSizeAndPosition"],
+        &["TweenPosition", "TweenPositionInternal"],
+        tween_position,
+    );
+    r.add("GuiObject", &["TweenSize", "TweenSizeInternal"], tween_size);
+    r.add(
+        "GuiObject",
+        &["TweenSizeAndPosition", "TweenSizeAndPositionInternal"],
         tween_size_and_position,
     );
 }

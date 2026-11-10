@@ -21,6 +21,7 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         ("GuiObject", "BorderColor") => Variant::BrickColor(BrickColor::new(26)),
         ("GuiObject", "BackgroundColor") => Variant::BrickColor(BrickColor::new(194)),
         ("GuiObject", "Visible") => Variant::Bool(true),
+        ("GuiObject", "ZIndex") => Variant::Int(1),
         ("GuiButton" | "TextBox", "Active") => Variant::Bool(true),
         ("GuiButton", "AutoButtonColor") => Variant::Bool(true),
         ("TextLabel", "Text") => Variant::String("Label".into()),
@@ -261,6 +262,16 @@ pub fn parse_default(text: &str, ty: &ValueType) -> Option<Variant> {
             Variant::Enum(e.from_name(text.trim())?)
         }
         ValueType::Value(t) => match t {
+            VariantType::Font => {
+                let rest = text.strip_prefix("font:")?;
+                let mut parts = rest.split('|');
+                Variant::Font(rbx_reflection::FontFace {
+                    family: parts.next()?.to_string(),
+                    weight: parts.next()?.parse().ok()?,
+                    style: parts.next()?.parse().ok()?,
+                    cached_face_id: String::new(),
+                })
+            }
             VariantType::Bool => Variant::Bool(text.trim().eq_ignore_ascii_case("true")),
             VariantType::Int => Variant::Int(text.trim().parse().ok()?),
             VariantType::Int64 => Variant::Int64(text.trim().parse().ok()?),

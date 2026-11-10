@@ -51,7 +51,7 @@ fn main() {
     let rt = ScriptRuntime::new(Arc::new(Mutex::new(engine))).expect("runtime");
     let players = rt.engine.lock().dm.get_service("Players").expect("players");
     let p =
-        rbx_script::api::players::make_local_player(&rt.lua, players, 1, false, Some("Player1"))
+        rbx_script::api::players::make_local_player(&rt.lua, players, -1, false, Some("Player1"))
             .expect("player");
     rbx_script::api::players::load_character(&rt.lua, p, true, "").expect("character");
     rt.start_server_core_scripts().expect("server core scripts");

@@ -1,6 +1,7 @@
 pub mod flags;
 pub mod jobs;
 pub mod log;
+pub mod paths;
 pub mod scheduler;
 pub mod time;
 pub mod vfs;

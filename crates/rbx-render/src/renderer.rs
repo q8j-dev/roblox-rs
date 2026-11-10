@@ -101,6 +101,7 @@ pub struct Renderer {
     image_index: HashMap<String, u32>,
     file_meshes: HashMap<String, Option<crate::filemesh::FileMesh>>,
     pub asset_dirs: Vec<PathBuf>,
+    pub content_overlays: Vec<PathBuf>,
     pub async_loads: bool,
     pub overlay: crate::adorn::Adorns,
     load_tx: std::sync::mpsc::Sender<(Shading, Option<Image>)>,
@@ -564,6 +565,7 @@ impl Renderer {
             image_index: HashMap::new(),
             file_meshes: HashMap::new(),
             asset_dirs: Vec::new(),
+            content_overlays: Vec::new(),
             async_loads: false,
             overlay: crate::adorn::Adorns::default(),
             load_tx,
@@ -618,8 +620,9 @@ impl Renderer {
                 let content = self.content_dir.clone();
                 let platform = self.platform_dir.clone();
                 let assets = self.asset_dirs.clone();
+                let overlays = self.content_overlays.clone();
                 Some(Box::new(move || {
-                    read_content_in(&content, &platform, &assets, &url)
+                    read_content_in(&content, &platform, &overlays, &assets, &url)
                         .and_then(|b| texture::decode_for_gpu(&b, compressed).ok())
                 }))
             }
@@ -857,7 +860,13 @@ impl Renderer {
         if url.trim_start().starts_with("rbxthumb://") {
             return crate::thumbnail::fetch(url, &self.content_dir, &self.platform_dir);
         }
-        read_content_in(&self.content_dir, &self.platform_dir, &self.asset_dirs, url)
+        read_content_in(
+            &self.content_dir,
+            &self.platform_dir,
+            &self.content_overlays,
+            &self.asset_dirs,
+            url,
+        )
     }
 
     fn file_mesh(&mut self, url: &str) -> Option<&crate::filemesh::FileMesh> {
@@ -920,7 +929,12 @@ impl Renderer {
     }
 
     fn resolve_content(&self, url: &str) -> Option<PathBuf> {
-        resolve_content_in(&self.content_dir, &self.platform_dir, url)
+        resolve_content_in(
+            &self.content_dir,
+            &self.platform_dir,
+            &self.content_overlays,
+            url,
+        )
     }
 
     fn sky_group(&mut self, faces: Option<&[String; 6]>) -> &wgpu::BindGroup {
@@ -1789,10 +1803,27 @@ fn mat_mul(a: &[[f32; 4]; 4], b: &[[f32; 4]; 4]) -> [[f32; 4]; 4] {
     out
 }
 
-fn resolve_content_in(content_dir: &Path, platform_dir: &Path, url: &str) -> Option<PathBuf> {
+fn resolve_content_in(
+    content_dir: &Path,
+    platform_dir: &Path,
+    overlays: &[PathBuf],
+    url: &str,
+) -> Option<PathBuf> {
     let lower = url.to_ascii_lowercase();
     let rest = lower.strip_prefix("rbxasset://")?;
     let rel = &url[url.len() - rest.len()..];
+    for overlay in overlays {
+        let mut path = overlay.clone();
+        for part in rel
+            .split(['/', '\\'])
+            .filter(|s| !s.is_empty() && *s != "..")
+        {
+            path.push(part);
+        }
+        if rbx_base::vfs::is_file(&path) {
+            return Some(path);
+        }
+    }
     let mut path = content_dir.to_path_buf();
     for part in rel
         .split(['/', '\\'])
@@ -1816,10 +1847,11 @@ fn resolve_content_in(content_dir: &Path, platform_dir: &Path, url: &str) -> Opt
 fn read_content_in(
     content_dir: &Path,
     platform_dir: &Path,
+    overlays: &[PathBuf],
     asset_dirs: &[PathBuf],
     url: &str,
 ) -> Option<Vec<u8>> {
-    if let Some(p) = resolve_content_in(content_dir, platform_dir, url) {
+    if let Some(p) = resolve_content_in(content_dir, platform_dir, overlays, url) {
         return rbx_base::vfs::read(p).ok();
     }
     let lower = url.trim().to_ascii_lowercase();

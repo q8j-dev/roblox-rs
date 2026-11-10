@@ -21,6 +21,7 @@ pub struct IpcState {
     mem_items: HashMap<String, String>,
     mem_binds: HashMap<String, Vec<Subscriber>>,
     local_items: HashMap<String, String>,
+    local_loaded: bool,
 }
 
 pub fn register(r: &mut Registry) {
@@ -336,13 +337,67 @@ fn mem_bind_and_fire(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> 
     ret(lua, push_instance(lua, connection)?)
 }
 
+pub fn seed_mem_item(lua: &Lua, key: &str, value: String) {
+    with_state(lua, |s| {
+        s.ipc.mem_items.entry(key.to_string()).or_insert(value);
+    });
+}
+
+fn storage_path(lua: &Lua) -> Option<std::path::PathBuf> {
+    engine(lua).lock().app_storage_path.clone()
+}
+
+fn load_local(lua: &Lua) {
+    if with_state(lua, |s| std::mem::replace(&mut s.ipc.local_loaded, true)) {
+        return;
+    }
+    let Some(path) = storage_path(lua) else {
+        return;
+    };
+    let Ok(text) = rbx_base::vfs::read_to_string(&path) else {
+        return;
+    };
+    let Ok(serde_json::Value::Object(map)) = serde_json::from_str::<serde_json::Value>(&text)
+    else {
+        return;
+    };
+    with_state(lua, |s| {
+        for (k, v) in map {
+            let v = match v {
+                serde_json::Value::String(s) => s,
+                other => other.to_string(),
+            };
+            s.ipc.local_items.entry(k).or_insert(v);
+        }
+    });
+}
+
+fn save_local(lua: &Lua) {
+    let Some(path) = storage_path(lua) else {
+        return;
+    };
+    let map: serde_json::Map<String, serde_json::Value> = with_state(lua, |s| {
+        s.ipc
+            .local_items
+            .iter()
+            .map(|(k, v)| (k.clone(), serde_json::Value::String(v.clone())))
+            .collect()
+    });
+    if let Some(dir) = path.parent() {
+        let _ = std::fs::create_dir_all(dir);
+    }
+    let _ = std::fs::write(&path, serde_json::Value::Object(map).to_string());
+}
+
 fn local_get(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    load_local(lua);
     let key = string_arg(args, 0)?;
     let v = with_state(lua, |s| s.ipc.local_items.get(&key).cloned());
     ret(lua, v.unwrap_or_default())
 }
 
 fn local_set(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    load_local(lua);
     let key = string_arg(args, 0)?;
     let value = arg_string(args.get(1)).unwrap_or_default();
     with_state(lua, |s| {
@@ -359,7 +414,9 @@ fn local_set(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
     none()
 }
 
-fn local_flush(_lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+fn local_flush(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    load_local(lua);
+    save_local(lua);
     none()
 }
 

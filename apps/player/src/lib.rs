@@ -189,6 +189,8 @@ fn make_runtime(dm: DataModel, assets: &Path, ui_2026: bool) -> Result<ScriptRun
     engine.content_root = Some(assets.join("content"));
     if ui_2026 {
         engine.core_package = Some(assets.join("inexperience").join("InExperience.rbxm"));
+        engine.app_storage_path = rbx_base::paths::user_data_dir()
+            .map(|d| d.join("LocalStorage").join("appStorage.json"));
     }
     engine.animate_fallback = true;
     engine.audio = rbx_audio::AudioEngine::open();
@@ -208,9 +210,19 @@ fn spawn_local_player(
         .dm
         .get_service("Players")
         .map_err(|e| e.to_string())?;
-    let player =
-        rbx_script::api::players::make_local_player(&runtime.lua, players, 1, false, Some(name))
-            .map_err(|e| e.to_string())?;
+    let user_id = if runtime.engine.lock().core_package.is_some() {
+        -1
+    } else {
+        1
+    };
+    let player = rbx_script::api::players::make_local_player(
+        &runtime.lua,
+        players,
+        user_id,
+        false,
+        Some(name),
+    )
+    .map_err(|e| e.to_string())?;
     if character {
         rbx_script::api::players::load_character(&runtime.lua, player, true, "")
             .map_err(|e| e.to_string())?;
@@ -598,6 +610,7 @@ impl Player {
             Ok(mut off) => {
                 off.renderer.gui_scale = self.gui_scale();
                 let e = self.runtime.engine.lock();
+                off.renderer.content_overlays = e.content_overlays.clone();
                 if let Err(err) = off.save_png(&e.dm, path) {
                     tracing::error!("screenshot failed: {err}");
                 } else {
@@ -768,7 +781,8 @@ impl App for Player {
         } else {
             None
         };
-        if let Some(gpu) = ready {
+        if let Some(mut gpu) = ready {
+            gpu.renderer.content_overlays = self.runtime.engine.lock().content_overlays.clone();
             self.gpu = Some(gpu);
             let size = self.surface_size.or_else(|| {
                 self.window

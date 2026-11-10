@@ -89,6 +89,10 @@ pub fn make_local_player(
         if let Some(n) = name {
             e.dm.set_name(p, n);
         }
+        if e.dm.property_descriptor(p, "DisplayName").is_some() {
+            let shown = e.dm.name_of(p).to_string();
+            let _ = e.dm.set(p, "DisplayName", Variant::String(shown));
+        }
         e.dm.set_unchecked(p, "TeleportedIn", Variant::Bool(teleported));
         e.dm.set_unchecked(p, "UserId", Variant::Int(uid));
         e.dm.local_player = Some(p);
@@ -918,6 +922,17 @@ pub fn register(r: &mut Registry) {
     );
     r.add(
         "Player",
+        &["GetBlockListInitialized"],
+        get_block_list_initialized,
+    );
+    r.add(
+        "Player",
+        &["SetBlockListInitialized"],
+        set_block_list_initialized,
+    );
+    r.add("Player", &["AddToBlockList"], add_to_block_list);
+    r.add(
+        "Player",
         &["GetRankInGroup", "GetWebPersonalServerRank"],
         web_zero,
     );
@@ -946,4 +961,45 @@ pub fn register(r: &mut Registry) {
     r.add("Player", &["LoadString", "loadString"], load_string);
     r.add("Player", &["LoadBoolean", "loadBoolean"], load_boolean);
     r.add("Player", &["LoadInstance", "loadInstance"], load_instance);
+}
+
+fn block_state(lua: &Lua) -> Result<mlua::Table> {
+    match lua.named_registry_value::<Value>("rbx_block_lists")? {
+        Value::Table(t) => Ok(t),
+        _ => {
+            let t = lua.create_table()?;
+            lua.set_named_registry_value("rbx_block_lists", &t)?;
+            Ok(t)
+        }
+    }
+}
+
+fn get_block_list_initialized(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let init: Option<bool> = block_state(lua)?.get(format!("init{}", id.0))?;
+    ret(lua, init.unwrap_or(false))
+}
+
+fn set_block_list_initialized(lua: &Lua, id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    block_state(lua)?.set(format!("init{}", id.0), true)?;
+    ret(lua, Value::Nil)
+}
+
+fn add_to_block_list(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let state = block_state(lua)?;
+    let key = format!("list{}", id.0);
+    let list = match state.get::<Value>(key.as_str())? {
+        Value::Table(t) => t,
+        _ => {
+            let t = lua.create_table()?;
+            state.set(key.as_str(), &t)?;
+            t
+        }
+    };
+    if let Some(Value::Table(ids)) = args.first() {
+        for v in ids.sequence_values::<Value>() {
+            list.push(v?)?;
+        }
+    }
+    crate::runtime::fire_lua(lua, id, "BlockListChanged", mlua::MultiValue::new());
+    ret(lua, Value::Nil)
 }

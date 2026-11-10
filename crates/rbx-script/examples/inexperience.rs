@@ -54,6 +54,7 @@ fn main() {
         rbx_script::api::players::make_local_player(&rt.lua, players, 1, false, Some("Player1"))
             .expect("player");
     rbx_script::api::players::load_character(&rt.lua, p, true, "").expect("character");
+    rt.start_server_core_scripts().expect("server core scripts");
     rt.start_core_scripts("StarterScript")
         .expect("core scripts");
     let keys: Vec<(usize, u32)> = std::env::var("KEYS")

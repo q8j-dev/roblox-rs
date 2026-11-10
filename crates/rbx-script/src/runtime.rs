@@ -1690,6 +1690,14 @@ pub fn require_module(lua: &Lua, m: Value) -> mlua::Result<Value> {
         }
     };
     let identity = current_info(lua).identity;
+    if let Ok(target) = std::env::var("TRACE_REQUIRE")
+        && engine(lua).lock().dm.full_name(id).ends_with(&target)
+        && let Ok(debug) = lua.globals().get::<Table>("debug")
+        && let Ok(tb) = debug.get::<Function>("traceback")
+        && let Ok(text) = tb.call::<String>("require")
+    {
+        eprintln!("{text}\ninset={:?}", engine(lua).lock().dm.gui_view.inset);
+    }
     let thread = lua.create_thread(func)?;
     let key = thread_key(&thread);
     with_state(lua, |s| {

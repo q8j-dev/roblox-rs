@@ -48,6 +48,18 @@ struct Args {
     log: String,
     #[arg(long = "ui-2026")]
     ui_2026: bool,
+    #[arg(long = "window-size", value_parser = parse_size)]
+    window_size: Option<(u32, u32)>,
+}
+
+fn parse_size(s: &str) -> Result<(u32, u32), String> {
+    let (w, h) = s
+        .split_once(['x', 'X'])
+        .ok_or_else(|| "expected WIDTHxHEIGHT".to_string())?;
+    Ok((
+        w.trim().parse().map_err(|_| "bad width".to_string())?,
+        h.trim().parse().map_err(|_| "bad height".to_string())?,
+    ))
 }
 
 struct Gpu {
@@ -927,7 +939,7 @@ pub fn desktop_main() {
         frames: 0,
         done: false,
     };
-    if let Err(e) = rbx_platform::run("Roblox", (1280, 720), player) {
+    if let Err(e) = rbx_platform::run("Roblox", args.window_size.unwrap_or((1280, 720)), player) {
         eprintln!("{e}");
         std::process::exit(1);
     }

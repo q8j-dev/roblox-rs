@@ -211,7 +211,7 @@ pub fn add_core_script(lua: &Lua, name: &str, parent: Option<InstanceId>) -> Res
         e.dm.set_parent_ignore_lock(id.0, Some(id.1))
             .map_err(|err| rt(err.to_string()))?;
     }
-    crate::scripts::reevaluate(lua, id.0);
+    crate::scripts::start_now(lua, id.0);
     Ok(id.0)
 }
 
@@ -368,6 +368,12 @@ pub fn load_core_package(lua: &Lua, path: &Path) -> Result<()> {
         && let Err(err) = engine(lua).lock().flags.load_ixp_values_json(&text)
     {
         tracing::warn!("IxpSettings.json: {err}");
+    }
+    if let Some(dir) = path.parent()
+        && let Ok(text) = rbx_base::vfs::read_to_string(&dir.join("OfflineFlags.json"))
+        && let Err(err) = engine(lua).lock().flags.load_json(&text)
+    {
+        tracing::warn!("OfflineFlags.json: {err}");
     }
     if let Some(dir) = path.parent()
         && let Ok(text) = rbx_base::vfs::read_to_string(&dir.join("EngineFeatures.json"))

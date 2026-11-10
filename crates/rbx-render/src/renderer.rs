@@ -126,6 +126,7 @@ pub struct Renderer {
     lgrid_texture: wgpu::Texture,
     lgrid_active: bool,
     pub lighting_budget: usize,
+    pub hide_sky: bool,
     sky_bg: Option<(Vec<String>, wgpu::BindGroup)>,
     meshes: HashMap<MeshKey, GpuMesh>,
     depth: Option<(wgpu::Texture, wgpu::TextureView, u32, u32)>,
@@ -588,6 +589,7 @@ impl Renderer {
             lgrid_texture,
             lgrid_active: false,
             lighting_budget: 24,
+            hide_sky: false,
             sky_bg: None,
             meshes: HashMap::new(),
             depth: None,
@@ -851,6 +853,10 @@ impl Renderer {
     }
 
     fn read_content(&self, url: &str) -> Option<Vec<u8>> {
+        #[cfg(not(target_arch = "wasm32"))]
+        if url.trim_start().starts_with("rbxthumb://") {
+            return crate::thumbnail::fetch(url, &self.content_dir, &self.platform_dir);
+        }
         read_content_in(&self.content_dir, &self.platform_dir, &self.asset_dirs, url)
     }
 
@@ -1615,11 +1621,15 @@ impl Renderer {
                     depth_slice: None,
                     resolve_target: Some(target),
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: clear.r as f64,
-                            g: clear.g as f64,
-                            b: clear.b as f64,
-                            a: 1.0,
+                        load: wgpu::LoadOp::Clear(if self.hide_sky {
+                            wgpu::Color::TRANSPARENT
+                        } else {
+                            wgpu::Color {
+                                r: clear.r as f64,
+                                g: clear.g as f64,
+                                b: clear.b as f64,
+                                a: 1.0,
+                            }
                         }),
                         store: wgpu::StoreOp::Store,
                     },
@@ -1677,12 +1687,12 @@ impl Renderer {
             if !self.smooth.is_empty() {
                 self.smooth.draw_solid(&mut pass);
             }
-            if let Some((_, sky)) = &self.sky_bg {
+            if let Some((_, sky)) = self.sky_bg.as_ref().filter(|_| !self.hide_sky) {
                 pass.set_pipeline(&self.sky);
                 pass.set_bind_group(1, sky, &[]);
                 pass.draw(0..3, 0..1);
             }
-            if let Some(buf) = &sun_moon_buffer {
+            if let Some(buf) = sun_moon_buffer.as_ref().filter(|_| !self.hide_sky) {
                 pass.set_pipeline(&self.celestial_add);
                 pass.set_vertex_buffer(0, buf.slice(..));
                 pass.set_bind_group(1, &self.materials[&sun_shading], &[]);
@@ -1690,7 +1700,7 @@ impl Renderer {
                 pass.set_bind_group(1, &self.materials[&moon_shading], &[]);
                 pass.draw(moon_start..sun_moon.len() as u32, 0..1);
             }
-            if let Some(buf) = &star_buffer {
+            if let Some(buf) = star_buffer.as_ref().filter(|_| !self.hide_sky) {
                 pass.set_pipeline(&self.celestial_alpha);
                 pass.set_vertex_buffer(0, buf.slice(..));
                 pass.set_bind_group(1, &self.materials[&Shading::SmoothPlastic], &[]);

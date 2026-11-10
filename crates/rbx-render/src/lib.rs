@@ -21,6 +21,8 @@ pub mod smooth;
 pub mod terrain;
 pub mod texture;
 #[cfg(not(target_arch = "wasm32"))]
+pub mod thumbnail;
+#[cfg(not(target_arch = "wasm32"))]
 pub mod video;
 pub mod world_gui;
 

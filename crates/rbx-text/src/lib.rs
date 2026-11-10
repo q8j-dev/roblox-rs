@@ -161,6 +161,7 @@ pub struct Bitmap {
 pub struct Typesetter {
     face: FontRef<'static>,
     legacy_height_scale: f32,
+    legacy_metrics: bool,
     glyphs: Mutex<HashMap<(char, u32), Glyph>>,
     ligatures: HashMap<u16, Vec<(Vec<u16>, u16)>>,
     private: HashMap<char, GlyphId>,
@@ -241,10 +242,14 @@ fn adjust_y(y: f32, height: i32, scale: f32, align: YAlign) -> f32 {
 
 impl Typesetter {
     fn new(data: &'static [u8], legacy_height_scale: f32) -> Typesetter {
-        Typesetter::from_bytes(data, legacy_height_scale).expect("bundled font")
+        Typesetter::from_bytes(data, legacy_height_scale, true).expect("bundled font")
     }
 
-    fn from_bytes(data: &'static [u8], legacy_height_scale: f32) -> Option<Typesetter> {
+    fn from_bytes(
+        data: &'static [u8],
+        legacy_height_scale: f32,
+        legacy_metrics: bool,
+    ) -> Option<Typesetter> {
         let face = FontRef::try_from_slice(data).ok()?;
         let ligatures = read_ligatures(data);
         let mut private = HashMap::new();
@@ -264,6 +269,7 @@ impl Typesetter {
         Some(Typesetter {
             face,
             legacy_height_scale,
+            legacy_metrics,
             glyphs: Mutex::new(HashMap::new()),
             ligatures,
             private,
@@ -312,16 +318,32 @@ impl Typesetter {
     }
 
     fn face_height(&self) -> f32 {
-        self.face.height_unscaled() + self.face.line_gap_unscaled()
+        if self.legacy_metrics {
+            self.face.height_unscaled() + self.face.line_gap_unscaled()
+        } else {
+            self.face.height_unscaled()
+        }
+    }
+
+    fn size_padding(&self) -> f32 {
+        if self.legacy_metrics {
+            FONT_SIZE_PADDING
+        } else {
+            0.0
+        }
+    }
+
+    pub fn em(&self, size: u32) -> f32 {
+        size as f32 + self.size_padding()
     }
 
     pub fn ascender(&self, size: u32) -> i32 {
-        let mult = (size as f32 + FONT_SIZE_PADDING) / self.face_height();
+        let mult = self.em(size) / self.face_height();
         (self.face.ascent_unscaled() * mult).round() as i32
     }
 
-    fn scale(size: u32) -> PxScale {
-        PxScale::from(size as f32 + FONT_SIZE_PADDING)
+    fn scale(&self, size: u32) -> PxScale {
+        PxScale::from(self.em(size))
     }
 
     pub fn glyph(&self, ch: char, size: u32) -> Glyph {
@@ -329,9 +351,9 @@ impl Typesetter {
         if let Some(g) = cache.get(&(ch, size)) {
             return *g;
         }
-        let scaled = self.face.as_scaled(Self::scale(size));
+        let scaled = self.face.as_scaled(self.scale(size));
         let id = self.gid(ch);
-        let glyph = id.with_scale_and_position(Self::scale(size), ab_glyph::point(0.0, 0.0));
+        let glyph = id.with_scale_and_position(self.scale(size), ab_glyph::point(0.0, 0.0));
         let mut g = Glyph {
             xadvance: scaled.h_advance(id).round() as i32,
             ..Default::default()
@@ -351,7 +373,7 @@ impl Typesetter {
         if previous == '\0' {
             return 0;
         }
-        let mult = (size as f32 + FONT_SIZE_PADDING) / self.face_height();
+        let mult = self.em(size) / self.face_height();
         let a: GlyphId = self.gid(previous);
         let b: GlyphId = self.gid(current);
         (self.face.kern_unscaled(a, b) * mult).round() as i32
@@ -360,7 +382,7 @@ impl Typesetter {
     pub fn rasterize(&self, ch: char, size: u32) -> Option<Bitmap> {
         let glyph = self
             .gid(ch)
-            .with_scale_and_position(Self::scale(size), ab_glyph::point(0.0, 0.0));
+            .with_scale_and_position(self.scale(size), ab_glyph::point(0.0, 0.0));
         let outline = self.face.outline_glyph(glyph)?;
         let b = outline.px_bounds();
         let pad = FONT_PADDING as u32;
@@ -609,7 +631,7 @@ impl Typesetter {
                                 line_x + dx + x as f32 * scale,
                                 line_y + dy + ascender as f32 * scale,
                             ],
-                            em: (measure_size as f32 + FONT_SIZE_PADDING) * scale,
+                            em: self.em(measure_size) * scale,
                         });
                     }
                     x += glyph.xadvance;
@@ -745,7 +767,7 @@ pub fn set_loader(loader: impl Fn(&str) -> Option<Vec<u8>> + Send + Sync + 'stat
 fn load_file(path: &str) -> Option<Font> {
     let bytes = (LOADER.get()?)(path)?;
     let data: &'static [u8] = Box::leak(bytes.into_boxed_slice());
-    let t: &'static Typesetter = Box::leak(Box::new(Typesetter::from_bytes(data, 1.0)?));
+    let t: &'static Typesetter = Box::leak(Box::new(Typesetter::from_bytes(data, 1.0, false)?));
     let mut faces = FACES.lock().ok()?;
     faces.push(t);
     Some(Font::Face((faces.len() - 1) as u16))

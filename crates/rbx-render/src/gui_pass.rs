@@ -543,8 +543,9 @@ impl GuiRenderer {
                     } else {
                         q.em * scale
                     };
-                    let px = (target_em - 1.0).round().max(1.0) as u32;
-                    let raster_em = px as f32 + 1.0;
+                    let pad = typesetter.em(0);
+                    let px = (target_em - pad).round().max(1.0) as u32;
+                    let raster_em = typesetter.em(px);
                     let Some([x, y, w, h]) = self.atlas.place(queue, cmd.font, q.ch, px) else {
                         continue;
                     };

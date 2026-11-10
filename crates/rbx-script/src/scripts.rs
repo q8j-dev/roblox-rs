@@ -211,6 +211,10 @@ pub fn reevaluate(lua: &Lua, id: InstanceId) {
     reevaluate_with(lua, id, true);
 }
 
+pub fn start_now(lua: &Lua, id: InstanceId) {
+    reevaluate_with(lua, id, false);
+}
+
 fn reevaluate_with(lua: &Lua, id: InstanceId, may_queue: bool) {
     let verdict = {
         let eng = engine(lua);

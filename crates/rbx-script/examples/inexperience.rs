@@ -38,6 +38,12 @@ fn main() {
     ] {
         let _ = dm.get_service(s);
     }
+    if let Some(ws) = dm.find_service("Workspace")
+        && let Ok(cam) = dm.create("Camera")
+    {
+        let _ = dm.set_parent(cam, Some(ws));
+        let _ = dm.set(ws, "CurrentCamera", rbx_dom::Variant::Ref(Some(cam)));
+    }
     let mut engine = Engine::new(dm);
     engine.content_root = Some("assets/content".into());
     engine.core_package = Some("assets/inexperience/InExperience.rbxm".into());

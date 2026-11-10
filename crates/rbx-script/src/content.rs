@@ -42,8 +42,17 @@ pub fn fetch(e: &Engine, url: &str) -> Option<Vec<u8>> {
     }
     let lower = url.to_ascii_lowercase();
     if let Some(rest) = lower.strip_prefix("rbxasset://") {
-        let root = e.content_root.as_ref()?;
         let rel = &url[url.len() - rest.len()..];
+        for overlay in &e.content_overlays {
+            let path = rel
+                .split(['/', '\\'])
+                .filter(|s| !s.is_empty() && *s != "..")
+                .fold(overlay.clone(), |p, s| p.join(s));
+            if let Ok(data) = rbx_base::vfs::read(&path) {
+                return Some(data);
+            }
+        }
+        let root = e.content_root.as_ref()?;
         let path = rel
             .split(['/', '\\'])
             .filter(|s| !s.is_empty() && *s != "..")

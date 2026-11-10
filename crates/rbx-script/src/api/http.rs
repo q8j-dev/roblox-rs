@@ -117,6 +117,13 @@ fn request(url: String, body: Option<(String, String)>) -> std::result::Result<V
         .map_err(|e| format!("HttpError: {e}"))
 }
 
+pub fn request_blocking(
+    url: String,
+    body: Option<(String, String)>,
+) -> std::result::Result<Vec<u8>, String> {
+    request(url, body)
+}
+
 #[cfg(target_arch = "wasm32")]
 fn request(url: String, _body: Option<(String, String)>) -> std::result::Result<Vec<u8>, String> {
     Err(format!(

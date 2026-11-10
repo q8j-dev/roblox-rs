@@ -229,12 +229,33 @@ impl UserData for LVector2 {
             let inv = 1.0 / t.0.length_squared().sqrt();
             Ok(LVector2(t.0 * inv))
         });
-        f.add_field_method_get("magnitude", |_, t| Ok(t.0.length()));
+        for n in ["magnitude", "Magnitude"] {
+            f.add_field_method_get(n, |_, t| Ok(t.0.length()));
+        }
+        f.add_field_method_get("Unit", |_, t| {
+            let inv = 1.0 / t.0.length_squared().sqrt();
+            Ok(LVector2(t.0 * inv))
+        });
     }
 
     fn add_methods<M: UserDataMethods<Self>>(m: &mut M) {
-        m.add_method("lerp", |_, t, (o, a): (LVector2, f32)| {
-            Ok(LVector2(t.0 + (o.0 - t.0) * a))
+        for n in ["lerp", "Lerp"] {
+            m.add_method(n, |_, t, (o, a): (LVector2, f32)| {
+                Ok(LVector2(t.0 + (o.0 - t.0) * a))
+            });
+        }
+        m.add_method("Dot", |_, t, o: LVector2| Ok(t.0.dot(o.0)));
+        m.add_method("Cross", |_, t, o: LVector2| {
+            Ok(t.0.x * o.0.y - t.0.y * o.0.x)
+        });
+        m.add_method("Min", |_, t, o: LVector2| Ok(LVector2(t.0.min(o.0))));
+        m.add_method("Max", |_, t, o: LVector2| Ok(LVector2(t.0.max(o.0))));
+        m.add_method("Abs", |_, t, ()| Ok(LVector2(t.0.abs())));
+        m.add_method("Floor", |_, t, ()| Ok(LVector2(t.0.floor())));
+        m.add_method("Ceil", |_, t, ()| Ok(LVector2(t.0.ceil())));
+        m.add_method("FuzzyEq", |_, t, (o, eps): (LVector2, Option<f32>)| {
+            let e = eps.map(f32::abs).unwrap_or(1e-5);
+            Ok(fuzzy_eq(t.0.x, o.0.x, e) && fuzzy_eq(t.0.y, o.0.y, e))
         });
         m.add_meta_method(MetaMethod::ToString, |_, t, ()| {
             Ok(format!("{}, {}", float_str(t.0.x), float_str(t.0.y)))
@@ -399,8 +420,22 @@ fn many_vec3(lua: &Lua, args: MultiValue, f: impl Fn(Vec3) -> Vec3) -> Result<Mu
 impl UserData for LCFrame {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
         f.add_meta_field(mlua::MetaMethod::Type, "CFrame");
-        f.add_field_method_get("p", |_, t| Ok(LVector3(t.0.translation)));
-        f.add_field_method_get("lookVector", |_, t| Ok(LVector3(t.0.look_vector())));
+        for n in ["p", "Position"] {
+            f.add_field_method_get(n, |_, t| Ok(LVector3(t.0.translation)));
+        }
+        for n in ["lookVector", "LookVector"] {
+            f.add_field_method_get(n, |_, t| Ok(LVector3(t.0.look_vector())));
+        }
+        for n in ["RightVector", "XVector"] {
+            f.add_field_method_get(n, |_, t| Ok(LVector3(t.0.rotation.x_axis)));
+        }
+        for n in ["UpVector", "YVector"] {
+            f.add_field_method_get(n, |_, t| Ok(LVector3(t.0.rotation.y_axis)));
+        }
+        f.add_field_method_get("ZVector", |_, t| Ok(LVector3(t.0.rotation.z_axis)));
+        f.add_field_method_get("Rotation", |_, t| {
+            Ok(LCFrame(CFrame::new(t.0.rotation, Vec3::ZERO)))
+        });
         for n in ["X", "x"] {
             f.add_field_method_get(n, |_, t| Ok(t.0.translation.x));
         }
@@ -413,71 +448,112 @@ impl UserData for LCFrame {
     }
 
     fn add_methods<M: UserDataMethods<Self>>(m: &mut M) {
-        m.add_method("inverse", |_, t, ()| Ok(LCFrame(t.0.inverse())));
-        m.add_method("lerp", |_, t, (o, a): (LCFrame, f32)| {
-            Ok(LCFrame(if a == 1.0 {
-                o.0
-            } else if a == 0.0 {
-                t.0
+        for n in ["ToOrientation", "ToEulerAnglesYXZ"] {
+            m.add_method(n, |_, t, ()| {
+                let r = t.0.rows();
+                let x = (-r[5]).clamp(-1.0, 1.0).asin();
+                let y = r[2].atan2(r[8]);
+                let z = r[3].atan2(r[4]);
+                Ok((x, y, z))
+            });
+        }
+        m.add_method("ToAxisAngle", |_, t, ()| {
+            let q = t.0.to_quaternion();
+            let w = q.w.clamp(-1.0, 1.0);
+            let angle = 2.0 * w.acos();
+            let s = (1.0 - w * w).sqrt();
+            let axis = if s < 1e-6 {
+                Vec3::X
             } else {
-                t.0.lerp(&o.0, a)
-            }))
+                Vec3::new(q.x / s, q.y / s, q.z / s)
+            };
+            Ok((LVector3(axis), angle))
         });
-        m.add_method("toWorldSpace", |lua, t, args: MultiValue| {
-            if args.is_empty() {
-                return Ok(MultiValue::from_vec(vec![Value::UserData(
-                    lua.create_userdata(*t)?,
-                )]));
-            }
-            let mut out = Vec::new();
-            for a in args {
-                let b = LCFrame::from_lua(a, lua)?;
-                out.push(Value::UserData(lua.create_userdata(LCFrame(t.0 * b.0))?));
-            }
-            Ok(MultiValue::from_vec(out))
-        });
-        m.add_method("toObjectSpace", |lua, t, args: MultiValue| {
-            if args.is_empty() {
-                return Ok(MultiValue::from_vec(vec![Value::UserData(
-                    lua.create_userdata(LCFrame(t.0.inverse()))?,
-                )]));
-            }
-            let mut out = Vec::new();
-            for a in args {
-                let b = LCFrame::from_lua(a, lua)?;
-                out.push(Value::UserData(
-                    lua.create_userdata(LCFrame(t.0.to_object_space(&b.0)))?,
-                ));
-            }
-            Ok(MultiValue::from_vec(out))
-        });
-        m.add_method("pointToWorldSpace", |lua, t, args: MultiValue| {
-            let c = t.0;
-            many_vec3(lua, args, |v| c.point_to_world_space(v))
-        });
-        m.add_method("pointToObjectSpace", |lua, t, args: MultiValue| {
-            let c = t.0;
-            many_vec3(lua, args, |v| c.point_to_object_space(v))
-        });
-        m.add_method("vectorToWorldSpace", |lua, t, args: MultiValue| {
-            let c = t.0;
-            many_vec3(lua, args, |v| c.vector_to_world_space(v))
-        });
-        m.add_method("vectorToObjectSpace", |lua, t, args: MultiValue| {
-            let c = t.0;
-            many_vec3(lua, args, |v| c.vector_to_object_space(v))
-        });
-        m.add_method("toEulerAnglesXYZ", |_, t, ()| {
-            let (x, y, z) = t.0.to_euler_xyz();
-            Ok((x, y, z))
-        });
-        m.add_method("components", |_, t, ()| {
-            let r = t.0.rows();
-            let p = t.0.translation;
-            Ok((
-                p.x, p.y, p.z, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8],
-            ))
-        });
+        for n in ["inverse", "Inverse"] {
+            m.add_method(n, |_, t, ()| Ok(LCFrame(t.0.inverse())));
+        }
+        for n in ["lerp", "Lerp"] {
+            m.add_method(n, |_, t, (o, a): (LCFrame, f32)| {
+                Ok(LCFrame(if a == 1.0 {
+                    o.0
+                } else if a == 0.0 {
+                    t.0
+                } else {
+                    t.0.lerp(&o.0, a)
+                }))
+            });
+        }
+        for n in ["toWorldSpace", "ToWorldSpace"] {
+            m.add_method(n, |lua, t, args: MultiValue| {
+                if args.is_empty() {
+                    return Ok(MultiValue::from_vec(vec![Value::UserData(
+                        lua.create_userdata(*t)?,
+                    )]));
+                }
+                let mut out = Vec::new();
+                for a in args {
+                    let b = LCFrame::from_lua(a, lua)?;
+                    out.push(Value::UserData(lua.create_userdata(LCFrame(t.0 * b.0))?));
+                }
+                Ok(MultiValue::from_vec(out))
+            });
+        }
+        for n in ["toObjectSpace", "ToObjectSpace"] {
+            m.add_method(n, |lua, t, args: MultiValue| {
+                if args.is_empty() {
+                    return Ok(MultiValue::from_vec(vec![Value::UserData(
+                        lua.create_userdata(LCFrame(t.0.inverse()))?,
+                    )]));
+                }
+                let mut out = Vec::new();
+                for a in args {
+                    let b = LCFrame::from_lua(a, lua)?;
+                    out.push(Value::UserData(
+                        lua.create_userdata(LCFrame(t.0.to_object_space(&b.0)))?,
+                    ));
+                }
+                Ok(MultiValue::from_vec(out))
+            });
+        }
+        for n in ["pointToWorldSpace", "PointToWorldSpace"] {
+            m.add_method(n, |lua, t, args: MultiValue| {
+                let c = t.0;
+                many_vec3(lua, args, |v| c.point_to_world_space(v))
+            });
+        }
+        for n in ["pointToObjectSpace", "PointToObjectSpace"] {
+            m.add_method(n, |lua, t, args: MultiValue| {
+                let c = t.0;
+                many_vec3(lua, args, |v| c.point_to_object_space(v))
+            });
+        }
+        for n in ["vectorToWorldSpace", "VectorToWorldSpace"] {
+            m.add_method(n, |lua, t, args: MultiValue| {
+                let c = t.0;
+                many_vec3(lua, args, |v| c.vector_to_world_space(v))
+            });
+        }
+        for n in ["vectorToObjectSpace", "VectorToObjectSpace"] {
+            m.add_method(n, |lua, t, args: MultiValue| {
+                let c = t.0;
+                many_vec3(lua, args, |v| c.vector_to_object_space(v))
+            });
+        }
+        for n in ["toEulerAnglesXYZ", "ToEulerAnglesXYZ"] {
+            m.add_method(n, |_, t, ()| {
+                let (x, y, z) = t.0.to_euler_xyz();
+                Ok((x, y, z))
+            });
+        }
+        for n in ["components", "GetComponents"] {
+            m.add_method(n, |_, t, ()| {
+                let r = t.0.rows();
+                let p = t.0.translation;
+                Ok((
+                    p.x, p.y, p.z, r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7], r[8],
+                ))
+            });
+        }
         m.add_meta_method(MetaMethod::ToString, |_, t, ()| Ok(cframe_str(&t.0)));
         m.add_meta_method(MetaMethod::Eq, |_, t, o: Value| {
             Ok(matches!(&o, Value::UserData(u) if u.borrow::<LCFrame>().map(|v| v.0 == t.0).unwrap_or(false)))
@@ -524,12 +600,28 @@ pub fn color3_str(c: Color3) -> String {
 impl UserData for LColor3 {
     fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
         f.add_meta_field(mlua::MetaMethod::Type, "Color3");
-        f.add_field_method_get("r", |_, t| Ok(t.0.r));
-        f.add_field_method_get("g", |_, t| Ok(t.0.g));
-        f.add_field_method_get("b", |_, t| Ok(t.0.b));
+        for n in ["r", "R"] {
+            f.add_field_method_get(n, |_, t| Ok(t.0.r));
+        }
+        for n in ["g", "G"] {
+            f.add_field_method_get(n, |_, t| Ok(t.0.g));
+        }
+        for n in ["b", "B"] {
+            f.add_field_method_get(n, |_, t| Ok(t.0.b));
+        }
     }
 
     fn add_methods<M: UserDataMethods<Self>>(m: &mut M) {
+        for n in ["lerp", "Lerp"] {
+            m.add_method(n, |_, t, (o, a): (LColor3, f32)| {
+                Ok(LColor3(t.0.lerp(o.0, a)))
+            });
+        }
+        m.add_method("ToHSV", |_, t, ()| Ok(t.0.to_hsv()));
+        m.add_method("ToHex", |_, t, ()| {
+            let c = |x: f32| (x.clamp(0.0, 1.0) * 255.0).round() as u8;
+            Ok(format!("{:02x}{:02x}{:02x}", c(t.0.r), c(t.0.g), c(t.0.b)))
+        });
         m.add_meta_method(MetaMethod::ToString, |_, t, ()| Ok(color3_str(t.0)));
         m.add_meta_method(MetaMethod::Eq, |_, t, o: Value| {
             Ok(matches!(&o, Value::UserData(u) if u.borrow::<LColor3>().map(|v| v.0 == t.0).unwrap_or(false)))
@@ -639,6 +731,20 @@ impl UserData for LUDim2 {
     }
 
     fn add_methods<M: UserDataMethods<Self>>(m: &mut M) {
+        for n in ["lerp", "Lerp"] {
+            m.add_method(n, |_, t, (o, a): (LUDim2, f32)| {
+                let l = |x: UDim, y: UDim| {
+                    UDim::new(
+                        x.scale + (y.scale - x.scale) * a,
+                        (x.offset as f32 + (y.offset - x.offset) as f32 * a).round() as i32,
+                    )
+                };
+                Ok(LUDim2(UDim2 {
+                    x: l(t.0.x, o.0.x),
+                    y: l(t.0.y, o.0.y),
+                }))
+            });
+        }
         m.add_meta_method(MetaMethod::ToString, |_, t, ()| {
             Ok(format!("{{{}}}, {{{}}}", udim_str(t.0.x), udim_str(t.0.y)))
         });

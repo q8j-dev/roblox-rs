@@ -26,6 +26,17 @@ pub fn register(r: &mut Registry) {
     r.add("RenderSettings", &["GetMaxQualityLevel"], max_quality_level);
     r.add("Teams", &["GetTeams"], get_teams);
     r.add("ContentProvider", &["Preload"], preload);
+    r.add("ContentProvider", &["PreloadAsync"], preload_async);
+    r.add(
+        "ContentProvider",
+        &["GetAssetFetchStatus"],
+        asset_fetch_status,
+    );
+    r.add(
+        "ContentProvider",
+        &["GetAssetFetchStatusChangedSignal"],
+        asset_fetch_status_signal,
+    );
     r.add("ParticleEmitter", &["Emit"], emit_particles);
 }
 
@@ -314,6 +325,19 @@ pub fn load_core_package(lua: &Lua, path: &Path) -> Result<()> {
     {
         tracing::warn!("ClientAppSettings.json: {err}");
     }
+    if let Some(dir) = path.parent() {
+        let eng = engine(lua);
+        let mut e = eng.lock();
+        if !e.content_overlays.iter().any(|p| p == dir) {
+            e.content_overlays.insert(0, dir.to_path_buf());
+        }
+    }
+    if let Some(dir) = path.parent()
+        && let Ok(text) = rbx_base::vfs::read_to_string(&dir.join("VERSION"))
+        && let Some(version) = text.lines().nth(1)
+    {
+        engine(lua).lock().client_version = version.trim().to_string();
+    }
     if let Some(dir) = path.parent()
         && let Ok(text) = rbx_base::vfs::read_to_string(&dir.join("EngineFlagDefaults.json"))
         && let Err(err) = engine(lua).lock().flags.load_engine_defaults_json(&text)
@@ -509,4 +533,50 @@ fn ensure_robloxgui(lua: &Lua) -> Result<InstanceId> {
         )?;
     }
     Ok(gui)
+}
+
+fn fetch_success(lua: &Lua) -> Result<Value> {
+    match crate::types::LEnumItem::by_name("AssetFetchStatus", "Success") {
+        Some(i) => crate::types::enum_item_value(lua, i),
+        None => Ok(Value::Nil),
+    }
+}
+
+fn preload_async(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let callback = match args.get(1) {
+        Some(Value::Function(f)) => Some(f.clone()),
+        _ => None,
+    };
+    if let (Some(Value::Table(list)), Some(cb)) = (args.first(), callback) {
+        for item in list.clone().sequence_values::<Value>() {
+            let item = item?;
+            let id = match &item {
+                Value::String(_) => item.clone(),
+                other => match crate::runtime::instance_from_value(lua, other) {
+                    Some(_) => Value::String(lua.create_string("")?),
+                    None => continue,
+                },
+            };
+            crate::runtime::spawn_function(
+                lua,
+                cb.clone(),
+                mlua::MultiValue::from_vec(vec![id, fetch_success(lua)?]),
+                crate::runtime::current_info(lua),
+            );
+        }
+    }
+    none()
+}
+
+fn asset_fetch_status(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    super::ret(lua, fetch_success(lua)?)
+}
+
+fn asset_fetch_status_signal(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let url = arg_string(args.first()).unwrap_or_default();
+    let signal = crate::signal::LSignal {
+        target: id,
+        event: crate::signal::filtered_event("AssetFetchStatusChanged", &url),
+    };
+    super::ret(lua, lua.create_userdata(signal)?)
 }

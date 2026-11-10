@@ -271,6 +271,47 @@ pub fn register(r: &mut Registry) {
         ret(lua, false)
     });
     r.add("RunService", &["BindToRenderStep"], bind_render_step);
+    r.add(
+        "RunService",
+        &["GetRobloxVersion", "GetCoreScriptVersion"],
+        |lua, _, _| {
+            let v = engine(lua).lock().client_version.clone();
+            super::ret(lua, v)
+        },
+    );
+    r.add("RunService", &["GetRobloxClientChannel"], |lua, _, _| {
+        super::ret(lua, "production")
+    });
+    r.add(
+        "RunService",
+        &["IsEdit", "IsTeamTest", "IsTeamCreateViewer"],
+        |lua, _, _| super::ret(lua, false),
+    );
+    r.add("RunService", &["SetRobloxGuiFocused"], |lua, _, args| {
+        engine(lua).lock().roblox_gui_focused = matches!(args.first(), Some(Value::Boolean(true)));
+        super::none()
+    });
+    r.add("RunService", &["GetRobloxGuiFocused"], |lua, _, _| {
+        let v = engine(lua).lock().roblox_gui_focused;
+        super::ret(lua, v)
+    });
+    r.add(
+        "RunService",
+        &["setThrottleFramerateEnabled"],
+        |lua, _, args| {
+            engine(lua).lock().throttle_framerate =
+                matches!(args.first(), Some(Value::Boolean(true)));
+            super::none()
+        },
+    );
+    r.add(
+        "RunService",
+        &["getThrottleFramerateEnabled"],
+        |lua, _, _| {
+            let v = engine(lua).lock().throttle_framerate;
+            super::ret(lua, v)
+        },
+    );
     r.add("RunService", &["UnbindFromRenderStep"], unbind_render_step);
     r.add("ScriptContext", &["SetTimeout"], set_timeout);
     r.add(

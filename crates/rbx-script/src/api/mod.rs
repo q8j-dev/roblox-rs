@@ -2,6 +2,7 @@ pub mod actions;
 pub mod animation;
 pub mod bindables;
 pub mod camera;
+pub mod client_services;
 pub mod core;
 pub mod flags;
 pub mod gui;
@@ -23,10 +24,12 @@ pub mod selection;
 pub mod services;
 pub mod sound;
 pub mod stats;
+pub mod styling;
 pub mod telemetry;
 pub mod terrain;
 pub mod test;
 pub mod tween;
+pub mod tween_service;
 pub mod user_input;
 pub mod verbs;
 
@@ -88,6 +91,9 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     ixp::register(&mut r);
     platform::register(&mut r);
     telemetry::register(&mut r);
+    tween_service::register(&mut r);
+    client_services::register(&mut r);
+    styling::register(&mut r);
     localization::register(&mut r);
     input::register(&mut r);
     actions::register(&mut r);
@@ -127,6 +133,12 @@ pub fn call(lua: &Lua, id: InstanceId, class: &str, name: &str, args: MultiValue
 }
 
 pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Result<Option<Value>> {
+    if class == "Tween" && name == "TweenInfo" {
+        return match tween_service::tween_info(lua, id) {
+            Some(info) => Ok(Some(Value::UserData(lua.create_userdata(info)?))),
+            None => Ok(Some(Value::Nil)),
+        };
+    }
     if class == "ContentProvider" && name == "BaseUrl" {
         let base = crate::runtime::engine(lua).lock().base_url.clone();
         let site = crate::api::http::site_base_url(&base);

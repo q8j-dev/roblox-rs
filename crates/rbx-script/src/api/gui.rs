@@ -9,6 +9,7 @@ use rbx_math::Vec2;
 use rustc_hash::{FxHashMap as HashMap, FxHashSet as HashSet};
 
 pub struct GuiState {
+    pub hidden_gui_types: HashSet<u32>,
     pub topbar_transparency: f32,
     pub core_gui_disabled: HashSet<u32>,
     pub keys: HashSet<String>,
@@ -26,6 +27,7 @@ pub struct GuiState {
 impl Default for GuiState {
     fn default() -> Self {
         GuiState {
+            hidden_gui_types: HashSet::default(),
             topbar_transparency: 0.5,
             core_gui_disabled: HashSet::default(),
             keys: HashSet::default(),
@@ -49,6 +51,56 @@ pub fn register(r: &mut Registry) {
     r.add("GuiService", &["SetTopbarInset"], set_topbar_inset);
     r.add("GuiService", &["GetInsetArea"], get_inset_area);
     r.add("DataModel", &["IsLoaded"], is_loaded);
+    r.add(
+        "GuiService",
+        &["GetNotificationTypeList"],
+        notification_types,
+    );
+    r.add(
+        "GuiService",
+        &[
+            "BroadcastNotification",
+            "CloseInspectMenu",
+            "SetPurchasePromptIsShown",
+            "SetEmotesMenuOpen",
+            "ClearError",
+        ],
+        ignore,
+    );
+    r.add(
+        "GuiService",
+        &["DismissNotification", "GetInspectMenuEnabled"],
+        no_value,
+    );
+    r.add("GuiService", &["GetGuiIsVisible"], gui_is_visible);
+    r.add(
+        "GuiService",
+        &[
+            "ToggleGuiIsVisibleForCaptures",
+            "ToggleGuiIsVisibleIfAllowed",
+        ],
+        toggle_gui_visible,
+    );
+    r.add("GuiService", &["GetSafeZoneOffsets"], safe_zone_offsets);
+    r.add("GuiService", &["GetResolutionScale"], one_int);
+    r.add("GuiService", &["GetRawScreenScale"], one_int);
+    r.add(
+        "GuiService",
+        &["GetEffectiveUIScaleHundredths", "GetAutoUIScaleHundredths"],
+        hundred,
+    );
+    r.add("GuiService", &["SetUIScaleMultiplier"], ignore);
+    r.add(
+        "GuiService",
+        &["GetHardwareSafeViewport"],
+        get_screen_resolution,
+    );
+    r.add(
+        "GuiService",
+        &["GetErrorCode", "GetErrorType"],
+        connection_ok,
+    );
+    r.add("AdService", &["GetAdTeleportInfo"], no_ad_teleport);
     r.add(
         "GuiService",
         &["GetScreenResolution"],
@@ -222,8 +274,7 @@ fn set_topbar_inset(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
     engine(lua)
         .lock()
         .dm
-        .set(id, "TopbarInset", Variant::Rect2D(rect))
-        .map_err(|e| rt(e.to_string()))?;
+        .set_unchecked(id, "TopbarInset", Variant::Rect2D(rect));
     none()
 }
 
@@ -589,4 +640,108 @@ pub fn sync_view(e: &mut crate::runtime::Engine) {
         e.dm.notify_changed(id, "AbsoluteSize");
         e.dm.notify_changed(id, "AbsolutePosition");
     }
+}
+
+const NOTIFICATION_TYPES: &[(&str, i32)] = &[
+    ("VIEW_PROFILE", 0),
+    ("REPORT_ABUSE", 1),
+    ("VIEW_GAME_DETAILS", 2),
+    ("SHOW_TAB_BAR", 3),
+    ("HIDE_TAB_BAR", 4),
+    ("UNREAD_COUNT", 5),
+    ("PRIVACY_SETTINGS", 6),
+    ("BACK_BUTTON_NOT_CONSUMED", 7),
+    ("PURCHASE_ROBUX", 8),
+    ("VIEW_NOTIFICATIONS", 9),
+    ("APP_READY", 10),
+    ("CLOSE_MODAL", 11),
+    ("VIEW_GAME_DETAILS_ANIMATED", 12),
+    ("SEARCH_GAMES", 15),
+    ("GAMES_SEE_ALL", 16),
+    ("ACTION_LOG_OUT", 17),
+    ("LAUNCH_CONVERSATION", 18),
+    ("UNIVERSAL_FRIENDS", 19),
+    ("OPEN_CUSTOM_WEBVIEW", 20),
+    ("SET_STATUS_BAR_STYLE", 22),
+    ("OPEN_YOUTUBE_VIDEO", 23),
+    ("DID_LOG_OUT", 24),
+    ("OPEN_BUILDERS_CLUB", 25),
+    ("ACTION_LOG_IN", 26),
+    ("OPEN_SETTINGS_WEBVIEW", 27),
+    ("DID_LOG_IN", 28),
+    ("OPEN_CAPTCHA_VIEW", 29),
+    ("DID_SIGN_UP", 30),
+    ("LUA_UNAUTHORIZED_LOG_OUT", 31),
+    ("NATIVE_SHARE", 32),
+    ("SDK_SHARE", 33),
+    ("SDK_OPEN_URL", 34),
+    ("NATIVE_EXIT", 35),
+    ("RESTART_LUA_APP", 36),
+    ("IDENTITY_VERIFICATION", 38),
+    ("SCAN_QR_CODE", 39),
+    ("SHOW_FRIEND_QR_CODE", 40),
+    ("DID_SWITCH_ACCOUNT", 42),
+    ("GAME_STREAMING_STATUS_CHANGED", 43),
+    ("POST_PURCHASE", 44),
+];
+
+fn notification_types(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let t = lua.create_table()?;
+    for (k, v) in NOTIFICATION_TYPES {
+        t.set(*k, *v)?;
+    }
+    ret(lua, t)
+}
+
+fn no_value(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    ret(lua, false)
+}
+
+fn gui_type(lua: &Lua, args: &[Value]) -> u32 {
+    args.first()
+        .and_then(|v| enum_value(lua, v, "GuiType").ok())
+        .unwrap_or(0)
+}
+
+fn gui_is_visible(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let t = gui_type(lua, args);
+    let hidden = engine(lua).lock().gui.hidden_gui_types.contains(&t);
+    ret(lua, !hidden)
+}
+
+fn toggle_gui_visible(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let t = gui_type(lua, args);
+    let eng = engine(lua);
+    let mut e = eng.lock();
+    if !e.gui.hidden_gui_types.remove(&t) {
+        e.gui.hidden_gui_types.insert(t);
+    }
+    none()
+}
+
+fn safe_zone_offsets(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let t = lua.create_table()?;
+    for k in ["top", "bottom", "left", "right"] {
+        t.set(k, 0)?;
+    }
+    ret(lua, t)
+}
+
+fn one_int(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    ret(lua, 1)
+}
+
+fn hundred(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    ret(lua, 100)
+}
+
+fn connection_ok(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    match crate::types::LEnumItem::by_name("ConnectionError", "OK") {
+        Some(i) => ret(lua, crate::types::enum_item_value(lua, i)?),
+        None => ret(lua, 0),
+    }
+}
+
+fn no_ad_teleport(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    ret(lua, (0, 0))
 }

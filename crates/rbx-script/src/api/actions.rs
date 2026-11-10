@@ -24,6 +24,7 @@ pub struct Action {
     pub description: Option<String>,
     pub image: Option<String>,
     pub position: Option<rbx_math::UDim2>,
+    pub priority: i32,
 }
 
 #[derive(Default)]
@@ -43,6 +44,21 @@ pub fn register(r: &mut Registry) {
         bind_core_action,
     );
     r.add("ContextActionService", &["UnbindAction"], unbind_action);
+    r.add(
+        "ContextActionService",
+        &["BindActionAtPriority"],
+        bind_action_at_priority,
+    );
+    r.add(
+        "ContextActionService",
+        &["BindCoreActionAtPriority"],
+        bind_core_action_at_priority,
+    );
+    r.add(
+        "ContextActionService",
+        &["GetAllBoundCoreActionInfo"],
+        get_all_bound_core_action_info,
+    );
     r.add(
         "ContextActionService",
         &["UnbindCoreAction"],
@@ -183,13 +199,25 @@ fn remove(lua: &Lua, id: InstanceId, name: &str, core: bool) -> Result<()> {
 }
 
 fn bind(lua: &Lua, id: InstanceId, args: &[Value], core: bool) -> Result<Ret> {
+    bind_at(lua, id, args, core, None)
+}
+
+fn bind_at(
+    lua: &Lua,
+    id: InstanceId,
+    args: &[Value],
+    core: bool,
+    priority: Option<i32>,
+) -> Result<Ret> {
     let name = arg_string(args.first()).ok_or_else(|| rt("Argument 1 missing or nil"))?;
     let func = match args.get(1) {
         Some(Value::Function(f)) => f.clone(),
         _ => return Err(rt("Argument 2 missing or nil")),
     };
     let touch = crate::convert::arg_bool(args.get(2));
-    let inputs = parse_inputs(lua, args.get(3..).unwrap_or(&[]));
+    let first_input = if priority.is_some() { 4 } else { 3 };
+    let inputs = parse_inputs(lua, args.get(first_input..).unwrap_or(&[]));
+    let priority = priority.unwrap_or(2000);
     remove(lua, id, &name, core)?;
     let action = Action {
         name: name.clone(),
@@ -201,6 +229,7 @@ fn bind(lua: &Lua, id: InstanceId, args: &[Value], core: bool) -> Result<Ret> {
         description: None,
         image: None,
         position: None,
+        priority,
     };
     let info = info_table(lua, &action, 0)?;
     with_state(lua, |s| s.actions.actions.push(action));
@@ -223,6 +252,43 @@ fn bind_action(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
 
 fn bind_core_action(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
     bind(lua, id, args, true)
+}
+
+fn priority_arg(lua: &Lua, args: &[Value]) -> i32 {
+    match args.get(3) {
+        Some(v) => crate::convert::arg_number(Some(v))
+            .map(|n| n as i32)
+            .or_else(|| {
+                crate::convert::enum_value(lua, v, "ContextActionPriority")
+                    .ok()
+                    .map(|n| n as i32)
+            })
+            .unwrap_or(2000),
+        None => 2000,
+    }
+}
+
+fn bind_action_at_priority(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let p = priority_arg(lua, args);
+    bind_at(lua, id, args, false, Some(p))
+}
+
+fn bind_core_action_at_priority(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let p = priority_arg(lua, args);
+    bind_at(lua, id, args, true, Some(p))
+}
+
+fn get_all_bound_core_action_info(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let out = lua.create_table()?;
+    with_state(lua, |s| -> Result<()> {
+        for (i, a) in s.actions.actions.iter().enumerate() {
+            if a.core {
+                out.set(a.name.as_str(), info_table(lua, a, i)?)?;
+            }
+        }
+        Ok(())
+    })?;
+    ret(lua, out)
 }
 
 fn unbind_action(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
@@ -433,14 +499,16 @@ pub fn dispatch(
         s.actions
             .actions
             .iter()
-            .rev()
-            .filter(|a| a.core == core)
-            .find_map(|a| {
-                binding_matches(&a.inputs, input, input_type).and_then(|sink| {
-                    lua.registry_value::<Function>(&a.func)
-                        .ok()
-                        .map(|f| (a.name.clone(), f, sink))
-                })
+            .enumerate()
+            .filter(|(_, a)| a.core == core)
+            .filter_map(|(i, a)| {
+                binding_matches(&a.inputs, input, input_type).map(|sink| (i, a, sink))
+            })
+            .max_by_key(|(i, a, _)| (a.priority, *i))
+            .and_then(|(_, a, sink)| {
+                lua.registry_value::<Function>(&a.func)
+                    .ok()
+                    .map(|f| (a.name.clone(), f, sink))
             })
     });
     let Some((name, func, sink)) = target else {

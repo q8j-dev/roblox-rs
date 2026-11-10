@@ -1055,3 +1055,39 @@ class WorldModel | Instance.new("WorldModel") at 2 call sites (docs/inexperience
 class UITableLayout | class name string in module string tables (docs/inexperience/backport-list.md)
 class CanvasGroup | class name string in module string tables (docs/inexperience/backport-list.md)
 class LinkingService | GetService("LinkingService") through MockableProxyServices line 14 (service name held in a table)
+enum AdTeleportMethod | GETTABLEKS AdTeleportMethod at 1 sites (enum accessed as Enum.AdTeleportMethod)
+enum AssetRepresentation | GETTABLEKS AssetRepresentation at 2 sites (enum accessed as Enum.AssetRepresentation)
+enum AudioSortType | GETTABLEKS AudioSortType at 1 sites (enum accessed as Enum.AudioSortType)
+enum CameraType | GETTABLEKS CameraType at 35 sites (enum accessed as Enum.CameraType)
+enum ChatColor | GETTABLEKS ChatColor at 24 sites (enum accessed as Enum.ChatColor)
+enum CloseReason | GETTABLEKS CloseReason at 5 sites (enum accessed as Enum.CloseReason)
+enum CollisionFidelity | GETTABLEKS CollisionFidelity at 2 sites (enum accessed as Enum.CollisionFidelity)
+enum DevTouchMovementMode | GETTABLEKS DevTouchMovementMode at 3 sites (enum accessed as Enum.DevTouchMovementMode)
+enum DiscountType | GETTABLEKS DiscountType at 17 sites (enum accessed as Enum.DiscountType)
+enum ExperienceStateCaptureSelectionMode | GETTABLEKS ExperienceStateCaptureSelectionMode at 2 sites (enum accessed as Enum.ExperienceStateCaptureSelectionMode)
+enum FeedbackType | GETTABLEKS FeedbackType at 2 sites (enum accessed as Enum.FeedbackType)
+enum FieldOfViewMode | GETTABLEKS FieldOfViewMode at 8 sites (enum accessed as Enum.FieldOfViewMode)
+enum FilterType | GETTABLEKS FilterType at 5 sites (enum accessed as Enum.FilterType)
+enum GroupMembershipStatus | GETTABLEKS GroupMembershipStatus at 6 sites (enum accessed as Enum.GroupMembershipStatus)
+enum ListenerLocation | GETTABLEKS ListenerLocation at 14 sites (enum accessed as Enum.ListenerLocation)
+enum LocationType | GETTABLEKS LocationType at 2 sites (enum accessed as Enum.LocationType)
+enum MeshType | GETTABLEKS MeshType at 3 sites (enum accessed as Enum.MeshType)
+enum NetworkStatus | GETTABLEKS NetworkStatus at 58 sites (enum accessed as Enum.NetworkStatus)
+enum PageType | GETTABLEKS PageType at 2 sites (enum accessed as Enum.PageType)
+enum PromptPublishAssetResult | GETTABLEKS PromptPublishAssetResult at 1 sites (enum accessed as Enum.PromptPublishAssetResult)
+enum RecommendationActionType | GETTABLEKS RecommendationActionType at 11 sites (enum accessed as Enum.RecommendationActionType)
+enum RigType | GETTABLEKS RigType at 37 sites (enum accessed as Enum.RigType)
+enum TextChannelDisplayMode | GETTABLEKS TextChannelDisplayMode at 1 sites (enum accessed as Enum.TextChannelDisplayMode)
+enum TouchCameraMovementMode | GETTABLEKS TouchCameraMovementMode at 6 sites (enum accessed as Enum.TouchCameraMovementMode)
+enum TrackerError | GETTABLEKS TrackerError at 4 sites (enum accessed as Enum.TrackerError)
+enum TrackerPromptEvent | GETTABLEKS TrackerPromptEvent at 1 sites (enum accessed as Enum.TrackerPromptEvent)
+enum UpdateState | GETTABLEKS UpdateState at 4 sites (enum accessed as Enum.UpdateState)
+enum WindowState | GETTABLEKS WindowState at 5 sites (enum accessed as Enum.WindowState)
+class StyleLink | Instance.new("StyleLink") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types
+class StyleDerive | Instance.new("StyleDerive") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types
+class StyleQuery | Instance.new("StyleQuery") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types
+class StyleBase | Instance.new("StyleBase") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types
+class HttpRequest | Instance.new("HttpRequest") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types
+class Tween | return type of TweenService.Create (107 call sites)
+class MeshContentProvider | GetService("MeshContentProvider") in Modules/DevConsole/Components/Memory/ClientMemoryData line 8
+member Instance.ResetPropertyToDefault | React-Roblox resets props bound to nil (Error applying initial props to DismissButton); not in methods.txt because it is called through a stored function

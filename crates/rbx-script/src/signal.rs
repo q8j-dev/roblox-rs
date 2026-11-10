@@ -137,6 +137,21 @@ pub fn register(lua: &Lua) -> Result<()> {
     let wrap: Function = lua.named_registry_value("rbx_wrap")?;
     let wait: Function = wrap.call(native)?;
     lua.set_named_registry_value("rbx_signal_wait", wait)?;
+    let once: Function = lua
+        .load(
+            "return function(signal, f)\n\
+               if type(f) ~= 'function' then error('Attempt to connect failed: Passed value is not a function', 2) end\n\
+               local c\n\
+               c = signal:Connect(function(...)\n\
+                 if c then c:Disconnect() end\n\
+                 return f(...)\n\
+               end)\n\
+               return c\n\
+             end",
+        )
+        .set_name("=signal")
+        .eval()?;
+    lua.set_named_registry_value("rbx_signal_once", once)?;
     Ok(())
 }
 
@@ -162,6 +177,7 @@ impl UserData for LSignal {
         m.add_meta_method(MetaMethod::Index, |lua, _, k: String| -> Result<Value> {
             match k.as_str() {
                 "wait" | "Wait" => lua.named_registry_value("rbx_signal_wait"),
+                "Once" => lua.named_registry_value("rbx_signal_once"),
                 _ => Err(not_member(&k)),
             }
         });

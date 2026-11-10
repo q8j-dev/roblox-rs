@@ -62,7 +62,11 @@ pub struct Engine {
     pub load_string_enabled: bool,
     pub hooks: Vec<Box<dyn EngineHook>>,
     pub content_root: Option<std::path::PathBuf>,
+    pub content_overlays: Vec<std::path::PathBuf>,
     pub core_package: Option<std::path::PathBuf>,
+    pub client_version: String,
+    pub roblox_gui_focused: bool,
+    pub throttle_framerate: bool,
     pub flags: crate::flags::FlagStore,
     pub asset_dirs: Vec<std::path::PathBuf>,
     pub test: crate::api::test::TestState,
@@ -191,7 +195,11 @@ impl Engine {
             load_string_enabled: false,
             hooks: Vec::new(),
             content_root: None,
+            content_overlays: Vec::new(),
             core_package: None,
+            client_version: String::new(),
+            roblox_gui_focused: false,
+            throttle_framerate: false,
             flags: Default::default(),
             asset_dirs: Vec::new(),
             test: Default::default(),
@@ -433,6 +441,9 @@ pub struct State {
     pub ipc: crate::api::ipc::IpcState,
     pub localization: crate::api::localization::LocalizationState,
     pub telemetry: crate::api::telemetry::TelemetryState,
+    pub tween_service: crate::api::tween_service::TweenServiceState,
+    pub client_services: crate::api::client_services::ClientServicesState,
+    pub styles: crate::api::styling::StyleState,
     pub core_sources: HashMap<InstanceId, String>,
     pub core_bytecode: HashMap<InstanceId, Arc<Vec<u8>>>,
     pub core_package_scripts: Option<HashMap<String, Arc<Vec<u8>>>>,
@@ -648,6 +659,9 @@ impl ScriptRuntime {
             ipc: Default::default(),
             localization: Default::default(),
             telemetry: Default::default(),
+            tween_service: Default::default(),
+            client_services: Default::default(),
+            styles: Default::default(),
             core_sources: HashMap::default(),
             core_bytecode: HashMap::default(),
             core_package_scripts: None,
@@ -983,6 +997,7 @@ impl ScriptRuntime {
             self.step_explosions();
             crate::api::animation::step(&self.lua);
             crate::api::tween::step(&self.lua, dt as f32);
+            crate::api::tween_service::step(&self.lua, dt);
             pump(&self.lua);
             self.step_physics(dt);
             let mut e = self.engine.lock();

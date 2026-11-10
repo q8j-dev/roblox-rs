@@ -420,7 +420,7 @@ fn owner_load(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
     load_animation_into(lua, animator, args)
 }
 
-fn playing_tracks(lua: &Lua, id: InstanceId, _: &[Value]) -> Result<Ret> {
+pub(crate) fn playing_tracks(lua: &Lua, id: InstanceId, _: &[Value]) -> Result<Ret> {
     let ids: Vec<InstanceId> = {
         let e = engine(lua);
         let e = e.lock();

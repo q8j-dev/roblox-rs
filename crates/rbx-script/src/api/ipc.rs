@@ -59,6 +59,8 @@ pub fn register(r: &mut Registry) {
     );
     r.add("MessageBusService", &["MakeRequest"], make_request);
     r.add("MessageBusService", &["GetLast"], get_last);
+    r.add("MessageBusService", &["Call"], no_handler);
+    r.add("MemStorageService", &["Call"], no_handler);
     r.add("MessageBusConnection", &["Disconnect"], disconnect);
     r.add("MemStorageConnection", &["Disconnect"], disconnect);
     r.add("MemStorageService", &["GetItem"], mem_get);
@@ -365,4 +367,8 @@ fn local_when_loaded(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> 
     let func = function_arg(args, 0)?;
     spawn_function(lua, func, MultiValue::new(), current_info(lua));
     none()
+}
+
+fn no_handler(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    ret(lua, Value::Nil)
 }

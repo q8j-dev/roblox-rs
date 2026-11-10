@@ -664,6 +664,30 @@ fn get_extents_size(lua: &Lua, id: InstanceId, _: &[Value]) -> Result<Ret> {
     ret(lua, LVector3(hi - lo))
 }
 
+fn get_bounding_box(lua: &Lua, id: InstanceId, _: &[Value]) -> Result<Ret> {
+    let e = engine(lua);
+    let e = e.lock();
+    let mut loc = model_location_with(&e.dm, id, e.model_in_primary.get(&id).copied());
+    let mut bounds: Option<(Vec3, Vec3)> = None;
+    for d in e.dm.descendants(id) {
+        if e.dm.is_a(d, "BasePart") {
+            let cf =
+                e.dm.get(d, "CFrame")
+                    .ok()
+                    .and_then(|v| v.as_cframe())
+                    .unwrap_or_default();
+            let (lo, hi) = express_extents(part_extents_local(&e.dm, d), &cf, &loc);
+            bounds = Some(match bounds {
+                Some((a, b)) => (a.min(lo), b.max(hi)),
+                None => (lo, hi),
+            });
+        }
+    }
+    let (lo, hi) = bounds.unwrap_or((Vec3::ZERO, Vec3::ZERO));
+    loc.translation = loc * ((lo + hi) * 0.5);
+    ret(lua, (crate::types::LCFrame(loc), LVector3(hi - lo)))
+}
+
 fn get_model_cframe(lua: &Lua, id: InstanceId, _: &[Value]) -> Result<Ret> {
     let e = engine(lua);
     let e = e.lock();
@@ -1039,6 +1063,7 @@ pub fn register(r: &mut Registry) {
         get_extents_size,
     );
     r.add("Model", &["GetModelCFrame"], get_model_cframe);
+    r.add("Model", &["GetBoundingBox"], get_bounding_box);
     r.add("Model", &["GetPrimaryPartCFrame"], get_primary_part_cframe);
     r.add("Model", &["SetPrimaryPartCFrame"], set_primary_part_cframe);
     r.add("Model", &["TranslateBy"], translate_by);

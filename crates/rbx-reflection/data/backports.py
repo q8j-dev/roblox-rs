@@ -5,7 +5,15 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 
 PRIMITIVES = {"bool", "int", "int64", "float", "double", "string"}
-DATATYPE_ALIASES = {"ContentId": "Content", "Content": "Content", "OptionalCoordinateFrame": "OptionalCoordinateFrame"}
+DATATYPE_ALIASES = {
+    "ContentId": "Content",
+    "Content": "Content",
+    "OptionalCoordinateFrame": "OptionalCoordinateFrame",
+    "Rect": "Rect2D",
+    "SharedString": "BinaryString",
+    "NetAssetRef": "BinaryString",
+    "Color3uint8": "Color3",
+}
 
 
 def type_name(t):

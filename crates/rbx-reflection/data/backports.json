@@ -17482,6 +17482,20 @@
      "params": [],
      "return": "Array",
      "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "React-Roblox resets props bound to nil (Error applying initial props to DismissButton); not in methods.txt because it is called through a stored function",
+     "name": "ResetPropertyToDefault",
+     "params": [
+      {
+       "default": null,
+       "name": "property",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": null
     }
    ],
    "name": "Instance",
@@ -20069,7 +20083,7 @@
      "name": "ClippedRect",
      "read_only": true,
      "security": "RobloxScript",
-     "type": "Rect"
+     "type": "Rect2D"
     },
     {
      "category": "Debugging",
@@ -20091,7 +20105,7 @@
      "name": "RawRect2D",
      "read_only": true,
      "security": "RobloxScript",
-     "type": "Rect"
+     "type": "Rect2D"
     },
     {
      "category": "Localization",
@@ -20416,7 +20430,7 @@
      "name": "SelectionRect2D",
      "read_only": true,
      "security": "RobloxScript",
-     "type": "Rect"
+     "type": "Rect2D"
     }
    ],
    "security": null,
@@ -20713,7 +20727,7 @@
        "type": "Enum:ScreenInsets"
       }
      ],
-     "return": "Rect",
+     "return": "Rect2D",
      "security": null
     },
     {
@@ -20910,7 +20924,7 @@
       {
        "default": null,
        "name": "topbarInset",
-       "type": "Rect"
+       "type": "Rect2D"
       }
      ],
      "return": "void",
@@ -21014,7 +21028,7 @@
      "name": "TopbarInset",
      "read_only": true,
      "security": null,
-     "type": "Rect"
+     "type": "Rect2D"
     },
     {
      "category": "Data",
@@ -37217,7 +37231,7 @@
      "evidence": "Instance.new(\"Path2D\") at 4 call sites (docs/inexperience/created.txt)",
      "name": "GetBoundingRect",
      "params": [],
-     "return": "Rect",
+     "return": "Rect2D",
      "security": null
     },
     {
@@ -37772,7 +37786,7 @@
      "security": null
     }
    ],
-   "evidence": "superclass of StyleRule",
+   "evidence": "Instance.new(\"StyleBase\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
    "flags": [],
    "functions": [
     {
@@ -41174,6 +41188,415 @@
      "security": "RobloxScript"
     }
    ]
+  },
+  {
+   "callbacks": [],
+   "creatable": true,
+   "events": [],
+   "evidence": "Instance.new(\"StyleLink\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+   "flags": [],
+   "functions": [],
+   "name": "StyleLink",
+   "properties": [
+    {
+     "category": "Data",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleLink\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 31,
+     "getter": null,
+     "name": "StyleSheet",
+     "read_only": false,
+     "security": null,
+     "type": "Instance:StyleSheet"
+    }
+   ],
+   "security": null,
+   "service": false,
+   "superclass": "Instance",
+   "yield_functions": []
+  },
+  {
+   "callbacks": [],
+   "creatable": true,
+   "events": [],
+   "evidence": "Instance.new(\"StyleDerive\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+   "flags": [],
+   "functions": [],
+   "name": "StyleDerive",
+   "properties": [
+    {
+     "category": "Data",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleDerive\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 6,
+     "getter": null,
+     "name": "Index",
+     "read_only": false,
+     "security": null,
+     "type": "int"
+    },
+    {
+     "category": "Data",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleDerive\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 31,
+     "getter": null,
+     "name": "Priority",
+     "read_only": false,
+     "security": null,
+     "type": "int"
+    },
+    {
+     "category": "Data",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleDerive\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 31,
+     "getter": null,
+     "name": "StyleSheet",
+     "read_only": false,
+     "security": null,
+     "type": "Instance:StyleSheet"
+    }
+   ],
+   "security": null,
+   "service": false,
+   "superclass": "Instance",
+   "yield_functions": []
+  },
+  {
+   "callbacks": [],
+   "creatable": true,
+   "events": [],
+   "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+   "flags": [],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "name": "GetCondition",
+     "params": [
+      {
+       "default": null,
+       "name": "name",
+       "type": "string"
+      }
+     ],
+     "return": "Variant",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "name": "GetConditions",
+     "params": [],
+     "return": "Dictionary",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "name": "SetCondition",
+     "params": [
+      {
+       "default": null,
+       "name": "name",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "value",
+       "type": "Variant"
+      }
+     ],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "name": "SetConditions",
+     "params": [
+      {
+       "default": null,
+       "name": "conditions",
+       "type": "Dictionary"
+      }
+     ],
+     "return": "void",
+     "security": null
+    }
+   ],
+   "name": "StyleQuery",
+   "properties": [
+    {
+     "category": "Conditions",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 1,
+     "getter": null,
+     "name": "AspectRatioRange",
+     "read_only": false,
+     "security": "Roblox",
+     "type": "NumberRange"
+    },
+    {
+     "category": "Data",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 14,
+     "getter": null,
+     "name": "ConditionsSerialize",
+     "read_only": false,
+     "security": "Roblox",
+     "type": "BinaryString"
+    },
+    {
+     "category": "Behavior",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 25,
+     "getter": null,
+     "name": "IsActive",
+     "read_only": true,
+     "security": null,
+     "type": "bool"
+    },
+    {
+     "category": "Conditions",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 1,
+     "getter": null,
+     "name": "MaxSize",
+     "read_only": false,
+     "security": "Roblox",
+     "type": "Vector2"
+    },
+    {
+     "category": "Conditions",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 1,
+     "getter": null,
+     "name": "MinSize",
+     "read_only": false,
+     "security": "Roblox",
+     "type": "Vector2"
+    },
+    {
+     "category": "Conditions",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 1,
+     "getter": null,
+     "name": "PreferredInput",
+     "read_only": false,
+     "security": "Roblox",
+     "type": "Enum:PreferredInput"
+    },
+    {
+     "category": "Conditions",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 1,
+     "getter": null,
+     "name": "PreferredTextSize",
+     "read_only": false,
+     "security": "Roblox",
+     "type": "Enum:PreferredTextSize"
+    },
+    {
+     "category": "Conditions",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 1,
+     "getter": null,
+     "name": "ReducedMotionEnabled",
+     "read_only": false,
+     "security": "Roblox",
+     "type": "bool"
+    },
+    {
+     "category": "Conditions",
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"StyleQuery\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "flags": 1,
+     "getter": null,
+     "name": "ViewportDisplaySize",
+     "read_only": false,
+     "security": "Roblox",
+     "type": "Enum:DisplaySize"
+    }
+   ],
+   "security": null,
+   "service": false,
+   "superclass": "Instance",
+   "yield_functions": []
+  },
+  {
+   "callbacks": [],
+   "creatable": false,
+   "events": [],
+   "evidence": "Instance.new(\"HttpRequest\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+   "flags": [],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"HttpRequest\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "name": "Cancel",
+     "params": [],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "Instance.new(\"HttpRequest\") through React host config (ReactRobloxHostConfig:337 creates StyleLink) and return types",
+     "name": "Start",
+     "params": [
+      {
+       "default": null,
+       "name": "callback",
+       "type": "Function"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    }
+   ],
+   "name": "HttpRequest",
+   "properties": [],
+   "security": null,
+   "service": false,
+   "superclass": "Instance",
+   "yield_functions": []
+  },
+  {
+   "callbacks": [],
+   "creatable": true,
+   "events": [],
+   "evidence": "return type of TweenService.Create (107 call sites)",
+   "flags": [],
+   "functions": [],
+   "name": "Tween",
+   "properties": [
+    {
+     "category": "Data",
+     "deprecated_by": null,
+     "evidence": "return type of TweenService.Create (107 call sites)",
+     "flags": 17,
+     "getter": null,
+     "name": "Instance",
+     "read_only": true,
+     "security": null,
+     "type": "Instance:Instance"
+    },
+    {
+     "category": "Data",
+     "deprecated_by": null,
+     "evidence": "return type of TweenService.Create (107 call sites)",
+     "flags": 17,
+     "getter": null,
+     "name": "TweenInfo",
+     "read_only": true,
+     "security": null,
+     "type": "TweenInfo"
+    }
+   ],
+   "security": null,
+   "service": false,
+   "superclass": "TweenBase",
+   "yield_functions": []
+  },
+  {
+   "callbacks": [],
+   "creatable": false,
+   "events": [
+    {
+     "deprecated_by": null,
+     "evidence": "superclass of Tween",
+     "kind": "RemoteEventDesc",
+     "name": "Completed",
+     "params": [
+      {
+       "default": null,
+       "name": "playbackState",
+       "type": "Enum:PlaybackState"
+      }
+     ],
+     "security": null
+    }
+   ],
+   "evidence": "superclass of Tween",
+   "flags": [],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "superclass of Tween",
+     "name": "Cancel",
+     "params": [],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "superclass of Tween",
+     "name": "Pause",
+     "params": [],
+     "return": "void",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "superclass of Tween",
+     "name": "Play",
+     "params": [],
+     "return": "void",
+     "security": null
+    }
+   ],
+   "name": "TweenBase",
+   "properties": [
+    {
+     "category": "Behavior",
+     "deprecated_by": null,
+     "evidence": "superclass of Tween",
+     "flags": 25,
+     "getter": null,
+     "name": "PlaybackState",
+     "read_only": true,
+     "security": null,
+     "type": "Enum:PlaybackState"
+    }
+   ],
+   "security": null,
+   "service": false,
+   "superclass": "Instance",
+   "yield_functions": []
+  },
+  {
+   "callbacks": [],
+   "creatable": false,
+   "events": [],
+   "evidence": "GetService(\"MeshContentProvider\") in Modules/DevConsole/Components/Memory/ClientMemoryData line 8",
+   "flags": [
+    "PERSISTENT_LOCAL"
+   ],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"MeshContentProvider\") in Modules/DevConsole/Components/Memory/ClientMemoryData line 8",
+     "name": "GetContentMemoryData",
+     "params": [],
+     "return": "Dictionary",
+     "security": "RobloxScript"
+    }
+   ],
+   "name": "MeshContentProvider",
+   "properties": [],
+   "security": null,
+   "service": true,
+   "superclass": "CacheableContentProvider",
+   "yield_functions": []
   }
  ],
  "enums": [
@@ -48393,6 +48816,706 @@
    ],
    "legacy": [],
    "name": "ZIndexBehavior"
+  },
+  {
+   "evidence": "GETTABLEKS AdTeleportMethod at 1 sites (enum accessed as Enum.AdTeleportMethod)",
+   "items": [
+    {
+     "name": "Undefined",
+     "value": 0
+    },
+    {
+     "name": "PortalForward",
+     "value": 1
+    },
+    {
+     "name": "InGameMenuBackButton",
+     "value": 2
+    },
+    {
+     "name": "UIBackButton",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "AdTeleportMethod"
+  },
+  {
+   "evidence": "GETTABLEKS AssetRepresentation at 2 sites (enum accessed as Enum.AssetRepresentation)",
+   "items": [
+    {
+     "name": "FullLength",
+     "value": 0
+    },
+    {
+     "name": "ShortPreview",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "AssetRepresentation"
+  },
+  {
+   "evidence": "GETTABLEKS AudioSortType at 1 sites (enum accessed as Enum.AudioSortType)",
+   "items": [
+    {
+     "name": "Relevance",
+     "value": 1
+    },
+    {
+     "name": "MostUsed",
+     "value": 2
+    },
+    {
+     "name": "Trending",
+     "value": 3
+    },
+    {
+     "name": "RecentlyCreated",
+     "value": 4
+    },
+    {
+     "name": "ShortestToLongest",
+     "value": 5
+    },
+    {
+     "name": "LongestToShortest",
+     "value": 6
+    }
+   ],
+   "legacy": [],
+   "name": "AudioSortType"
+  },
+  {
+   "evidence": "GETTABLEKS CameraType at 35 sites (enum accessed as Enum.CameraType)",
+   "items": [
+    {
+     "name": "Fixed",
+     "value": 0
+    },
+    {
+     "name": "Attach",
+     "value": 1
+    },
+    {
+     "name": "Watch",
+     "value": 2
+    },
+    {
+     "name": "Track",
+     "value": 3
+    },
+    {
+     "name": "Follow",
+     "value": 4
+    },
+    {
+     "name": "Custom",
+     "value": 5
+    },
+    {
+     "name": "Scriptable",
+     "value": 6
+    },
+    {
+     "name": "Orbital",
+     "value": 7
+    }
+   ],
+   "legacy": [],
+   "name": "CameraType"
+  },
+  {
+   "evidence": "GETTABLEKS ChatColor at 24 sites (enum accessed as Enum.ChatColor)",
+   "items": [
+    {
+     "name": "Blue",
+     "value": 0
+    },
+    {
+     "name": "Green",
+     "value": 1
+    },
+    {
+     "name": "Red",
+     "value": 2
+    },
+    {
+     "name": "White",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "ChatColor"
+  },
+  {
+   "evidence": "GETTABLEKS CloseReason at 5 sites (enum accessed as Enum.CloseReason)",
+   "items": [
+    {
+     "name": "Unknown",
+     "value": 0
+    },
+    {
+     "name": "RobloxMaintenance",
+     "value": 1
+    },
+    {
+     "name": "DeveloperShutdown",
+     "value": 2
+    },
+    {
+     "name": "DeveloperUpdate",
+     "value": 3
+    },
+    {
+     "name": "ServerEmpty",
+     "value": 4
+    },
+    {
+     "name": "OutOfMemory",
+     "value": 5
+    },
+    {
+     "name": "Moderation",
+     "value": 6
+    }
+   ],
+   "legacy": [],
+   "name": "CloseReason"
+  },
+  {
+   "evidence": "GETTABLEKS CollisionFidelity at 2 sites (enum accessed as Enum.CollisionFidelity)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "Hull",
+     "value": 1
+    },
+    {
+     "name": "Box",
+     "value": 2
+    },
+    {
+     "name": "PreciseConvexDecomposition",
+     "value": 3
+    },
+    {
+     "name": "Tunable",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "CollisionFidelity"
+  },
+  {
+   "evidence": "GETTABLEKS DevTouchMovementMode at 3 sites (enum accessed as Enum.DevTouchMovementMode)",
+   "items": [
+    {
+     "name": "UserChoice",
+     "value": 0
+    },
+    {
+     "name": "Thumbstick",
+     "value": 1
+    },
+    {
+     "name": "DPad",
+     "value": 2
+    },
+    {
+     "name": "Thumbpad",
+     "value": 3
+    },
+    {
+     "name": "ClickToMove",
+     "value": 4
+    },
+    {
+     "name": "Scriptable",
+     "value": 5
+    },
+    {
+     "name": "DynamicThumbstick",
+     "value": 6
+    }
+   ],
+   "legacy": [],
+   "name": "DevTouchMovementMode"
+  },
+  {
+   "evidence": "GETTABLEKS DiscountType at 17 sites (enum accessed as Enum.DiscountType)",
+   "items": [
+    {
+     "name": "Uncategorized",
+     "value": 0
+    }
+   ],
+   "legacy": [],
+   "name": "DiscountType"
+  },
+  {
+   "evidence": "GETTABLEKS ExperienceStateCaptureSelectionMode at 2 sites (enum accessed as Enum.ExperienceStateCaptureSelectionMode)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "SafetyHighlightMode",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "ExperienceStateCaptureSelectionMode"
+  },
+  {
+   "evidence": "GETTABLEKS FeedbackType at 2 sites (enum accessed as Enum.FeedbackType)",
+   "items": [
+    {
+     "name": "Feedback",
+     "value": 0
+    },
+    {
+     "name": "PlayerSupport",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "FeedbackType"
+  },
+  {
+   "evidence": "GETTABLEKS FieldOfViewMode at 8 sites (enum accessed as Enum.FieldOfViewMode)",
+   "items": [
+    {
+     "name": "Vertical",
+     "value": 0
+    },
+    {
+     "name": "Diagonal",
+     "value": 1
+    },
+    {
+     "name": "MaxAxis",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "FieldOfViewMode"
+  },
+  {
+   "evidence": "GETTABLEKS FilterType at 5 sites (enum accessed as Enum.FilterType)",
+   "items": [
+    {
+     "name": "Exclude",
+     "value": 0
+    },
+    {
+     "name": "Include",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "FilterType"
+  },
+  {
+   "evidence": "GETTABLEKS GroupMembershipStatus at 6 sites (enum accessed as Enum.GroupMembershipStatus)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Joined",
+     "value": 1
+    },
+    {
+     "name": "JoinRequestPending",
+     "value": 2
+    },
+    {
+     "name": "AlreadyMember",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "GroupMembershipStatus"
+  },
+  {
+   "evidence": "GETTABLEKS ListenerLocation at 14 sites (enum accessed as Enum.ListenerLocation)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "None",
+     "value": 1
+    },
+    {
+     "name": "Character",
+     "value": 2
+    },
+    {
+     "name": "Camera",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "ListenerLocation"
+  },
+  {
+   "evidence": "GETTABLEKS LocationType at 2 sites (enum accessed as Enum.LocationType)",
+   "items": [
+    {
+     "name": "Character",
+     "value": 0
+    },
+    {
+     "name": "Camera",
+     "value": 1
+    },
+    {
+     "name": "ObjectPosition",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "LocationType"
+  },
+  {
+   "evidence": "GETTABLEKS MeshType at 3 sites (enum accessed as Enum.MeshType)",
+   "items": [
+    {
+     "name": "Head",
+     "value": 0
+    },
+    {
+     "name": "Torso",
+     "value": 1
+    },
+    {
+     "name": "Wedge",
+     "value": 2
+    },
+    {
+     "name": "Sphere",
+     "value": 3
+    },
+    {
+     "name": "Cylinder",
+     "value": 4
+    },
+    {
+     "name": "FileMesh",
+     "value": 5
+    },
+    {
+     "name": "Brick",
+     "value": 6
+    },
+    {
+     "name": "Prism",
+     "value": 7
+    },
+    {
+     "name": "Pyramid",
+     "value": 8
+    },
+    {
+     "name": "ParallelRamp",
+     "value": 9
+    },
+    {
+     "name": "RightAngleRamp",
+     "value": 10
+    },
+    {
+     "name": "CornerWedge",
+     "value": 11
+    }
+   ],
+   "legacy": [],
+   "name": "MeshType"
+  },
+  {
+   "evidence": "GETTABLEKS NetworkStatus at 58 sites (enum accessed as Enum.NetworkStatus)",
+   "items": [
+    {
+     "name": "Unknown",
+     "value": 0
+    },
+    {
+     "name": "Connected",
+     "value": 1
+    },
+    {
+     "name": "Disconnected",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "NetworkStatus"
+  },
+  {
+   "evidence": "GETTABLEKS PageType at 2 sites (enum accessed as Enum.PageType)",
+   "items": [
+    {
+     "name": "AvatarEditor",
+     "value": 0
+    },
+    {
+     "name": "Party",
+     "value": 1
+    },
+    {
+     "name": "ExperienceDetail",
+     "value": 2
+    },
+    {
+     "name": "AvatarMarketplace",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "PageType"
+  },
+  {
+   "evidence": "GETTABLEKS PromptPublishAssetResult at 1 sites (enum accessed as Enum.PromptPublishAssetResult)",
+   "items": [
+    {
+     "name": "Success",
+     "value": 1
+    },
+    {
+     "name": "PermissionDenied",
+     "value": 2
+    },
+    {
+     "name": "Timeout",
+     "value": 3
+    },
+    {
+     "name": "UploadFailed",
+     "value": 4
+    },
+    {
+     "name": "NoUserInput",
+     "value": 5
+    },
+    {
+     "name": "UnknownFailure",
+     "value": 6
+    }
+   ],
+   "legacy": [],
+   "name": "PromptPublishAssetResult"
+  },
+  {
+   "evidence": "GETTABLEKS RecommendationActionType at 11 sites (enum accessed as Enum.RecommendationActionType)",
+   "items": [
+    {
+     "name": "AddReaction",
+     "value": 0
+    },
+    {
+     "name": "RemoveReaction",
+     "value": 1
+    },
+    {
+     "name": "Share",
+     "value": 2
+    },
+    {
+     "name": "Report",
+     "value": 3
+    },
+    {
+     "name": "Comment",
+     "value": 4
+    },
+    {
+     "name": "Play",
+     "value": 5
+    },
+    {
+     "name": "Purchase",
+     "value": 6
+    }
+   ],
+   "legacy": [],
+   "name": "RecommendationActionType"
+  },
+  {
+   "evidence": "GETTABLEKS RigType at 37 sites (enum accessed as Enum.RigType)",
+   "items": [
+    {
+     "name": "R15",
+     "value": 0
+    },
+    {
+     "name": "CustomHumanoid",
+     "value": 1
+    },
+    {
+     "name": "Custom",
+     "value": 2
+    },
+    {
+     "name": "None",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "RigType"
+  },
+  {
+   "evidence": "GETTABLEKS TextChannelDisplayMode at 1 sites (enum accessed as Enum.TextChannelDisplayMode)",
+   "items": [
+    {
+     "name": "AllTextChannels",
+     "value": 0
+    },
+    {
+     "name": "DefaultTextChannels",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "TextChannelDisplayMode"
+  },
+  {
+   "evidence": "GETTABLEKS TouchCameraMovementMode at 6 sites (enum accessed as Enum.TouchCameraMovementMode)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "Classic",
+     "value": 1
+    },
+    {
+     "name": "Follow",
+     "value": 2
+    },
+    {
+     "name": "Orbital",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "TouchCameraMovementMode"
+  },
+  {
+   "evidence": "GETTABLEKS TrackerError at 4 sites (enum accessed as Enum.TrackerError)",
+   "items": [
+    {
+     "name": "Ok",
+     "value": 0
+    },
+    {
+     "name": "NoService",
+     "value": 1
+    },
+    {
+     "name": "InitFailed",
+     "value": 2
+    },
+    {
+     "name": "NoVideo",
+     "value": 3
+    },
+    {
+     "name": "VideoError",
+     "value": 4
+    },
+    {
+     "name": "VideoNoPermission",
+     "value": 5
+    },
+    {
+     "name": "VideoUnsupported",
+     "value": 6
+    },
+    {
+     "name": "NoAudio",
+     "value": 7
+    },
+    {
+     "name": "AudioError",
+     "value": 8
+    },
+    {
+     "name": "AudioNoPermission",
+     "value": 9
+    },
+    {
+     "name": "UnsupportedDevice",
+     "value": 10
+    }
+   ],
+   "legacy": [],
+   "name": "TrackerError"
+  },
+  {
+   "evidence": "GETTABLEKS TrackerPromptEvent at 1 sites (enum accessed as Enum.TrackerPromptEvent)",
+   "items": [
+    {
+     "name": "LODCameraRecommendDisable",
+     "value": 0
+    }
+   ],
+   "legacy": [],
+   "name": "TrackerPromptEvent"
+  },
+  {
+   "evidence": "GETTABLEKS UpdateState at 4 sites (enum accessed as Enum.UpdateState)",
+   "items": [
+    {
+     "name": "UpdateNotAvailable",
+     "value": 0
+    },
+    {
+     "name": "UpdateAvailable",
+     "value": 1
+    },
+    {
+     "name": "UpdateInProgress",
+     "value": 2
+    },
+    {
+     "name": "UpdateReady",
+     "value": 3
+    },
+    {
+     "name": "UpdateFailed",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "UpdateState"
+  },
+  {
+   "evidence": "GETTABLEKS WindowState at 5 sites (enum accessed as Enum.WindowState)",
+   "items": [
+    {
+     "name": "Normal",
+     "value": 0
+    },
+    {
+     "name": "Minimized",
+     "value": 1
+    },
+    {
+     "name": "Maximized",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "WindowState"
   }
  ],
  "source": "full-api-dump-67c8b1dedbb74fed.json"

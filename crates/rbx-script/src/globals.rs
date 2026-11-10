@@ -108,6 +108,16 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
         ))?;
     co.raw_set("wrap", wrap_co)?;
     g.set("coroutine", co)?;
+    let base_debug: Table = base.get("debug")?;
+    let dbg = lua.create_table()?;
+    for pair in base_debug.pairs::<Value, Value>() {
+        let (k, v) = pair?;
+        dbg.raw_set(k, v)?;
+    }
+    let marker = lua.create_function(|_, _args: MultiValue| Ok(()))?;
+    dbg.raw_set("profilebegin", marker.clone())?;
+    dbg.raw_set("profileend", marker)?;
+    g.set("debug", dbg)?;
 
     let os: Table = base.get("os")?;
     let safe_os = lua.create_table()?;

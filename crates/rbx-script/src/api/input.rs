@@ -54,6 +54,27 @@ pub fn register(r: &mut Registry) {
         ignore,
     );
     r.add("UserInputService", &["GetUserCFrame"], get_user_cframe);
+    r.add("UserInputService", &["GetDeviceType"], device_type);
+    r.add("UserInputService", &["GetDeviceLevel"], device_level);
+    r.add("UserInputService", &["GetMouseLocation"], mouse_location);
+    r.add("UserInputService", &["GetMouseDelta"], mouse_delta);
+    r.add("UserInputService", &["IsGamepadButtonDown"], no);
+    r.add(
+        "UserInputService",
+        &["IsMouseButtonPressed"],
+        mouse_button_pressed,
+    );
+    r.add("UserInputService", &["GetMouseButtonsPressed"], empty_table);
+    r.add(
+        "UserInputService",
+        &["GetStringForKeyCode"],
+        string_for_key_code,
+    );
+    r.add(
+        "UserInputService",
+        &["GetImageForKeyCode"],
+        image_for_key_code,
+    );
     r.add(
         "UserInputService",
         &[
@@ -208,4 +229,67 @@ fn is_user_feature_enabled(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result
     let name = arg_string(args.first()).unwrap_or_default();
     let on = rbx_base::flag_value(&name).is_some_and(|v| v.eq_ignore_ascii_case("true"));
     ret(lua, on)
+}
+
+fn enum_ret(lua: &Lua, name: &str, item: &str) -> Result<Ret> {
+    match crate::types::LEnumItem::by_name(name, item) {
+        Some(i) => ret(lua, crate::types::enum_item_value(lua, i)?),
+        None => ret(lua, Value::Nil),
+    }
+}
+
+fn device_type(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let touch = engine(lua).lock().input.pointer.touch_enabled;
+    enum_ret(lua, "DeviceType", if touch { "Phone" } else { "Desktop" })
+}
+
+fn device_level(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    enum_ret(lua, "DeviceLevel", "High")
+}
+
+fn mouse_location(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let p = engine(lua).lock().input.pointer.position;
+    ret(lua, crate::types::LVector2(p))
+}
+
+fn mouse_delta(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    ret(lua, crate::types::LVector2(rbx_math::Vec2::ZERO))
+}
+
+fn mouse_button_pressed(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let button = args
+        .first()
+        .and_then(|v| enum_value(lua, v, "UserInputType").ok())
+        .unwrap_or(u32::MAX);
+    let down = engine(lua)
+        .lock()
+        .input
+        .pointer
+        .pressed
+        .contains_key(&button);
+    ret(lua, down)
+}
+
+fn string_for_key_code(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let code = args
+        .first()
+        .and_then(|v| enum_value(lua, v, "KeyCode").ok())
+        .unwrap_or(0);
+    let text = match code {
+        97..=122 => ((code as u8) - 32) as char,
+        48..=57 => code as u8 as char,
+        _ => {
+            let name = rbx_reflection::database()
+                .enum_desc("KeyCode")
+                .and_then(|e| e.name_of(code))
+                .unwrap_or("")
+                .to_string();
+            return ret(lua, name);
+        }
+    };
+    ret(lua, text.to_string())
+}
+
+fn image_for_key_code(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    ret(lua, "")
 }

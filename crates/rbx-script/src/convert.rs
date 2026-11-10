@@ -370,6 +370,12 @@ pub fn infer_variant(v: &Value) -> Option<Variant> {
                 Variant::NumberSequence(x.0.clone())
             } else if let Ok(x) = ud.borrow::<LColorSequence>() {
                 Variant::ColorSequence(x.0.clone())
+            } else if let Ok(x) = ud.borrow::<LEnumItem>() {
+                Variant::Enum(x.value)
+            } else if let Ok(x) = ud.borrow::<crate::datatypes::LFont>() {
+                Variant::Font(x.0.clone())
+            } else if let Ok(x) = ud.borrow::<crate::instance::LInstance>() {
+                Variant::Ref(Some(x.id))
             } else {
                 return None;
             }

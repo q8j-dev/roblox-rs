@@ -16,6 +16,7 @@ pub fn register(r: &mut Registry) {
     r.add("DataModel", &["SetFastFlagForTesting"], set_flag);
     r.add("DataModel", &["SetFastIntForTesting"], set_int);
     r.add("DataModel", &["GetEngineFeature"], engine_feature);
+    r.add("DataModel", &["SetFlagVersion"], set_version);
 }
 
 fn name_arg(args: &[Value]) -> Result<String> {
@@ -94,4 +95,11 @@ fn engine_feature(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
     let name = name_arg(args)?;
     let on = engine(lua).lock().flags.engine_feature(&name);
     ret(lua, on)
+}
+
+fn set_version(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let name = name_arg(args)?;
+    let version = crate::convert::arg_number(args.get(1)).unwrap_or(0.0) as i64;
+    engine(lua).lock().flags.set_version(&name, version);
+    super::none()
 }

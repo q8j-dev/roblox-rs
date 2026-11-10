@@ -75,6 +75,40 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
     g.set("_G", lua.create_table()?)?;
     g.set("shared", lua.create_table()?)?;
 
+    let base_co: Table = base.get("coroutine")?;
+    let co = lua.create_table()?;
+    for pair in base_co.pairs::<Value, Value>() {
+        let (k, v) = pair?;
+        co.raw_set(k, v)?;
+    }
+    let create = lua.create_function(|lua, f: Function| {
+        let t = lua.create_thread(f)?;
+        crate::runtime::record_thread_origin(lua, &t, &crate::runtime::current_info(lua))?;
+        Ok(t)
+    })?;
+    co.raw_set("create", create.clone())?;
+    let wrap_co: Function = lua
+        .load(
+            "local create, resume, pack, unpack = ...\n\
+             return function(f)\n\
+               local co = create(f)\n\
+               return function(...)\n\
+                 local r = pack(resume(co, ...))\n\
+                 if not r[1] then error(r[2], 0) end\n\
+                 return unpack(r, 2, r.n)\n\
+               end\n\
+             end",
+        )
+        .set_name("=coroutine")
+        .call((
+            create,
+            base_co.get::<Function>("resume")?,
+            base.get::<Table>("table")?.get::<Function>("pack")?,
+            base.get::<Table>("table")?.get::<Function>("unpack")?,
+        ))?;
+    co.raw_set("wrap", wrap_co)?;
+    g.set("coroutine", co)?;
+
     let os: Table = base.get("os")?;
     let safe_os = lua.create_table()?;
     for name in ["time", "clock", "difftime", "date"] {
@@ -293,6 +327,7 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
     )?;
 
     register_constructors(lua, &g)?;
+    crate::datatypes::register(lua, &g)?;
     crate::signal::register(lua)?;
     let wrapper: Function = lua.named_registry_value("rbx_wrap")?;
     for name in [
@@ -317,6 +352,13 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
         "ColorSequence",
         "ColorSequenceKeypoint",
         "PhysicalProperties",
+        "Font",
+        "Path2DControlPoint",
+        "DateTime",
+        "TweenInfo",
+        "RaycastParams",
+        "Content",
+        "Random",
         "Instance",
     ] {
         if let Value::Table(t) = g.get::<Value>(name)? {

@@ -1122,6 +1122,26 @@ pub struct LEnumItem {
 }
 from_lua_userdata!(LEnumItem, "EnumItem");
 
+pub fn enum_item_value(lua: &Lua, item: LEnumItem) -> Result<Value> {
+    let cache: Table = match lua.named_registry_value::<Value>("rbx_enum_items")? {
+        Value::Table(t) => t,
+        _ => {
+            let t = lua.create_table()?;
+            lua.set_named_registry_value("rbx_enum_items", t.clone())?;
+            t
+        }
+    };
+    let key = format!("{}\0{}", item.enum_name, item.value);
+    match cache.raw_get::<Value>(key.as_str())? {
+        Value::Nil => {
+            let v = Value::UserData(lua.create_userdata(item)?);
+            cache.raw_set(key, v.clone())?;
+            Ok(v)
+        }
+        v => Ok(v),
+    }
+}
+
 impl LEnumItem {
     pub fn lookup(enum_name: &str, value: u32) -> Option<LEnumItem> {
         let e = database().enum_desc(enum_name)?;
@@ -1177,11 +1197,14 @@ impl UserData for LEnum {
                 for (i, item) in e.items.iter().enumerate() {
                     tbl.raw_set(
                         i + 1,
-                        LEnumItem {
-                            enum_name: e.name.as_str(),
-                            name: item.name.as_str(),
-                            value: item.value,
-                        },
+                        enum_item_value(
+                            lua,
+                            LEnumItem {
+                                enum_name: e.name.as_str(),
+                                name: item.name.as_str(),
+                                value: item.value,
+                            },
+                        )?,
                     )?;
                 }
             }
@@ -1207,7 +1230,7 @@ impl UserData for LEnum {
                 .ok_or_else(|| rt(format!("{name} is not a valid EnumItem")))?;
             let real = LEnumItem::lookup(t.0, item.value)
                 .ok_or_else(|| rt(format!("{name} is not a valid EnumItem")))?;
-            Ok(Value::UserData(lua.create_userdata(real)?))
+            enum_item_value(lua, real)
         });
     }
 }

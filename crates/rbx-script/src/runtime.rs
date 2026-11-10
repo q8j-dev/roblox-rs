@@ -430,6 +430,8 @@ pub struct State {
     pub pending_invokes: Vec<(InstanceId, String, Thread, Vec<Value>)>,
     pub remote: crate::api::remote::RemoteState,
     pub http: crate::api::http::HttpState,
+    pub ipc: crate::api::ipc::IpcState,
+    pub localization: crate::api::localization::LocalizationState,
     pub core_sources: HashMap<InstanceId, String>,
     pub core_bytecode: HashMap<InstanceId, Arc<Vec<u8>>>,
     pub core_package_scripts: Option<HashMap<String, Arc<Vec<u8>>>>,
@@ -497,18 +499,47 @@ pub fn thread_key(t: &Thread) -> usize {
     t.to_pointer() as usize
 }
 
+pub fn thread_origin(lua: &Lua, t: &Thread) -> Option<ThreadInfo> {
+    let origins: Table = lua.named_registry_value("rbx_thread_origin").ok()?;
+    let entry: Table = origins.raw_get(t.clone()).ok()?;
+    let level: i32 = entry.raw_get(1).ok()?;
+    let script: Option<f64> = entry.raw_get(2).ok()?;
+    Some(ThreadInfo {
+        script: script.and_then(|s| InstanceId::from_raw(s as u64)),
+        identity: Identity::from_level(level),
+    })
+}
+
+pub fn record_thread_origin(lua: &Lua, t: &Thread, info: &ThreadInfo) -> mlua::Result<()> {
+    let origins: Table = match lua.named_registry_value::<Value>("rbx_thread_origin")? {
+        Value::Table(t) => t,
+        _ => {
+            let t = lua.create_table()?;
+            let mt = lua.create_table()?;
+            mt.raw_set("__mode", "k")?;
+            t.set_metatable(Some(mt))?;
+            lua.set_named_registry_value("rbx_thread_origin", t.clone())?;
+            t
+        }
+    };
+    let entry = lua.create_table()?;
+    entry.raw_set(1, info.identity.level())?;
+    if let Some(s) = info.script {
+        entry.raw_set(2, s.raw() as f64)?;
+    }
+    origins.raw_set(t.clone(), entry)
+}
+
 pub fn current_info(lua: &Lua) -> ThreadInfo {
     let t = lua.current_thread();
-    with_state(lua, |s| {
-        s.threads
-            .get(&thread_key(&t))
-            .cloned()
-            .or_else(|| s.current.last().cloned())
-            .unwrap_or(ThreadInfo {
-                script: None,
-                identity: Identity::GameScript,
-            })
-    })
+    let known = with_state(lua, |s| s.threads.get(&thread_key(&t)).cloned());
+    known
+        .or_else(|| thread_origin(lua, &t))
+        .or_else(|| with_state(lua, |s| s.current.last().cloned()))
+        .unwrap_or(ThreadInfo {
+            script: None,
+            identity: Identity::GameScript,
+        })
 }
 
 pub fn current_identity(lua: &Lua) -> Identity {
@@ -613,6 +644,8 @@ impl ScriptRuntime {
             pending_invokes: Vec::new(),
             remote: Default::default(),
             http: Default::default(),
+            ipc: Default::default(),
+            localization: Default::default(),
             core_sources: HashMap::default(),
             core_bytecode: HashMap::default(),
             core_package_scripts: None,
@@ -1390,7 +1423,8 @@ pub fn resume_thread_result(
     if thread.status() != ThreadStatus::Resumable {
         return None;
     }
-    let info = with_state(lua, |s| s.threads.get(&thread_key(thread)).cloned());
+    let info = with_state(lua, |s| s.threads.get(&thread_key(thread)).cloned())
+        .or_else(|| thread_origin(lua, thread));
     if let Some(i) = &info
         && let Some(script) = i.script
     {

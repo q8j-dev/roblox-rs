@@ -155,7 +155,7 @@ pub fn from_remote(lua: &Lua, v: &RemoteValue) -> Result<Value> {
         RemoteValue::Value(Variant::Double(n)) => Value::Number(*n),
         RemoteValue::Value(v) => crate::convert::variant_to_lua(lua, v, None)?,
         RemoteValue::Enum { ty, value } => match LEnumItem::lookup(ty, *value) {
-            Some(item) => Value::UserData(lua.create_userdata(item)?),
+            Some(item) => crate::types::enum_item_value(lua, item)?,
             None => Value::Nil,
         },
         RemoteValue::Array(items) => {

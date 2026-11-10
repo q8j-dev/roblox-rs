@@ -328,7 +328,27 @@ pub fn load_core_package(lua: &Lua, path: &Path) -> Result<()> {
         }
     }
     let mut scripts: rustc_hash::FxHashMap<String, Arc<Vec<u8>>> = Default::default();
+    let mut tables = Vec::new();
     if let Some(folder) = child_named(&tree, root, "CoreScripts") {
+        let localization: Vec<usize> = tree.instances[folder]
+            .children
+            .iter()
+            .copied()
+            .filter(|&c| tree.instances[c].class == "LocalizationTable")
+            .collect();
+        if !localization.is_empty() {
+            let mut sub = tree.clone();
+            sub.roots = localization;
+            for &r in &sub.roots {
+                sub.instances[r].parent = None;
+            }
+            let loaded = engine(lua)
+                .lock()
+                .dm
+                .load_tree(&sub, None, Default::default())
+                .map_err(|err| rt(err.to_string()))?;
+            tables = loaded.0;
+        }
         for &c in &tree.instances[folder].children {
             if let (Some(b), Some(name)) = (
                 code.get(&c),
@@ -360,6 +380,7 @@ pub fn load_core_package(lua: &Lua, path: &Path) -> Result<()> {
     }
     with_state(lua, |s| {
         s.core_bytecode.extend(bytecode);
+        s.localization.core_tables = tables;
         s.core_package_scripts = Some(scripts);
     });
     Ok(())

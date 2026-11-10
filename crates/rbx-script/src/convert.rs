@@ -49,7 +49,7 @@ pub fn variant_to_lua(lua: &Lua, v: &Variant, ty: Option<&ValueType>) -> Result<
         Variant::NumberRange(x) => Value::UserData(lua.create_userdata(LNumberRange(*x))?),
         Variant::Enum(e) => match ty {
             Some(ValueType::Enum(name)) => match LEnumItem::lookup(name, *e) {
-                Some(item) => Value::UserData(lua.create_userdata(item)?),
+                Some(item) => crate::types::enum_item_value(lua, item)?,
                 None => Value::Number(*e as f64),
             },
             _ => Value::Number(*e as f64),
@@ -59,10 +59,12 @@ pub fn variant_to_lua(lua: &Lua, v: &Variant, ty: Option<&ValueType>) -> Result<
             None => Value::Nil,
         },
         Variant::OptionalCFrame(Some(x)) => Value::UserData(lua.create_userdata(LCFrame(*x))?),
-        Variant::OptionalCFrame(None)
-        | Variant::Font(_)
-        | Variant::UniqueId(_)
-        | Variant::SecurityCapabilities(_) => Value::Nil,
+        Variant::Font(f) => {
+            Value::UserData(lua.create_userdata(crate::datatypes::LFont(f.clone()))?)
+        }
+        Variant::OptionalCFrame(None) | Variant::UniqueId(_) | Variant::SecurityCapabilities(_) => {
+            Value::Nil
+        }
     })
 }
 
@@ -263,7 +265,12 @@ pub fn lua_to_variant(lua: &Lua, v: Value, ty: &ValueType) -> Result<Variant> {
                         .0,
                 )),
             },
-            VariantType::Font | VariantType::UniqueId | VariantType::SecurityCapabilities => {
+            VariantType::Font => Variant::Font(
+                crate::datatypes::LFont::from_lua(v.clone(), lua)
+                    .map_err(|_| bad(ty, &v))?
+                    .0,
+            ),
+            VariantType::UniqueId | VariantType::SecurityCapabilities => {
                 return Err(bad(ty, &v));
             }
         },

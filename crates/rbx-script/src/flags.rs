@@ -68,6 +68,7 @@ pub struct FlagStore {
     overrides: BTreeMap<String, serde_json::Value>,
     engine_features: BTreeMap<String, bool>,
     ixp: BTreeMap<String, serde_json::Map<String, serde_json::Value>>,
+    versions: BTreeMap<String, i64>,
     pub reads: BTreeMap<String, FlagRead>,
 }
 
@@ -170,6 +171,10 @@ impl FlagStore {
         old
     }
 
+    pub fn set_version(&mut self, name: &str, version: i64) {
+        self.versions.insert(bare(name).to_string(), version);
+    }
+
     pub fn engine_feature(&mut self, name: &str) -> bool {
         let on = self.engine_features.get(name).copied().unwrap_or(false);
         self.reads.insert(
@@ -180,6 +185,20 @@ impl FlagStore {
             },
         );
         on
+    }
+
+    pub fn register_layer(&mut self, layer: &str) {
+        let key = format!("IXP:{layer}");
+        if !self.reads.contains_key(&key) {
+            let vars = self.ixp.get(layer).cloned().unwrap_or_default();
+            self.reads.insert(
+                key,
+                FlagRead {
+                    default: None,
+                    value: serde_json::Value::Object(vars).to_string(),
+                },
+            );
+        }
     }
 
     pub fn ixp_layer(&mut self, layer: &str) -> serde_json::Map<String, serde_json::Value> {

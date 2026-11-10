@@ -15,6 +15,21 @@ pub enum Identity {
 }
 
 impl Identity {
+    pub fn from_level(level: i32) -> Identity {
+        match level {
+            0 => Identity::Anonymous,
+            1 => Identity::LocalGui,
+            3 => Identity::GameScriptInRobloxPlace,
+            4 => Identity::RobloxGameScript,
+            5 => Identity::CmdLine,
+            6 => Identity::StudioPlugin,
+            7 => Identity::Com,
+            8 => Identity::WebService,
+            9 => Identity::Replicator,
+            _ => Identity::GameScript,
+        }
+    }
+
     pub fn level(self) -> i32 {
         match self {
             Identity::Anonymous => 0,

@@ -28514,8 +28514,7285 @@
    "service": true,
    "superclass": "WorldRoot",
    "yield_functions": []
+  },
+  {
+   "callbacks": [],
+   "creatable": false,
+   "events": [],
+   "evidence": "return type of MessageBusService.Subscribe (22 call sites)",
+   "flags": [
+    "PERSISTENT_LOCAL"
+   ],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "return type of MessageBusService.Subscribe (22 call sites)",
+     "name": "Disconnect",
+     "params": [],
+     "return": "void",
+     "security": "RobloxScript"
+    }
+   ],
+   "name": "MessageBusConnection",
+   "properties": [],
+   "security": null,
+   "service": false,
+   "superclass": "Instance",
+   "yield_functions": []
+  },
+  {
+   "callbacks": [],
+   "creatable": false,
+   "events": [],
+   "evidence": "return type of MemStorageService.BindAndFire (4 call sites)",
+   "flags": [
+    "PERSISTENT_LOCAL"
+   ],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "return type of MemStorageService.BindAndFire (4 call sites)",
+     "name": "Disconnect",
+     "params": [],
+     "return": "void",
+     "security": "Plugin"
+    }
+   ],
+   "name": "MemStorageConnection",
+   "properties": [],
+   "security": null,
+   "service": false,
+   "superclass": "Instance",
+   "yield_functions": []
+  },
+  {
+   "callbacks": [],
+   "creatable": false,
+   "events": [],
+   "evidence": "return type of LocalizationTable.GetTranslator (9 sites) and LocalizationService.GetTranslatorForPlayer; Translator.FormatByKey at 554 sites",
+   "flags": [
+    "PERSISTENT_LOCAL"
+   ],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "return type of LocalizationTable.GetTranslator (9 sites) and LocalizationService.GetTranslatorForPlayer; Translator.FormatByKey at 554 sites",
+     "name": "FormatByKey",
+     "params": [
+      {
+       "default": null,
+       "name": "key",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "args",
+       "type": "Variant"
+      }
+     ],
+     "return": "string",
+     "security": null
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "return type of LocalizationTable.GetTranslator (9 sites) and LocalizationService.GetTranslatorForPlayer; Translator.FormatByKey at 554 sites",
+     "name": "RobloxOnlyTranslate",
+     "params": [
+      {
+       "default": null,
+       "name": "context",
+       "type": "Instance:Instance"
+      },
+      {
+       "default": null,
+       "name": "text",
+       "type": "string"
+      }
+     ],
+     "return": "string",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "return type of LocalizationTable.GetTranslator (9 sites) and LocalizationService.GetTranslatorForPlayer; Translator.FormatByKey at 554 sites",
+     "name": "Translate",
+     "params": [
+      {
+       "default": null,
+       "name": "context",
+       "type": "Instance:Instance"
+      },
+      {
+       "default": null,
+       "name": "text",
+       "type": "string"
+      }
+     ],
+     "return": "string",
+     "security": null
+    }
+   ],
+   "name": "Translator",
+   "properties": [
+    {
+     "category": "Behavior",
+     "deprecated_by": null,
+     "evidence": "return type of LocalizationTable.GetTranslator (9 sites) and LocalizationService.GetTranslatorForPlayer; Translator.FormatByKey at 554 sites",
+     "flags": 25,
+     "getter": null,
+     "name": "LocaleId",
+     "read_only": true,
+     "security": null,
+     "type": "string"
+    }
+   ],
+   "security": null,
+   "service": false,
+   "superclass": "Instance",
+   "yield_functions": []
   }
  ],
- "enums": [],
+ "enums": [
+  {
+   "evidence": "GETIMPORT Enum.AccessoryType.{Back,DressSkirt,Eyebrow,Eyelash,Face,Front,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Unknown",
+     "value": 0
+    },
+    {
+     "name": "Hat",
+     "value": 1
+    },
+    {
+     "name": "Hair",
+     "value": 2
+    },
+    {
+     "name": "Face",
+     "value": 3
+    },
+    {
+     "name": "Neck",
+     "value": 4
+    },
+    {
+     "name": "Shoulder",
+     "value": 5
+    },
+    {
+     "name": "Front",
+     "value": 6
+    },
+    {
+     "name": "Back",
+     "value": 7
+    },
+    {
+     "name": "Waist",
+     "value": 8
+    },
+    {
+     "name": "TShirt",
+     "value": 9
+    },
+    {
+     "name": "Shirt",
+     "value": 10
+    },
+    {
+     "name": "Pants",
+     "value": 11
+    },
+    {
+     "name": "Jacket",
+     "value": 12
+    },
+    {
+     "name": "Sweater",
+     "value": 13
+    },
+    {
+     "name": "Shorts",
+     "value": 14
+    },
+    {
+     "name": "LeftShoe",
+     "value": 15
+    },
+    {
+     "name": "RightShoe",
+     "value": 16
+    },
+    {
+     "name": "DressSkirt",
+     "value": 17
+    },
+    {
+     "name": "Eyebrow",
+     "value": 18
+    },
+    {
+     "name": "Eyelash",
+     "value": 19
+    }
+   ],
+   "legacy": [],
+   "name": "AccessoryType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AdAvailabilityResult.{IsAvailable} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "IsAvailable",
+     "value": 1
+    },
+    {
+     "name": "DeviceIneligible",
+     "value": 2
+    },
+    {
+     "name": "ExperienceIneligible",
+     "value": 3
+    },
+    {
+     "name": "InternalError",
+     "value": 4
+    },
+    {
+     "name": "NoFill",
+     "value": 5
+    },
+    {
+     "name": "PlayerIneligible",
+     "value": 6
+    },
+    {
+     "name": "PublisherIneligible",
+     "value": 7
+    }
+   ],
+   "legacy": [],
+   "name": "AdAvailabilityResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AdFormat.{RewardedVideo} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "RewardedVideo",
+     "value": 0
+    }
+   ],
+   "legacy": [],
+   "name": "AdFormat"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AdUIEventType.{AdLabelClicked,CloseButtonClicked,FullscreenButtonClicked,PauseButtonClicked,PauseEventTriggered,PlayButtonClicked,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "AdLabelClicked",
+     "value": 0
+    },
+    {
+     "name": "VolumeButtonClicked",
+     "value": 1
+    },
+    {
+     "name": "FullscreenButtonClicked",
+     "value": 2
+    },
+    {
+     "name": "PlayButtonClicked",
+     "value": 3
+    },
+    {
+     "name": "PauseButtonClicked",
+     "value": 4
+    },
+    {
+     "name": "CloseButtonClicked",
+     "value": 5
+    },
+    {
+     "name": "WhyThisAdClicked",
+     "value": 6
+    },
+    {
+     "name": "PlayEventTriggered",
+     "value": 7
+    },
+    {
+     "name": "PauseEventTriggered",
+     "value": 8
+    }
+   ],
+   "legacy": [],
+   "name": "AdUIEventType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AdUIType.{None,Video} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Image",
+     "value": 1
+    },
+    {
+     "name": "Video",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "AdUIType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AlphaMode.{Overlay,Transparency} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Overlay",
+     "value": 0
+    },
+    {
+     "name": "Transparency",
+     "value": 1
+    },
+    {
+     "name": "TintMask",
+     "value": 2
+    },
+    {
+     "name": "Opaque",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "AlphaMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AnimationPriority.{Action2,Action3,Action4} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Idle",
+     "value": 0
+    },
+    {
+     "name": "Movement",
+     "value": 1
+    },
+    {
+     "name": "Action",
+     "value": 2
+    },
+    {
+     "name": "Action2",
+     "value": 3
+    },
+    {
+     "name": "Action3",
+     "value": 4
+    },
+    {
+     "name": "Action4",
+     "value": 5
+    },
+    {
+     "name": "Core",
+     "value": 1000
+    }
+   ],
+   "legacy": [],
+   "name": "AnimationPriority"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AppUpdateStatus.{Available,AvailableBetaProgram,AvailableBoundChannel} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Unknown",
+     "value": 0
+    },
+    {
+     "name": "NotSupported",
+     "value": 1
+    },
+    {
+     "name": "Failed",
+     "value": 2
+    },
+    {
+     "name": "NotAvailable",
+     "value": 3
+    },
+    {
+     "name": "Available",
+     "value": 4
+    },
+    {
+     "name": "AvailableBoundChannel",
+     "value": 5
+    },
+    {
+     "name": "AvailableBetaProgram",
+     "value": 6
+    }
+   ],
+   "legacy": [],
+   "name": "AppUpdateStatus"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ApplyStrokeMode.{Border,Contextual} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Contextual",
+     "value": 0
+    },
+    {
+     "name": "Border",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "ApplyStrokeMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AspectType.{FitWithinMaxSize,ScaleWithParentSize} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "FitWithinMaxSize",
+     "value": 0
+    },
+    {
+     "name": "ScaleWithParentSize",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "AspectType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AssetFetchStatus.{Failure,Loading,None,Success,TimedOut} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Success",
+     "value": 0
+    },
+    {
+     "name": "Failure",
+     "value": 1
+    },
+    {
+     "name": "None",
+     "value": 2
+    },
+    {
+     "name": "Loading",
+     "value": 3
+    },
+    {
+     "name": "TimedOut",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "AssetFetchStatus"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AssetType.{AvatarBackground,BackAccessory,ClimbAnimation,DressSkirtAccessory,DynamicHead,EmoteAnimation,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Image",
+     "value": 1
+    },
+    {
+     "name": "TShirt",
+     "value": 2
+    },
+    {
+     "name": "Audio",
+     "value": 3
+    },
+    {
+     "name": "Mesh",
+     "value": 4
+    },
+    {
+     "name": "Lua",
+     "value": 5
+    },
+    {
+     "name": "Hat",
+     "value": 8
+    },
+    {
+     "name": "Place",
+     "value": 9
+    },
+    {
+     "name": "Model",
+     "value": 10
+    },
+    {
+     "name": "Shirt",
+     "value": 11
+    },
+    {
+     "name": "Pants",
+     "value": 12
+    },
+    {
+     "name": "Decal",
+     "value": 13
+    },
+    {
+     "name": "Head",
+     "value": 17
+    },
+    {
+     "name": "Face",
+     "value": 18
+    },
+    {
+     "name": "Gear",
+     "value": 19
+    },
+    {
+     "name": "Badge",
+     "value": 21
+    },
+    {
+     "name": "Animation",
+     "value": 24
+    },
+    {
+     "name": "Torso",
+     "value": 27
+    },
+    {
+     "name": "RightArm",
+     "value": 28
+    },
+    {
+     "name": "LeftArm",
+     "value": 29
+    },
+    {
+     "name": "LeftLeg",
+     "value": 30
+    },
+    {
+     "name": "RightLeg",
+     "value": 31
+    },
+    {
+     "name": "Package",
+     "value": 32
+    },
+    {
+     "name": "GamePass",
+     "value": 34
+    },
+    {
+     "name": "Plugin",
+     "value": 38
+    },
+    {
+     "name": "MeshPart",
+     "value": 40
+    },
+    {
+     "name": "HairAccessory",
+     "value": 41
+    },
+    {
+     "name": "FaceAccessory",
+     "value": 42
+    },
+    {
+     "name": "NeckAccessory",
+     "value": 43
+    },
+    {
+     "name": "ShoulderAccessory",
+     "value": 44
+    },
+    {
+     "name": "FrontAccessory",
+     "value": 45
+    },
+    {
+     "name": "BackAccessory",
+     "value": 46
+    },
+    {
+     "name": "WaistAccessory",
+     "value": 47
+    },
+    {
+     "name": "ClimbAnimation",
+     "value": 48
+    },
+    {
+     "name": "DeathAnimation",
+     "value": 49
+    },
+    {
+     "name": "FallAnimation",
+     "value": 50
+    },
+    {
+     "name": "IdleAnimation",
+     "value": 51
+    },
+    {
+     "name": "JumpAnimation",
+     "value": 52
+    },
+    {
+     "name": "RunAnimation",
+     "value": 53
+    },
+    {
+     "name": "SwimAnimation",
+     "value": 54
+    },
+    {
+     "name": "WalkAnimation",
+     "value": 55
+    },
+    {
+     "name": "PoseAnimation",
+     "value": 56
+    },
+    {
+     "name": "EarAccessory",
+     "value": 57
+    },
+    {
+     "name": "EyeAccessory",
+     "value": 58
+    },
+    {
+     "name": "EmoteAnimation",
+     "value": 61
+    },
+    {
+     "name": "Video",
+     "value": 62
+    },
+    {
+     "name": "TShirtAccessory",
+     "value": 64
+    },
+    {
+     "name": "ShirtAccessory",
+     "value": 65
+    },
+    {
+     "name": "PantsAccessory",
+     "value": 66
+    },
+    {
+     "name": "JacketAccessory",
+     "value": 67
+    },
+    {
+     "name": "SweaterAccessory",
+     "value": 68
+    },
+    {
+     "name": "ShortsAccessory",
+     "value": 69
+    },
+    {
+     "name": "LeftShoeAccessory",
+     "value": 70
+    },
+    {
+     "name": "RightShoeAccessory",
+     "value": 71
+    },
+    {
+     "name": "DressSkirtAccessory",
+     "value": 72
+    },
+    {
+     "name": "FontFamily",
+     "value": 73
+    },
+    {
+     "name": "EyebrowAccessory",
+     "value": 76
+    },
+    {
+     "name": "EyelashAccessory",
+     "value": 77
+    },
+    {
+     "name": "MoodAnimation",
+     "value": 78
+    },
+    {
+     "name": "DynamicHead",
+     "value": 79
+    },
+    {
+     "name": "FaceMakeup",
+     "value": 88
+    },
+    {
+     "name": "LipMakeup",
+     "value": 89
+    },
+    {
+     "name": "EyeMakeup",
+     "value": 90
+    },
+    {
+     "name": "AvatarBackground",
+     "value": 92
+    },
+    {
+     "name": "TextDocument",
+     "value": 93
+    },
+    {
+     "name": "AnimatedImage",
+     "value": 95
+    }
+   ],
+   "legacy": [],
+   "name": "AssetType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AudioApiRollout.{Enabled} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Disabled",
+     "value": 0
+    },
+    {
+     "name": "Automatic",
+     "value": 1
+    },
+    {
+     "name": "Enabled",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "AudioApiRollout"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AudioSubType.{Music} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Music",
+     "value": 1
+    },
+    {
+     "name": "SoundEffect",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "AudioSubType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AuthorityMode.{Server} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Server",
+     "value": 0
+    },
+    {
+     "name": "Automatic",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "AuthorityMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AutomaticSize.{None,X,XY,Y} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "X",
+     "value": 1
+    },
+    {
+     "name": "Y",
+     "value": 2
+    },
+    {
+     "name": "XY",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "AutomaticSize"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AvatarAssetType.{AvatarBackground,BackAccessory,ClimbAnimation,DressSkirtAccessory,DynamicHead,EmoteAnimation,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "TShirt",
+     "value": 2
+    },
+    {
+     "name": "Hat",
+     "value": 8
+    },
+    {
+     "name": "Shirt",
+     "value": 11
+    },
+    {
+     "name": "Pants",
+     "value": 12
+    },
+    {
+     "name": "Head",
+     "value": 17
+    },
+    {
+     "name": "Face",
+     "value": 18
+    },
+    {
+     "name": "Gear",
+     "value": 19
+    },
+    {
+     "name": "Torso",
+     "value": 27
+    },
+    {
+     "name": "RightArm",
+     "value": 28
+    },
+    {
+     "name": "LeftArm",
+     "value": 29
+    },
+    {
+     "name": "LeftLeg",
+     "value": 30
+    },
+    {
+     "name": "RightLeg",
+     "value": 31
+    },
+    {
+     "name": "HairAccessory",
+     "value": 41
+    },
+    {
+     "name": "FaceAccessory",
+     "value": 42
+    },
+    {
+     "name": "NeckAccessory",
+     "value": 43
+    },
+    {
+     "name": "ShoulderAccessory",
+     "value": 44
+    },
+    {
+     "name": "FrontAccessory",
+     "value": 45
+    },
+    {
+     "name": "BackAccessory",
+     "value": 46
+    },
+    {
+     "name": "WaistAccessory",
+     "value": 47
+    },
+    {
+     "name": "ClimbAnimation",
+     "value": 48
+    },
+    {
+     "name": "FallAnimation",
+     "value": 50
+    },
+    {
+     "name": "IdleAnimation",
+     "value": 51
+    },
+    {
+     "name": "JumpAnimation",
+     "value": 52
+    },
+    {
+     "name": "RunAnimation",
+     "value": 53
+    },
+    {
+     "name": "SwimAnimation",
+     "value": 54
+    },
+    {
+     "name": "WalkAnimation",
+     "value": 55
+    },
+    {
+     "name": "EmoteAnimation",
+     "value": 61
+    },
+    {
+     "name": "TShirtAccessory",
+     "value": 64
+    },
+    {
+     "name": "ShirtAccessory",
+     "value": 65
+    },
+    {
+     "name": "PantsAccessory",
+     "value": 66
+    },
+    {
+     "name": "JacketAccessory",
+     "value": 67
+    },
+    {
+     "name": "SweaterAccessory",
+     "value": 68
+    },
+    {
+     "name": "ShortsAccessory",
+     "value": 69
+    },
+    {
+     "name": "LeftShoeAccessory",
+     "value": 70
+    },
+    {
+     "name": "RightShoeAccessory",
+     "value": 71
+    },
+    {
+     "name": "DressSkirtAccessory",
+     "value": 72
+    },
+    {
+     "name": "EyebrowAccessory",
+     "value": 76
+    },
+    {
+     "name": "EyelashAccessory",
+     "value": 77
+    },
+    {
+     "name": "MoodAnimation",
+     "value": 78
+    },
+    {
+     "name": "DynamicHead",
+     "value": 79
+    },
+    {
+     "name": "FaceMakeup",
+     "value": 88
+    },
+    {
+     "name": "LipMakeup",
+     "value": 89
+    },
+    {
+     "name": "EyeMakeup",
+     "value": 90
+    },
+    {
+     "name": "AvatarBackground",
+     "value": 92
+    }
+   ],
+   "legacy": [],
+   "name": "AvatarAssetType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AvatarChatServiceFeature.{PlaceAudio,PlaceVideo,UniverseAudio,UniverseVideo,UserAudio,UserAudioEligible,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "UniverseAudio",
+     "value": 1
+    },
+    {
+     "name": "UniverseVideo",
+     "value": 2
+    },
+    {
+     "name": "PlaceAudio",
+     "value": 4
+    },
+    {
+     "name": "PlaceVideo",
+     "value": 8
+    },
+    {
+     "name": "UserAudioEligible",
+     "value": 16
+    },
+    {
+     "name": "UserAudio",
+     "value": 32
+    },
+    {
+     "name": "UserVideoEligible",
+     "value": 64
+    },
+    {
+     "name": "UserVideo",
+     "value": 128
+    },
+    {
+     "name": "UserBanned",
+     "value": 256
+    },
+    {
+     "name": "UserVerifiedForVoice",
+     "value": 512
+    }
+   ],
+   "legacy": [],
+   "name": "AvatarChatServiceFeature"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AvatarContextMenuOption.{Chat,Emote,Friend,InspectMenu} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Friend",
+     "value": 0
+    },
+    {
+     "name": "Chat",
+     "value": 1
+    },
+    {
+     "name": "Emote",
+     "value": 2
+    },
+    {
+     "name": "InspectMenu",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "AvatarContextMenuOption"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AvatarItemType.{Asset,Bundle} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Asset",
+     "value": 1
+    },
+    {
+     "name": "Bundle",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "AvatarItemType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AvatarPromptResult.{Success} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Success",
+     "value": 1
+    },
+    {
+     "name": "PermissionDenied",
+     "value": 2
+    },
+    {
+     "name": "Failed",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "AvatarPromptResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.AvatarThumbnailCustomizationType.{Closeup,FullBody} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Closeup",
+     "value": 1
+    },
+    {
+     "name": "FullBody",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "AvatarThumbnailCustomizationType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.BodyPartR15.{Head,LeftFoot,LeftHand,LeftLowerArm,LeftLowerLeg,LeftUpperArm,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Head",
+     "value": 0
+    },
+    {
+     "name": "UpperTorso",
+     "value": 1
+    },
+    {
+     "name": "LowerTorso",
+     "value": 2
+    },
+    {
+     "name": "LeftFoot",
+     "value": 3
+    },
+    {
+     "name": "LeftLowerLeg",
+     "value": 4
+    },
+    {
+     "name": "LeftUpperLeg",
+     "value": 5
+    },
+    {
+     "name": "RightFoot",
+     "value": 6
+    },
+    {
+     "name": "RightLowerLeg",
+     "value": 7
+    },
+    {
+     "name": "RightUpperLeg",
+     "value": 8
+    },
+    {
+     "name": "LeftHand",
+     "value": 9
+    },
+    {
+     "name": "LeftLowerArm",
+     "value": 10
+    },
+    {
+     "name": "LeftUpperArm",
+     "value": 11
+    },
+    {
+     "name": "RightHand",
+     "value": 12
+    },
+    {
+     "name": "RightLowerArm",
+     "value": 13
+    },
+    {
+     "name": "RightUpperArm",
+     "value": 14
+    },
+    {
+     "name": "RootPart",
+     "value": 15
+    },
+    {
+     "name": "Unknown",
+     "value": 17
+    }
+   ],
+   "legacy": [],
+   "name": "BodyPartR15"
+  },
+  {
+   "evidence": "GETIMPORT Enum.BorderMode.{Outline} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Outline",
+     "value": 0
+    },
+    {
+     "name": "Middle",
+     "value": 1
+    },
+    {
+     "name": "Inset",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "BorderMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.BorderStrokePosition.{Center,Inner,Outer} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Outer",
+     "value": 0
+    },
+    {
+     "name": "Center",
+     "value": 1
+    },
+    {
+     "name": "Inner",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "BorderStrokePosition"
+  },
+  {
+   "evidence": "GETIMPORT Enum.BundleType.{Animations,BodyParts,DynamicHead,Shoes} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "BodyParts",
+     "value": 1
+    },
+    {
+     "name": "Animations",
+     "value": 2
+    },
+    {
+     "name": "Shoes",
+     "value": 3
+    },
+    {
+     "name": "DynamicHead",
+     "value": 4
+    },
+    {
+     "name": "DynamicHeadAvatar",
+     "value": 5
+    }
+   ],
+   "legacy": [],
+   "name": "BundleType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.CaptureGalleryPermission.{ReadAndUpload} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "ReadAndUpload",
+     "value": 0
+    }
+   ],
+   "legacy": [],
+   "name": "CaptureGalleryPermission"
+  },
+  {
+   "evidence": "GETIMPORT Enum.CaptureType.{Screenshot,Video} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Screenshot",
+     "value": 1
+    },
+    {
+     "name": "Video",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "CaptureType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ChatCallbackType.{OnClientFormattingMessage,OnCreatingChatWindow,OnServerReceivingMessage} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "OnCreatingChatWindow",
+     "value": 1
+    },
+    {
+     "name": "OnClientSendingMessage",
+     "value": 2
+    },
+    {
+     "name": "OnClientFormattingMessage",
+     "value": 3
+    },
+    {
+     "name": "OnServerReceivingMessage",
+     "value": 17
+    }
+   ],
+   "legacy": [],
+   "name": "ChatCallbackType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ChatRestrictionStatus.{NotRestricted,Restricted,Unknown} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Unknown",
+     "value": 0
+    },
+    {
+     "name": "NotRestricted",
+     "value": 1
+    },
+    {
+     "name": "Restricted",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "ChatRestrictionStatus"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ChatVersion.{LegacyChatService,TextChatService} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "LegacyChatService",
+     "value": 0
+    },
+    {
+     "name": "TextChatService",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "ChatVersion"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ComputerCameraMovementMode.{CameraToggle} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "Classic",
+     "value": 1
+    },
+    {
+     "name": "Follow",
+     "value": 2
+    },
+    {
+     "name": "Orbital",
+     "value": 3
+    },
+    {
+     "name": "CameraToggle",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "ComputerCameraMovementMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ConnectionError.{AlreadyConnected,AndroidAnticheatKick,AndroidEmulatorKick,AndroidRootedKick,ConnectErrors,ConnectionBanned,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "OK",
+     "value": 0
+    },
+    {
+     "name": "Unknown",
+     "value": 1
+    },
+    {
+     "name": "ConnectErrors",
+     "value": 2
+    },
+    {
+     "name": "AlreadyConnected",
+     "value": 3
+    },
+    {
+     "name": "NoFreeIncomingConnections",
+     "value": 4
+    },
+    {
+     "name": "ConnectionBanned",
+     "value": 5
+    },
+    {
+     "name": "InvalidPassword",
+     "value": 6
+    },
+    {
+     "name": "IncompatibleProtocolVersion",
+     "value": 7
+    },
+    {
+     "name": "IPRecentlyConnected",
+     "value": 8
+    },
+    {
+     "name": "OurSystemRequiresSecurity",
+     "value": 9
+    },
+    {
+     "name": "SecurityKeyMismatch",
+     "value": 10
+    },
+    {
+     "name": "DisconnectErrors",
+     "value": 256
+    },
+    {
+     "name": "DisconnectBadhash",
+     "value": 257
+    },
+    {
+     "name": "DisconnectSecurityKeyMismatch",
+     "value": 258
+    },
+    {
+     "name": "DisconnectProtocolMismatch",
+     "value": 259
+    },
+    {
+     "name": "DisconnectReceivePacketError",
+     "value": 260
+    },
+    {
+     "name": "DisconnectReceivePacketStreamError",
+     "value": 261
+    },
+    {
+     "name": "DisconnectSendPacketError",
+     "value": 262
+    },
+    {
+     "name": "DisconnectIllegalTeleport",
+     "value": 263
+    },
+    {
+     "name": "DisconnectDuplicatePlayer",
+     "value": 264
+    },
+    {
+     "name": "DisconnectDuplicateTicket",
+     "value": 265
+    },
+    {
+     "name": "DisconnectTimeout",
+     "value": 266
+    },
+    {
+     "name": "DisconnectLuaKick",
+     "value": 267
+    },
+    {
+     "name": "DisconnectOnRemoteSysStats",
+     "value": 268
+    },
+    {
+     "name": "DisconnectHashTimeout",
+     "value": 269
+    },
+    {
+     "name": "DisconnectCloudEditKick",
+     "value": 270
+    },
+    {
+     "name": "DisconnectPlayerless",
+     "value": 271
+    },
+    {
+     "name": "DisconnectNewSecurityKeyMismatch",
+     "value": 272
+    },
+    {
+     "name": "DisconnectEvicted",
+     "value": 273
+    },
+    {
+     "name": "DisconnectDevMaintenance",
+     "value": 274
+    },
+    {
+     "name": "DisconnectRobloxMaintenance",
+     "value": 275
+    },
+    {
+     "name": "DisconnectRejoin",
+     "value": 276
+    },
+    {
+     "name": "DisconnectConnectionLost",
+     "value": 277
+    },
+    {
+     "name": "DisconnectIdle",
+     "value": 278
+    },
+    {
+     "name": "DisconnectRaknetErrors",
+     "value": 279
+    },
+    {
+     "name": "DisconnectWrongVersion",
+     "value": 280
+    },
+    {
+     "name": "DisconnectBySecurityPolicy",
+     "value": 281
+    },
+    {
+     "name": "DisconnectBlockedIP",
+     "value": 282
+    },
+    {
+     "name": "DisconnectClientFailure",
+     "value": 284
+    },
+    {
+     "name": "DisconnectClientRequest",
+     "value": 285
+    },
+    {
+     "name": "DisconnectPrivateServerKickout",
+     "value": 286
+    },
+    {
+     "name": "DisconnectModeratedGame",
+     "value": 287
+    },
+    {
+     "name": "ServerShutdown",
+     "value": 288
+    },
+    {
+     "name": "ReplicatorTimeout",
+     "value": 290
+    },
+    {
+     "name": "PlayerRemoved",
+     "value": 291
+    },
+    {
+     "name": "DisconnectOutOfMemoryKeepPlayingLeave",
+     "value": 292
+    },
+    {
+     "name": "DisconnectRomarkEndOfTest",
+     "value": 293
+    },
+    {
+     "name": "DisconnectCollaboratorPermissionRevoked",
+     "value": 294
+    },
+    {
+     "name": "DisconnectCollaboratorUnderage",
+     "value": 295
+    },
+    {
+     "name": "NetworkInternal",
+     "value": 296
+    },
+    {
+     "name": "NetworkSend",
+     "value": 297
+    },
+    {
+     "name": "NetworkTimeout",
+     "value": 298
+    },
+    {
+     "name": "NetworkMisbehavior",
+     "value": 299
+    },
+    {
+     "name": "NetworkSecurity",
+     "value": 300
+    },
+    {
+     "name": "ReplacementReady",
+     "value": 301
+    },
+    {
+     "name": "ServerEmpty",
+     "value": 302
+    },
+    {
+     "name": "PhantomFreeze",
+     "value": 303
+    },
+    {
+     "name": "AndroidAnticheatKick",
+     "value": 304
+    },
+    {
+     "name": "AndroidEmulatorKick",
+     "value": 305
+    },
+    {
+     "name": "AndroidRootedKick",
+     "value": 306
+    },
+    {
+     "name": "ScreentimeLockoutKick",
+     "value": 307
+    },
+    {
+     "name": "DisconnectionNotification",
+     "value": 308
+    },
+    {
+     "name": "DisconnectVerboselyModeratedGame",
+     "value": 309
+    },
+    {
+     "name": "DisconnectCollaboratorNotAgeVerified",
+     "value": 310
+    },
+    {
+     "name": "DisconnectCollaboratorTrustedConnectionsRequired",
+     "value": 311
+    },
+    {
+     "name": "DisconnectCollaboratorOwnerActionRequired",
+     "value": 312
+    },
+    {
+     "name": "DisconnectCollaboratorTooManyCollaborators",
+     "value": 313
+    },
+    {
+     "name": "DisconnectCollaboratorUnknownError",
+     "value": 314
+    },
+    {
+     "name": "DisconnectCollaboratorRequestedEviction",
+     "value": 315
+    },
+    {
+     "name": "DisconnectCollaboratorTrustedConnectionsRequiredPC",
+     "value": 316
+    },
+    {
+     "name": "DisconnectRemoteAttestationUnsupported",
+     "value": 317
+    },
+    {
+     "name": "DisconnectRemoteAttestationGeneralFailure",
+     "value": 318
+    },
+    {
+     "name": "DisconnectRemoteAttestationTimeout",
+     "value": 319
+    },
+    {
+     "name": "DisconnectRemoteAttestationOSOutOfDate",
+     "value": 320
+    },
+    {
+     "name": "DisconnectRemoteAttestationBootValidationFailure",
+     "value": 321
+    },
+    {
+     "name": "PlacelaunchErrors",
+     "value": 512
+    },
+    {
+     "name": "PlacelaunchDisabled",
+     "value": 515
+    },
+    {
+     "name": "PlacelaunchError",
+     "value": 516
+    },
+    {
+     "name": "PlacelaunchGameEnded",
+     "value": 517
+    },
+    {
+     "name": "PlacelaunchGameFull",
+     "value": 518
+    },
+    {
+     "name": "PlacelaunchUserLeft",
+     "value": 522
+    },
+    {
+     "name": "PlacelaunchRestricted",
+     "value": 523
+    },
+    {
+     "name": "PlacelaunchUnauthorized",
+     "value": 524
+    },
+    {
+     "name": "PlacelaunchFlooded",
+     "value": 525
+    },
+    {
+     "name": "PlacelaunchHashExpired",
+     "value": 526
+    },
+    {
+     "name": "PlacelaunchHashException",
+     "value": 527
+    },
+    {
+     "name": "PlacelaunchPartyCannotFit",
+     "value": 528
+    },
+    {
+     "name": "PlacelaunchHttpError",
+     "value": 529
+    },
+    {
+     "name": "PlacelaunchUserPrivacyUnauthorized",
+     "value": 533
+    },
+    {
+     "name": "PlacelaunchVipOwnerNotPresent",
+     "value": 541
+    },
+    {
+     "name": "PlacelaunchAgeVerificationRequired",
+     "value": 542
+    },
+    {
+     "name": "PlacelaunchParentalApprovalRequired",
+     "value": 543
+    },
+    {
+     "name": "PlacelaunchCoreGated",
+     "value": 544
+    },
+    {
+     "name": "PlacelaunchCollaborationCoreGated",
+     "value": 545
+    },
+    {
+     "name": "PlacelaunchCreatorBan",
+     "value": 600
+    },
+    {
+     "name": "PlacelaunchDeviceBlock",
+     "value": 601
+    },
+    {
+     "name": "PlacelaunchCustomMessage",
+     "value": 610
+    },
+    {
+     "name": "PlacelaunchOtherError",
+     "value": 611
+    },
+    {
+     "name": "TeleportErrors",
+     "value": 768
+    },
+    {
+     "name": "TeleportFailure",
+     "value": 769
+    },
+    {
+     "name": "TeleportGameNotFound",
+     "value": 770
+    },
+    {
+     "name": "TeleportGameEnded",
+     "value": 771
+    },
+    {
+     "name": "TeleportGameFull",
+     "value": 772
+    },
+    {
+     "name": "TeleportUnauthorized",
+     "value": 773
+    },
+    {
+     "name": "TeleportFlooded",
+     "value": 774
+    },
+    {
+     "name": "TeleportIsTeleporting",
+     "value": 775
+    },
+    {
+     "name": "TransportErrors",
+     "value": 1024
+    },
+    {
+     "name": "DisconnectTransportIoError",
+     "value": 1025
+    },
+    {
+     "name": "DisconnectTransportIoInternetError",
+     "value": 1026
+    },
+    {
+     "name": "DisconnectTransportProtocolError",
+     "value": 1027
+    },
+    {
+     "name": "DisconnectTransportNgtcp2Error",
+     "value": 1028
+    },
+    {
+     "name": "DisconnectTransportQuicError",
+     "value": 1029
+    },
+    {
+     "name": "DisconnectTransportRnaError",
+     "value": 1030
+    }
+   ],
+   "legacy": [],
+   "name": "ConnectionError"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ConnectionState.{Connected,Disconnected} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Connected",
+     "value": 0
+    },
+    {
+     "name": "Disconnected",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "ConnectionState"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ContentSourceType.{None,Object,Uri} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Uri",
+     "value": 1
+    },
+    {
+     "name": "Object",
+     "value": 2
+    },
+    {
+     "name": "Opaque",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "ContentSourceType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ContextActionPriority.{High,Low} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Low",
+     "value": 1000
+    },
+    {
+     "name": "Medium",
+     "value": 2000
+    },
+    {
+     "name": "High",
+     "value": 3000
+    }
+   ],
+   "legacy": [],
+   "name": "ContextActionPriority"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ContextActionResult.{Pass,Sink} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Sink",
+     "value": 0
+    },
+    {
+     "name": "Pass",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "ContextActionResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.CoreGuiType.{AvatarSwitcher,Captures,EmotesMenu,ExperienceShop,SelfView} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "PlayerList",
+     "value": 0
+    },
+    {
+     "name": "Health",
+     "value": 1
+    },
+    {
+     "name": "Backpack",
+     "value": 2
+    },
+    {
+     "name": "Chat",
+     "value": 3
+    },
+    {
+     "name": "All",
+     "value": 4
+    },
+    {
+     "name": "EmotesMenu",
+     "value": 5
+    },
+    {
+     "name": "SelfView",
+     "value": 6
+    },
+    {
+     "name": "Captures",
+     "value": 7
+    },
+    {
+     "name": "AvatarSwitcher",
+     "value": 8
+    },
+    {
+     "name": "ExperienceShop",
+     "value": 9
+    }
+   ],
+   "legacy": [],
+   "name": "CoreGuiType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.CreateOutfitFailure.{InvalidName,Other,OutfitLimitReached} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "InvalidName",
+     "value": 1
+    },
+    {
+     "name": "OutfitLimitReached",
+     "value": 2
+    },
+    {
+     "name": "Other",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "CreateOutfitFailure"
+  },
+  {
+   "evidence": "GETIMPORT Enum.DeviceFeatureType.{DeviceCapture,InExperienceFAE} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "DeviceCapture",
+     "value": 0
+    },
+    {
+     "name": "InExperienceFAE",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "DeviceFeatureType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.DeviceLevel.{High,Low,Medium} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Low",
+     "value": 0
+    },
+    {
+     "name": "Medium",
+     "value": 1
+    },
+    {
+     "name": "High",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "DeviceLevel"
+  },
+  {
+   "evidence": "GETIMPORT Enum.DeviceType.{Desktop} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Unknown",
+     "value": 0
+    },
+    {
+     "name": "Desktop",
+     "value": 1
+    },
+    {
+     "name": "Tablet",
+     "value": 2
+    },
+    {
+     "name": "Phone",
+     "value": 3
+    },
+    {
+     "name": "TV",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "DeviceType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.DialogBehaviorType.{MultiplePlayers} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "SinglePlayer",
+     "value": 0
+    },
+    {
+     "name": "MultiplePlayers",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "DialogBehaviorType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.DigitsRigDescriptionSide.{Left,Right} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Left",
+     "value": 1
+    },
+    {
+     "name": "Right",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "DigitsRigDescriptionSide"
+  },
+  {
+   "evidence": "GETIMPORT Enum.DisplaySize.{Large,Small} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Small",
+     "value": 0
+    },
+    {
+     "name": "Medium",
+     "value": 1
+    },
+    {
+     "name": "Large",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "DisplaySize"
+  },
+  {
+   "evidence": "GETIMPORT Enum.DominantAxis.{Height,Width} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Width",
+     "value": 0
+    },
+    {
+     "name": "Height",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "DominantAxis"
+  },
+  {
+   "evidence": "GETIMPORT Enum.DragDetectorDragStyle.{BestForDevice} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "TranslateLine",
+     "value": 0
+    },
+    {
+     "name": "TranslatePlane",
+     "value": 1
+    },
+    {
+     "name": "TranslatePlaneOrLine",
+     "value": 2
+    },
+    {
+     "name": "TranslateLineOrPlane",
+     "value": 3
+    },
+    {
+     "name": "TranslateViewPlane",
+     "value": 4
+    },
+    {
+     "name": "RotateAxis",
+     "value": 5
+    },
+    {
+     "name": "RotateTrackball",
+     "value": 6
+    },
+    {
+     "name": "Scriptable",
+     "value": 7
+    },
+    {
+     "name": "BestForDevice",
+     "value": 8
+    }
+   ],
+   "legacy": [],
+   "name": "DragDetectorDragStyle"
+  },
+  {
+   "evidence": "GETIMPORT Enum.EasingStyle.{Circular,Cubic,Exponential} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Linear",
+     "value": 0
+    },
+    {
+     "name": "Sine",
+     "value": 1
+    },
+    {
+     "name": "Back",
+     "value": 2
+    },
+    {
+     "name": "Quad",
+     "value": 3
+    },
+    {
+     "name": "Quart",
+     "value": 4
+    },
+    {
+     "name": "Quint",
+     "value": 5
+    },
+    {
+     "name": "Bounce",
+     "value": 6
+    },
+    {
+     "name": "Elastic",
+     "value": 7
+    },
+    {
+     "name": "Exponential",
+     "value": 8
+    },
+    {
+     "name": "Circular",
+     "value": 9
+    },
+    {
+     "name": "Cubic",
+     "value": 10
+    },
+    {
+     "name": "Bezier",
+     "value": 11
+    },
+    {
+     "name": "Spring",
+     "value": 12
+    }
+   ],
+   "legacy": [],
+   "name": "EasingStyle"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ElasticBehavior.{Always,Never,WhenScrollable} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "WhenScrollable",
+     "value": 0
+    },
+    {
+     "name": "Always",
+     "value": 1
+    },
+    {
+     "name": "Never",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "ElasticBehavior"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ExperienceAuthScope.{CreatorAssetsCreate} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "DefaultScope",
+     "value": 0
+    },
+    {
+     "name": "CreatorAssetsCreate",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "ExperienceAuthScope"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ExperienceStateRecordingLoadMode.{ContiguousSlice,NewReplay,NoncontiguousSlice} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "NewReplay",
+     "value": 0
+    },
+    {
+     "name": "ContiguousSlice",
+     "value": 1
+    },
+    {
+     "name": "NoncontiguousSlice",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "ExperienceStateRecordingLoadMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ExperienceStateRecordingLoadSourceType.{File,S3Url} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "S3Url",
+     "value": 0
+    },
+    {
+     "name": "File",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "ExperienceStateRecordingLoadSourceType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ExperienceStateRecordingPlaybackMode.{Playing,Rewinding,Stopped} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Undefined",
+     "value": 0
+    },
+    {
+     "name": "Stopped",
+     "value": 1
+    },
+    {
+     "name": "Playing",
+     "value": 2
+    },
+    {
+     "name": "Rewinding",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "ExperienceStateRecordingPlaybackMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.FacialAgeEstimationResultType.{Cancel,Complete,Error} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Complete",
+     "value": 0
+    },
+    {
+     "name": "Cancel",
+     "value": 1
+    },
+    {
+     "name": "Error",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "FacialAgeEstimationResultType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.FeatureRestrictionAbuseVector.{ExperienceChat} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "ExperienceChat",
+     "value": 0
+    },
+    {
+     "name": "Communication",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "FeatureRestrictionAbuseVector"
+  },
+  {
+   "evidence": "GETIMPORT Enum.FillDirection.{Horizontal,Vertical} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Horizontal",
+     "value": 0
+    },
+    {
+     "name": "Vertical",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "FillDirection"
+  },
+  {
+   "evidence": "GETIMPORT Enum.FluidFidelity.{Automatic} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Automatic",
+     "value": 0
+    },
+    {
+     "name": "UseCollisionGeometry",
+     "value": 1
+    },
+    {
+     "name": "UsePreciseGeometry",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "FluidFidelity"
+  },
+  {
+   "evidence": "GETIMPORT Enum.Font.{Arcade,Bangers,BuilderSans,BuilderSansBold,BuilderSansExtraBold,BuilderSansMedium,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Legacy",
+     "value": 0
+    },
+    {
+     "name": "Arial",
+     "value": 1
+    },
+    {
+     "name": "ArialBold",
+     "value": 2
+    },
+    {
+     "name": "SourceSans",
+     "value": 3
+    },
+    {
+     "name": "SourceSansBold",
+     "value": 4
+    },
+    {
+     "name": "SourceSansLight",
+     "value": 5
+    },
+    {
+     "name": "SourceSansItalic",
+     "value": 6
+    },
+    {
+     "name": "Bodoni",
+     "value": 7
+    },
+    {
+     "name": "Garamond",
+     "value": 8
+    },
+    {
+     "name": "Cartoon",
+     "value": 9
+    },
+    {
+     "name": "Code",
+     "value": 10
+    },
+    {
+     "name": "Highway",
+     "value": 11
+    },
+    {
+     "name": "SciFi",
+     "value": 12
+    },
+    {
+     "name": "Arcade",
+     "value": 13
+    },
+    {
+     "name": "Fantasy",
+     "value": 14
+    },
+    {
+     "name": "Antique",
+     "value": 15
+    },
+    {
+     "name": "SourceSansSemibold",
+     "value": 16
+    },
+    {
+     "name": "Gotham",
+     "value": 17
+    },
+    {
+     "name": "GothamMedium",
+     "value": 18
+    },
+    {
+     "name": "GothamBold",
+     "value": 19
+    },
+    {
+     "name": "GothamBlack",
+     "value": 20
+    },
+    {
+     "name": "AmaticSC",
+     "value": 21
+    },
+    {
+     "name": "Bangers",
+     "value": 22
+    },
+    {
+     "name": "Creepster",
+     "value": 23
+    },
+    {
+     "name": "DenkOne",
+     "value": 24
+    },
+    {
+     "name": "Fondamento",
+     "value": 25
+    },
+    {
+     "name": "FredokaOne",
+     "value": 26
+    },
+    {
+     "name": "GrenzeGotisch",
+     "value": 27
+    },
+    {
+     "name": "IndieFlower",
+     "value": 28
+    },
+    {
+     "name": "JosefinSans",
+     "value": 29
+    },
+    {
+     "name": "Jura",
+     "value": 30
+    },
+    {
+     "name": "Kalam",
+     "value": 31
+    },
+    {
+     "name": "LuckiestGuy",
+     "value": 32
+    },
+    {
+     "name": "Merriweather",
+     "value": 33
+    },
+    {
+     "name": "Michroma",
+     "value": 34
+    },
+    {
+     "name": "Nunito",
+     "value": 35
+    },
+    {
+     "name": "Oswald",
+     "value": 36
+    },
+    {
+     "name": "PatrickHand",
+     "value": 37
+    },
+    {
+     "name": "PermanentMarker",
+     "value": 38
+    },
+    {
+     "name": "Roboto",
+     "value": 39
+    },
+    {
+     "name": "RobotoCondensed",
+     "value": 40
+    },
+    {
+     "name": "RobotoMono",
+     "value": 41
+    },
+    {
+     "name": "Sarpanch",
+     "value": 42
+    },
+    {
+     "name": "SpecialElite",
+     "value": 43
+    },
+    {
+     "name": "TitilliumWeb",
+     "value": 44
+    },
+    {
+     "name": "Ubuntu",
+     "value": 45
+    },
+    {
+     "name": "BuilderSans",
+     "value": 46
+    },
+    {
+     "name": "BuilderSansMedium",
+     "value": 47
+    },
+    {
+     "name": "BuilderSansBold",
+     "value": 48
+    },
+    {
+     "name": "BuilderSansExtraBold",
+     "value": 49
+    },
+    {
+     "name": "Arimo",
+     "value": 50
+    },
+    {
+     "name": "ArimoBold",
+     "value": 51
+    },
+    {
+     "name": "Unknown",
+     "value": 100
+    }
+   ],
+   "legacy": [],
+   "name": "Font"
+  },
+  {
+   "evidence": "GETIMPORT Enum.FontStyle.{Italic,Normal} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Normal",
+     "value": 0
+    },
+    {
+     "name": "Italic",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "FontStyle"
+  },
+  {
+   "evidence": "GETIMPORT Enum.FontWeight.{Bold,ExtraBold,Medium,Regular,SemiBold} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Thin",
+     "value": 100
+    },
+    {
+     "name": "ExtraLight",
+     "value": 200
+    },
+    {
+     "name": "Light",
+     "value": 300
+    },
+    {
+     "name": "Regular",
+     "value": 400
+    },
+    {
+     "name": "Medium",
+     "value": 500
+    },
+    {
+     "name": "SemiBold",
+     "value": 600
+    },
+    {
+     "name": "Bold",
+     "value": 700
+    },
+    {
+     "name": "ExtraBold",
+     "value": 800
+    },
+    {
+     "name": "Heavy",
+     "value": 900
+    }
+   ],
+   "legacy": [],
+   "name": "FontWeight"
+  },
+  {
+   "evidence": "GETIMPORT Enum.GuiState.{Hover,Idle,NonInteractable,Press} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Idle",
+     "value": 0
+    },
+    {
+     "name": "Hover",
+     "value": 1
+    },
+    {
+     "name": "Press",
+     "value": 2
+    },
+    {
+     "name": "NonInteractable",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "GuiState"
+  },
+  {
+   "evidence": "GETIMPORT Enum.GuiType.{Custom,CustomBillboards,PlayerNameplates} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Core",
+     "value": 0
+    },
+    {
+     "name": "Custom",
+     "value": 1
+    },
+    {
+     "name": "PlayerNameplates",
+     "value": 2
+    },
+    {
+     "name": "CustomBillboards",
+     "value": 3
+    },
+    {
+     "name": "CoreBillboards",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "GuiType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.HapticEffectType.{UIClick,UIHover} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Custom",
+     "value": 0
+    },
+    {
+     "name": "UIHover",
+     "value": 1
+    },
+    {
+     "name": "UIClick",
+     "value": 2
+    },
+    {
+     "name": "UINotification",
+     "value": 3
+    },
+    {
+     "name": "GameplayExplosion",
+     "value": 4
+    },
+    {
+     "name": "GameplayCollision",
+     "value": 5
+    }
+   ],
+   "legacy": [],
+   "name": "HapticEffectType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.HighlightDepthMode.{Occluded} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "AlwaysOnTop",
+     "value": 0
+    },
+    {
+     "name": "Occluded",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "HighlightDepthMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.HorizontalAlignment.{Center,Left,Right} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Center",
+     "value": 0
+    },
+    {
+     "name": "Left",
+     "value": 1
+    },
+    {
+     "name": "Right",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "HorizontalAlignment"
+  },
+  {
+   "evidence": "GETIMPORT Enum.HttpCachePolicy.{None} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Full",
+     "value": 1
+    },
+    {
+     "name": "DataOnly",
+     "value": 2
+    },
+    {
+     "name": "Default",
+     "value": 3
+    },
+    {
+     "name": "InternalRedirectRefresh",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "HttpCachePolicy"
+  },
+  {
+   "evidence": "GETIMPORT Enum.HttpError.{Aborted,ConnectFail,DnsResolve,InvalidRedirect,InvalidUrl,NetFail,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "OK",
+     "value": 0
+    },
+    {
+     "name": "InvalidUrl",
+     "value": 1
+    },
+    {
+     "name": "DnsResolve",
+     "value": 2
+    },
+    {
+     "name": "ConnectFail",
+     "value": 3
+    },
+    {
+     "name": "OutOfMemory",
+     "value": 4
+    },
+    {
+     "name": "TimedOut",
+     "value": 5
+    },
+    {
+     "name": "TooManyRedirects",
+     "value": 6
+    },
+    {
+     "name": "InvalidRedirect",
+     "value": 7
+    },
+    {
+     "name": "NetFail",
+     "value": 8
+    },
+    {
+     "name": "Aborted",
+     "value": 9
+    },
+    {
+     "name": "SslConnectFail",
+     "value": 10
+    },
+    {
+     "name": "SslVerificationFail",
+     "value": 11
+    },
+    {
+     "name": "Unknown",
+     "value": 12
+    },
+    {
+     "name": "ConnectionClosed",
+     "value": 13
+    },
+    {
+     "name": "ServerProtocolError",
+     "value": 14
+    },
+    {
+     "name": "CreatorEnvironmentsNotSupportedByService",
+     "value": 15
+    },
+    {
+     "name": "InactivityTimeout",
+     "value": 16
+    },
+    {
+     "name": "TooManyOutstandingRequests",
+     "value": 17
+    },
+    {
+     "name": "InvalidRangeResponse",
+     "value": 18
+    }
+   ],
+   "legacy": [],
+   "name": "HttpError"
+  },
+  {
+   "evidence": "GETIMPORT Enum.HttpRequestType.{Default,Players} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "MarketplaceService",
+     "value": 2
+    },
+    {
+     "name": "Players",
+     "value": 7
+    },
+    {
+     "name": "Chat",
+     "value": 15
+    },
+    {
+     "name": "Avatar",
+     "value": 16
+    },
+    {
+     "name": "Analytics",
+     "value": 23
+    },
+    {
+     "name": "Localization",
+     "value": 25
+    }
+   ],
+   "legacy": [],
+   "name": "HttpRequestType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.IKControlType.{Rotation,Transform} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Transform",
+     "value": 0
+    },
+    {
+     "name": "Position",
+     "value": 1
+    },
+    {
+     "name": "Rotation",
+     "value": 2
+    },
+    {
+     "name": "LookAt",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "IKControlType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.IXPLoadingStatus.{Initialized,None,Pending} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Pending",
+     "value": 1
+    },
+    {
+     "name": "Initialized",
+     "value": 2
+    },
+    {
+     "name": "ErrorInvalidUser",
+     "value": 3
+    },
+    {
+     "name": "ErrorConnection",
+     "value": 4
+    },
+    {
+     "name": "ErrorJsonParse",
+     "value": 5
+    },
+    {
+     "name": "ErrorTimedOut",
+     "value": 6
+    }
+   ],
+   "legacy": [],
+   "name": "IXPLoadingStatus"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ImageCombineType.{AlphaBlend,Overwrite} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "BlendSourceOver",
+     "value": 1
+    },
+    {
+     "name": "Overwrite",
+     "value": 2
+    },
+    {
+     "name": "Add",
+     "value": 3
+    },
+    {
+     "name": "Multiply",
+     "value": 4
+    },
+    {
+     "name": "AlphaBlend",
+     "value": 5
+    },
+    {
+     "name": "NormalMapBlend",
+     "value": 6
+    },
+    {
+     "name": "Subtract",
+     "value": 7
+    }
+   ],
+   "legacy": [],
+   "name": "ImageCombineType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.InfoType.{Bundle,GamePass,Subscription} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Asset",
+     "value": 0
+    },
+    {
+     "name": "Product",
+     "value": 1
+    },
+    {
+     "name": "GamePass",
+     "value": 2
+    },
+    {
+     "name": "Subscription",
+     "value": 3
+    },
+    {
+     "name": "Bundle",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "InfoType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.InputActionType.{Bool,Direction1D,Direction2D} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Bool",
+     "value": 0
+    },
+    {
+     "name": "Direction1D",
+     "value": 1
+    },
+    {
+     "name": "Direction2D",
+     "value": 2
+    },
+    {
+     "name": "Direction3D",
+     "value": 3
+    },
+    {
+     "name": "ViewportPosition",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "InputActionType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.InputSink.{None} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Activate",
+     "value": 1
+    },
+    {
+     "name": "All",
+     "value": 100
+    }
+   ],
+   "legacy": [],
+   "name": "InputSink"
+  },
+  {
+   "evidence": "GETIMPORT Enum.InternalVideoUsage.{WatchPage} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "WatchPage",
+     "value": 1
+    },
+    {
+     "name": "HomeCarousel",
+     "value": 2
+    },
+    {
+     "name": "FeatureTileAd",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "InternalVideoUsage"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ItemLineAlignment.{Automatic,Center,End,Start,Stretch} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Automatic",
+     "value": 0
+    },
+    {
+     "name": "Start",
+     "value": 1
+    },
+    {
+     "name": "Center",
+     "value": 2
+    },
+    {
+     "name": "End",
+     "value": 3
+    },
+    {
+     "name": "Stretch",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "ItemLineAlignment"
+  },
+  {
+   "evidence": "GETIMPORT Enum.KeyCode.{ButtonCenter,ButtonDown,ButtonLeft,ButtonRight,ButtonUp,MouseDelta,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Backspace",
+     "value": 8
+    },
+    {
+     "name": "Tab",
+     "value": 9
+    },
+    {
+     "name": "Clear",
+     "value": 12
+    },
+    {
+     "name": "Return",
+     "value": 13
+    },
+    {
+     "name": "Pause",
+     "value": 19
+    },
+    {
+     "name": "Escape",
+     "value": 27
+    },
+    {
+     "name": "Space",
+     "value": 32
+    },
+    {
+     "name": "QuotedDouble",
+     "value": 34
+    },
+    {
+     "name": "Hash",
+     "value": 35
+    },
+    {
+     "name": "Dollar",
+     "value": 36
+    },
+    {
+     "name": "Percent",
+     "value": 37
+    },
+    {
+     "name": "Ampersand",
+     "value": 38
+    },
+    {
+     "name": "Quote",
+     "value": 39
+    },
+    {
+     "name": "LeftParenthesis",
+     "value": 40
+    },
+    {
+     "name": "RightParenthesis",
+     "value": 41
+    },
+    {
+     "name": "Asterisk",
+     "value": 42
+    },
+    {
+     "name": "Plus",
+     "value": 43
+    },
+    {
+     "name": "Comma",
+     "value": 44
+    },
+    {
+     "name": "Minus",
+     "value": 45
+    },
+    {
+     "name": "Period",
+     "value": 46
+    },
+    {
+     "name": "Slash",
+     "value": 47
+    },
+    {
+     "name": "Zero",
+     "value": 48
+    },
+    {
+     "name": "One",
+     "value": 49
+    },
+    {
+     "name": "Two",
+     "value": 50
+    },
+    {
+     "name": "Three",
+     "value": 51
+    },
+    {
+     "name": "Four",
+     "value": 52
+    },
+    {
+     "name": "Five",
+     "value": 53
+    },
+    {
+     "name": "Six",
+     "value": 54
+    },
+    {
+     "name": "Seven",
+     "value": 55
+    },
+    {
+     "name": "Eight",
+     "value": 56
+    },
+    {
+     "name": "Nine",
+     "value": 57
+    },
+    {
+     "name": "Colon",
+     "value": 58
+    },
+    {
+     "name": "Semicolon",
+     "value": 59
+    },
+    {
+     "name": "LessThan",
+     "value": 60
+    },
+    {
+     "name": "Equals",
+     "value": 61
+    },
+    {
+     "name": "GreaterThan",
+     "value": 62
+    },
+    {
+     "name": "Question",
+     "value": 63
+    },
+    {
+     "name": "At",
+     "value": 64
+    },
+    {
+     "name": "LeftBracket",
+     "value": 91
+    },
+    {
+     "name": "BackSlash",
+     "value": 92
+    },
+    {
+     "name": "RightBracket",
+     "value": 93
+    },
+    {
+     "name": "Caret",
+     "value": 94
+    },
+    {
+     "name": "Underscore",
+     "value": 95
+    },
+    {
+     "name": "Backquote",
+     "value": 96
+    },
+    {
+     "name": "A",
+     "value": 97
+    },
+    {
+     "name": "B",
+     "value": 98
+    },
+    {
+     "name": "C",
+     "value": 99
+    },
+    {
+     "name": "D",
+     "value": 100
+    },
+    {
+     "name": "E",
+     "value": 101
+    },
+    {
+     "name": "F",
+     "value": 102
+    },
+    {
+     "name": "G",
+     "value": 103
+    },
+    {
+     "name": "H",
+     "value": 104
+    },
+    {
+     "name": "I",
+     "value": 105
+    },
+    {
+     "name": "J",
+     "value": 106
+    },
+    {
+     "name": "K",
+     "value": 107
+    },
+    {
+     "name": "L",
+     "value": 108
+    },
+    {
+     "name": "M",
+     "value": 109
+    },
+    {
+     "name": "N",
+     "value": 110
+    },
+    {
+     "name": "O",
+     "value": 111
+    },
+    {
+     "name": "P",
+     "value": 112
+    },
+    {
+     "name": "Q",
+     "value": 113
+    },
+    {
+     "name": "R",
+     "value": 114
+    },
+    {
+     "name": "S",
+     "value": 115
+    },
+    {
+     "name": "T",
+     "value": 116
+    },
+    {
+     "name": "U",
+     "value": 117
+    },
+    {
+     "name": "V",
+     "value": 118
+    },
+    {
+     "name": "W",
+     "value": 119
+    },
+    {
+     "name": "X",
+     "value": 120
+    },
+    {
+     "name": "Y",
+     "value": 121
+    },
+    {
+     "name": "Z",
+     "value": 122
+    },
+    {
+     "name": "LeftCurly",
+     "value": 123
+    },
+    {
+     "name": "Pipe",
+     "value": 124
+    },
+    {
+     "name": "RightCurly",
+     "value": 125
+    },
+    {
+     "name": "Tilde",
+     "value": 126
+    },
+    {
+     "name": "Delete",
+     "value": 127
+    },
+    {
+     "name": "World0",
+     "value": 160
+    },
+    {
+     "name": "World1",
+     "value": 161
+    },
+    {
+     "name": "World2",
+     "value": 162
+    },
+    {
+     "name": "World3",
+     "value": 163
+    },
+    {
+     "name": "World4",
+     "value": 164
+    },
+    {
+     "name": "World5",
+     "value": 165
+    },
+    {
+     "name": "World6",
+     "value": 166
+    },
+    {
+     "name": "World7",
+     "value": 167
+    },
+    {
+     "name": "World8",
+     "value": 168
+    },
+    {
+     "name": "World9",
+     "value": 169
+    },
+    {
+     "name": "World10",
+     "value": 170
+    },
+    {
+     "name": "World11",
+     "value": 171
+    },
+    {
+     "name": "World12",
+     "value": 172
+    },
+    {
+     "name": "World13",
+     "value": 173
+    },
+    {
+     "name": "World14",
+     "value": 174
+    },
+    {
+     "name": "World15",
+     "value": 175
+    },
+    {
+     "name": "World16",
+     "value": 176
+    },
+    {
+     "name": "World17",
+     "value": 177
+    },
+    {
+     "name": "World18",
+     "value": 178
+    },
+    {
+     "name": "World19",
+     "value": 179
+    },
+    {
+     "name": "World20",
+     "value": 180
+    },
+    {
+     "name": "World21",
+     "value": 181
+    },
+    {
+     "name": "World22",
+     "value": 182
+    },
+    {
+     "name": "World23",
+     "value": 183
+    },
+    {
+     "name": "World24",
+     "value": 184
+    },
+    {
+     "name": "World25",
+     "value": 185
+    },
+    {
+     "name": "World26",
+     "value": 186
+    },
+    {
+     "name": "World27",
+     "value": 187
+    },
+    {
+     "name": "World28",
+     "value": 188
+    },
+    {
+     "name": "World29",
+     "value": 189
+    },
+    {
+     "name": "World30",
+     "value": 190
+    },
+    {
+     "name": "World31",
+     "value": 191
+    },
+    {
+     "name": "World32",
+     "value": 192
+    },
+    {
+     "name": "World33",
+     "value": 193
+    },
+    {
+     "name": "World34",
+     "value": 194
+    },
+    {
+     "name": "World35",
+     "value": 195
+    },
+    {
+     "name": "World36",
+     "value": 196
+    },
+    {
+     "name": "World37",
+     "value": 197
+    },
+    {
+     "name": "World38",
+     "value": 198
+    },
+    {
+     "name": "World39",
+     "value": 199
+    },
+    {
+     "name": "World40",
+     "value": 200
+    },
+    {
+     "name": "World41",
+     "value": 201
+    },
+    {
+     "name": "World42",
+     "value": 202
+    },
+    {
+     "name": "World43",
+     "value": 203
+    },
+    {
+     "name": "World44",
+     "value": 204
+    },
+    {
+     "name": "World45",
+     "value": 205
+    },
+    {
+     "name": "World46",
+     "value": 206
+    },
+    {
+     "name": "World47",
+     "value": 207
+    },
+    {
+     "name": "World48",
+     "value": 208
+    },
+    {
+     "name": "World49",
+     "value": 209
+    },
+    {
+     "name": "World50",
+     "value": 210
+    },
+    {
+     "name": "World51",
+     "value": 211
+    },
+    {
+     "name": "World52",
+     "value": 212
+    },
+    {
+     "name": "World53",
+     "value": 213
+    },
+    {
+     "name": "World54",
+     "value": 214
+    },
+    {
+     "name": "World55",
+     "value": 215
+    },
+    {
+     "name": "World56",
+     "value": 216
+    },
+    {
+     "name": "World57",
+     "value": 217
+    },
+    {
+     "name": "World58",
+     "value": 218
+    },
+    {
+     "name": "World59",
+     "value": 219
+    },
+    {
+     "name": "World60",
+     "value": 220
+    },
+    {
+     "name": "World61",
+     "value": 221
+    },
+    {
+     "name": "World62",
+     "value": 222
+    },
+    {
+     "name": "World63",
+     "value": 223
+    },
+    {
+     "name": "World64",
+     "value": 224
+    },
+    {
+     "name": "World65",
+     "value": 225
+    },
+    {
+     "name": "World66",
+     "value": 226
+    },
+    {
+     "name": "World67",
+     "value": 227
+    },
+    {
+     "name": "World68",
+     "value": 228
+    },
+    {
+     "name": "World69",
+     "value": 229
+    },
+    {
+     "name": "World70",
+     "value": 230
+    },
+    {
+     "name": "World71",
+     "value": 231
+    },
+    {
+     "name": "World72",
+     "value": 232
+    },
+    {
+     "name": "World73",
+     "value": 233
+    },
+    {
+     "name": "World74",
+     "value": 234
+    },
+    {
+     "name": "World75",
+     "value": 235
+    },
+    {
+     "name": "World76",
+     "value": 236
+    },
+    {
+     "name": "World77",
+     "value": 237
+    },
+    {
+     "name": "World78",
+     "value": 238
+    },
+    {
+     "name": "World79",
+     "value": 239
+    },
+    {
+     "name": "World80",
+     "value": 240
+    },
+    {
+     "name": "World81",
+     "value": 241
+    },
+    {
+     "name": "World82",
+     "value": 242
+    },
+    {
+     "name": "World83",
+     "value": 243
+    },
+    {
+     "name": "World84",
+     "value": 244
+    },
+    {
+     "name": "World85",
+     "value": 245
+    },
+    {
+     "name": "World86",
+     "value": 246
+    },
+    {
+     "name": "World87",
+     "value": 247
+    },
+    {
+     "name": "World88",
+     "value": 248
+    },
+    {
+     "name": "World89",
+     "value": 249
+    },
+    {
+     "name": "World90",
+     "value": 250
+    },
+    {
+     "name": "World91",
+     "value": 251
+    },
+    {
+     "name": "World92",
+     "value": 252
+    },
+    {
+     "name": "World93",
+     "value": 253
+    },
+    {
+     "name": "World94",
+     "value": 254
+    },
+    {
+     "name": "World95",
+     "value": 255
+    },
+    {
+     "name": "KeypadZero",
+     "value": 256
+    },
+    {
+     "name": "KeypadOne",
+     "value": 257
+    },
+    {
+     "name": "KeypadTwo",
+     "value": 258
+    },
+    {
+     "name": "KeypadThree",
+     "value": 259
+    },
+    {
+     "name": "KeypadFour",
+     "value": 260
+    },
+    {
+     "name": "KeypadFive",
+     "value": 261
+    },
+    {
+     "name": "KeypadSix",
+     "value": 262
+    },
+    {
+     "name": "KeypadSeven",
+     "value": 263
+    },
+    {
+     "name": "KeypadEight",
+     "value": 264
+    },
+    {
+     "name": "KeypadNine",
+     "value": 265
+    },
+    {
+     "name": "KeypadPeriod",
+     "value": 266
+    },
+    {
+     "name": "KeypadDivide",
+     "value": 267
+    },
+    {
+     "name": "KeypadMultiply",
+     "value": 268
+    },
+    {
+     "name": "KeypadMinus",
+     "value": 269
+    },
+    {
+     "name": "KeypadPlus",
+     "value": 270
+    },
+    {
+     "name": "KeypadEnter",
+     "value": 271
+    },
+    {
+     "name": "KeypadEquals",
+     "value": 272
+    },
+    {
+     "name": "Up",
+     "value": 273
+    },
+    {
+     "name": "Down",
+     "value": 274
+    },
+    {
+     "name": "Right",
+     "value": 275
+    },
+    {
+     "name": "Left",
+     "value": 276
+    },
+    {
+     "name": "Insert",
+     "value": 277
+    },
+    {
+     "name": "Home",
+     "value": 278
+    },
+    {
+     "name": "End",
+     "value": 279
+    },
+    {
+     "name": "PageUp",
+     "value": 280
+    },
+    {
+     "name": "PageDown",
+     "value": 281
+    },
+    {
+     "name": "F1",
+     "value": 282
+    },
+    {
+     "name": "F2",
+     "value": 283
+    },
+    {
+     "name": "F3",
+     "value": 284
+    },
+    {
+     "name": "F4",
+     "value": 285
+    },
+    {
+     "name": "F5",
+     "value": 286
+    },
+    {
+     "name": "F6",
+     "value": 287
+    },
+    {
+     "name": "F7",
+     "value": 288
+    },
+    {
+     "name": "F8",
+     "value": 289
+    },
+    {
+     "name": "F9",
+     "value": 290
+    },
+    {
+     "name": "F10",
+     "value": 291
+    },
+    {
+     "name": "F11",
+     "value": 292
+    },
+    {
+     "name": "F12",
+     "value": 293
+    },
+    {
+     "name": "F13",
+     "value": 294
+    },
+    {
+     "name": "F14",
+     "value": 295
+    },
+    {
+     "name": "F15",
+     "value": 296
+    },
+    {
+     "name": "NumLock",
+     "value": 300
+    },
+    {
+     "name": "CapsLock",
+     "value": 301
+    },
+    {
+     "name": "ScrollLock",
+     "value": 302
+    },
+    {
+     "name": "RightShift",
+     "value": 303
+    },
+    {
+     "name": "LeftShift",
+     "value": 304
+    },
+    {
+     "name": "RightControl",
+     "value": 305
+    },
+    {
+     "name": "LeftControl",
+     "value": 306
+    },
+    {
+     "name": "RightAlt",
+     "value": 307
+    },
+    {
+     "name": "LeftAlt",
+     "value": 308
+    },
+    {
+     "name": "RightMeta",
+     "value": 309
+    },
+    {
+     "name": "LeftMeta",
+     "value": 310
+    },
+    {
+     "name": "LeftSuper",
+     "value": 311
+    },
+    {
+     "name": "RightSuper",
+     "value": 312
+    },
+    {
+     "name": "Mode",
+     "value": 313
+    },
+    {
+     "name": "Compose",
+     "value": 314
+    },
+    {
+     "name": "Help",
+     "value": 315
+    },
+    {
+     "name": "Print",
+     "value": 316
+    },
+    {
+     "name": "SysReq",
+     "value": 317
+    },
+    {
+     "name": "Break",
+     "value": 318
+    },
+    {
+     "name": "Menu",
+     "value": 319
+    },
+    {
+     "name": "Power",
+     "value": 320
+    },
+    {
+     "name": "Euro",
+     "value": 321
+    },
+    {
+     "name": "Undo",
+     "value": 322
+    },
+    {
+     "name": "ButtonX",
+     "value": 1000
+    },
+    {
+     "name": "ButtonY",
+     "value": 1001
+    },
+    {
+     "name": "ButtonA",
+     "value": 1002
+    },
+    {
+     "name": "ButtonB",
+     "value": 1003
+    },
+    {
+     "name": "ButtonR1",
+     "value": 1004
+    },
+    {
+     "name": "ButtonL1",
+     "value": 1005
+    },
+    {
+     "name": "ButtonR2",
+     "value": 1006
+    },
+    {
+     "name": "ButtonL2",
+     "value": 1007
+    },
+    {
+     "name": "ButtonR3",
+     "value": 1008
+    },
+    {
+     "name": "ButtonL3",
+     "value": 1009
+    },
+    {
+     "name": "ButtonStart",
+     "value": 1010
+    },
+    {
+     "name": "ButtonSelect",
+     "value": 1011
+    },
+    {
+     "name": "DPadLeft",
+     "value": 1012
+    },
+    {
+     "name": "DPadRight",
+     "value": 1013
+    },
+    {
+     "name": "DPadUp",
+     "value": 1014
+    },
+    {
+     "name": "DPadDown",
+     "value": 1015
+    },
+    {
+     "name": "Thumbstick1",
+     "value": 1016
+    },
+    {
+     "name": "Thumbstick2",
+     "value": 1017
+    },
+    {
+     "name": "Thumbstick1Up",
+     "value": 1018
+    },
+    {
+     "name": "Thumbstick1Down",
+     "value": 1019
+    },
+    {
+     "name": "Thumbstick1Left",
+     "value": 1020
+    },
+    {
+     "name": "Thumbstick1Right",
+     "value": 1021
+    },
+    {
+     "name": "Thumbstick2Up",
+     "value": 1022
+    },
+    {
+     "name": "Thumbstick2Down",
+     "value": 1023
+    },
+    {
+     "name": "Thumbstick2Left",
+     "value": 1024
+    },
+    {
+     "name": "Thumbstick2Right",
+     "value": 1025
+    },
+    {
+     "name": "MouseLeftButton",
+     "value": 1026
+    },
+    {
+     "name": "MouseRightButton",
+     "value": 1027
+    },
+    {
+     "name": "MouseMiddleButton",
+     "value": 1028
+    },
+    {
+     "name": "MouseBackButton",
+     "value": 1029
+    },
+    {
+     "name": "MouseNoButton",
+     "value": 1030
+    },
+    {
+     "name": "MouseX",
+     "value": 1031
+    },
+    {
+     "name": "MouseY",
+     "value": 1032
+    },
+    {
+     "name": "MousePosition",
+     "value": 1033
+    },
+    {
+     "name": "TouchPosition",
+     "value": 1034
+    },
+    {
+     "name": "MouseWheel",
+     "value": 1035
+    },
+    {
+     "name": "TrackpadPan",
+     "value": 1040
+    },
+    {
+     "name": "TrackpadPinch",
+     "value": 1045
+    },
+    {
+     "name": "MouseDelta",
+     "value": 1048
+    },
+    {
+     "name": "TouchDelta",
+     "value": 1049
+    },
+    {
+     "name": "TouchPinch",
+     "value": 1050
+    },
+    {
+     "name": "ButtonCenter",
+     "value": 1051
+    },
+    {
+     "name": "ButtonBack",
+     "value": 1052
+    },
+    {
+     "name": "ButtonUp",
+     "value": 1053
+    },
+    {
+     "name": "ButtonDown",
+     "value": 1054
+    },
+    {
+     "name": "ButtonLeft",
+     "value": 1055
+    },
+    {
+     "name": "ButtonRight",
+     "value": 1056
+    }
+   ],
+   "legacy": [],
+   "name": "KeyCode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.LineJoinMode.{Miter,Round} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Round",
+     "value": 0
+    },
+    {
+     "name": "Bevel",
+     "value": 1
+    },
+    {
+     "name": "Miter",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "LineJoinMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.MakeupType.{Eye,Face,Lip} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Face",
+     "value": 0
+    },
+    {
+     "name": "Lip",
+     "value": 1
+    },
+    {
+     "name": "Eye",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "MakeupType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.MarketplaceBulkPurchasePromptStatus.{Completed} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Completed",
+     "value": 1
+    },
+    {
+     "name": "Aborted",
+     "value": 2
+    },
+    {
+     "name": "Error",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "MarketplaceBulkPurchasePromptStatus"
+  },
+  {
+   "evidence": "GETIMPORT Enum.MarketplaceItemPurchaseStatus.{AlreadyOwned,InsufficientMembership,InsufficientRobux,NotAvailableForPurchaser,NotForSale,PlaceInvalid,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Success",
+     "value": 1
+    },
+    {
+     "name": "SystemError",
+     "value": 2
+    },
+    {
+     "name": "AlreadyOwned",
+     "value": 3
+    },
+    {
+     "name": "InsufficientRobux",
+     "value": 4
+    },
+    {
+     "name": "QuantityLimitExceeded",
+     "value": 5
+    },
+    {
+     "name": "QuotaExceeded",
+     "value": 6
+    },
+    {
+     "name": "NotForSale",
+     "value": 7
+    },
+    {
+     "name": "NotAvailableForPurchaser",
+     "value": 8
+    },
+    {
+     "name": "PriceMismatch",
+     "value": 9
+    },
+    {
+     "name": "SoldOut",
+     "value": 10
+    },
+    {
+     "name": "PurchaserIsSeller",
+     "value": 11
+    },
+    {
+     "name": "InsufficientMembership",
+     "value": 12
+    },
+    {
+     "name": "PlaceInvalid",
+     "value": 13
+    }
+   ],
+   "legacy": [],
+   "name": "MarketplaceItemPurchaseStatus"
+  },
+  {
+   "evidence": "GETIMPORT Enum.MarketplaceProductType.{AvatarAsset,AvatarBundle} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "AvatarAsset",
+     "value": 1
+    },
+    {
+     "name": "AvatarBundle",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "MarketplaceProductType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.Material.{Glass} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Plastic",
+     "value": 256
+    },
+    {
+     "name": "SmoothPlastic",
+     "value": 272
+    },
+    {
+     "name": "Neon",
+     "value": 288
+    },
+    {
+     "name": "Wood",
+     "value": 512
+    },
+    {
+     "name": "WoodPlanks",
+     "value": 528
+    },
+    {
+     "name": "Marble",
+     "value": 784
+    },
+    {
+     "name": "Basalt",
+     "value": 788
+    },
+    {
+     "name": "Slate",
+     "value": 800
+    },
+    {
+     "name": "CrackedLava",
+     "value": 804
+    },
+    {
+     "name": "Concrete",
+     "value": 816
+    },
+    {
+     "name": "Limestone",
+     "value": 820
+    },
+    {
+     "name": "Granite",
+     "value": 832
+    },
+    {
+     "name": "Pavement",
+     "value": 836
+    },
+    {
+     "name": "Brick",
+     "value": 848
+    },
+    {
+     "name": "Pebble",
+     "value": 864
+    },
+    {
+     "name": "Cobblestone",
+     "value": 880
+    },
+    {
+     "name": "Rock",
+     "value": 896
+    },
+    {
+     "name": "Sandstone",
+     "value": 912
+    },
+    {
+     "name": "CorrodedMetal",
+     "value": 1040
+    },
+    {
+     "name": "DiamondPlate",
+     "value": 1056
+    },
+    {
+     "name": "Foil",
+     "value": 1072
+    },
+    {
+     "name": "Metal",
+     "value": 1088
+    },
+    {
+     "name": "Grass",
+     "value": 1280
+    },
+    {
+     "name": "LeafyGrass",
+     "value": 1284
+    },
+    {
+     "name": "Sand",
+     "value": 1296
+    },
+    {
+     "name": "Fabric",
+     "value": 1312
+    },
+    {
+     "name": "Snow",
+     "value": 1328
+    },
+    {
+     "name": "Mud",
+     "value": 1344
+    },
+    {
+     "name": "Ground",
+     "value": 1360
+    },
+    {
+     "name": "Asphalt",
+     "value": 1376
+    },
+    {
+     "name": "Salt",
+     "value": 1392
+    },
+    {
+     "name": "Ice",
+     "value": 1536
+    },
+    {
+     "name": "Glacier",
+     "value": 1552
+    },
+    {
+     "name": "Glass",
+     "value": 1568
+    },
+    {
+     "name": "ForceField",
+     "value": 1584
+    },
+    {
+     "name": "Air",
+     "value": 1792
+    },
+    {
+     "name": "Water",
+     "value": 2048
+    },
+    {
+     "name": "Cardboard",
+     "value": 2304
+    },
+    {
+     "name": "Carpet",
+     "value": 2305
+    },
+    {
+     "name": "CeramicTiles",
+     "value": 2306
+    },
+    {
+     "name": "ClayRoofTiles",
+     "value": 2307
+    },
+    {
+     "name": "RoofShingles",
+     "value": 2308
+    },
+    {
+     "name": "Leather",
+     "value": 2309
+    },
+    {
+     "name": "Plaster",
+     "value": 2310
+    },
+    {
+     "name": "Rubber",
+     "value": 2311
+    }
+   ],
+   "legacy": [],
+   "name": "Material"
+  },
+  {
+   "evidence": "GETIMPORT Enum.MembershipType.{Premium} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "BuildersClub",
+     "value": 1
+    },
+    {
+     "name": "TurboBuildersClub",
+     "value": 2
+    },
+    {
+     "name": "OutrageousBuildersClub",
+     "value": 3
+    },
+    {
+     "name": "Premium",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "MembershipType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ModifierKey.{Ctrl,Shift} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Shift",
+     "value": 0
+    },
+    {
+     "name": "Ctrl",
+     "value": 1
+    },
+    {
+     "name": "Alt",
+     "value": 2
+    },
+    {
+     "name": "Meta",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "ModifierKey"
+  },
+  {
+   "evidence": "GETIMPORT Enum.NotificationButtonType.{Primary,Secondary} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Primary",
+     "value": 0
+    },
+    {
+     "name": "Secondary",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "NotificationButtonType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.OrientationAlignmentMode.{OneAttachment} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "OneAttachment",
+     "value": 0
+    },
+    {
+     "name": "TwoAttachment",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "OrientationAlignmentMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.OutfitSource.{Created} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "All",
+     "value": 1
+    },
+    {
+     "name": "Created",
+     "value": 2
+    },
+    {
+     "name": "Purchased",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "OutfitSource"
+  },
+  {
+   "evidence": "GETIMPORT Enum.OutfitType.{Avatar,Makeup} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "All",
+     "value": 1
+    },
+    {
+     "name": "Avatar",
+     "value": 2
+    },
+    {
+     "name": "DynamicHead",
+     "value": 3
+    },
+    {
+     "name": "Shoes",
+     "value": 4
+    },
+    {
+     "name": "Makeup",
+     "value": 5
+    }
+   ],
+   "legacy": [],
+   "name": "OutfitType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.PeoplePageLayout.{Card,List} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Card",
+     "value": 0
+    },
+    {
+     "name": "List",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "PeoplePageLayout"
+  },
+  {
+   "evidence": "GETIMPORT Enum.PinExperienceStatus.{AlreadyExists,Success} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Success",
+     "value": 0
+    },
+    {
+     "name": "Failure",
+     "value": 1
+    },
+    {
+     "name": "AlreadyExists",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "PinExperienceStatus"
+  },
+  {
+   "evidence": "GETIMPORT Enum.PioneerSource.{DaveyBazooka} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Roblox",
+     "value": 0
+    },
+    {
+     "name": "DaveyBazooka",
+     "value": 1
+    },
+    {
+     "name": "Oof",
+     "value": 2
+    },
+    {
+     "name": "RobloxPioneerTest",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "PioneerSource"
+  },
+  {
+   "evidence": "GETIMPORT Enum.Platform.{MetaOS,PS5} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Windows",
+     "value": 0
+    },
+    {
+     "name": "OSX",
+     "value": 1
+    },
+    {
+     "name": "IOS",
+     "value": 2
+    },
+    {
+     "name": "Android",
+     "value": 3
+    },
+    {
+     "name": "XBoxOne",
+     "value": 4
+    },
+    {
+     "name": "PS4",
+     "value": 5
+    },
+    {
+     "name": "PS3",
+     "value": 6
+    },
+    {
+     "name": "XBox360",
+     "value": 7
+    },
+    {
+     "name": "WiiU",
+     "value": 8
+    },
+    {
+     "name": "NX",
+     "value": 9
+    },
+    {
+     "name": "Ouya",
+     "value": 10
+    },
+    {
+     "name": "AndroidTV",
+     "value": 11
+    },
+    {
+     "name": "Chromecast",
+     "value": 12
+    },
+    {
+     "name": "Linux",
+     "value": 13
+    },
+    {
+     "name": "SteamOS",
+     "value": 14
+    },
+    {
+     "name": "WebOS",
+     "value": 15
+    },
+    {
+     "name": "DOS",
+     "value": 16
+    },
+    {
+     "name": "BeOS",
+     "value": 17
+    },
+    {
+     "name": "UWP",
+     "value": 18
+    },
+    {
+     "name": "PS5",
+     "value": 19
+    },
+    {
+     "name": "MetaOS",
+     "value": 20
+    },
+    {
+     "name": "Web",
+     "value": 21
+    },
+    {
+     "name": "None",
+     "value": 22
+    }
+   ],
+   "legacy": [],
+   "name": "Platform"
+  },
+  {
+   "evidence": "GETIMPORT Enum.PlaybackState.{Completed,Playing} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Begin",
+     "value": 0
+    },
+    {
+     "name": "Delayed",
+     "value": 1
+    },
+    {
+     "name": "Playing",
+     "value": 2
+    },
+    {
+     "name": "Paused",
+     "value": 3
+    },
+    {
+     "name": "Completed",
+     "value": 4
+    },
+    {
+     "name": "Cancelled",
+     "value": 5
+    }
+   ],
+   "legacy": [],
+   "name": "PlaybackState"
+  },
+  {
+   "evidence": "GETIMPORT Enum.PositionAlignmentMode.{OneAttachment} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "OneAttachment",
+     "value": 0
+    },
+    {
+     "name": "TwoAttachment",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "PositionAlignmentMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.PreferredInput.{Gamepad,KeyboardAndMouse,MicroGamepad,Touch} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "KeyboardAndMouse",
+     "value": 0
+    },
+    {
+     "name": "Gamepad",
+     "value": 1
+    },
+    {
+     "name": "Touch",
+     "value": 2
+    },
+    {
+     "name": "MicroGamepad",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "PreferredInput"
+  },
+  {
+   "evidence": "GETIMPORT Enum.PreferredTextSize.{Medium} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Medium",
+     "value": 1
+    },
+    {
+     "name": "Large",
+     "value": 2
+    },
+    {
+     "name": "Larger",
+     "value": 3
+    },
+    {
+     "name": "Largest",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "PreferredTextSize"
+  },
+  {
+   "evidence": "GETIMPORT Enum.PrefetchDownloadStatus.{Completed,InProgress} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "NotStarted",
+     "value": 0
+    },
+    {
+     "name": "InProgress",
+     "value": 1
+    },
+    {
+     "name": "Completed",
+     "value": 2
+    },
+    {
+     "name": "Failed",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "PrefetchDownloadStatus"
+  },
+  {
+   "evidence": "GETIMPORT Enum.PromptCreatePlatformContentResult.{} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Success",
+     "value": 1
+    },
+    {
+     "name": "PermissionDenied",
+     "value": 2
+    },
+    {
+     "name": "Timeout",
+     "value": 3
+    },
+    {
+     "name": "UploadFailed",
+     "value": 4
+    },
+    {
+     "name": "NoUserInput",
+     "value": 5
+    },
+    {
+     "name": "UnknownFailure",
+     "value": 6
+    },
+    {
+     "name": "UGCValidationFailed",
+     "value": 7
+    },
+    {
+     "name": "ModeratedName",
+     "value": 8
+    },
+    {
+     "name": "PurchaseFailure",
+     "value": 9
+    },
+    {
+     "name": "TokenInvalid",
+     "value": 10
+    }
+   ],
+   "legacy": [],
+   "name": "PromptCreatePlatformContentResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.PromptExperienceDetailsResult.{PromptClosed,TeleportAttempted} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "PromptClosed",
+     "value": 0
+    },
+    {
+     "name": "TeleportAttempted",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "PromptExperienceDetailsResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ProximityPromptInputType.{Gamepad,Touch} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Keyboard",
+     "value": 0
+    },
+    {
+     "name": "Gamepad",
+     "value": 1
+    },
+    {
+     "name": "Touch",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "ProximityPromptInputType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ProximityPromptStyle.{Custom} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "Custom",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "ProximityPromptStyle"
+  },
+  {
+   "evidence": "GETIMPORT Enum.PurchaseOption.{TimedOption} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "TimedOption",
+     "value": 1
+    },
+    {
+     "name": "Permanent",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "PurchaseOption"
+  },
+  {
+   "evidence": "GETIMPORT Enum.RaycastFilterType.{Exclude} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Exclude",
+     "value": 0
+    },
+    {
+     "name": "Include",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "RaycastFilterType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ReadCapturesFromGalleryResult.{NeedPermission,Success} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Success",
+     "value": 0
+    },
+    {
+     "name": "NeedPermission",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "ReadCapturesFromGalleryResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.RecommendationItemContentType.{Dynamic,Static} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Static",
+     "value": 0
+    },
+    {
+     "name": "Dynamic",
+     "value": 1
+    },
+    {
+     "name": "Interactive",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "RecommendationItemContentType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ResamplerMode.{} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "Pixelated",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "ResamplerMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ReturnKeyType.{Default,Next,Search} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "Done",
+     "value": 1
+    },
+    {
+     "name": "Go",
+     "value": 2
+    },
+    {
+     "name": "Next",
+     "value": 3
+    },
+    {
+     "name": "Search",
+     "value": 4
+    },
+    {
+     "name": "Send",
+     "value": 5
+    }
+   ],
+   "legacy": [],
+   "name": "ReturnKeyType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.RigLabel.{LeftClavicle,LeftElbow,LeftShoulder,LeftWrist,RightClavicle,RightElbow,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Invalid",
+     "value": 0
+    },
+    {
+     "name": "Root",
+     "value": 2
+    },
+    {
+     "name": "LeftHip",
+     "value": 3
+    },
+    {
+     "name": "LeftKnee",
+     "value": 4
+    },
+    {
+     "name": "LeftAnkle",
+     "value": 5
+    },
+    {
+     "name": "RightHip",
+     "value": 7
+    },
+    {
+     "name": "RightKnee",
+     "value": 8
+    },
+    {
+     "name": "RightAnkle",
+     "value": 9
+    },
+    {
+     "name": "Waist",
+     "value": 11
+    },
+    {
+     "name": "LeftShoulder",
+     "value": 12
+    },
+    {
+     "name": "LeftElbow",
+     "value": 13
+    },
+    {
+     "name": "LeftWrist",
+     "value": 14
+    },
+    {
+     "name": "RightShoulder",
+     "value": 16
+    },
+    {
+     "name": "RightElbow",
+     "value": 17
+    },
+    {
+     "name": "RightWrist",
+     "value": 18
+    },
+    {
+     "name": "Neck",
+     "value": 20
+    },
+    {
+     "name": "Spine",
+     "value": 23
+    },
+    {
+     "name": "Chest",
+     "value": 24
+    },
+    {
+     "name": "HeadBase",
+     "value": 25
+    },
+    {
+     "name": "LeftClavicle",
+     "value": 26
+    },
+    {
+     "name": "RightClavicle",
+     "value": 27
+    },
+    {
+     "name": "LeftToeBase",
+     "value": 28
+    },
+    {
+     "name": "RightToeBase",
+     "value": 29
+    },
+    {
+     "name": "Thumb1",
+     "value": 30
+    },
+    {
+     "name": "Thumb2",
+     "value": 31
+    },
+    {
+     "name": "Thumb3",
+     "value": 32
+    },
+    {
+     "name": "Index1",
+     "value": 33
+    },
+    {
+     "name": "Index2",
+     "value": 34
+    },
+    {
+     "name": "Index3",
+     "value": 35
+    },
+    {
+     "name": "Middle1",
+     "value": 36
+    },
+    {
+     "name": "Middle2",
+     "value": 37
+    },
+    {
+     "name": "Middle3",
+     "value": 38
+    },
+    {
+     "name": "Ring1",
+     "value": 39
+    },
+    {
+     "name": "Ring2",
+     "value": 40
+    },
+    {
+     "name": "Ring3",
+     "value": 41
+    },
+    {
+     "name": "Pinky1",
+     "value": 42
+    },
+    {
+     "name": "Pinky2",
+     "value": 43
+    },
+    {
+     "name": "Pinky3",
+     "value": 44
+    }
+   ],
+   "legacy": [],
+   "name": "RigLabel"
+  },
+  {
+   "evidence": "GETIMPORT Enum.RolloutState.{Disabled,Enabled} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "Disabled",
+     "value": 1
+    },
+    {
+     "name": "Enabled",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "RolloutState"
+  },
+  {
+   "evidence": "GETIMPORT Enum.RsvpStatus.{Going,None,NotGoing} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Going",
+     "value": 1
+    },
+    {
+     "name": "NotGoing",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "RsvpStatus"
+  },
+  {
+   "evidence": "GETIMPORT Enum.RunContext.{Client} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Legacy",
+     "value": 0
+    },
+    {
+     "name": "Server",
+     "value": 1
+    },
+    {
+     "name": "Client",
+     "value": 2
+    },
+    {
+     "name": "Plugin",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "RunContext"
+  },
+  {
+   "evidence": "GETIMPORT Enum.SafeAreaCompatibility.{None} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "FullscreenExtension",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "SafeAreaCompatibility"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ScaleType.{Crop,Fit,Tile} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Stretch",
+     "value": 0
+    },
+    {
+     "name": "Slice",
+     "value": 1
+    },
+    {
+     "name": "Tile",
+     "value": 2
+    },
+    {
+     "name": "Fit",
+     "value": 3
+    },
+    {
+     "name": "Crop",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "ScaleType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ScopeCheckResult.{ConsentAccepted,ConsentDenied} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "ConsentAccepted",
+     "value": 0
+    },
+    {
+     "name": "InvalidScopes",
+     "value": 1
+    },
+    {
+     "name": "Timeout",
+     "value": 2
+    },
+    {
+     "name": "NoUserInput",
+     "value": 3
+    },
+    {
+     "name": "BackendError",
+     "value": 4
+    },
+    {
+     "name": "UnexpectedError",
+     "value": 5
+    },
+    {
+     "name": "InvalidArgument",
+     "value": 6
+    },
+    {
+     "name": "ConsentDenied",
+     "value": 7
+    }
+   ],
+   "legacy": [],
+   "name": "ScopeCheckResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ScreenInsets.{CoreUISafeInsets,DeviceSafeInsets,None} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "DeviceSafeInsets",
+     "value": 1
+    },
+    {
+     "name": "CoreUISafeInsets",
+     "value": 2
+    },
+    {
+     "name": "TopbarSafeInsets",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "ScreenInsets"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ScreenOrientation.{LandscapeLeft,LandscapeRight,LandscapeSensor,Portrait,Sensor} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "LandscapeLeft",
+     "value": 0
+    },
+    {
+     "name": "LandscapeRight",
+     "value": 1
+    },
+    {
+     "name": "LandscapeSensor",
+     "value": 2
+    },
+    {
+     "name": "Portrait",
+     "value": 3
+    },
+    {
+     "name": "Sensor",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "ScreenOrientation"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ScrollBarInset.{Always,None,ScrollBar} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "ScrollBar",
+     "value": 1
+    },
+    {
+     "name": "Always",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "ScrollBarInset"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ScrollingDirection.{X,XY,Y} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "X",
+     "value": 1
+    },
+    {
+     "name": "Y",
+     "value": 2
+    },
+    {
+     "name": "XY",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "ScrollingDirection"
+  },
+  {
+   "evidence": "GETIMPORT Enum.SelectionBehavior.{Escape,Stop} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Escape",
+     "value": 0
+    },
+    {
+     "name": "Stop",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "SelectionBehavior"
+  },
+  {
+   "evidence": "GETIMPORT Enum.SelfViewPosition.{BottomLeft,BottomRight,TopLeft,TopRight} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "LastPosition",
+     "value": 0
+    },
+    {
+     "name": "TopLeft",
+     "value": 1
+    },
+    {
+     "name": "TopRight",
+     "value": 2
+    },
+    {
+     "name": "BottomLeft",
+     "value": 3
+    },
+    {
+     "name": "BottomRight",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "SelfViewPosition"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ShowAdResult.{ShowCompleted,ShowInterrupted} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "ShowCompleted",
+     "value": 1
+    },
+    {
+     "name": "AdNotReady",
+     "value": 2
+    },
+    {
+     "name": "AdAlreadyShowing",
+     "value": 3
+    },
+    {
+     "name": "InternalError",
+     "value": 4
+    },
+    {
+     "name": "ShowInterrupted",
+     "value": 5
+    },
+    {
+     "name": "InsufficientMemory",
+     "value": 6
+    }
+   ],
+   "legacy": [],
+   "name": "ShowAdResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.SlimTintMode.{} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "LevelOfDetail",
+     "value": 1
+    },
+    {
+     "name": "Meshes",
+     "value": 2
+    },
+    {
+     "name": "MeshResourcePtr",
+     "value": 3
+    },
+    {
+     "name": "ContentId",
+     "value": 4
+    },
+    {
+     "name": "DataModelState",
+     "value": 5
+    },
+    {
+     "name": "TranscoderStatus",
+     "value": 6
+    }
+   ],
+   "legacy": [],
+   "name": "SlimTintMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.SlimViewContext.{Player} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Player",
+     "value": 0
+    },
+    {
+     "name": "Editor",
+     "value": 1
+    },
+    {
+     "name": "ImGui",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "SlimViewContext"
+  },
+  {
+   "evidence": "GETIMPORT Enum.SortOrder.{LayoutOrder,Name} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Name",
+     "value": 0
+    },
+    {
+     "name": "Custom",
+     "value": 1
+    },
+    {
+     "name": "LayoutOrder",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "SortOrder"
+  },
+  {
+   "evidence": "GETIMPORT Enum.StudioStyleGuideColor.{ScriptBackground,ScriptBool,ScriptBuiltInFunction,ScriptComment,ScriptKeyword,ScriptNumber,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "MainBackground",
+     "value": 0
+    },
+    {
+     "name": "Titlebar",
+     "value": 1
+    },
+    {
+     "name": "Dropdown",
+     "value": 2
+    },
+    {
+     "name": "Tooltip",
+     "value": 3
+    },
+    {
+     "name": "Notification",
+     "value": 4
+    },
+    {
+     "name": "ScrollBar",
+     "value": 5
+    },
+    {
+     "name": "ScrollBarBackground",
+     "value": 6
+    },
+    {
+     "name": "TabBar",
+     "value": 7
+    },
+    {
+     "name": "Tab",
+     "value": 8
+    },
+    {
+     "name": "FilterButtonDefault",
+     "value": 9
+    },
+    {
+     "name": "FilterButtonHover",
+     "value": 10
+    },
+    {
+     "name": "FilterButtonChecked",
+     "value": 11
+    },
+    {
+     "name": "FilterButtonAccent",
+     "value": 12
+    },
+    {
+     "name": "FilterButtonBorder",
+     "value": 13
+    },
+    {
+     "name": "FilterButtonBorderAlt",
+     "value": 14
+    },
+    {
+     "name": "RibbonTab",
+     "value": 15
+    },
+    {
+     "name": "RibbonTabTopBar",
+     "value": 16
+    },
+    {
+     "name": "Button",
+     "value": 17
+    },
+    {
+     "name": "MainButton",
+     "value": 18
+    },
+    {
+     "name": "RibbonButton",
+     "value": 19
+    },
+    {
+     "name": "ViewPortBackground",
+     "value": 20
+    },
+    {
+     "name": "InputFieldBackground",
+     "value": 21
+    },
+    {
+     "name": "Item",
+     "value": 22
+    },
+    {
+     "name": "TableItem",
+     "value": 23
+    },
+    {
+     "name": "CategoryItem",
+     "value": 24
+    },
+    {
+     "name": "GameSettingsTableItem",
+     "value": 25
+    },
+    {
+     "name": "GameSettingsTooltip",
+     "value": 26
+    },
+    {
+     "name": "EmulatorBar",
+     "value": 27
+    },
+    {
+     "name": "EmulatorDropDown",
+     "value": 28
+    },
+    {
+     "name": "ColorPickerFrame",
+     "value": 29
+    },
+    {
+     "name": "CurrentMarker",
+     "value": 30
+    },
+    {
+     "name": "Border",
+     "value": 31
+    },
+    {
+     "name": "DropShadow",
+     "value": 32
+    },
+    {
+     "name": "Shadow",
+     "value": 33
+    },
+    {
+     "name": "Light",
+     "value": 34
+    },
+    {
+     "name": "Dark",
+     "value": 35
+    },
+    {
+     "name": "Mid",
+     "value": 36
+    },
+    {
+     "name": "MainText",
+     "value": 37
+    },
+    {
+     "name": "SubText",
+     "value": 38
+    },
+    {
+     "name": "TitlebarText",
+     "value": 39
+    },
+    {
+     "name": "BrightText",
+     "value": 40
+    },
+    {
+     "name": "DimmedText",
+     "value": 41
+    },
+    {
+     "name": "LinkText",
+     "value": 42
+    },
+    {
+     "name": "WarningText",
+     "value": 43
+    },
+    {
+     "name": "ErrorText",
+     "value": 44
+    },
+    {
+     "name": "InfoText",
+     "value": 45
+    },
+    {
+     "name": "SensitiveText",
+     "value": 46
+    },
+    {
+     "name": "ScriptSideWidget",
+     "value": 47
+    },
+    {
+     "name": "ScriptBackground",
+     "value": 48
+    },
+    {
+     "name": "ScriptText",
+     "value": 49
+    },
+    {
+     "name": "ScriptSelectionText",
+     "value": 50
+    },
+    {
+     "name": "ScriptSelectionBackground",
+     "value": 51
+    },
+    {
+     "name": "ScriptFindSelectionBackground",
+     "value": 52
+    },
+    {
+     "name": "ScriptMatchingWordSelectionBackground",
+     "value": 53
+    },
+    {
+     "name": "ScriptOperator",
+     "value": 54
+    },
+    {
+     "name": "ScriptNumber",
+     "value": 55
+    },
+    {
+     "name": "ScriptString",
+     "value": 56
+    },
+    {
+     "name": "ScriptComment",
+     "value": 57
+    },
+    {
+     "name": "ScriptKeyword",
+     "value": 58
+    },
+    {
+     "name": "ScriptBuiltInFunction",
+     "value": 59
+    },
+    {
+     "name": "ScriptWarning",
+     "value": 60
+    },
+    {
+     "name": "ScriptError",
+     "value": 61
+    },
+    {
+     "name": "ScriptInformation",
+     "value": 62
+    },
+    {
+     "name": "ScriptHint",
+     "value": 63
+    },
+    {
+     "name": "ScriptWhitespace",
+     "value": 64
+    },
+    {
+     "name": "ScriptRuler",
+     "value": 65
+    },
+    {
+     "name": "DocViewCodeBackground",
+     "value": 66
+    },
+    {
+     "name": "DebuggerCurrentLine",
+     "value": 67
+    },
+    {
+     "name": "DebuggerErrorLine",
+     "value": 68
+    },
+    {
+     "name": "DiffFilePathText",
+     "value": 69
+    },
+    {
+     "name": "DiffTextHunkInfo",
+     "value": 70
+    },
+    {
+     "name": "DiffTextNoChange",
+     "value": 71
+    },
+    {
+     "name": "DiffTextAddition",
+     "value": 72
+    },
+    {
+     "name": "DiffTextDeletion",
+     "value": 73
+    },
+    {
+     "name": "DiffTextSeparatorBackground",
+     "value": 74
+    },
+    {
+     "name": "DiffTextNoChangeBackground",
+     "value": 75
+    },
+    {
+     "name": "DiffTextAdditionBackground",
+     "value": 76
+    },
+    {
+     "name": "DiffTextDeletionBackground",
+     "value": 77
+    },
+    {
+     "name": "DiffLineNum",
+     "value": 78
+    },
+    {
+     "name": "DiffLineNumSeparatorBackground",
+     "value": 79
+    },
+    {
+     "name": "DiffLineNumNoChangeBackground",
+     "value": 80
+    },
+    {
+     "name": "DiffLineNumAdditionBackground",
+     "value": 81
+    },
+    {
+     "name": "DiffLineNumDeletionBackground",
+     "value": 82
+    },
+    {
+     "name": "DiffFilePathBackground",
+     "value": 83
+    },
+    {
+     "name": "DiffFilePathBorder",
+     "value": 84
+    },
+    {
+     "name": "ChatIncomingBgColor",
+     "value": 85
+    },
+    {
+     "name": "ChatIncomingTextColor",
+     "value": 86
+    },
+    {
+     "name": "ChatOutgoingBgColor",
+     "value": 87
+    },
+    {
+     "name": "ChatOutgoingTextColor",
+     "value": 88
+    },
+    {
+     "name": "ChatModeratedMessageColor",
+     "value": 89
+    },
+    {
+     "name": "Separator",
+     "value": 90
+    },
+    {
+     "name": "ButtonBorder",
+     "value": 91
+    },
+    {
+     "name": "ButtonText",
+     "value": 92
+    },
+    {
+     "name": "InputFieldBorder",
+     "value": 93
+    },
+    {
+     "name": "CheckedFieldBackground",
+     "value": 94
+    },
+    {
+     "name": "CheckedFieldBorder",
+     "value": 95
+    },
+    {
+     "name": "CheckedFieldIndicator",
+     "value": 96
+    },
+    {
+     "name": "HeaderSection",
+     "value": 97
+    },
+    {
+     "name": "Midlight",
+     "value": 98
+    },
+    {
+     "name": "StatusBar",
+     "value": 99
+    },
+    {
+     "name": "DialogButton",
+     "value": 100
+    },
+    {
+     "name": "DialogButtonText",
+     "value": 101
+    },
+    {
+     "name": "DialogButtonBorder",
+     "value": 102
+    },
+    {
+     "name": "DialogMainButton",
+     "value": 103
+    },
+    {
+     "name": "DialogMainButtonText",
+     "value": 104
+    },
+    {
+     "name": "InfoBarWarningBackground",
+     "value": 105
+    },
+    {
+     "name": "InfoBarWarningText",
+     "value": 106
+    },
+    {
+     "name": "ScriptEditorCurrentLine",
+     "value": 107
+    },
+    {
+     "name": "ScriptMethod",
+     "value": 108
+    },
+    {
+     "name": "ScriptProperty",
+     "value": 109
+    },
+    {
+     "name": "ScriptNil",
+     "value": 110
+    },
+    {
+     "name": "ScriptBool",
+     "value": 111
+    },
+    {
+     "name": "ScriptFunction",
+     "value": 112
+    },
+    {
+     "name": "ScriptLocal",
+     "value": 113
+    },
+    {
+     "name": "ScriptSelf",
+     "value": 114
+    },
+    {
+     "name": "ScriptLuauKeyword",
+     "value": 115
+    },
+    {
+     "name": "ScriptFunctionName",
+     "value": 116
+    },
+    {
+     "name": "ScriptTodo",
+     "value": 117
+    },
+    {
+     "name": "ScriptBracket",
+     "value": 118
+    },
+    {
+     "name": "AttributeCog",
+     "value": 119
+    },
+    {
+     "name": "AICOOverlayText",
+     "value": 128
+    },
+    {
+     "name": "AICOOverlayButtonBackground",
+     "value": 129
+    },
+    {
+     "name": "AICOOverlayButtonBackgroundHover",
+     "value": 130
+    },
+    {
+     "name": "AICOOverlayButtonBackgroundPressed",
+     "value": 131
+    },
+    {
+     "name": "OnboardingCover",
+     "value": 132
+    },
+    {
+     "name": "OnboardingHighlight",
+     "value": 133
+    },
+    {
+     "name": "OnboardingShadow",
+     "value": 134
+    },
+    {
+     "name": "BreakpointMarker",
+     "value": 136
+    },
+    {
+     "name": "DiffLineNumHover",
+     "value": 137
+    },
+    {
+     "name": "DiffLineNumSeparatorBackgroundHover",
+     "value": 138
+    }
+   ],
+   "legacy": [],
+   "name": "StudioStyleGuideColor"
+  },
+  {
+   "evidence": "GETIMPORT Enum.SubscriptionState.{Expired,NeverSubscribed,SubscribedRenewalPaymentPending,SubscribedWillNotRenew,SubscribedWillRenew} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "NeverSubscribed",
+     "value": 0
+    },
+    {
+     "name": "SubscribedWillRenew",
+     "value": 1
+    },
+    {
+     "name": "SubscribedWillNotRenew",
+     "value": 2
+    },
+    {
+     "name": "SubscribedRenewalPaymentPending",
+     "value": 3
+    },
+    {
+     "name": "Expired",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "SubscriptionState"
+  },
+  {
+   "evidence": "GETIMPORT Enum.SurfaceGuiShape.{CurvedHorizontally,Flat} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Flat",
+     "value": 0
+    },
+    {
+     "name": "CurvedHorizontally",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "SurfaceGuiShape"
+  },
+  {
+   "evidence": "GETIMPORT Enum.SurfaceGuiSizingMode.{PixelsPerStud} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "FixedSize",
+     "value": 0
+    },
+    {
+     "name": "PixelsPerStud",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "SurfaceGuiSizingMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.TeleportResult.{Failure,Flooded,IsTeleporting} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Success",
+     "value": 0
+    },
+    {
+     "name": "Failure",
+     "value": 1
+    },
+    {
+     "name": "GameNotFound",
+     "value": 2
+    },
+    {
+     "name": "GameEnded",
+     "value": 3
+    },
+    {
+     "name": "GameFull",
+     "value": 4
+    },
+    {
+     "name": "Unauthorized",
+     "value": 5
+    },
+    {
+     "name": "Flooded",
+     "value": 6
+    },
+    {
+     "name": "IsTeleporting",
+     "value": 7
+    }
+   ],
+   "legacy": [],
+   "name": "TeleportResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.TextChatMessageStatus.{Floodchecked,InvalidPrivacySettings,InvalidTextChannelPermissions,MessageTooLong,ModerationTimeout,Sending,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Unknown",
+     "value": 1
+    },
+    {
+     "name": "Success",
+     "value": 2
+    },
+    {
+     "name": "Sending",
+     "value": 3
+    },
+    {
+     "name": "TextFilterFailed",
+     "value": 4
+    },
+    {
+     "name": "Floodchecked",
+     "value": 5
+    },
+    {
+     "name": "InvalidPrivacySettings",
+     "value": 6
+    },
+    {
+     "name": "InvalidTextChannelPermissions",
+     "value": 7
+    },
+    {
+     "name": "MessageTooLong",
+     "value": 8
+    },
+    {
+     "name": "ModerationTimeout",
+     "value": 9
+    }
+   ],
+   "legacy": [],
+   "name": "TextChatMessageStatus"
+  },
+  {
+   "evidence": "GETIMPORT Enum.TextDirection.{LeftToRight,RightToLeft} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Auto",
+     "value": 0
+    },
+    {
+     "name": "LeftToRight",
+     "value": 1
+    },
+    {
+     "name": "RightToLeft",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "TextDirection"
+  },
+  {
+   "evidence": "GETIMPORT Enum.TextFilterContext.{PrivateChat,PublicChat} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "PublicChat",
+     "value": 1
+    },
+    {
+     "name": "PrivateChat",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "TextFilterContext"
+  },
+  {
+   "evidence": "GETIMPORT Enum.TextInputType.{Default,Email,NewPassword,NewPasswordShown,NoSuggestions,Number,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "NoSuggestions",
+     "value": 1
+    },
+    {
+     "name": "Number",
+     "value": 2
+    },
+    {
+     "name": "Email",
+     "value": 3
+    },
+    {
+     "name": "Phone",
+     "value": 4
+    },
+    {
+     "name": "Password",
+     "value": 5
+    },
+    {
+     "name": "PasswordShown",
+     "value": 6
+    },
+    {
+     "name": "Username",
+     "value": 7
+    },
+    {
+     "name": "OneTimePassword",
+     "value": 8
+    },
+    {
+     "name": "NewPassword",
+     "value": 9
+    },
+    {
+     "name": "NewPasswordShown",
+     "value": 10
+    }
+   ],
+   "legacy": [],
+   "name": "TextInputType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.TextTruncate.{AtEnd,None,SplitWord} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "AtEnd",
+     "value": 1
+    },
+    {
+     "name": "SplitWord",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "TextTruncate"
+  },
+  {
+   "evidence": "GETIMPORT Enum.TextureQueryType.{Humanoid,HumanoidOrphaned,NonHumanoid,NonHumanoidOrphaned} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "NonHumanoid",
+     "value": 0
+    },
+    {
+     "name": "NonHumanoidOrphaned",
+     "value": 1
+    },
+    {
+     "name": "Humanoid",
+     "value": 2
+    },
+    {
+     "name": "HumanoidOrphaned",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "TextureQueryType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ThumbnailSize.{Size100x100,Size150x150,Size180x180,Size352x352,Size420x420,Size48x48,...} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Size48x48",
+     "value": 0
+    },
+    {
+     "name": "Size180x180",
+     "value": 1
+    },
+    {
+     "name": "Size420x420",
+     "value": 2
+    },
+    {
+     "name": "Size60x60",
+     "value": 3
+    },
+    {
+     "name": "Size100x100",
+     "value": 4
+    },
+    {
+     "name": "Size150x150",
+     "value": 5
+    },
+    {
+     "name": "Size352x352",
+     "value": 6
+    }
+   ],
+   "legacy": [],
+   "name": "ThumbnailSize"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ThumbnailType.{AvatarBust,AvatarThumbnail,HeadShot} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "HeadShot",
+     "value": 0
+    },
+    {
+     "name": "AvatarBust",
+     "value": 1
+    },
+    {
+     "name": "AvatarThumbnail",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "ThumbnailType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.TonemapperPreset.{Default,Retro} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "Retro",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "TonemapperPreset"
+  },
+  {
+   "evidence": "GETIMPORT Enum.TouchMovementMode.{DynamicThumbstick} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Default",
+     "value": 0
+    },
+    {
+     "name": "Thumbstick",
+     "value": 1
+    },
+    {
+     "name": "DPad",
+     "value": 2
+    },
+    {
+     "name": "Thumbpad",
+     "value": 3
+    },
+    {
+     "name": "ClickToMove",
+     "value": 4
+    },
+    {
+     "name": "DynamicThumbstick",
+     "value": 5
+    }
+   ],
+   "legacy": [],
+   "name": "TouchMovementMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.TrackerMode.{Audio,AudioVideo,None,Video} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Audio",
+     "value": 1
+    },
+    {
+     "name": "Video",
+     "value": 2
+    },
+    {
+     "name": "AudioVideo",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "TrackerMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.TriStateBoolean.{False,True} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Unknown",
+     "value": 0
+    },
+    {
+     "name": "True",
+     "value": 1
+    },
+    {
+     "name": "False",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "TriStateBoolean"
+  },
+  {
+   "evidence": "GETIMPORT Enum.UIDragDetectorBoundingBehavior.{EntireObject} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Automatic",
+     "value": 0
+    },
+    {
+     "name": "EntireObject",
+     "value": 1
+    },
+    {
+     "name": "HitPoint",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "UIDragDetectorBoundingBehavior"
+  },
+  {
+   "evidence": "GETIMPORT Enum.UIDragDetectorDragRelativity.{Absolute} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Absolute",
+     "value": 0
+    },
+    {
+     "name": "Relative",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "UIDragDetectorDragRelativity"
+  },
+  {
+   "evidence": "GETIMPORT Enum.UIDragDetectorDragStyle.{Scriptable,TranslateLine,TranslatePlane} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "TranslatePlane",
+     "value": 0
+    },
+    {
+     "name": "TranslateLine",
+     "value": 1
+    },
+    {
+     "name": "Rotate",
+     "value": 2
+    },
+    {
+     "name": "Scriptable",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "UIDragDetectorDragStyle"
+  },
+  {
+   "evidence": "GETIMPORT Enum.UIDragDetectorResponseStyle.{CustomOffset,CustomScale,Scale} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Offset",
+     "value": 0
+    },
+    {
+     "name": "Scale",
+     "value": 1
+    },
+    {
+     "name": "CustomOffset",
+     "value": 2
+    },
+    {
+     "name": "CustomScale",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "UIDragDetectorResponseStyle"
+  },
+  {
+   "evidence": "GETIMPORT Enum.UIFlexAlignment.{Fill,None,SpaceAround,SpaceBetween,SpaceEvenly} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Fill",
+     "value": 1
+    },
+    {
+     "name": "SpaceAround",
+     "value": 2
+    },
+    {
+     "name": "SpaceBetween",
+     "value": 3
+    },
+    {
+     "name": "SpaceEvenly",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "UIFlexAlignment"
+  },
+  {
+   "evidence": "GETIMPORT Enum.UIFlexMode.{Custom,Fill,Grow,None,Shrink} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "None",
+     "value": 0
+    },
+    {
+     "name": "Grow",
+     "value": 1
+    },
+    {
+     "name": "Shrink",
+     "value": 2
+    },
+    {
+     "name": "Fill",
+     "value": 3
+    },
+    {
+     "name": "Custom",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "UIFlexMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.UploadCaptureResult.{CaptureModerated,Success,UploadFailed,UploadPending,UploadQuotaReached} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Success",
+     "value": 0
+    },
+    {
+     "name": "NeedPermission",
+     "value": 1
+    },
+    {
+     "name": "CaptureModerated",
+     "value": 2
+    },
+    {
+     "name": "CaptureNotInGallery",
+     "value": 3
+    },
+    {
+     "name": "IneligibleCapture",
+     "value": 4
+    },
+    {
+     "name": "UploadQuotaReached",
+     "value": 5
+    },
+    {
+     "name": "UploadPending",
+     "value": 6
+    },
+    {
+     "name": "UploadFailed",
+     "value": 7
+    }
+   ],
+   "legacy": [],
+   "name": "UploadCaptureResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.UserCFrame.{Floor} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Head",
+     "value": 0
+    },
+    {
+     "name": "LeftHand",
+     "value": 1
+    },
+    {
+     "name": "RightHand",
+     "value": 2
+    },
+    {
+     "name": "Floor",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "UserCFrame"
+  },
+  {
+   "evidence": "GETIMPORT Enum.UserInputType.{InputMethod} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "MouseButton1",
+     "value": 0
+    },
+    {
+     "name": "MouseButton2",
+     "value": 1
+    },
+    {
+     "name": "MouseButton3",
+     "value": 2
+    },
+    {
+     "name": "MouseWheel",
+     "value": 3
+    },
+    {
+     "name": "MouseMovement",
+     "value": 4
+    },
+    {
+     "name": "Touch",
+     "value": 7
+    },
+    {
+     "name": "Keyboard",
+     "value": 8
+    },
+    {
+     "name": "Focus",
+     "value": 9
+    },
+    {
+     "name": "Accelerometer",
+     "value": 10
+    },
+    {
+     "name": "Gyro",
+     "value": 11
+    },
+    {
+     "name": "Gamepad1",
+     "value": 12
+    },
+    {
+     "name": "Gamepad2",
+     "value": 13
+    },
+    {
+     "name": "Gamepad3",
+     "value": 14
+    },
+    {
+     "name": "Gamepad4",
+     "value": 15
+    },
+    {
+     "name": "Gamepad5",
+     "value": 16
+    },
+    {
+     "name": "Gamepad6",
+     "value": 17
+    },
+    {
+     "name": "Gamepad7",
+     "value": 18
+    },
+    {
+     "name": "Gamepad8",
+     "value": 19
+    },
+    {
+     "name": "TextInput",
+     "value": 20
+    },
+    {
+     "name": "InputMethod",
+     "value": 21
+    },
+    {
+     "name": "None",
+     "value": 22
+    }
+   ],
+   "legacy": [],
+   "name": "UserInputType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VRComfortSetting.{Custom} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Comfort",
+     "value": 0
+    },
+    {
+     "name": "Normal",
+     "value": 1
+    },
+    {
+     "name": "Expert",
+     "value": 2
+    },
+    {
+     "name": "Custom",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "VRComfortSetting"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VRControllerModelMode.{Disabled,Transparent} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Disabled",
+     "value": 0
+    },
+    {
+     "name": "Transparent",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "VRControllerModelMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VRLaserPointerMode.{Disabled,DualPointer,Pointer} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Disabled",
+     "value": 0
+    },
+    {
+     "name": "Pointer",
+     "value": 1
+    },
+    {
+     "name": "DualPointer",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "VRLaserPointerMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VRSafetyBubbleMode.{Anyone,NoOne,OnlyFriends} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "NoOne",
+     "value": 0
+    },
+    {
+     "name": "OnlyFriends",
+     "value": 1
+    },
+    {
+     "name": "Anyone",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "VRSafetyBubbleMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VRScaling.{World} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "World",
+     "value": 0
+    },
+    {
+     "name": "Off",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "VRScaling"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VRSessionState.{Focused,Idle,Visible} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Undefined",
+     "value": 0
+    },
+    {
+     "name": "Idle",
+     "value": 1
+    },
+    {
+     "name": "Visible",
+     "value": 2
+    },
+    {
+     "name": "Focused",
+     "value": 3
+    },
+    {
+     "name": "Stopping",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "VRSessionState"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VRTouchpad.{Left,Right} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Left",
+     "value": 0
+    },
+    {
+     "name": "Right",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "VRTouchpad"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VRTouchpadMode.{ABXY} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Touch",
+     "value": 0
+    },
+    {
+     "name": "VirtualThumbstick",
+     "value": 1
+    },
+    {
+     "name": "ABXY",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "VRTouchpadMode"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VerticalAlignment.{Bottom,Center,Top} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Center",
+     "value": 0
+    },
+    {
+     "name": "Top",
+     "value": 1
+    },
+    {
+     "name": "Bottom",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "VerticalAlignment"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VerticalScrollBarPosition.{Left,Right} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Right",
+     "value": 0
+    },
+    {
+     "name": "Left",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "VerticalScrollBarPosition"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VideoCaptureResult.{OtherError} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Success",
+     "value": 0
+    },
+    {
+     "name": "OtherError",
+     "value": 1
+    },
+    {
+     "name": "ScreenSizeChanged",
+     "value": 2
+    },
+    {
+     "name": "TimeLimitReached",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "VideoCaptureResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VideoCaptureStartedResult.{CapturingAlready,NoDeviceSupport,NoSpaceOnDevice,OtherError} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Success",
+     "value": 0
+    },
+    {
+     "name": "OtherError",
+     "value": 1
+    },
+    {
+     "name": "CapturingAlready",
+     "value": 2
+    },
+    {
+     "name": "NoDeviceSupport",
+     "value": 3
+    },
+    {
+     "name": "NoSpaceOnDevice",
+     "value": 4
+    }
+   ],
+   "legacy": [],
+   "name": "VideoCaptureStartedResult"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VideoSampleSize.{Full,Small} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Small",
+     "value": 0
+    },
+    {
+     "name": "Medium",
+     "value": 1
+    },
+    {
+     "name": "Large",
+     "value": 2
+    },
+    {
+     "name": "Full",
+     "value": 3
+    }
+   ],
+   "legacy": [],
+   "name": "VideoSampleSize"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VoiceChatDistanceAttenuationType.{Legacy} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Inverse",
+     "value": 0
+    },
+    {
+     "name": "Legacy",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "VoiceChatDistanceAttenuationType"
+  },
+  {
+   "evidence": "GETIMPORT Enum.VoiceChatState.{Ended,Failed,Joined} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Idle",
+     "value": 0
+    },
+    {
+     "name": "Joining",
+     "value": 1
+    },
+    {
+     "name": "JoiningRetry",
+     "value": 2
+    },
+    {
+     "name": "Joined",
+     "value": 3
+    },
+    {
+     "name": "Leaving",
+     "value": 4
+    },
+    {
+     "name": "Ended",
+     "value": 5
+    },
+    {
+     "name": "Failed",
+     "value": 6
+    }
+   ],
+   "legacy": [],
+   "name": "VoiceChatState"
+  },
+  {
+   "evidence": "GETIMPORT Enum.WrapLayerAutoSkin.{EnabledOverride} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Disabled",
+     "value": 0
+    },
+    {
+     "name": "EnabledPreserve",
+     "value": 1
+    },
+    {
+     "name": "EnabledOverride",
+     "value": 2
+    }
+   ],
+   "legacy": [],
+   "name": "WrapLayerAutoSkin"
+  },
+  {
+   "evidence": "GETIMPORT Enum.ZIndexBehavior.{Global,Sibling} (docs/inexperience/globals.txt)",
+   "items": [
+    {
+     "name": "Global",
+     "value": 0
+    },
+    {
+     "name": "Sibling",
+     "value": 1
+    }
+   ],
+   "legacy": [],
+   "name": "ZIndexBehavior"
+  }
+ ],
  "source": "full-api-dump-67c8b1dedbb74fed.json"
 }

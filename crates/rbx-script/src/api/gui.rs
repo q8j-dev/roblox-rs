@@ -45,6 +45,10 @@ impl Default for GuiState {
 pub fn register(r: &mut Registry) {
     r.add("TextService", &["GetTextSize"], get_text_size);
     r.add("GuiService", &["SetGlobalGuiInset"], set_global_gui_inset);
+    r.add("GuiService", &["GetGuiInset"], get_gui_inset);
+    r.add("GuiService", &["SetTopbarInset"], set_topbar_inset);
+    r.add("GuiService", &["GetInsetArea"], get_inset_area);
+    r.add("DataModel", &["IsLoaded"], is_loaded);
     r.add(
         "GuiService",
         &["GetScreenResolution"],
@@ -197,6 +201,56 @@ fn set_global_gui_inset(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Re
     let eng = engine(lua);
     eng.lock().dm.gui_view.inset = [v[0], v[1], v[2], v[3]];
     none()
+}
+
+fn get_gui_inset(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let i = engine(lua).lock().dm.gui_view.inset;
+    ret(
+        lua,
+        (
+            LVector2(Vec2::new(i[0], i[1])),
+            LVector2(Vec2::new(i[2], i[3])),
+        ),
+    )
+}
+
+fn set_topbar_inset(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let rect = match args.first() {
+        Some(v) => crate::types::LRect2D::from_lua(v.clone(), lua)?.0,
+        None => return Err(rt("Argument 1 missing or nil")),
+    };
+    engine(lua)
+        .lock()
+        .dm
+        .set(id, "TopbarInset", Variant::Rect2D(rect))
+        .map_err(|e| rt(e.to_string()))?;
+    none()
+}
+
+fn get_inset_area(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let kind = args
+        .first()
+        .and_then(|v| enum_value(lua, v, "ScreenInsets").ok())
+        .unwrap_or(0);
+    let (screen, inset, topbar) = {
+        let eng = engine(lua);
+        let e = eng.lock();
+        let topbar = match e.dm.get(id, "TopbarInset") {
+            Ok(Variant::Rect2D(r)) => Some(r),
+            _ => None,
+        };
+        (e.dm.gui_view.screen, e.dm.gui_view.inset, topbar)
+    };
+    let rect = match kind {
+        2 => rbx_math::Rect2D::xyxy(inset[0], inset[1], screen.x - inset[2], screen.y - inset[3]),
+        3 => topbar.unwrap_or_default(),
+        _ => rbx_math::Rect2D::xyxy(0.0, 0.0, screen.x, screen.y),
+    };
+    ret(lua, crate::types::LRect2D(rect))
+}
+
+fn is_loaded(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    ret(lua, true)
 }
 
 fn get_screen_resolution(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {

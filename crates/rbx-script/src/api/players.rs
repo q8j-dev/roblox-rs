@@ -2,7 +2,7 @@ use super::{Registry, Ret, none, ret};
 use crate::convert::{arg_bool, arg_number, arg_string};
 use crate::instance::push_instance;
 use crate::runtime::{Engine, MessageType, engine, expect_instance, fire_lua, pump};
-use crate::types::{LVector3, rt};
+use crate::types::rt;
 use mlua::{Lua, MultiValue, Result, Value};
 use rbx_dom::{DataModel, InstanceId, Variant};
 use rbx_math::{CFrame, Vec3};
@@ -689,10 +689,7 @@ fn remove_character(lua: &Lua, id: InstanceId, _: &[Value]) -> Result<Ret> {
 
 fn distance_from_character(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
     let point = match args.first() {
-        Some(Value::UserData(ud)) => ud
-            .borrow::<LVector3>()
-            .map(|v| v.0)
-            .map_err(|_| rt("Unable to cast value to Vector3"))?,
+        Some(Value::Vector(v)) => Ok::<_, mlua::Error>(rbx_math::Vec3::new(v.x(), v.y(), v.z()))?,
         _ => return Err(rt("Argument 1 missing or nil")),
     };
     let e = engine(lua);

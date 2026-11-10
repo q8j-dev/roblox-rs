@@ -20,7 +20,7 @@ pub fn variant_to_lua(lua: &Lua, v: &Variant, ty: Option<&ValueType>) -> Result<
         | Variant::SystemAddress(s) => Value::String(lua.create_string(s)?),
         Variant::BinaryString(b) => Value::String(lua.create_string(b)?),
         Variant::Vector2(x) => Value::UserData(lua.create_userdata(LVector2(*x))?),
-        Variant::Vector3(x) => Value::UserData(lua.create_userdata(LVector3(*x))?),
+        Variant::Vector3(x) => mlua::IntoLua::into_lua(LVector3(*x), lua)?,
         Variant::Vector2int16(x) => Value::UserData(lua.create_userdata(LVector2int16(*x))?),
         Variant::Vector3int16(x) => Value::UserData(lua.create_userdata(LVector3int16(*x))?),
         Variant::Vector3int32(x) => Value::UserData(lua.create_userdata(LVector3int16(
@@ -99,6 +99,7 @@ pub fn lua_type_name(v: &Value) -> String {
                 .map(|s| s.to_string_lossy())
                 .unwrap_or_else(|| "userdata".into())
         }
+        Value::Vector(_) => "Vector3".into(),
         other => other.type_name().to_string(),
     }
 }
@@ -347,10 +348,9 @@ pub fn infer_variant(v: &Value) -> Option<Variant> {
         Value::Number(n) => Variant::Double(*n),
         Value::Integer(i) => Variant::Double(*i as f64),
         Value::String(s) => Variant::String(s.to_str().ok()?.to_string()),
+        Value::Vector(v) => Variant::Vector3(rbx_math::Vec3::new(v.x(), v.y(), v.z())),
         Value::UserData(ud) => {
-            if let Ok(x) = ud.borrow::<LVector3>() {
-                Variant::Vector3(x.0)
-            } else if let Ok(x) = ud.borrow::<LVector2>() {
+            if let Ok(x) = ud.borrow::<LVector2>() {
                 Variant::Vector2(x.0)
             } else if let Ok(x) = ud.borrow::<LCFrame>() {
                 Variant::CFrame(x.0)

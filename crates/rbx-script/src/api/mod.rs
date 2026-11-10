@@ -123,6 +123,11 @@ pub fn call(lua: &Lua, id: InstanceId, class: &str, name: &str, args: MultiValue
 }
 
 pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Result<Option<Value>> {
+    if class == "ContentProvider" && name == "BaseUrl" {
+        let base = crate::runtime::engine(lua).lock().base_url.clone();
+        let site = crate::api::http::site_base_url(&base);
+        return Ok(Some(Value::String(lua.create_string(site)?)));
+    }
     if class == "AnimationTrack" {
         return animation::get_track_property(lua, id, name);
     }

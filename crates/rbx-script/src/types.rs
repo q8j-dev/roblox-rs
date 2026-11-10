@@ -1,6 +1,6 @@
 use crate::format::float_str;
 use mlua::{
-    Error, FromLua, Lua, MetaMethod, MultiValue, Result, Table, UserData, UserDataFields,
+    Error, FromLua, IntoLua, Lua, MetaMethod, MultiValue, Result, Table, UserData, UserDataFields,
     UserDataMethods, Value,
 };
 use rbx_math::{
@@ -87,7 +87,27 @@ fn args_f32(args: &MultiValue, n: usize) -> Vec<f32> {
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct LVector3(pub Vec3);
-from_lua_userdata!(LVector3, "Vector3");
+
+impl FromLua for LVector3 {
+    fn from_lua(value: Value, _: &Lua) -> Result<Self> {
+        match value {
+            Value::Vector(v) => Ok(LVector3(Vec3::new(v.x(), v.y(), v.z()))),
+            other => Err(Error::FromLuaConversionError {
+                from: other.type_name(),
+                to: "Vector3".to_string(),
+                message: None,
+            }),
+        }
+    }
+}
+
+impl mlua::IntoLua for LVector3 {
+    fn into_lua(self, _: &Lua) -> Result<Value> {
+        Ok(Value::Vector(mlua::Vector::new(
+            self.0.x, self.0.y, self.0.z,
+        )))
+    }
+}
 
 pub fn vec3_str(v: Vec3) -> String {
     format!("{}, {}, {}", float_str(v.x), float_str(v.y), float_str(v.z))
@@ -101,81 +121,95 @@ fn fuzzy_eq_vec(a: Vec3, b: Vec3, eps: f32) -> bool {
     fuzzy_eq(a.x, b.x, eps) && fuzzy_eq(a.y, b.y, eps) && fuzzy_eq(a.z, b.z, eps)
 }
 
-impl UserData for LVector3 {
-    fn add_fields<F: UserDataFields<Self>>(f: &mut F) {
-        f.add_meta_field(mlua::MetaMethod::Type, "Vector3");
-        for n in ["X", "x"] {
-            f.add_field_method_get(n, |_, t| Ok(t.0.x));
+fn vec3_method(lua: &Lua, name: &str) -> Result<Option<mlua::Function>> {
+    let f = match name {
+        "Lerp" | "lerp" => lua.create_function(|_, (t, o, a): (LVector3, LVector3, f32)| {
+            Ok(LVector3(t.0 + (o.0 - t.0) * a))
+        })?,
+        "Cross" => {
+            lua.create_function(|_, (t, o): (LVector3, LVector3)| Ok(LVector3(t.0.cross(o.0))))?
         }
-        for n in ["Y", "y"] {
-            f.add_field_method_get(n, |_, t| Ok(t.0.y));
+        "Dot" => lua.create_function(|_, (t, o): (LVector3, LVector3)| Ok(t.0.dot(o.0)))?,
+        "isClose" | "FuzzyEq" => {
+            lua.create_function(|_, (t, o, eps): (LVector3, LVector3, Option<f32>)| {
+                Ok(fuzzy_eq_vec(t.0, o.0, eps.map(f32::abs).unwrap_or(1e-5)))
+            })?
         }
-        for n in ["Z", "z"] {
-            f.add_field_method_get(n, |_, t| Ok(t.0.z));
+        "Min" => {
+            lua.create_function(|_, (t, o): (LVector3, LVector3)| Ok(LVector3(t.0.min(o.0))))?
         }
-        for n in ["unit", "Unit"] {
-            f.add_field_method_get(n, |_, t| Ok(LVector3(rbx_math::g3d_direction(t.0))));
+        "Max" => {
+            lua.create_function(|_, (t, o): (LVector3, LVector3)| Ok(LVector3(t.0.max(o.0))))?
         }
-        for n in ["magnitude", "Magnitude"] {
-            f.add_field_method_get(n, |_, t| Ok(t.0.length()));
+        "Abs" => lua.create_function(|_, t: LVector3| Ok(LVector3(t.0.abs())))?,
+        "Floor" => lua.create_function(|_, t: LVector3| Ok(LVector3(t.0.floor())))?,
+        "Ceil" => lua.create_function(|_, t: LVector3| Ok(LVector3(t.0.ceil())))?,
+        "Sign" => lua.create_function(|_, t: LVector3| {
+            let s = |x: f32| {
+                if x > 0.0 {
+                    1.0
+                } else if x < 0.0 {
+                    -1.0
+                } else {
+                    0.0
+                }
+            };
+            Ok(LVector3(Vec3::new(s(t.0.x), s(t.0.y), s(t.0.z))))
+        })?,
+        "Angle" => {
+            lua.create_function(|_, (t, o, axis): (LVector3, LVector3, Option<LVector3>)| {
+                let a = t.0.cross(o.0).length().atan2(t.0.dot(o.0));
+                Ok(match axis {
+                    Some(ax) if t.0.cross(o.0).dot(ax.0) < 0.0 => -a,
+                    _ => a,
+                })
+            })?
         }
-    }
-
-    fn add_methods<M: UserDataMethods<Self>>(m: &mut M) {
-        for n in ["lerp", "Lerp"] {
-            m.add_method(n, |_, t, (o, a): (LVector3, f32)| {
-                Ok(LVector3(t.0 + (o.0 - t.0) * a))
-            });
-        }
-        m.add_method("Cross", |_, t, o: LVector3| Ok(LVector3(t.0.cross(o.0))));
-        m.add_method("Dot", |_, t, o: LVector3| Ok(t.0.dot(o.0)));
-        m.add_method("isClose", |_, t, (o, eps): (LVector3, Option<f32>)| {
-            Ok(fuzzy_eq_vec(t.0, o.0, eps.map(f32::abs).unwrap_or(1e-5)))
-        });
-        m.add_meta_method(MetaMethod::ToString, |_, t, ()| Ok(vec3_str(t.0)));
-        m.add_meta_method(MetaMethod::Eq, |_, t, o: Value| {
-            Ok(matches!(&o, Value::UserData(u) if u.borrow::<LVector3>().map(|v| v.0 == t.0).unwrap_or(false)))
-        });
-        m.add_meta_method(MetaMethod::Unm, |_, t, ()| Ok(LVector3(-t.0)));
-        m.add_meta_function(MetaMethod::Add, |_, (a, b): (LVector3, LVector3)| {
-            Ok(LVector3(a.0 + b.0))
-        });
-        m.add_meta_function(MetaMethod::Sub, |_, (a, b): (LVector3, LVector3)| {
-            Ok(LVector3(a.0 - b.0))
-        });
-        m.add_meta_function(MetaMethod::Mul, |lua, (a, b): (Value, Value)| {
-            vec3_binop(lua, a, b, "multiply", |x, y| x * y)
-        });
-        m.add_meta_function(MetaMethod::Div, |lua, (a, b): (Value, Value)| {
-            vec3_binop(lua, a, b, "divide", |x, y| x / y)
-        });
-        m.add_meta_method(MetaMethod::Index, |_, _, k: String| -> Result<Value> {
-            Err(not_member(&k))
-        });
-        m.add_meta_method(
-            MetaMethod::NewIndex,
-            |_, _, (k, _v): (String, Value)| -> Result<()> { Err(cannot_assign(&k)) },
-        );
-    }
+        _ => return Ok(None),
+    };
+    Ok(Some(f))
 }
 
-fn vec3_binop(
-    lua: &Lua,
-    a: Value,
-    b: Value,
-    verb: &str,
-    op: impl Fn(Vec3, Vec3) -> Vec3,
-) -> Result<LVector3> {
-    let av = LVector3::from_lua(a.clone(), lua).ok();
-    let bv = LVector3::from_lua(b.clone(), lua).ok();
-    match (av, bv) {
-        (Some(x), Some(y)) => Ok(LVector3(op(x.0, y.0))),
-        (Some(x), None) if is_number(&b) => Ok(LVector3(op(x.0, Vec3::splat(to_f32(&b))))),
-        (None, Some(y)) if is_number(&a) => Ok(LVector3(op(Vec3::splat(to_f32(&a)), y.0))),
-        _ => Err(rt(format!(
-            "attempt to {verb} a Vector3 with an incompatible value type or nil"
-        ))),
+pub fn install_vector3(lua: &Lua) -> Result<()> {
+    let mt = lua.create_table()?;
+    mt.raw_set("__type", "Vector3")?;
+    mt.raw_set(
+        "__tostring",
+        lua.create_function(|_, v: LVector3| Ok(vec3_str(v.0)))?,
+    )?;
+    let methods = lua.create_table()?;
+    for name in [
+        "Lerp", "lerp", "Cross", "Dot", "isClose", "FuzzyEq", "Min", "Max", "Abs", "Floor", "Ceil",
+        "Sign", "Angle",
+    ] {
+        if let Some(f) = vec3_method(lua, name)? {
+            methods.raw_set(name, f)?;
+        }
     }
+    mt.raw_set(
+        "__index",
+        lua.create_function(move |_, (v, k): (LVector3, String)| -> Result<Value> {
+            match k.as_str() {
+                "Magnitude" | "magnitude" => Ok(Value::Number(v.0.length() as f64)),
+                "Unit" | "unit" => {
+                    let u = rbx_math::g3d_direction(v.0);
+                    Ok(Value::Vector(mlua::Vector::new(u.x, u.y, u.z)))
+                }
+                _ => match methods.raw_get::<Value>(k.as_str())? {
+                    Value::Nil => Err(not_member(&k)),
+                    f => Ok(f),
+                },
+            }
+        })?,
+    )?;
+    mt.raw_set(
+        "__newindex",
+        lua.create_function(|_, (_v, k, _x): (Value, String, Value)| -> Result<()> {
+            Err(cannot_assign(&k))
+        })?,
+    )?;
+    lua.set_type_metatable::<mlua::Vector>(Some(mt));
+    Ok(())
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -351,13 +385,13 @@ pub fn cframe_str(c: &CFrame) -> String {
 
 fn many_vec3(lua: &Lua, args: MultiValue, f: impl Fn(Vec3) -> Vec3) -> Result<MultiValue> {
     if args.is_empty() {
-        let v = Value::UserData(lua.create_userdata(LVector3(f(Vec3::ZERO)))?);
+        let v = LVector3(f(Vec3::ZERO)).into_lua(lua)?;
         return Ok(MultiValue::from_vec(vec![v]));
     }
     let mut out = Vec::new();
     for a in args {
         let v = LVector3::from_lua(a, lua)?;
-        out.push(Value::UserData(lua.create_userdata(LVector3(f(v.0)))?));
+        out.push(LVector3(f(v.0)).into_lua(lua)?);
     }
     Ok(MultiValue::from_vec(out))
 }
@@ -461,9 +495,7 @@ impl UserData for LCFrame {
                     return Ok(Value::UserData(lua.create_userdata(LCFrame(a.0 * c.0))?));
                 }
                 let v = LVector3::from_lua(b, lua)?;
-                Ok(Value::UserData(lua.create_userdata(LVector3(
-                    a.0.point_to_world_space(v.0),
-                ))?))
+                Ok(LVector3(a.0.point_to_world_space(v.0)).into_lua(lua)?)
             },
         );
         m.add_meta_method(MetaMethod::Index, |_, _, k: String| -> Result<Value> {

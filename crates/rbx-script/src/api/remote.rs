@@ -75,7 +75,6 @@ fn userdata_variant(ud: &mlua::AnyUserData) -> Option<Variant> {
         return Some(Variant::Ref(Some(i.id)));
     }
     try_types!(
-        LVector3 => Vector3,
         LVector2 => Vector2,
         LVector3int16 => Vector3int16,
         LVector2int16 => Vector2int16,
@@ -110,6 +109,9 @@ pub fn to_remote(v: &Value, depth: u32) -> Result<RemoteValue> {
         Value::String(s) => RemoteValue::Value(Variant::String(
             String::from_utf8_lossy(&s.as_bytes()).into_owned(),
         )),
+        Value::Vector(v) => {
+            RemoteValue::Value(Variant::Vector3(rbx_math::Vec3::new(v.x(), v.y(), v.z())))
+        }
         Value::UserData(ud) => {
             if let Ok(item) = ud.borrow::<LEnumItem>() {
                 return Ok(RemoteValue::Enum {

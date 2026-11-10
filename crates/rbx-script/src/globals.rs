@@ -326,6 +326,7 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
         lua.create_function(|lua, name: String| crate::libraries::load_library(lua, &name))?,
     )?;
 
+    crate::types::install_vector3(lua)?;
     register_constructors(lua, &g)?;
     crate::datatypes::register(lua, &g)?;
     crate::signal::register(lua)?;

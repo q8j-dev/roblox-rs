@@ -2,7 +2,7 @@ use super::{Registry, Ret, none, ret};
 use crate::convert::{arg_bool, arg_number, enum_value, variant_to_lua};
 use crate::instance::push_instance;
 use crate::runtime::{MessageType, engine, expect_instance, fire_lua};
-use crate::types::{LVector3, rt};
+use crate::types::rt;
 use mlua::{Lua, MultiValue, Result, Value};
 use rbx_dom::{InstanceId, Variant};
 use rbx_physics::humanoid::{HState, HumanoidEvent, NUM_STATES};
@@ -38,10 +38,7 @@ fn with_sim<R>(
 
 fn vec3_arg(v: Option<&Value>) -> Result<rbx_math::Vec3> {
     match v {
-        Some(Value::UserData(ud)) => ud
-            .borrow::<LVector3>()
-            .map(|x| x.0)
-            .map_err(|_| rt("Unable to cast value to Vector3")),
+        Some(Value::Vector(v)) => Ok::<_, mlua::Error>(rbx_math::Vec3::new(v.x(), v.y(), v.z())),
         None | Some(Value::Nil) => Err(rt("Argument 1 missing or nil")),
         _ => Err(rt("Unable to cast value to Vector3")),
     }

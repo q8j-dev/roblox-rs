@@ -36,10 +36,7 @@ fn region_arg(v: Option<&Value>) -> Result<Region3> {
 
 fn vec3_arg(v: Option<&Value>, n: usize) -> Result<Vec3> {
     match v {
-        Some(Value::UserData(ud)) => ud
-            .borrow::<LVector3>()
-            .map(|r| r.0)
-            .map_err(|_| rt("Unable to cast value to Vector3")),
+        Some(Value::Vector(v)) => Ok::<_, mlua::Error>(rbx_math::Vec3::new(v.x(), v.y(), v.z())),
         None | Some(Value::Nil) => Err(rt(format!("Argument {n} missing or nil"))),
         _ => Err(rt("Unable to cast value to Vector3")),
     }

@@ -44,7 +44,11 @@ pub fn resolve(e: &Engine, url: &str) -> String {
         if let Some(rest) = lower.strip_prefix(scheme) {
             let host_end = rest.find('/').unwrap_or(rest.len());
             let host = &rest[..host_end];
-            if LEGACY_HOSTS.contains(&host) {
+            let local_subdomain = host
+                .split(':')
+                .next()
+                .is_some_and(|h| h.ends_with(".localhost"));
+            if LEGACY_HOSTS.contains(&host) || local_subdomain {
                 let path = &url[scheme.len() + host_end..];
                 let base = e.base_url.trim_end_matches('/');
                 return format!("{base}{path}");
@@ -52,6 +56,21 @@ pub fn resolve(e: &Engine, url: &str) -> String {
         }
     }
     url.to_string()
+}
+
+pub fn site_base_url(base: &str) -> String {
+    for scheme in ["http://", "https://"] {
+        if let Some(rest) = base.strip_prefix(scheme) {
+            let host_end = rest.find('/').unwrap_or(rest.len());
+            let (host, tail) = rest.split_at(host_end);
+            let name = host.split(':').next().unwrap_or(host);
+            if !name.contains('.') {
+                let tail = if tail.is_empty() { "/" } else { tail };
+                return format!("{scheme}www.{host}{tail}");
+            }
+        }
+    }
+    base.to_string()
 }
 
 fn query_number(url: &str, key: &str) -> Option<u64> {
@@ -414,4 +433,21 @@ pub fn register(r: &mut Registry) {
     r.add("DataModel", &["HttpPost", "HttpPostAsync"], game_http_post);
     r.add("ContentProvider", &["SetBaseUrl"], set_base_url);
     r.add("MarketplaceService", &["GetProductInfo"], get_product_info);
+}
+
+#[cfg(test)]
+mod site_tests {
+    use super::site_base_url;
+
+    #[test]
+    fn dotless_hosts_get_a_www_label() {
+        assert_eq!(
+            site_base_url("http://localhost:64989/"),
+            "http://www.localhost:64989/"
+        );
+        assert_eq!(
+            site_base_url("https://www.example.test/"),
+            "https://www.example.test/"
+        );
+    }
 }

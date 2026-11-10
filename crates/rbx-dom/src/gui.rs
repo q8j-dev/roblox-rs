@@ -107,6 +107,9 @@ pub fn gui_parent(dm: &DataModel, id: InstanceId) -> Option<InstanceId> {
 }
 
 pub fn canvas(dm: &DataModel, id: InstanceId, own: Placement) -> Placement {
+    if let Some(c) = dm.gui_layout().canvases.get(&id) {
+        return *c;
+    }
     if dm.class_of(id) == Some("ScrollingFrame") {
         let basis = gui_parent(dm, id)
             .map(|p| placement(dm, p).size)
@@ -123,10 +126,13 @@ pub fn canvas(dm: &DataModel, id: InstanceId, own: Placement) -> Placement {
 }
 
 pub fn placement(dm: &DataModel, id: InstanceId) -> Placement {
+    if let Some(p) = dm.gui_layout().nodes.get(&id) {
+        return *p;
+    }
     let view = dm.gui_view;
     let class = dm.class_of(id).unwrap_or("");
     match class {
-        "ScreenGui" | "GuiMain" => return view.user_rect(),
+        "ScreenGui" | "GuiMain" => return crate::gui_layout::screen_rect(dm, id, view),
         "BillboardGui" => {
             let size = udim2(dm, id, "Size");
             return Placement {

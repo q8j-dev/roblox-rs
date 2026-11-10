@@ -1091,3 +1091,27 @@ class HttpRequest | Instance.new("HttpRequest") through React host config (React
 class Tween | return type of TweenService.Create (107 call sites)
 class MeshContentProvider | GetService("MeshContentProvider") in Modules/DevConsole/Components/Memory/ClientMemoryData line 8
 member Instance.ResetPropertyToDefault | React-Roblox resets props bound to nil (Error applying initial props to DismissButton); not in methods.txt because it is called through a stored function
+member KeyframeSequence.Guid | inherited from AnimationClip (a class added after 2016); used at 8 sites
+member KeyframeSequence.Length | inherited from AnimationClip (a class added after 2016); used at 22 sites
+member PartOperation.FluidFidelity | inherited from TriangleMeshPart (a class added after 2016); used at 1 sites
+member PartOperation.MeshSize | inherited from TriangleMeshPart (a class added after 2016); used at 14 sites
+member Pose.EasingDirection | inherited from PoseBase (a class added after 2016); used at 1 sites
+member Pose.EasingStyle | inherited from PoseBase (a class added after 2016); used at 1 sites
+member ReflectionMetadataClass.Constraint | inherited from ReflectionMetadataItem (a class added after 2016); used at 4 sites
+member ReflectionMetadataClass.Deprecated | inherited from ReflectionMetadataItem (a class added after 2016); used at 3 sites
+member ReflectionMetadataClass.ScriptContext | inherited from ReflectionMetadataItem (a class added after 2016); used at 14 sites
+member ReflectionMetadataEnum.Constraint | inherited from ReflectionMetadataItem (a class added after 2016); used at 4 sites
+member ReflectionMetadataEnum.Deprecated | inherited from ReflectionMetadataItem (a class added after 2016); used at 3 sites
+member ReflectionMetadataEnum.ScriptContext | inherited from ReflectionMetadataItem (a class added after 2016); used at 14 sites
+member ReflectionMetadataEnumItem.Constraint | inherited from ReflectionMetadataItem (a class added after 2016); used at 4 sites
+member ReflectionMetadataEnumItem.Deprecated | inherited from ReflectionMetadataItem (a class added after 2016); used at 3 sites
+member ReflectionMetadataEnumItem.ScriptContext | inherited from ReflectionMetadataItem (a class added after 2016); used at 14 sites
+member ReflectionMetadataMember.Constraint | inherited from ReflectionMetadataItem (a class added after 2016); used at 4 sites
+member ReflectionMetadataMember.Deprecated | inherited from ReflectionMetadataItem (a class added after 2016); used at 3 sites
+member ReflectionMetadataMember.ScriptContext | inherited from ReflectionMetadataItem (a class added after 2016); used at 14 sites
+member Workspace.GetPartBoundsInRadius | inherited from WorldRoot (a class added after 2016); used at 1 sites
+member Workspace.Raycast | inherited from WorldRoot (a class added after 2016); used at 6 sites
+default LayerCollector.Enabled = true | create.roblox.com LayerCollector.Enabled default true; the dump omits defaults for non-creatable classes
+default LayerCollector.ResetOnSpawn = true | create.roblox.com LayerCollector.ResetOnSpawn default true
+default GuiObject.Interactable = true | create.roblox.com GuiObject.Interactable default true
+default GuiBase2d.AutoLocalize = true | create.roblox.com GuiBase2d.AutoLocalize default true

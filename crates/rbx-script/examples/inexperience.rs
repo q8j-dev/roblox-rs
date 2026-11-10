@@ -67,6 +67,25 @@ fn main() {
         println!("[{:?}] {}", m.kind, m.text);
     }
     println!("inset {:?}", e.dm.gui_view.inset);
+    if std::env::var("GUI_ROOTS").is_ok() {
+        let root = e.dm.root();
+        for d in e.dm.descendants(root) {
+            if e.dm.class_of(d) == Some("ScreenGui") {
+                println!(
+                    "ROOT {} Enabled={:?} DisplayOrder={:?}",
+                    e.dm.full_name(d),
+                    e.dm.get(d, "Enabled"),
+                    e.dm.get(d, "DisplayOrder")
+                );
+            }
+        }
+    }
+    if std::env::var("GUI_ITEMS").is_ok() {
+        for item in rbx_render::gui::extract(&e.dm) {
+            let s = format!("{:?}", item.cmd);
+            println!("ITEM clip={:?} {}", item.clip, &s[..s.len().min(220)]);
+        }
+    }
     if let Some(core) = e.dm.find_service("CoreGui") {
         dump(&e.dm, core, 0, depth);
     }

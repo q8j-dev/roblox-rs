@@ -4,6 +4,7 @@ mod datamodel;
 mod defaults;
 mod events;
 pub mod gui;
+pub mod gui_layout;
 pub mod history;
 mod layout;
 mod load;

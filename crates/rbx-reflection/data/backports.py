@@ -73,7 +73,11 @@ def convert_member(m, evidence):
             flags &= ~16
         if "Hidden" in t:
             flags &= ~1
+        default = m.get("Default")
+        if not isinstance(default, str) or default.startswith("__api_dump"):
+            default = None
         return "properties", {
+            "default": default,
             "name": m["Name"],
             "type": type_name(m.get("ValueType")),
             "category": m.get("Category", "Data"),
@@ -168,6 +172,14 @@ def main():
             entry = out_classes.setdefault(cls, {**empty_class(c, None), "extends": True})
             bucket, rec = convert_member(m, evidence)
             entry[bucket].append(rec)
+        elif kind == "default":
+            target, _, value = target.partition("=")
+            cls, _, name = target.strip().partition(".")
+            entry = out_classes.get(cls)
+            rec = entry and next((p for p in entry["properties"] if p["name"] == name), None)
+            if rec is None:
+                raise ValueError(f"default for unknown backported property {target}")
+            rec["default"] = value.strip()
         elif kind == "enum":
             e = enums[target]
             out_enums[target] = {

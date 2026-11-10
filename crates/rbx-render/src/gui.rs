@@ -174,6 +174,9 @@ struct Entry {
 struct Collector<'a> {
     dm: &'a DataModel,
     layers: Vec<(Vec<Entry>, Vec<Entry>)>,
+    layout: std::sync::Arc<rbx_dom::gui_layout::GuiLayout>,
+    sibling: bool,
+    order: usize,
 }
 
 impl Collector<'_> {
@@ -189,8 +192,16 @@ impl Collector<'_> {
         if !dm.is_a(id, "GuiObject") || !get_bool(dm, id, "Visible", true) {
             return;
         }
-        let p = place_child(dm, id, parent);
-        let z = get_i64(dm, id, "ZIndex").clamp(0, 10) as usize;
+        let p = match self.layout.nodes.get(&id) {
+            Some(p) => *p,
+            None => place_child(dm, id, parent),
+        };
+        let z = if self.sibling {
+            self.order += 1;
+            self.order.min(self.layers.len() - 1)
+        } else {
+            get_i64(dm, id, "ZIndex").clamp(0, 10) as usize
+        };
         let entry = Entry {
             id,
             placement: p,
@@ -212,8 +223,16 @@ impl Collector<'_> {
             clip
         };
         let child_parent = canvas(dm, id, p);
-        for &c in dm.children_of(id) {
-            self.load(c, child_parent, child_clip);
+        if self.sibling {
+            let mut kids: Vec<InstanceId> = dm.children_of(id).to_vec();
+            kids.sort_by_key(|c| get_i64(dm, *c, "ZIndex"));
+            for c in kids {
+                self.load(c, child_parent, child_clip);
+            }
+        } else {
+            for &c in dm.children_of(id) {
+                self.load(c, child_parent, child_clip);
+            }
         }
     }
 }
@@ -357,29 +376,34 @@ fn text(dm: &DataModel, id: InstanceId, rect: Rect, out: &mut Vec<GuiCmd>) {
 
 fn screen_guis(dm: &DataModel) -> Vec<InstanceId> {
     let mut roots = Vec::new();
-    let push_from = |parent: InstanceId, roots: &mut Vec<InstanceId>| {
+    fn push_from(dm: &DataModel, parent: InstanceId, roots: &mut Vec<InstanceId>) {
         for &c in dm.children_of(parent) {
             if matches!(dm.class_of(c), Some("ScreenGui" | "GuiMain")) {
-                roots.push(c);
+                if get_bool(dm, c, "Enabled", true) {
+                    roots.push(c);
+                }
+            } else if !dm.is_a(c, "GuiBase2d") && !dm.is_a(c, "BasePart") {
+                push_from(dm, c, roots);
             }
         }
-    };
+    }
     let player_gui = dm
         .local_player
         .and_then(|p| dm.find_first_child_of_class(p, "PlayerGui"));
     match player_gui {
-        Some(pg) => push_from(pg, &mut roots),
+        Some(pg) => push_from(dm, pg, &mut roots),
         None => {
             if let Some(sg) = dm.find_service("StarterGui")
                 && get_bool(dm, sg, "ShowDevelopmentGui", true)
             {
-                push_from(sg, &mut roots);
+                push_from(dm, sg, &mut roots);
             }
         }
     }
     if let Some(core) = dm.find_service("CoreGui") {
-        push_from(core, &mut roots);
+        push_from(dm, core, &mut roots);
     }
+    roots.sort_by_key(|r| get_i64(dm, *r, "DisplayOrder"));
     roots
 }
 
@@ -400,12 +424,26 @@ pub(crate) fn collect_root(
     items: &mut Vec<GuiItem>,
 ) {
     {
+        let sibling = get_i64(dm, root, "ZIndexBehavior") == 1;
         let mut c = Collector {
             dm,
-            layers: (0..=10).map(|_| (Vec::new(), Vec::new())).collect(),
+            layers: (0..if sibling { 4096 } else { 11 })
+                .map(|_| (Vec::new(), Vec::new()))
+                .collect(),
+            layout: dm.gui_layout(),
+            sibling,
+            order: 0,
         };
-        for &child in dm.children_of(root) {
-            c.load(child, base, clip);
+        if sibling {
+            let mut kids: Vec<InstanceId> = dm.children_of(root).to_vec();
+            kids.sort_by_key(|k| get_i64(dm, *k, "ZIndex"));
+            for child in kids {
+                c.load(child, base, clip);
+            }
+        } else {
+            for &child in dm.children_of(root) {
+                c.load(child, base, clip);
+            }
         }
         for (general, texts) in &c.layers {
             let mut push = |e: &Entry, cmds: Vec<GuiCmd>| {

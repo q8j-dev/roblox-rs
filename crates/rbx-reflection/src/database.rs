@@ -128,6 +128,8 @@ impl ValueType {
 #[derive(Deserialize)]
 struct RawProperty {
     name: String,
+    #[serde(default)]
+    default: Option<String>,
     #[serde(rename = "type")]
     ty: String,
     category: Option<String>,
@@ -211,6 +213,7 @@ pub struct PropertyDescriptor {
     pub read_only: bool,
     pub deprecated_by: Option<String>,
     pub getter: Option<String>,
+    pub default_text: Option<String>,
 }
 
 impl PropertyDescriptor {
@@ -462,6 +465,7 @@ impl ReflectionDatabase {
                     read_only: p.read_only,
                     deprecated_by: p.deprecated_by,
                     getter: p.getter,
+                    default_text: p.default,
                 })
                 .collect();
             let mut functions = Vec::new();

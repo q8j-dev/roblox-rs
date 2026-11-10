@@ -41,6 +41,8 @@ pub fn register(r: &mut Registry) {
         ignore,
     );
     r.add("Player", &["GetUnder13"], no);
+    r.add("FaceAnimatorService", &["IsStarted"], no);
+    r.add("FaceAnimatorService", &["Init", "Start", "Stop"], ignore);
     r.add(
         "AchievementService",
         &["IsAvailable", "IsAchievementAvailable", "HasAchieved"],

@@ -46,6 +46,8 @@ struct Args {
     dump_gui: Option<PathBuf>,
     #[arg(long, default_value = "info")]
     log: String,
+    #[arg(long = "ui-2026")]
+    ui_2026: bool,
 }
 
 struct Gpu {
@@ -170,9 +172,12 @@ fn decode_hash(hex: &str) -> Option<[u8; 32]> {
     Some(out)
 }
 
-fn make_runtime(dm: DataModel, assets: &Path) -> Result<ScriptRuntime, String> {
+fn make_runtime(dm: DataModel, assets: &Path, ui_2026: bool) -> Result<ScriptRuntime, String> {
     let mut engine = Engine::new(dm);
     engine.content_root = Some(assets.join("content"));
+    if ui_2026 {
+        engine.core_package = Some(assets.join("inexperience").join("InExperience.rbxm"));
+    }
     engine.animate_fallback = true;
     engine.audio = rbx_audio::AudioEngine::open();
     engine.process_after_load();
@@ -824,6 +829,7 @@ impl App for Player {
 pub fn desktop_main() {
     let args = Args::parse();
     rbx_base::log::init(&args.log);
+    let ui_2026 = args.ui_2026;
     let assets = find_assets(args.assets.clone());
     let (runtime, net) = if let Some(addr) = args.join {
         let hash = match args.cert.as_deref().and_then(decode_hash) {
@@ -851,7 +857,7 @@ pub fn desktop_main() {
         ] {
             let _ = dm.get_service(s);
         }
-        let runtime = match make_runtime(dm, &assets) {
+        let runtime = match make_runtime(dm, &assets, ui_2026) {
             Ok(r) => r,
             Err(e) => {
                 eprintln!("{e}");
@@ -882,7 +888,7 @@ pub fn desktop_main() {
             }
         }
         dm.ensure_terrain();
-        let runtime = match make_runtime(dm, &assets) {
+        let runtime = match make_runtime(dm, &assets, ui_2026) {
             Ok(r) => r,
             Err(e) => {
                 eprintln!("{e}");
@@ -1019,6 +1025,7 @@ mod web {
         let assets = PathBuf::from("assets");
         let place = query("place").unwrap_or_else(|| DEFAULT_PLACE.to_string());
         let name = query("name").unwrap_or_else(|| "Player1".to_string());
+        let ui_2026 = query("ui").as_deref() == Some("2026");
         let mut dm = DataModel::new();
         match rbx_base::vfs::read(&place) {
             Ok(data) => {
@@ -1029,7 +1036,7 @@ mod web {
             Err(e) => tracing::error!("{place}: {e}"),
         }
         dm.ensure_terrain();
-        let runtime = match make_runtime(dm, &assets) {
+        let runtime = match make_runtime(dm, &assets, ui_2026) {
             Ok(r) => r,
             Err(e) => {
                 tracing::error!("{e}");
@@ -1111,7 +1118,7 @@ pub mod mobile {
 
     pub fn start(assets: PathBuf) {
         rbx_base::log::init("info");
-        let runtime = match make_runtime(startup_place(&assets), &assets) {
+        let runtime = match make_runtime(startup_place(&assets), &assets, false) {
             Ok(r) => r,
             Err(e) => {
                 tracing::error!("{e}");

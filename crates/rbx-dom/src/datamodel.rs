@@ -100,7 +100,14 @@ pub struct DataModel {
     pub gui_view: crate::gui::GuiView,
     pub particle_emits: HashMap<InstanceId, u64>,
     clock: u64,
+    gui_cache: std::sync::Mutex<Option<GuiCache>>,
 }
+
+type GuiCache = (
+    u64,
+    crate::gui::GuiView,
+    std::sync::Arc<crate::gui_layout::GuiLayout>,
+);
 
 impl Default for DataModel {
     fn default() -> Self {
@@ -144,6 +151,7 @@ impl DataModel {
             gui_view: crate::gui::GuiView::default(),
             particle_emits: HashMap::new(),
             clock: 0,
+            gui_cache: std::sync::Mutex::new(None),
         };
         let root = match dm.create_internal(class) {
             Ok(id) => id,
@@ -247,6 +255,22 @@ impl DataModel {
 
     pub fn clock(&self) -> u64 {
         self.clock
+    }
+
+    pub fn gui_layout(&self) -> std::sync::Arc<crate::gui_layout::GuiLayout> {
+        let mut cache = match self.gui_cache.lock() {
+            Ok(c) => c,
+            Err(poisoned) => poisoned.into_inner(),
+        };
+        if let Some((clock, view, layout)) = cache.as_ref()
+            && *clock == self.clock
+            && *view == self.gui_view
+        {
+            return layout.clone();
+        }
+        let layout = std::sync::Arc::new(crate::gui_layout::compute(self));
+        *cache = Some((self.clock, self.gui_view, layout.clone()));
+        layout
     }
 
     fn touch(&mut self, id: InstanceId) {

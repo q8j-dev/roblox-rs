@@ -1,5 +1,5 @@
 use rbx_math::{BrickColor, CFrame, Color3, NumberRange, UDim2, Vec2, Vec3};
-use rbx_reflection::{PropertyDescriptor, ValueType, Variant, database};
+use rbx_reflection::{PropertyDescriptor, ValueType, Variant, VariantType, database};
 use std::collections::HashMap;
 use std::sync::LazyLock;
 
@@ -232,12 +232,60 @@ pub fn default_value(class: &str, prop: &PropertyDescriptor) -> Variant {
             return v;
         }
     }
+    if let Some(text) = &prop.default_text
+        && let Some(v) = parse_default(text, &prop.ty)
+    {
+        return v;
+    }
     match &prop.ty {
         ValueType::Enum(name) => enum_default(name),
         ValueType::Ref(_) => Variant::Ref(None),
         ValueType::Value(t) => Variant::default_for(*t),
         _ => Variant::Nil,
     }
+}
+
+fn numbers(text: &str) -> Vec<f32> {
+    text.split(|c: char| c == ',' || c == '{' || c == '}' || c.is_whitespace())
+        .filter(|s| !s.is_empty())
+        .filter_map(|s| s.parse::<f32>().ok())
+        .collect()
+}
+
+pub fn parse_default(text: &str, ty: &ValueType) -> Option<Variant> {
+    use rbx_math::{Rect2D, UDim};
+    let n = numbers(text);
+    Some(match ty {
+        ValueType::Enum(name) => {
+            let e = database().enum_desc(name)?;
+            Variant::Enum(e.from_name(text.trim())?)
+        }
+        ValueType::Value(t) => match t {
+            VariantType::Bool => Variant::Bool(text.trim().eq_ignore_ascii_case("true")),
+            VariantType::Int => Variant::Int(text.trim().parse().ok()?),
+            VariantType::Int64 => Variant::Int64(text.trim().parse().ok()?),
+            VariantType::Float => Variant::Float(text.trim().parse().ok()?),
+            VariantType::Double => Variant::Double(text.trim().parse().ok()?),
+            VariantType::String => Variant::String(text.to_string()),
+            VariantType::Content => Variant::Content(text.to_string()),
+            VariantType::UDim if n.len() == 2 => Variant::UDim(UDim::new(n[0], n[1] as i32)),
+            VariantType::UDim2 if n.len() == 4 => Variant::UDim2(UDim2 {
+                x: UDim::new(n[0], n[1] as i32),
+                y: UDim::new(n[2], n[3] as i32),
+            }),
+            VariantType::Vector2 if n.len() == 2 => Variant::Vector2(Vec2::new(n[0], n[1])),
+            VariantType::Vector3 if n.len() == 3 => Variant::Vector3(Vec3::new(n[0], n[1], n[2])),
+            VariantType::Color3 if n.len() == 3 => Variant::Color3(Color3::new(n[0], n[1], n[2])),
+            VariantType::Rect2D if n.len() == 4 => {
+                Variant::Rect2D(Rect2D::xyxy(n[0], n[1], n[2], n[3]))
+            }
+            VariantType::NumberRange if n.len() == 2 => {
+                Variant::NumberRange(NumberRange::new(n[0], n[1]))
+            }
+            _ => return None,
+        },
+        _ => return None,
+    })
 }
 
 pub fn default_name(class: &str) -> String {

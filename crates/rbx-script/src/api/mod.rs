@@ -139,6 +139,20 @@ pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Resul
             None => Ok(Some(Value::Nil)),
         };
     }
+    if matches!(name, "AbsoluteContentSize" | "TextBounds" | "TextFits") {
+        let layout = crate::runtime::engine(lua).lock().dm.gui_layout();
+        let v = match name {
+            "AbsoluteContentSize" => layout.content_sizes.get(&id).copied(),
+            "TextBounds" => layout.text_bounds.get(&id).copied(),
+            _ => None,
+        };
+        if let Some(v) = v {
+            return Ok(Some(mlua::IntoLua::into_lua(
+                crate::types::LVector2(v),
+                lua,
+            )?));
+        }
+    }
     if class == "ContentProvider" && name == "BaseUrl" {
         let base = crate::runtime::engine(lua).lock().base_url.clone();
         let site = crate::api::http::site_base_url(&base);

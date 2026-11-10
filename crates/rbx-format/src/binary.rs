@@ -758,6 +758,18 @@ impl Writer {
         self.data.extend_from_slice(b);
     }
 
+    fn longs(&mut self, values: &[i64]) {
+        let enc: Vec<[u8; 8]> = values
+            .iter()
+            .map(|&v| (((v << 1) ^ (v >> 63)) as u64).to_be_bytes())
+            .collect();
+        for k in 0..8 {
+            for e in &enc {
+                self.u8(e[k]);
+            }
+        }
+    }
+
     fn interleaved(&mut self, values: &[u32]) {
         for shift in [24, 16, 8, 0] {
             for v in values {
@@ -835,6 +847,11 @@ fn binary_format(ty: VariantType) -> Option<u8> {
         VariantType::NumberRange => BPF_NUMBER_RANGE,
         VariantType::Rect2D => BPF_RECT2D,
         VariantType::PhysicalProperties => BPF_PHYSICAL_PROPERTIES,
+        VariantType::Int64 => BPF_INT64,
+        VariantType::OptionalCFrame => BPF_OPTIONAL_CFRAME,
+        VariantType::UniqueId => BPF_UNIQUE_ID,
+        VariantType::Font => BPF_FONT,
+        VariantType::SecurityCapabilities => BPF_SECURITY_CAPABILITIES,
         _ => return None,
     })
 }
@@ -1053,6 +1070,60 @@ fn write_values(
                     }
                     _ => w.u8(0),
                 }
+            }
+        }
+        VariantType::Int64 => {
+            w.longs(&each!(Variant::Int64(x) => *x, 0));
+        }
+        VariantType::SecurityCapabilities => {
+            w.longs(&each!(Variant::SecurityCapabilities(x) => *x as i64, 0));
+        }
+        VariantType::OptionalCFrame => {
+            let c = each!(Variant::OptionalCFrame(x) => *x, None);
+            w.u8(BPF_CFRAME_MATRIX);
+            for cf in &c {
+                write_rotation_exact(w, &cf.unwrap_or(CFrame::IDENTITY).rotation);
+            }
+            let t: Vec<Vec3> = c
+                .iter()
+                .map(|x| x.unwrap_or(CFrame::IDENTITY).translation)
+                .collect();
+            w.floats(&t.iter().map(|v| v.x).collect::<Vec<_>>());
+            w.floats(&t.iter().map(|v| v.y).collect::<Vec<_>>());
+            w.floats(&t.iter().map(|v| v.z).collect::<Vec<_>>());
+            w.u8(BPF_BOOL);
+            for cf in &c {
+                w.u8(cf.is_some() as u8);
+            }
+        }
+        VariantType::UniqueId => {
+            let ids = each!(Variant::UniqueId(x) => *x, UniqueId::default());
+            let rows: Vec<[u8; 16]> = ids
+                .iter()
+                .map(|u| {
+                    let mut b = [0u8; 16];
+                    b[..4].copy_from_slice(&u.index.to_be_bytes());
+                    b[4..8].copy_from_slice(&u.time.to_be_bytes());
+                    b[8..].copy_from_slice(&u.random.rotate_left(1).to_be_bytes());
+                    b
+                })
+                .collect();
+            for k in 0..16 {
+                for r in &rows {
+                    w.u8(r[k]);
+                }
+            }
+        }
+        VariantType::Font => {
+            for v in values {
+                let f = match v {
+                    Variant::Font(f) => f.clone(),
+                    _ => FontFace::default(),
+                };
+                w.bytes(f.family.as_bytes());
+                w.u16(f.weight);
+                w.u8(f.style);
+                w.bytes(f.cached_face_id.as_bytes());
             }
         }
         _ => return Err(FormatError::UnsupportedBinaryType(name.to_string())),

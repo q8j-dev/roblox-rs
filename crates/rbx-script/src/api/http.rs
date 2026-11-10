@@ -320,6 +320,10 @@ fn json_decode(lua: &Lua, _: InstanceId, args: &[Value]) -> Result<Ret> {
 
 fn json_encode(lua: &Lua, _: InstanceId, args: &[Value]) -> Result<Ret> {
     let v = args.first().cloned().unwrap_or(Value::Nil);
+    if let Value::String(text) = &v {
+        let text = String::from_utf8_lossy(&text.as_bytes()).into_owned();
+        return ret(lua, Json::String(text).to_string());
+    }
     if !matches!(v, Value::Table(_)) {
         return Err(rt("Can't convert to JSON"));
     }

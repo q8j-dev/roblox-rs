@@ -40969,6 +40969,211 @@
    "service": false,
    "superclass": "GuiObject",
    "yield_functions": []
+  },
+  {
+   "callbacks": [],
+   "creatable": false,
+   "events": [
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "kind": "RemoteEventDesc",
+     "name": "OnLuaUrl",
+     "params": [
+      {
+       "default": null,
+       "name": "url",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "matchedUrl",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "attributionUrl",
+       "type": "string?"
+      }
+     ],
+     "security": "RobloxScript"
+    }
+   ],
+   "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+   "flags": [
+    "PERSISTENT_LOCAL"
+   ],
+   "functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "CreateInternalDlic",
+     "params": [
+      {
+       "default": null,
+       "name": "url",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "source",
+       "type": "string"
+      }
+     ],
+     "return": "string?",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "DetectDlic",
+     "params": [
+      {
+       "default": null,
+       "name": "deeplinkId",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "DetectUrl",
+     "params": [
+      {
+       "default": null,
+       "name": "url",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "GetAndClearLastPendingUrl",
+     "params": [],
+     "return": "Dictionary",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "GetLastLuaUrl",
+     "params": [],
+     "return": "string?",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "IsUrlRegistered",
+     "params": [
+      {
+       "default": null,
+       "name": "url",
+       "type": "string"
+      }
+     ],
+     "return": "bool",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "RegisterLuaUrl",
+     "params": [
+      {
+       "default": null,
+       "name": "url",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "RegisterLuaUrlWithPolicy",
+     "params": [
+      {
+       "default": null,
+       "name": "url",
+       "type": "string"
+      },
+      {
+       "default": null,
+       "name": "policy",
+       "type": "string"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "StartLuaUrlDelivery",
+     "params": [],
+     "return": "Dictionary?",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "StopLuaUrlDelivery",
+     "params": [],
+     "return": "void",
+     "security": "RobloxScript"
+    }
+   ],
+   "name": "LinkingService",
+   "properties": [],
+   "security": null,
+   "service": true,
+   "superclass": "Instance",
+   "yield_functions": [
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "OpenUrl",
+     "params": [
+      {
+       "default": null,
+       "name": "url",
+       "type": "string"
+      }
+     ],
+     "return": "bool",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "SupportsSwitchToSettingsApp",
+     "params": [],
+     "return": "bool",
+     "security": "RobloxScript"
+    },
+    {
+     "deprecated_by": null,
+     "evidence": "GetService(\"LinkingService\") through MockableProxyServices line 14 (service name held in a table)",
+     "name": "SwitchToSettingsApp",
+     "params": [
+      {
+       "default": null,
+       "name": "route",
+       "type": "string?"
+      }
+     ],
+     "return": "void",
+     "security": "RobloxScript"
+    }
+   ]
   }
  ],
  "enums": [
@@ -41056,7 +41261,12 @@
      "value": 19
     }
    ],
-   "legacy": [],
+   "legacy": [
+    {
+     "name": "TeeShirt",
+     "value": 9
+    }
+   ],
    "name": "AccessoryType"
   },
   {
@@ -41581,7 +41791,16 @@
      "value": 95
     }
    ],
-   "legacy": [],
+   "legacy": [
+    {
+     "name": "TeeShirt",
+     "value": 2
+    },
+    {
+     "name": "TeeShirtAccessory",
+     "value": 64
+    }
+   ],
    "name": "AssetType"
   },
   {
@@ -41836,7 +42055,12 @@
      "value": 92
     }
    ],
-   "legacy": [],
+   "legacy": [
+    {
+     "name": "TeeShirtAccessory",
+     "value": 64
+    }
+   ],
    "name": "AvatarAssetType"
   },
   {
@@ -42668,7 +42892,12 @@
      "value": 1030
     }
    ],
-   "legacy": [],
+   "legacy": [
+    {
+     "name": "DisconnectNoResponse",
+     "value": 279
+    }
+   ],
    "name": "ConnectionError"
   },
   {
@@ -42725,7 +42954,12 @@
      "value": 3000
     }
    ],
-   "legacy": [],
+   "legacy": [
+    {
+     "name": "Default",
+     "value": 2000
+    }
+   ],
    "name": "ContextActionPriority"
   },
   {
@@ -43415,7 +43649,28 @@
      "value": 100
     }
    ],
-   "legacy": [],
+   "legacy": [
+    {
+     "name": "Montserrat",
+     "value": 17
+    },
+    {
+     "name": "GothamSemibold",
+     "value": 18
+    },
+    {
+     "name": "MontserratMedium",
+     "value": 18
+    },
+    {
+     "name": "MontserratBold",
+     "value": 19
+    },
+    {
+     "name": "MontserratBlack",
+     "value": 20
+    }
+   ],
    "name": "Font"
   },
   {
@@ -45088,7 +45343,16 @@
      "value": 1056
     }
    ],
-   "legacy": [],
+   "legacy": [
+    {
+     "name": "Unknown",
+     "value": 0
+    },
+    {
+     "name": "Touch",
+     "value": 1034
+    }
+   ],
    "name": "KeyCode"
   },
   {
@@ -45406,7 +45670,16 @@
      "value": 2311
     }
    ],
-   "legacy": [],
+   "legacy": [
+    {
+     "name": "Corroded Metal",
+     "value": 1040
+    },
+    {
+     "name": "Aluminum",
+     "value": 1072
+    }
+   ],
    "name": "Material"
   },
   {
@@ -45929,7 +46202,16 @@
      "value": 1
     }
    ],
-   "legacy": [],
+   "legacy": [
+    {
+     "name": "Blacklist",
+     "value": 0
+    },
+    {
+     "name": "Whitelist",
+     "value": 1
+    }
+   ],
    "name": "RaycastFilterType"
   },
   {

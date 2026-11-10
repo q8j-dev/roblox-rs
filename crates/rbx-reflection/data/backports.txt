@@ -1054,3 +1054,4 @@ class Wire | Instance.new("Wire") at 34 call sites (docs/inexperience/created.tx
 class WorldModel | Instance.new("WorldModel") at 2 call sites (docs/inexperience/created.txt)
 class UITableLayout | class name string in module string tables (docs/inexperience/backport-list.md)
 class CanvasGroup | class name string in module string tables (docs/inexperience/backport-list.md)
+class LinkingService | GetService("LinkingService") through MockableProxyServices line 14 (service name held in a table)

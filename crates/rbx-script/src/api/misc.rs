@@ -54,15 +54,19 @@ fn set_legacy_max_items(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Re
 
 fn get_fflag(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
     let name = arg_string(args.first()).unwrap_or_default();
-    match rbx_base::flag_value(&name) {
-        Some(v) => ret(lua, v.eq_ignore_ascii_case("true")),
+    let found = rbx_base::flag_value(&name)
+        .or_else(|| crate::runtime::engine(lua).lock().flags.variable(&name));
+    match found {
+        Some(v) => ret(lua, v.eq_ignore_ascii_case("true") || v == "1"),
         None => Err(rt(format!("Flag {name} does not exist"))),
     }
 }
 
 fn get_fvariable(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
     let name = arg_string(args.first()).unwrap_or_default();
-    match rbx_base::flag_value(&name) {
+    let found = rbx_base::flag_value(&name)
+        .or_else(|| crate::runtime::engine(lua).lock().flags.variable(&name));
+    match found {
         Some(v) => ret(lua, v),
         None => Err(rt(format!("Variable {name} does not exist"))),
     }

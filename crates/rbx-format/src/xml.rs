@@ -7,7 +7,7 @@ use rbx_math::{
     NumberRange, NumberSequence, NumberSequenceKeypoint, PhysicalProperties, Ray, Rect2D,
     Region3int16, UDim, UDim2, Vec2, Vec3, Vector2int16, Vector3int16,
 };
-use rbx_reflection::Variant;
+use rbx_reflection::{FontFace, UniqueId, Variant};
 use std::collections::HashMap;
 
 #[derive(Clone, Debug, Default)]
@@ -434,6 +434,60 @@ fn property_value(e: &Element) -> Option<Pending> {
             x: e.child_i32("X") as i16,
             y: e.child_i32("Y") as i16,
         }),
+        "SecurityCapabilities" => Variant::SecurityCapabilities(t.trim().parse().ok()?),
+        "UniqueId" => {
+            let hex = t.trim();
+            if hex.len() != 32 {
+                return None;
+            }
+            let byte = |i: usize| u8::from_str_radix(&hex[i * 2..i * 2 + 2], 16).ok();
+            let mut b = [0u8; 16];
+            for (i, slot) in b.iter_mut().enumerate() {
+                *slot = byte(i)?;
+            }
+            Variant::UniqueId(UniqueId {
+                random: i64::from_be_bytes(b[..8].try_into().ok()?).rotate_right(1),
+                time: u32::from_be_bytes(b[8..12].try_into().ok()?),
+                index: u32::from_be_bytes(b[12..].try_into().ok()?),
+            })
+        }
+        "Font" => {
+            let url = |tag: &str| {
+                e.child(tag)
+                    .and_then(|c| c.child("url"))
+                    .map(|u| u.text().to_string())
+                    .unwrap_or_default()
+            };
+            Variant::Font(FontFace {
+                family: url("Family"),
+                weight: e.child_i32("Weight") as u16,
+                style: match e.child("Style").map(|c| c.text()) {
+                    Some("Italic") => 1,
+                    _ => 0,
+                },
+                cached_face_id: url("CachedFaceId"),
+            })
+        }
+        "OptionalCoordinateFrame" => match e.child("CFrame") {
+            Some(c) => {
+                let r = [
+                    c.child_f32("R00"),
+                    c.child_f32("R01"),
+                    c.child_f32("R02"),
+                    c.child_f32("R10"),
+                    c.child_f32("R11"),
+                    c.child_f32("R12"),
+                    c.child_f32("R20"),
+                    c.child_f32("R21"),
+                    c.child_f32("R22"),
+                ];
+                Variant::OptionalCFrame(Some(CFrame::from_rows(
+                    r,
+                    Vec3::new(c.child_f32("X"), c.child_f32("Y"), c.child_f32("Z")),
+                )))
+            }
+            None => Variant::OptionalCFrame(None),
+        },
         "CoordinateFrame" | "CFrame" => {
             let r = [
                 e.child_f32("R00"),
@@ -954,11 +1008,84 @@ fn write_property(out: &mut String, depth: usize, name: &str, value: &Variant) {
             };
             simple(out, depth, "Ref", name, &text, false)
         }
-        Variant::SystemAddress(_)
-        | Variant::Font(_)
-        | Variant::UniqueId(_)
-        | Variant::SecurityCapabilities(_)
-        | Variant::OptionalCFrame(_) => {}
+        Variant::SecurityCapabilities(v) => simple(
+            out,
+            depth,
+            "SecurityCapabilities",
+            name,
+            &v.to_string(),
+            false,
+        ),
+        Variant::UniqueId(u) => {
+            let mut hex = String::with_capacity(32);
+            for b in u
+                .random
+                .rotate_left(1)
+                .to_be_bytes()
+                .iter()
+                .chain(u.time.to_be_bytes().iter())
+                .chain(u.index.to_be_bytes().iter())
+            {
+                hex.push_str(&format!("{b:02x}"));
+            }
+            simple(out, depth, "UniqueId", name, &hex, false)
+        }
+        Variant::Font(font) => {
+            indent(out, depth);
+            out.push_str("<Font name=\"");
+            encode_text(out, name, false);
+            out.push_str("\">\n");
+            indent(out, depth + 1);
+            out.push_str("<Family><url>");
+            encode_text(out, &font.family, false);
+            out.push_str("</url></Family>\n");
+            indent(out, depth + 1);
+            out.push_str(&format!("<Weight>{}</Weight>\n", font.weight));
+            indent(out, depth + 1);
+            out.push_str(if font.style == 1 {
+                "<Style>Italic</Style>\n"
+            } else {
+                "<Style>Normal</Style>\n"
+            });
+            if !font.cached_face_id.is_empty() {
+                indent(out, depth + 1);
+                out.push_str("<CachedFaceId><url>");
+                encode_text(out, &font.cached_face_id, false);
+                out.push_str("</url></CachedFaceId>\n");
+            }
+            indent(out, depth);
+            out.push_str("</Font>\n");
+        }
+        Variant::OptionalCFrame(c) => {
+            indent(out, depth);
+            out.push_str("<OptionalCoordinateFrame name=\"");
+            encode_text(out, name, false);
+            out.push_str("\">");
+            if let Some(c) = c {
+                let r = c.rows();
+                let t = c.translation;
+                out.push_str("<CFrame>");
+                for (k, v) in [
+                    ("X", t.x),
+                    ("Y", t.y),
+                    ("Z", t.z),
+                    ("R00", r[0]),
+                    ("R01", r[1]),
+                    ("R02", r[2]),
+                    ("R10", r[3]),
+                    ("R11", r[4]),
+                    ("R12", r[5]),
+                    ("R20", r[6]),
+                    ("R21", r[7]),
+                    ("R22", r[8]),
+                ] {
+                    out.push_str(&format!("<{k}>{}</{k}>", f(v)));
+                }
+                out.push_str("</CFrame>");
+            }
+            out.push_str("</OptionalCoordinateFrame>\n");
+        }
+        Variant::SystemAddress(_) => {}
     }
 }
 

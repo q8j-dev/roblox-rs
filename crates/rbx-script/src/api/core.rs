@@ -308,6 +308,18 @@ pub fn load_core_package(lua: &Lua, path: &Path) -> Result<()> {
     if with_state(lua, |s| s.core_package_scripts.is_some()) {
         return Ok(());
     }
+    if let Some(dir) = path.parent()
+        && let Ok(text) = rbx_base::vfs::read_to_string(&dir.join("ClientAppSettings.json"))
+        && let Err(err) = engine(lua).lock().flags.load_baseline_json(&text)
+    {
+        tracing::warn!("ClientAppSettings.json: {err}");
+    }
+    if let Some(dir) = path.parent()
+        && let Ok(text) = rbx_base::vfs::read_to_string(&dir.join("EngineFlagDefaults.json"))
+        && let Err(err) = engine(lua).lock().flags.load_engine_defaults_json(&text)
+    {
+        tracing::warn!("EngineFlagDefaults.json: {err}");
+    }
     let data = rbx_base::vfs::read(path).map_err(|err| {
         rt(format!(
             "Error loading core package {}: {err}",

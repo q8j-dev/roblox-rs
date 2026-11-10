@@ -66,6 +66,8 @@ pub struct FlagRead {
 pub struct FlagStore {
     defined: BTreeMap<(FlagKind, String), FlagValue>,
     overrides: BTreeMap<String, serde_json::Value>,
+    baseline: BTreeMap<String, serde_json::Value>,
+    engine_defaults: BTreeMap<String, serde_json::Value>,
     engine_features: BTreeMap<String, bool>,
     ixp: BTreeMap<String, serde_json::Map<String, serde_json::Value>>,
     versions: BTreeMap<String, i64>,
@@ -114,8 +116,71 @@ impl FlagStore {
         Ok(())
     }
 
+    pub fn load_baseline_json(&mut self, text: &str) -> Result<usize, String> {
+        let value: serde_json::Value = serde_json::from_str(text).map_err(|e| e.to_string())?;
+        let serde_json::Value::Object(map) = value else {
+            return Err("client settings must be a JSON object".into());
+        };
+        let count = map.len();
+        for (key, v) in map {
+            self.baseline.insert(bare(&key).to_string(), v);
+        }
+        Ok(count)
+    }
+
+    pub fn load_engine_defaults_json(&mut self, text: &str) -> Result<usize, String> {
+        let value: serde_json::Value = serde_json::from_str(text).map_err(|e| e.to_string())?;
+        let serde_json::Value::Object(map) = value else {
+            return Err("engine flag defaults must be a JSON object".into());
+        };
+        let count = map.len();
+        self.engine_defaults.extend(map);
+        Ok(count)
+    }
+
+    fn raw(&self, name: &str) -> Option<&serde_json::Value> {
+        self.overrides.get(name).or_else(|| self.baseline.get(name))
+    }
+
     fn override_for(&self, kind: FlagKind, name: &str) -> Option<FlagValue> {
-        FlagValue::parse(kind, self.overrides.get(name)?)
+        FlagValue::parse(kind, self.raw(name)?)
+    }
+
+    pub fn variable(&mut self, name: &str) -> Option<String> {
+        let name = bare(name).to_string();
+        let value = self
+            .defined
+            .iter()
+            .find(|((_, n), _)| *n == name)
+            .map(|(_, v)| match v {
+                FlagValue::Bool(b) => {
+                    if *b {
+                        "True".to_string()
+                    } else {
+                        "False".to_string()
+                    }
+                }
+                FlagValue::Int(i) => i.to_string(),
+                FlagValue::String(s) => s.clone(),
+            })
+            .or_else(|| {
+                self.raw(&name)
+                    .or_else(|| self.engine_defaults.get(&name))
+                    .map(|v| match v {
+                        serde_json::Value::String(s) => s.clone(),
+                        other => other.to_string(),
+                    })
+            });
+        if let Some(v) = &value {
+            self.reads.insert(
+                format!("FVariable{name}"),
+                FlagRead {
+                    default: None,
+                    value: v.clone(),
+                },
+            );
+        }
+        value
     }
 
     fn record(

@@ -424,7 +424,10 @@ fn merge_backports(raw: &mut RawDatabase, extra: RawDatabase) {
     }
     for e in extra.enums {
         match raw.enums.iter_mut().find(|x| x.name == e.name) {
-            Some(existing) => merge_named(&mut existing.items, e.items, |i| &i.name),
+            Some(existing) => {
+                merge_named(&mut existing.items, e.items, |i| &i.name);
+                merge_named(&mut existing.legacy, e.legacy, |i| &i.name);
+            }
             None => raw.enums.push(e),
         }
     }

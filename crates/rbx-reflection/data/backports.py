@@ -165,7 +165,11 @@ def main():
             out_enums[target] = {
                 "name": target,
                 "items": [{"name": i["Name"], "value": i["Value"]} for i in e["Items"]],
-                "legacy": [],
+                "legacy": [
+                    {"name": legacy, "value": i["Value"]}
+                    for i in e["Items"]
+                    for legacy in (i.get("LegacyNames") or [])
+                ],
                 "evidence": evidence,
             }
         else:

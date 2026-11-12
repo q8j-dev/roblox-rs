@@ -406,6 +406,18 @@ pub fn create_globals(lua: &Lua) -> Result<Table> {
             g.raw_set(name, wrapper.call::<Function>(f)?)?;
         }
     }
+    if let Value::Table(utf8) = g.get::<Value>("utf8")? {
+        use unicode_normalization::UnicodeNormalization;
+        utf8.set_readonly(false);
+        utf8.raw_set(
+            "nfcnormalize",
+            lua.create_function(|_, s: mlua::LuaString| Ok(s.to_str()?.nfc().collect::<String>()))?,
+        )?;
+        utf8.raw_set(
+            "nfdnormalize",
+            lua.create_function(|_, s: mlua::LuaString| Ok(s.to_str()?.nfd().collect::<String>()))?,
+        )?;
+    }
     for lib in [
         "math",
         "string",

@@ -89,6 +89,16 @@ pub fn make_local_player(
         if let Some(n) = name {
             e.dm.set_name(p, n);
         }
+        if e.dm
+            .property_descriptor(p, "ChatAvailabilityStatus")
+            .is_some()
+        {
+            let _ = e.dm.set(
+                p,
+                "ChatAvailabilityStatus",
+                Variant::String("Enabled".into()),
+            );
+        }
         if e.dm.property_descriptor(p, "DisplayName").is_some() {
             let shown = e.dm.name_of(p).to_string();
             let _ = e.dm.set(p, "DisplayName", Variant::String(shown));

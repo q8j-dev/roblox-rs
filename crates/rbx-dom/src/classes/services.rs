@@ -199,8 +199,17 @@ impl Behavior for WorkspaceBehavior {
     }
 }
 
+pub struct TextSourceBehavior;
+
+impl Behavior for TextSourceBehavior {
+    fn aliases(&self) -> &'static [(&'static str, &'static str)] {
+        &[("UserId", "UserIdReplicated")]
+    }
+}
+
 pub fn register(map: &mut HashMap<&'static str, &'static dyn Behavior>) {
     map.insert("Players", &PlayersBehavior);
+    map.insert("TextSource", &TextSourceBehavior);
     map.insert("Workspace", &WorkspaceBehavior);
     map.insert("DataModel", &DataModelBehavior);
     for &class in SERVICE_CLASSES {

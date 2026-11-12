@@ -11,6 +11,8 @@ pub struct GuiLayout {
     pub canvases: HashMap<InstanceId, Placement>,
     pub content_sizes: HashMap<InstanceId, Vec2>,
     pub text_bounds: HashMap<InstanceId, Vec2>,
+    pub canvas_clamps: HashMap<InstanceId, Vec2>,
+    pub scales: HashMap<InstanceId, f32>,
 }
 
 fn udim2(dm: &DataModel, id: impl Src, name: &str) -> UDim2 {
@@ -81,8 +83,15 @@ fn resolve(u: UDim2, size: Vec2) -> Vec2 {
     )
 }
 
-fn resolve1(u: UDim, size: f32) -> f32 {
-    u.scale * size + u.offset as f32
+fn resolve_scaled(u: UDim2, size: Vec2, k: f32) -> Vec2 {
+    Vec2::new(
+        u.x.scale * size.x + u.x.offset as f32 * k,
+        u.y.scale * size.y + u.y.offset as f32 * k,
+    )
+}
+
+fn resolve1_scaled(u: UDim, size: f32, k: f32) -> f32 {
+    u.scale * size + u.offset as f32 * k
 }
 
 fn component_child(dm: &DataModel, id: InstanceId, class: &str) -> Option<Component> {
@@ -121,20 +130,20 @@ fn gui_children(dm: &DataModel, id: InstanceId, out: &mut Vec<InstanceId>) {
     }
 }
 
-fn padding(dm: &DataModel, id: InstanceId, size: Vec2) -> [f32; 4] {
+fn padding(dm: &DataModel, id: InstanceId, size: Vec2, k: f32) -> [f32; 4] {
     match component_child(dm, id, "UIPadding") {
         Some(p) => [
-            resolve1(udim(dm, &p, "PaddingLeft"), size.x),
-            resolve1(udim(dm, &p, "PaddingTop"), size.y),
-            resolve1(udim(dm, &p, "PaddingRight"), size.x),
-            resolve1(udim(dm, &p, "PaddingBottom"), size.y),
+            resolve1_scaled(udim(dm, &p, "PaddingLeft"), size.x, k),
+            resolve1_scaled(udim(dm, &p, "PaddingTop"), size.y, k),
+            resolve1_scaled(udim(dm, &p, "PaddingRight"), size.x, k),
+            resolve1_scaled(udim(dm, &p, "PaddingBottom"), size.y, k),
         ],
         None => [0.0; 4],
     }
 }
 
-fn content_rect(dm: &DataModel, id: InstanceId, p: Placement) -> Placement {
-    let pad = padding(dm, id, p.size);
+fn content_rect(dm: &DataModel, id: InstanceId, p: Placement, k: f32) -> Placement {
+    let pad = padding(dm, id, p.size, k);
     Placement {
         position: p.position + Vec2::new(pad[0], pad[1]),
         size: Vec2::new(
@@ -227,26 +236,98 @@ pub fn text_size(dm: &DataModel, id: InstanceId) -> f32 {
     })
 }
 
-fn measure_text(dm: &DataModel, id: InstanceId, width: f32) -> Vec2 {
+pub fn display_text(dm: &DataModel, id: InstanceId) -> crate::rich_text::RichText {
     let text = match dm.effective(id, "Text") {
         Ok(v) => v.as_str().unwrap_or("").to_string(),
         Err(_) => String::new(),
     };
-    if text.is_empty() {
+    if boolean(dm, id, "RichText", false) {
+        crate::rich_text::parse(&text)
+    } else {
+        crate::rich_text::RichText {
+            text,
+            ..Default::default()
+        }
+    }
+}
+
+pub fn display_font(
+    dm: &DataModel,
+    id: InstanceId,
+    rich: &crate::rich_text::RichText,
+) -> rbx_text::Font {
+    rich.family
+        .as_ref()
+        .and_then(|(family, weight)| rbx_text::face(family, *weight, false))
+        .unwrap_or_else(|| font_for(dm, id))
+}
+
+pub fn measure_display_text(
+    dm: &DataModel,
+    id: InstanceId,
+    available: [f32; 2],
+) -> ([f32; 2], bool) {
+    let rich = display_text(dm, id);
+    rbx_text::typesetter(display_font(dm, id, &rich)).measure(
+        &rich.text,
+        text_size(dm, id),
+        available,
+    )
+}
+
+fn measure_auto_text(dm: &DataModel, id: InstanceId, width: f32, k: f32) -> Vec2 {
+    let own = measure_text(dm, id, width, k);
+    if own != Vec2::ZERO || dm.class_of(id) != Some("TextBox") {
+        return own;
+    }
+    let placeholder = match dm.effective(id, "PlaceholderText") {
+        Ok(v) => v.as_str().unwrap_or("").to_string(),
+        Err(_) => String::new(),
+    };
+    if placeholder.is_empty() {
+        return own;
+    }
+    measure_string(
+        dm,
+        id,
+        &crate::rich_text::RichText {
+            text: placeholder,
+            ..Default::default()
+        },
+        width,
+        k,
+    )
+}
+
+fn measure_text(dm: &DataModel, id: InstanceId, width: f32, k: f32) -> Vec2 {
+    let rich = display_text(dm, id);
+    measure_string(dm, id, &rich, width, k)
+}
+
+fn measure_string(
+    dm: &DataModel,
+    id: InstanceId,
+    rich: &crate::rich_text::RichText,
+    width: f32,
+    k: f32,
+) -> Vec2 {
+    if rich.text.is_empty() {
         return Vec2::ZERO;
     }
+    let k = if k > 0.0 && k.is_finite() { k } else { 1.0 };
+    let width = width / k;
     let wrapped = boolean(dm, id, "TextWrapped", false);
     let avail = if wrapped {
         width.max(1.0)
     } else {
         f32::INFINITY
     };
-    let (out, _) = rbx_text::typesetter(font_for(dm, id)).measure(
-        &text,
+    let (out, _) = rbx_text::typesetter(display_font(dm, id, rich)).measure(
+        &rich.text,
         text_size(dm, id),
         [avail, f32::INFINITY],
     );
-    Vec2::new(out[0], out[1])
+    Vec2::new(out[0], out[1]) * k
 }
 
 struct Item {
@@ -268,27 +349,65 @@ impl Ctx<'_> {
             _ => parent,
         };
         let raw = udim2(dm, id, "Size");
+        let axis = |s: f32, parent: f32, offset: i32| {
+            if s == 0.0 {
+                offset as f32 * scale
+            } else {
+                s * parent + offset as f32 * scale
+            }
+        };
         let mut size = Vec2::new(
-            raw.x.scale * constrained.x + raw.x.offset as f32 * scale,
-            raw.y.scale * constrained.y + raw.y.offset as f32 * scale,
+            axis(raw.x.scale, constrained.x, raw.x.offset),
+            axis(raw.y.scale, constrained.y, raw.y.offset),
         );
         let auto = enum_value(dm, id, "AutomaticSize");
         if auto != 0 {
-            let content = self.measure_content(id, size, scale);
+            let base = Vec2::new(
+                if size.x.is_finite() { size.x } else { 0.0 },
+                if size.y.is_finite() { size.y } else { 0.0 },
+            );
+            let content = self.measure_content(id, base, scale);
             if auto & 1 != 0 {
-                size.x = size.x.max(content.x);
+                size.x = base.x.max(content.x);
             }
             if auto & 2 != 0 {
-                size.y = size.y.max(content.y);
+                size.y = base.y.max(content.y);
             }
         }
         let own_scale = ui_scale(dm, id);
-        apply_constraints(dm, id, size * own_scale, parent)
+        let mut out = apply_constraints(dm, id, size * own_scale, parent);
+        if !out.x.is_finite() || !out.y.is_finite() {
+            let base = Vec2::new(
+                if out.x.is_finite() { out.x } else { 0.0 },
+                if out.y.is_finite() { out.y } else { 0.0 },
+            );
+            let force =
+                (if out.x.is_finite() { 0 } else { 1 }) | (if out.y.is_finite() { 0 } else { 2 });
+            let content = self.measure_content_forced(id, base, scale, force);
+            if !out.x.is_finite() {
+                out.x = content.x;
+            }
+            if !out.y.is_finite() {
+                out.y = content.y;
+            }
+        }
+        out
     }
 
     fn measure_content(&mut self, id: InstanceId, size: Vec2, scale: f32) -> Vec2 {
+        self.measure_content_forced(id, size, scale, 0)
+    }
+
+    fn measure_content_forced(
+        &mut self,
+        id: InstanceId,
+        size: Vec2,
+        scale: f32,
+        force: u32,
+    ) -> Vec2 {
         let dm = self.dm;
-        let pad = padding(dm, id, size);
+        let child_scale = scale * ui_scale(dm, id);
+        let pad = padding(dm, id, size, child_scale);
         let inner = Vec2::new(
             (size.x - pad[0] - pad[2]).max(0.0),
             (size.y - pad[1] - pad[3]).max(0.0),
@@ -302,20 +421,32 @@ impl Ctx<'_> {
             } else {
                 inner.x
             };
-            extent = extent.max(measure_text(dm, id, width));
+            extent = extent.max(measure_auto_text(dm, id, width, child_scale));
         }
         let mut kids = Vec::new();
         gui_children(dm, id, &mut kids);
-        let child_scale = scale * ui_scale(dm, id);
+        let auto = enum_value(dm, id, "AutomaticSize") | force;
+        let open = Vec2::new(
+            if auto & 1 != 0 {
+                f32::INFINITY
+            } else {
+                inner.x
+            },
+            if auto & 2 != 0 {
+                f32::INFINITY
+            } else {
+                inner.y
+            },
+        );
         match layout_child(dm, id) {
             Some(layout) if component_class(dm, &layout) != "UIPageLayout" => {
-                let items: Vec<Item> = self.items(&kids, inner, child_scale);
+                let items: Vec<Item> = self.items(&kids, open, child_scale);
                 let rect = Placement {
                     position: Vec2::ZERO,
                     size: inner,
                     rotation: 0.0,
                 };
-                let (_, content) = self.arrange(&layout, &items, rect, true);
+                let (_, content) = self.arrange(&layout, &items, rect, true, child_scale);
                 extent = extent.max(content);
             }
             _ => {
@@ -323,7 +454,7 @@ impl Ctx<'_> {
                     if !boolean(dm, k, "Visible", true) {
                         continue;
                     }
-                    let s = self.sized(k, inner, child_scale);
+                    let s = self.sized(k, open, child_scale);
                     let pos = udim2(dm, k, "Position");
                     let anchor = vec2(dm, k, "AnchorPoint");
                     let p = Vec2::new(
@@ -363,6 +494,7 @@ impl Ctx<'_> {
         items: &[Item],
         rect: Placement,
         measuring: bool,
+        k: f32,
     ) -> (Vec<(InstanceId, Vec2, Vec2)>, Vec2) {
         let dm = self.dm;
         let mut items: Vec<Item> = items
@@ -395,8 +527,8 @@ impl Ctx<'_> {
         };
         let mut placed = Vec::new();
         if class == "UIGridLayout" {
-            let cell = resolve(udim2(dm, layout, "CellSize"), rect.size);
-            let gap = resolve(udim2(dm, layout, "CellPadding"), rect.size);
+            let cell = resolve_scaled(udim2(dm, layout, "CellSize"), rect.size, k);
+            let gap = resolve_scaled(udim2(dm, layout, "CellPadding"), rect.size, k);
             let main_avail = along(rect.size);
             let per_line = {
                 let max_cells = number(dm, layout, "FillDirectionMaxCells") as usize;
@@ -436,7 +568,7 @@ impl Ctx<'_> {
             }
             return (placed, content);
         }
-        let gap = resolve1(udim(dm, layout, "Padding"), along(rect.size));
+        let gap = resolve1_scaled(udim(dm, layout, "Padding"), along(rect.size), k);
         let flex = enum_value(
             dm,
             layout,
@@ -447,6 +579,16 @@ impl Ctx<'_> {
             },
         );
         let wraps = boolean(dm, layout, "Wraps", false);
+        let cross_flex = enum_value(
+            dm,
+            layout,
+            if vertical {
+                "HorizontalFlex"
+            } else {
+                "VerticalFlex"
+            },
+        );
+        let line_align = enum_value(dm, layout, "ItemLineAlignment");
         let mut lines: Vec<Vec<usize>> = vec![Vec::new()];
         let mut run = 0.0;
         for (i, item) in items.iter().enumerate() {
@@ -466,7 +608,7 @@ impl Ctx<'_> {
         let mut cross_cursor = 0.0;
         let mut content = Vec2::ZERO;
         let line_gap = if wraps {
-            resolve1(
+            resolve1_scaled(
                 udim(
                     dm,
                     layout,
@@ -477,7 +619,19 @@ impl Ctx<'_> {
                     },
                 ),
                 across(rect.size),
+                k,
             )
+        } else {
+            0.0
+        };
+        let pre_cross: Vec<f32> = lines
+            .iter()
+            .map(|l| l.iter().map(|&i| across(items[i].size)).fold(0.0, f32::max))
+            .collect();
+        let fill_extra = if wraps && cross_flex == 1 && !measuring && !lines.is_empty() {
+            let used: f32 =
+                pre_cross.iter().sum::<f32>() + line_gap * (lines.len().saturating_sub(1)) as f32;
+            ((across(rect.size) - used) / lines.len() as f32).max(0.0)
         } else {
             0.0
         };
@@ -561,7 +715,7 @@ impl Ctx<'_> {
             let used: f32 = sizes.iter().map(|s| along(*s)).sum::<f32>()
                 + spacing * (sizes.len().saturating_sub(1)) as f32
                 + lead * 2.0;
-            let line_cross = sizes.iter().map(|s| across(*s)).fold(0.0, f32::max);
+            let line_cross = sizes.iter().map(|s| across(*s)).fold(0.0, f32::max) + fill_extra;
             let start = if flex == 0 || measuring {
                 align_offset(main_align, along(rect.size) - used)
             } else {
@@ -569,9 +723,22 @@ impl Ctx<'_> {
             } + lead;
             let mut cursor = start;
             for (n, &i) in line.iter().enumerate() {
-                let s = sizes[n];
+                let mut s = sizes[n];
                 let cross_space = if wraps { line_cross } else { across(rect.size) };
-                let c = cross_cursor + align_offset(cross_align, cross_space - across(s));
+                let own_align = component_child(dm, items[i].id, "UIFlexItem")
+                    .map(|f| enum_value(dm, &f, "ItemLineAlignment"))
+                    .filter(|a| *a != 0)
+                    .unwrap_or(line_align);
+                if !measuring && (own_align == 4 || (own_align == 0 && cross_flex == 1)) {
+                    s = make(along(s), cross_space.max(0.0));
+                }
+                let item_align = match own_align {
+                    1 => 1,
+                    2 => 0,
+                    3 => 2,
+                    _ => cross_align,
+                };
+                let c = cross_cursor + align_offset(item_align, cross_space - across(s));
                 placed.push((items[i].id, rect.position + make(cursor, c), s));
                 cursor += along(s) + spacing;
             }
@@ -605,7 +772,31 @@ impl Ctx<'_> {
                     canvas_size.y = canvas_size.y.max(content.y);
                 }
             }
-            let offset = vec2(dm, id, "CanvasPosition");
+            let raw = vec2(dm, id, "CanvasPosition");
+            let thickness = number(dm, id, "ScrollBarThickness");
+            let mut window = own.size;
+            if canvas_size.y > own.size.y {
+                window.x -= thickness;
+            }
+            if canvas_size.x > own.size.x {
+                window.y -= thickness;
+            }
+            let limit = (canvas_size - window.max(Vec2::ZERO)).max(Vec2::ZERO);
+            let offset = Vec2::new(
+                if raw.x.is_finite() {
+                    raw.x.clamp(0.0, limit.x)
+                } else {
+                    0.0
+                },
+                if raw.y.is_finite() {
+                    raw.y.clamp(0.0, limit.y)
+                } else {
+                    0.0
+                },
+            );
+            if offset != raw {
+                self.out.canvas_clamps.insert(id, offset);
+            }
             base = Placement {
                 position: own.position - offset,
                 size: canvas_size.max(own.size),
@@ -613,14 +804,15 @@ impl Ctx<'_> {
             };
             self.out.canvases.insert(id, base);
         }
-        let inner = content_rect(dm, id, base);
         let child_scale = scale * ui_scale(dm, id);
+        self.out.scales.insert(id, child_scale);
+        let inner = content_rect(dm, id, base, child_scale);
         let mut kids = Vec::new();
         gui_children(dm, id, &mut kids);
         match layout_child(dm, id) {
             Some(layout) if component_class(dm, &layout) != "UIPageLayout" => {
                 let items = self.items(&kids, inner.size, child_scale);
-                let (placed, _) = self.arrange(&layout, &items, inner, false);
+                let (placed, _) = self.arrange(&layout, &items, inner, false, child_scale);
                 for (child, pos, size) in placed {
                     let p = Placement {
                         position: pos,
@@ -669,7 +861,8 @@ impl Ctx<'_> {
     fn node(&mut self, id: InstanceId, p: Placement, scale: f32) {
         let dm = self.dm;
         if is_text(dm.class_of(id).unwrap_or("")) {
-            let bounds = measure_text(dm, id, p.size.x);
+            let k = scale * ui_scale(dm, id);
+            let bounds = measure_text(dm, id, p.size.x, k);
             self.out.text_bounds.insert(id, bounds);
         }
         self.container(id, p, scale);

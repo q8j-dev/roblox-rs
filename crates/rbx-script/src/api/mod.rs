@@ -28,9 +28,11 @@ pub mod styling;
 pub mod telemetry;
 pub mod terrain;
 pub mod test;
+pub mod text_chat;
 pub mod tween;
 pub mod tween_service;
 pub mod user_input;
+pub mod user_settings;
 pub mod verbs;
 
 use crate::types::rt;
@@ -90,6 +92,7 @@ static REGISTRY: LazyLock<Registry> = LazyLock::new(|| {
     ipc::register(&mut r);
     ixp::register(&mut r);
     platform::register(&mut r);
+    text_chat::register(&mut r);
     telemetry::register(&mut r);
     tween_service::register(&mut r);
     client_services::register(&mut r);
@@ -153,6 +156,15 @@ pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Resul
             )?));
         }
     }
+    if class == "TextChatMessage"
+        && name == "Timestamp"
+        && let Some(ms) = text_chat::timestamp(lua, id)
+    {
+        return Ok(Some(mlua::IntoLua::into_lua(
+            crate::datatypes::LDateTime(ms),
+            lua,
+        )?));
+    }
     if class == "ContentProvider" && name == "BaseUrl" {
         let base = crate::runtime::engine(lua).lock().base_url.clone();
         let site = crate::api::http::site_base_url(&base);
@@ -206,6 +218,7 @@ pub fn get_property(lua: &Lua, id: InstanceId, class: &str, name: &str) -> Resul
         "AbsolutePosition"
             | "AbsoluteSize"
             | "AbsoluteWindowSize"
+            | "AbsoluteCanvasSize"
             | "TextBounds"
             | "TextFits"
             | "ViewportSize"

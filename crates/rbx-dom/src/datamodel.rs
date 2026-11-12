@@ -101,9 +101,17 @@ pub struct DataModel {
     pub particle_emits: HashMap<InstanceId, u64>,
     clock: u64,
     gui_cache: std::sync::Mutex<Option<GuiCache>>,
+    pub chat_bubbles: Vec<ChatBubble>,
     style_rules: HashMap<InstanceId, Vec<(String, Variant)>>,
     style_derives: HashMap<InstanceId, Vec<InstanceId>>,
     style_cache: std::sync::Mutex<Option<(u64, std::sync::Arc<crate::styles::Styles>)>>,
+}
+
+#[derive(Clone, Debug)]
+pub struct ChatBubble {
+    pub target: InstanceId,
+    pub text: String,
+    pub created: f64,
 }
 
 type GuiCache = (
@@ -155,6 +163,7 @@ impl DataModel {
             particle_emits: HashMap::new(),
             clock: 0,
             gui_cache: std::sync::Mutex::new(None),
+            chat_bubbles: Vec::new(),
             style_rules: HashMap::new(),
             style_derives: HashMap::new(),
             style_cache: std::sync::Mutex::new(None),

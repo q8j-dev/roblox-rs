@@ -375,6 +375,7 @@ pub fn load_core_package(lua: &Lua, path: &Path) -> Result<()> {
     {
         crate::api::ipc::seed_mem_item(lua, "GUAC:-1:app-policy", value.to_string());
     }
+    crate::api::text_chat::ensure(lua);
     if let Some(dir) = path.parent()
         && let Ok(text) = rbx_base::vfs::read_to_string(&dir.join("OfflineFlags.json"))
         && let Err(err) = engine(lua).lock().flags.load_json(&text)

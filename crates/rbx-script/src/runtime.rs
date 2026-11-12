@@ -64,6 +64,10 @@ pub struct Engine {
     pub content_root: Option<std::path::PathBuf>,
     pub content_overlays: Vec<std::path::PathBuf>,
     pub app_storage_path: Option<std::path::PathBuf>,
+    pub settings_path: Option<std::path::PathBuf>,
+    pub user_game_settings: Option<InstanceId>,
+    pub fullscreen: bool,
+    pub fullscreen_request: Option<bool>,
     pub core_package: Option<std::path::PathBuf>,
     pub client_version: String,
     pub roblox_gui_focused: bool,
@@ -198,6 +202,10 @@ impl Engine {
             content_root: None,
             content_overlays: Vec::new(),
             app_storage_path: None,
+            settings_path: None,
+            user_game_settings: None,
+            fullscreen: false,
+            fullscreen_request: None,
             core_package: None,
             client_version: String::new(),
             roblox_gui_focused: false,
@@ -410,6 +418,9 @@ pub struct State {
     pub engine: Shared,
     pub release: Arc<Mutex<Vec<InstanceId>>>,
     pub conns: HashMap<u64, Conn>,
+    pub layout_signals: crate::api::gui::LayoutSignals,
+    pub user_settings: crate::api::user_settings::UserSettingsState,
+    pub text_chat: crate::api::text_chat::TextChatState,
     pub by_event: HashMap<(InstanceId, &'static str), Vec<u64>>,
     pub next_conn: u64,
     pub touch_slots: HashMap<InstanceId, (usize, Option<InstanceId>)>,
@@ -627,6 +638,9 @@ impl ScriptRuntime {
             engine: engine.clone(),
             release: Arc::new(Mutex::new(Vec::new())),
             conns: HashMap::default(),
+            layout_signals: Default::default(),
+            user_settings: Default::default(),
+            text_chat: Default::default(),
             by_event: HashMap::default(),
             next_conn: 1,
             touch_slots: HashMap::default(),
@@ -918,6 +932,21 @@ impl ScriptRuntime {
         crate::api::user_input::process(&self.lua, event);
     }
 
+    pub fn take_fullscreen_request(&self) -> Option<bool> {
+        self.engine.lock().fullscreen_request.take()
+    }
+
+    pub fn set_fullscreen(&self, on: bool) {
+        crate::api::user_settings::set_fullscreen(&self.lua, on);
+    }
+
+    pub fn framerate_cap(&self) -> Option<f64> {
+        let e = self.engine.lock();
+        let id = e.user_game_settings?;
+        let cap = e.dm.get(id, "FramerateCap").ok()?.as_f64()?;
+        (cap > 0.0).then_some(cap)
+    }
+
     pub fn render_step(&self, dt: f64) {
         crate::api::user_input::render_step(&self.lua, dt);
     }
@@ -998,6 +1027,9 @@ impl ScriptRuntime {
             crate::api::animation::step(&self.lua);
             crate::api::tween::step(&self.lua, dt as f32);
             crate::api::tween_service::step(&self.lua, dt);
+            crate::api::gui::sync_layout_signals(&self.lua);
+            crate::api::text_chat::sync(&self.lua);
+            crate::api::user_settings::sync(&self.lua);
             pump(&self.lua);
             self.step_physics(dt);
             let mut e = self.engine.lock();
@@ -1378,6 +1410,12 @@ end
     pub fn running_thread_count(&self) -> usize {
         with_state(&self.lua, |s| s.threads.len())
     }
+
+    pub fn held_thread_count(&self) -> usize {
+        with_state(&self.lua, |s| {
+            s.script_threads.values().map(Vec::len).sum::<usize>() + s.deferred.len()
+        })
+    }
 }
 
 pub fn globals_table(lua: &Lua) -> mlua::Result<Table> {
@@ -1525,6 +1563,11 @@ pub fn resume_thread_result(
     if thread.status() != ThreadStatus::Resumable {
         let (hook, join, module, reply) = with_state(lua, |s| {
             s.threads.remove(&key);
+            if let Some(script) = info.as_ref().and_then(|i| i.script)
+                && let Some(list) = s.script_threads.get_mut(&script)
+            {
+                list.retain(|t| thread_key(t) != key);
+            }
             (
                 s.finish_hooks.remove(&key),
                 s.joins.remove(&key),

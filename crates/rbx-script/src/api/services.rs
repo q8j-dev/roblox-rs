@@ -36,14 +36,20 @@ pub fn settings_root(lua: &Lua, class: &str) -> Result<InstanceId> {
                 }
             }
         }
+        let mut game_settings = None;
         if class == "UserSettings"
             && let Ok(child) = e.dm.create_internal("UserGameSettings")
         {
             e.dm.set_name(child, "GameSettings");
             let _ = e.dm.set_parent(child, Some(id));
+            game_settings = Some(child);
         }
-        id
+        (id, game_settings)
     };
+    let (id, game_settings) = id;
+    if let Some(gs) = game_settings {
+        crate::api::user_settings::attach(lua, gs);
+    }
     lua.set_named_registry_value(&key, id.raw() as f64)?;
     Ok(id)
 }

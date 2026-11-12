@@ -1045,6 +1045,14 @@ class StyleRule | Instance.new("StyleRule") at 2 call sites (docs/inexperience/c
 class StyleSheet | Instance.new("StyleSheet") at 1 call sites (docs/inexperience/created.txt)
 class SurfaceAppearance | Instance.new("SurfaceAppearance") at 2 call sites (docs/inexperience/created.txt)
 class TeleportOptions | Instance.new("TeleportOptions") at 1 call sites (docs/inexperience/created.txt)
+class TextSource | engine-created under TextChatService in the Studio 0.746 client tree
+class TextChatMessage | engine-created under TextChatService in the Studio 0.746 client tree
+class ChatWindowConfiguration | engine-created under TextChatService in the Studio 0.746 client tree
+class ChatInputBarConfiguration | engine-created under TextChatService in the Studio 0.746 client tree
+class BubbleChatConfiguration | engine-created under TextChatService in the Studio 0.746 client tree
+class ChannelTabsConfiguration | engine-created under TextChatService in the Studio 0.746 client tree
+class ChatWindowMessageProperties | engine-created under TextChatService in the Studio 0.746 client tree
+class BubbleChatMessageProperties | engine-created under TextChatService in the Studio 0.746 client tree
 class TextChannel | Instance.new("TextChannel") at 9 call sites (docs/inexperience/created.txt)
 class TextChatCommand | Instance.new("TextChatCommand") at 1 call sites (docs/inexperience/created.txt)
 class TextChatMessageProperties | Instance.new("TextChatMessageProperties") at 4 call sites (docs/inexperience/created.txt)

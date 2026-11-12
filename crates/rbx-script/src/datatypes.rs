@@ -639,8 +639,8 @@ impl UserData for LRandom {
 }
 
 fn now_millis() -> i64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
+    rbx_base::time::SystemTime::now()
+        .duration_since(rbx_base::time::UNIX_EPOCH)
         .map(|d| d.as_millis() as i64)
         .unwrap_or(0)
 }

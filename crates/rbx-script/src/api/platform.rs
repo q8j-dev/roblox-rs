@@ -30,6 +30,11 @@ pub fn register(r: &mut Registry) {
         no_features,
     );
     r.add("AvatarChatService", &["IsEnabled"], feature_enabled);
+    r.add(
+        "AvatarChatService",
+        &["deviceMeetsRequirementsForFeature"],
+        unsupported,
+    );
     r.add("DataModel", &["IsPioneerApp"], unsupported);
     r.add("DataModel", &["GetPioneerRootPlaceId"], no_features);
     r.add("DataModel", &["GetPioneerSource"], pioneer_source);
@@ -39,6 +44,25 @@ pub fn register(r: &mut Registry) {
         validation_rules,
     );
     r.add("VideoCaptureService", &["GetCameraDevices"], empty_map);
+    r.add("SoundService", &["GetOutputDevices"], output_devices);
+    r.add("SoundService", &["GetInputDevices"], input_devices);
+    r.add(
+        "RunService",
+        &["GetTotalScriptPlusExecutionTime"],
+        script_execution_time,
+    );
+    r.add("GuiService", &["Select"], gui_select);
+    r.add(
+        "PlatformFriendsService",
+        &["IsProfileEnabled", "IsInviteFriendsEnabled"],
+        unsupported,
+    );
+    r.add("PlatformFriendsService", &["GetPartyMembers"], empty_map);
+    r.add(
+        "GuiService",
+        &["SendUIOcclusionMetricsForQueryRegion"],
+        nothing,
+    );
     r.add(
         "UserGameSettings",
         &["GetDefaultFramerateCap"],
@@ -137,6 +161,67 @@ fn set_translation_locale(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<R
         "PlayerChatTranslationSettingsLocaleSetFromLua",
         mlua::MultiValue::from_vec(vec![Value::String(lua.create_string(&locale)?)]),
     );
+    ret(lua, Value::Nil)
+}
+
+fn device_tuple(lua: &Lua, list: rbx_audio::DeviceList) -> Result<Ret> {
+    let names = lua.create_table()?;
+    let guids = lua.create_table()?;
+    names.push(list.default.clone().unwrap_or_default())?;
+    guids.push("")?;
+    for n in list.names {
+        guids.push(n.clone())?;
+        names.push(n)?;
+    }
+    let values = mlua::MultiValue::from_vec(vec![
+        Value::Table(names),
+        Value::Table(guids),
+        Value::Integer(1),
+    ]);
+    Ok(Ret::Values(values))
+}
+
+fn output_devices(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    device_tuple(lua, rbx_audio::output_devices())
+}
+
+fn input_devices(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    device_tuple(lua, rbx_audio::input_devices())
+}
+
+fn script_execution_time(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let total: f64 =
+        crate::runtime::with_state(lua, |s| s.script_activity.values().map(|(t, _)| *t).sum());
+    ret(lua, total)
+}
+
+fn gui_select(lua: &Lua, id: InstanceId, args: &[Value]) -> Result<Ret> {
+    let Some(parent) = args
+        .first()
+        .and_then(|v| crate::runtime::instance_from_value(lua, v))
+    else {
+        return ret(lua, Value::Nil);
+    };
+    {
+        let eng = crate::runtime::engine(lua);
+        let mut e = eng.lock();
+        let target = e.dm.descendants(parent).into_iter().find(|d| {
+            e.dm.is_a(*d, "GuiObject")
+                && e.dm.get_bool(*d, "Selectable")
+                && e.dm.get_bool(*d, "Visible")
+        });
+        let core =
+            e.dm.find_service("CoreGui")
+                .is_some_and(|c| e.dm.is_ancestor_of(c, Some(parent)));
+        let prop = if core {
+            "SelectedCoreObject"
+        } else {
+            "SelectedObject"
+        };
+        if let Some(t) = target {
+            let _ = e.dm.set(id, prop, rbx_dom::Variant::Ref(Some(t)));
+        }
+    }
     ret(lua, Value::Nil)
 }
 

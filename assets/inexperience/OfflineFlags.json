@@ -1,3 +1,7 @@
 {
- "FFlagAppChatInExperienceEnabledV654NewIcon": false
+ "FFlagAppChatInExperienceEnabledV654NewIcon": false,
+ "FFlagEnableCorescriptsProfiler": false,
+ "FFlagEnableInExperienceAvatarSwitcher9": false,
+ "FFlagEnableInExperienceShop3": false,
+ "FFlagExpChatDictation3": false
 }

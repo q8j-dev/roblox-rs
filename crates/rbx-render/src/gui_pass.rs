@@ -552,11 +552,18 @@ impl GuiRenderer {
                     let g = typesetter.glyph(q.ch, px);
                     let f = q.em / raster_em;
                     let pad = rbx_text::FONT_PADDING;
-                    let base = if q.stroke {
+                    let tint = cmd.tints.get(q.index).copied().unwrap_or_default();
+                    if tint.alpha <= 0.0 {
+                        continue;
+                    }
+                    let mut base = if q.stroke {
                         cmd.stroke.unwrap_or(cmd.color)
+                    } else if let Some(c) = tint.color {
+                        [c[0], c[1], c[2], cmd.color[3]]
                     } else {
                         cmd.color
                     };
+                    base[3] *= tint.alpha;
                     let color = [base[0], base[1], base[2], base[3] * draw.alpha];
                     let a = ATLAS_SIZE as f32;
                     let snap = |v: f32| {

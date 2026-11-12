@@ -92,6 +92,7 @@ struct Player {
     recorder: Option<video::VideoRecorder>,
     frames: u32,
     done: bool,
+    last_frame: Option<rbx_base::time::Instant>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -100,6 +101,7 @@ enum ScriptedInput {
     Key(u32),
     Click(f32, f32),
     Verb(String),
+    Text(String),
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -110,6 +112,7 @@ fn parse_input(spec: &str) -> Option<(u32, ScriptedInput)> {
     let input = match kind {
         "key" => ScriptedInput::Key(value.parse().ok()?),
         "verb" => ScriptedInput::Verb(value.to_string()),
+        "text" => ScriptedInput::Text(value.to_string()),
         "click" => {
             let (x, y) = value.split_once(',')?;
             ScriptedInput::Click(x.parse().ok()?, y.parse().ok()?)
@@ -191,6 +194,8 @@ fn make_runtime(dm: DataModel, assets: &Path, ui_2026: bool) -> Result<ScriptRun
         engine.core_package = Some(assets.join("inexperience").join("InExperience.rbxm"));
         engine.app_storage_path = rbx_base::paths::user_data_dir()
             .map(|d| d.join("LocalStorage").join("appStorage.json"));
+        engine.settings_path =
+            rbx_base::paths::user_data_dir().map(|d| d.join("GameSettings.json"));
     }
     engine.animate_fallback = true;
     engine.audio = rbx_audio::AudioEngine::open();
@@ -331,6 +336,17 @@ impl Player {
         }
     }
 
+    fn apply_fullscreen(&mut self) {
+        let Some(on) = self.runtime.take_fullscreen_request() else {
+            return;
+        };
+        if let Some(w) = &self.window {
+            use rbx_platform::winit::window::Fullscreen;
+            w.set_fullscreen(on.then_some(Fullscreen::Borderless(None)));
+        }
+        self.runtime.set_fullscreen(on);
+    }
+
     fn ensure_camera(&mut self) {
         let mut e = self.runtime.engine.lock();
         let Some(ws) = e.dm.find_service("Workspace") else {
@@ -412,6 +428,17 @@ impl Player {
                 }
             }
             ScriptedInput::Verb(verb) => self.do_verb(&verb),
+            ScriptedInput::Text(text) => {
+                for c in text.chars() {
+                    for pressed in [true, false] {
+                        self.input(Input::Key {
+                            code: 0,
+                            pressed,
+                            text: pressed.then(|| c.to_string()),
+                        });
+                    }
+                }
+            }
             ScriptedInput::Click(x, y) => {
                 let p = Vec3::new(x, y, 0.0);
                 self.send(
@@ -770,6 +797,21 @@ impl App for Player {
     }
 
     fn frame(&mut self, dt: f64) {
+        #[cfg(not(target_arch = "wasm32"))]
+        let dt = if self.screenshot.is_some() { STEP } else { dt };
+        #[cfg(not(target_arch = "wasm32"))]
+        if self.screenshot.is_none()
+            && let Some(cap) = self.runtime.framerate_cap()
+        {
+            let target = std::time::Duration::from_secs_f64(1.0 / cap);
+            if let Some(last) = self.last_frame {
+                let elapsed = last.elapsed();
+                if elapsed < target {
+                    std::thread::sleep(target - elapsed);
+                }
+            }
+        }
+        self.last_frame = Some(rbx_base::time::Instant::now());
         #[cfg(target_arch = "wasm32")]
         if let Some((width, height)) = self.window.as_ref().and_then(|w| web::canvas_size(w))
             && self.surface_size != Some((width, height))
@@ -806,6 +848,7 @@ impl App for Player {
             steps += 1;
         }
         self.apply_mouse_behavior();
+        self.apply_fullscreen();
         self.ensure_camera();
         self.runtime.render_step(dt);
         #[cfg(not(target_arch = "wasm32"))]
@@ -952,6 +995,7 @@ pub fn desktop_main() {
         recorder: None,
         frames: 0,
         done: false,
+        last_frame: None,
     };
     if let Err(e) = rbx_platform::run("Roblox", args.window_size.unwrap_or((1280, 720)), player) {
         eprintln!("{e}");
@@ -1096,6 +1140,7 @@ mod web {
             lock_point: None,
             frames: 0,
             done: false,
+            last_frame: None,
         };
         if let Err(e) = rbx_platform::run("Roblox", (1280, 720), player) {
             tracing::error!("{e}");
@@ -1181,6 +1226,7 @@ pub mod mobile {
             recorder: None,
             frames: 0,
             done: false,
+            last_frame: None,
         };
         if let Err(e) = rbx_platform::run("Roblox", (1280, 720), player) {
             tracing::error!("{e}");

@@ -25,6 +25,7 @@ rbx-text = { version = "0.1.0", path = "../rbx-text" }
 serde_json = "1.0.154"
 tracing = "0.1.44"
 rbx-audio = { path = "../rbx-audio" }
+unicode-normalization = "0.1.26"
 
 [dev-dependencies]
 parking_lot = "0.13.0"

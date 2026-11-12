@@ -191,6 +191,16 @@ pub fn absolute_size(dm: &DataModel, id: InstanceId) -> Vec2 {
     placement(dm, id).rounded_size()
 }
 
+pub fn node_scale(dm: &DataModel, id: InstanceId) -> f32 {
+    dm.gui_layout().scales.get(&id).copied().unwrap_or(1.0)
+}
+
+pub fn absolute_canvas_size(dm: &DataModel, id: InstanceId) -> Vec2 {
+    let own = placement(dm, id);
+    let size = canvas(dm, id, own).size;
+    Vec2::new(size.x.round(), size.y.round())
+}
+
 pub fn absolute_window_size(dm: &DataModel, id: InstanceId) -> Vec2 {
     let own = placement(dm, id);
     let canvas = canvas(dm, id, own);
@@ -203,4 +213,48 @@ pub fn absolute_window_size(dm: &DataModel, id: InstanceId) -> Vec2 {
         size.y -= thickness;
     }
     size.max(Vec2::ZERO)
+}
+
+pub fn screen_gui_roots(dm: &DataModel) -> Vec<InstanceId> {
+    fn enabled(dm: &DataModel, id: InstanceId) -> bool {
+        !matches!(dm.effective(id, "Enabled"), Ok(Variant::Bool(false)))
+    }
+    fn push_from(dm: &DataModel, parent: InstanceId, roots: &mut Vec<InstanceId>) {
+        for &c in dm.children_of(parent) {
+            if matches!(dm.class_of(c), Some("ScreenGui" | "GuiMain")) {
+                if enabled(dm, c) {
+                    roots.push(c);
+                }
+            } else if !dm.is_a(c, "GuiBase2d") && !dm.is_a(c, "BasePart") {
+                push_from(dm, c, roots);
+            }
+        }
+    }
+    let mut roots = Vec::new();
+    let player_gui = dm
+        .local_player
+        .and_then(|p| dm.find_first_child_of_class(p, "PlayerGui"));
+    match player_gui {
+        Some(pg) => push_from(dm, pg, &mut roots),
+        None => {
+            if let Some(sg) = dm.find_service("StarterGui")
+                && !matches!(
+                    dm.effective(sg, "ShowDevelopmentGui"),
+                    Ok(Variant::Bool(false))
+                )
+            {
+                push_from(dm, sg, &mut roots);
+            }
+        }
+    }
+    if let Some(core) = dm.find_service("CoreGui") {
+        push_from(dm, core, &mut roots);
+    }
+    roots.sort_by_key(|r| {
+        dm.effective(*r, "DisplayOrder")
+            .ok()
+            .and_then(|v| v.as_f64())
+            .unwrap_or(0.0) as i64
+    });
+    roots
 }

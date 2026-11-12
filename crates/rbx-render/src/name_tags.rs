@@ -271,6 +271,7 @@ pub fn extract(
                     yalign: rbx_text::YAlign::Bottom,
                     rect: rect(pos, pos),
                     color: [color[0], color[1], color[2], name_alpha],
+                    tints: Vec::new(),
                     stroke: Some(stroke),
                 }),
                 clip: None,

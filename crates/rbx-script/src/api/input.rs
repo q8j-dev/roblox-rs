@@ -84,7 +84,8 @@ pub fn register(r: &mut Registry) {
         ],
         device_motion,
     );
-    r.add("UserGameSettings", &["InFullScreen", "InStudioMode"], no);
+    r.add("UserGameSettings", &["InStudioMode"], no);
+    r.add("UserGameSettings", &["InFullScreen"], in_full_screen);
     r.add(
         "UserGameSettings",
         &["GetTutorialState"],
@@ -179,6 +180,11 @@ fn empty_table(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
     ret(lua, lua.create_table()?)
 }
 
+fn in_full_screen(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let on = engine(lua).lock().fullscreen;
+    ret(lua, on)
+}
+
 fn no(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
     ret(lua, false)
 }
@@ -253,7 +259,12 @@ fn mouse_location(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
 }
 
 fn mouse_delta(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
-    ret(lua, crate::types::LVector2(rbx_math::Vec2::ZERO))
+    let e = engine(lua);
+    let e = e.lock();
+    ret(
+        lua,
+        crate::types::LVector2(e.input.pointer.last_frame_delta),
+    )
 }
 
 fn mouse_button_pressed(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
@@ -277,7 +288,7 @@ fn string_for_key_code(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret
         .unwrap_or(0);
     let text = match code {
         97..=122 => ((code as u8) - 32) as char,
-        48..=57 => code as u8 as char,
+        33..=126 => code as u8 as char,
         _ => {
             let name = rbx_reflection::database()
                 .enum_desc("KeyCode")

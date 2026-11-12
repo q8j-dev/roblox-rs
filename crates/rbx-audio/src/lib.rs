@@ -290,3 +290,49 @@ pub fn inverse_rolloff(distance: f32, min: f32, max: f32, rolloff_scale: f32) ->
     let d = distance.clamp(min, max.max(min));
     min / (min + rolloff_scale.max(0.0) * (d - min))
 }
+
+pub struct DeviceList {
+    pub names: Vec<String>,
+    pub default: Option<String>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+fn devices(input: bool) -> DeviceList {
+    use cpal::traits::{DeviceTrait, HostTrait};
+    let host = cpal::default_host();
+    let default = if input {
+        host.default_input_device()
+    } else {
+        host.default_output_device()
+    }
+    .and_then(|d| d.description().ok().map(|x| x.name().to_string()));
+    let names = if input {
+        host.input_devices().map(|i| {
+            i.filter_map(|d| d.description().ok().map(|x| x.name().to_string()))
+                .collect()
+        })
+    } else {
+        host.output_devices().map(|i| {
+            i.filter_map(|d| d.description().ok().map(|x| x.name().to_string()))
+                .collect()
+        })
+    }
+    .unwrap_or_default();
+    DeviceList { names, default }
+}
+
+#[cfg(target_arch = "wasm32")]
+fn devices(_input: bool) -> DeviceList {
+    DeviceList {
+        names: Vec::new(),
+        default: None,
+    }
+}
+
+pub fn output_devices() -> DeviceList {
+    devices(false)
+}
+
+pub fn input_devices() -> DeviceList {
+    devices(true)
+}

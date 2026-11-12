@@ -62,6 +62,7 @@ pub struct TextCmd {
     pub yalign: rbx_text::YAlign,
     pub rect: Rect,
     pub color: [f32; 4],
+    pub tints: Vec<rbx_dom::rich_text::Tint>,
     pub stroke: Option<[f32; 4]>,
 }
 
@@ -366,53 +367,20 @@ fn image(dm: &DataModel, id: InstanceId, rect: Rect, out: &mut Vec<GuiCmd>) {
     }
 }
 
-fn rich_text(s: &str) -> (String, Option<rbx_text::Font>) {
-    let mut font = None;
-    if let Some(start) = s.find("<font")
-        && let Some(close) = s[start..].find('>')
-    {
-        let tag = &s[start..start + close];
-        let attr = |name: &str| {
-            let at = tag.find(&format!("{name}="))? + name.len() + 1;
-            let quote = tag[at..].chars().next()?;
-            let rest = &tag[at + 1..];
-            Some(rest[..rest.find(quote)?].to_string())
-        };
-        if let Some(family) = attr("family") {
-            let weight = attr("weight").and_then(|w| w.parse().ok()).unwrap_or(400);
-            font = rbx_text::face(&family, weight, false);
-        }
-    }
-    let mut out = String::with_capacity(s.len());
-    let mut in_tag = false;
-    for c in s.chars() {
-        match c {
-            '<' => in_tag = true,
-            '>' if in_tag => in_tag = false,
-            _ if !in_tag => out.push(c),
-            _ => {}
-        }
-    }
-    let out = out
-        .replace("&lt;", "<")
-        .replace("&gt;", ">")
-        .replace("&quot;", "\"")
-        .replace("&apos;", "'")
-        .replace("&amp;", "&");
-    (out, font)
-}
-
 fn text(dm: &DataModel, id: InstanceId, rect: Rect, out: &mut Vec<GuiCmd>) {
     let alpha = 1.0 - get_f32(dm, id, "TextTransparency");
-    let s = get_string(dm, id, "Text");
-    if alpha <= 0.0 || s.is_empty() {
+    let mut rich = rbx_dom::gui_layout::display_text(dm, id);
+    let mut color = get_color(dm, id, "TextColor3");
+    if rich.text.is_empty() && dm.class_of(id) == Some("TextBox") {
+        rich = rbx_dom::rich_text::RichText {
+            text: get_string(dm, id, "PlaceholderText"),
+            ..Default::default()
+        };
+        color = get_color(dm, id, "PlaceholderColor3");
+    }
+    if alpha <= 0.0 || rich.text.is_empty() {
         return;
     }
-    let (s, rich_font) = if get_bool(dm, id, "RichText", false) {
-        rich_text(&s)
-    } else {
-        (s, None)
-    };
     let mut stroke_alpha = (1.0 - get_f32(dm, id, "TextStrokeTransparency")) * alpha;
     let mut stroke_color = get_color(dm, id, "TextStrokeColor3");
     if let Some(stroke) = component(dm, id, "UIStroke")
@@ -422,15 +390,16 @@ fn text(dm: &DataModel, id: InstanceId, rect: Rect, out: &mut Vec<GuiCmd>) {
         stroke_color = comp_color(dm, &stroke, "Color");
     }
     out.push(GuiCmd::Text(TextCmd {
-        text: s,
-        font: rich_font.unwrap_or_else(|| rbx_dom::gui_layout::font_for(dm, id)),
-        size: rbx_dom::gui_layout::text_size(dm, id),
+        font: rbx_dom::gui_layout::display_font(dm, id, &rich),
+        tints: rich.tints,
+        text: rich.text,
+        size: rbx_dom::gui_layout::text_size(dm, id) * rbx_dom::gui::node_scale(dm, id),
         scaled: get_bool(dm, id, "TextScaled", false),
         wrapped: get_bool(dm, id, "TextWrapped", false) || get_bool(dm, id, "TextWrap", false),
         xalign: rbx_text::XAlign::from_enum(get_i64(dm, id, "TextXAlignment")),
         yalign: rbx_text::YAlign::from_enum(get_i64(dm, id, "TextYAlignment")),
         rect,
-        color: rgba(get_color(dm, id, "TextColor3"), alpha),
+        color: rgba(color, alpha),
         stroke: (stroke_alpha > 0.05).then(|| rgba(stroke_color, stroke_alpha)),
     }));
 }
@@ -446,9 +415,9 @@ fn comp_color(dm: &DataModel, c: &Component, name: &str) -> [f32; 3] {
     }
 }
 
-fn comp_udim(dm: &DataModel, c: &Component, name: &str, basis: f32) -> f32 {
+fn comp_udim(dm: &DataModel, c: &Component, name: &str, basis: f32, k: f32) -> f32 {
     match c.get(dm, name) {
-        Variant::UDim(u) => u.scale * basis + u.offset as f32,
+        Variant::UDim(u) => u.scale * basis + u.offset as f32 * k,
         _ => 0.0,
     }
 }
@@ -456,6 +425,7 @@ fn comp_udim(dm: &DataModel, c: &Component, name: &str, basis: f32) -> f32 {
 fn corner_shape(dm: &DataModel, id: InstanceId, rect: Rect) -> Option<Shape> {
     let corner = component(dm, id, "UICorner")?;
     let basis = rect.width().min(rect.height());
+    let k = rbx_dom::gui::node_scale(dm, id);
     let whole = corner.get(dm, "CornerRadius");
     let synced = whole == corner.get(dm, "TopLeftRadius");
     let names = [
@@ -466,9 +436,9 @@ fn corner_shape(dm: &DataModel, id: InstanceId, rect: Rect) -> Option<Shape> {
     ];
     let radii = names.map(|n| {
         let r = if synced {
-            comp_udim(dm, &corner, n, basis)
+            comp_udim(dm, &corner, n, basis, k)
         } else {
-            comp_udim(dm, &corner, "CornerRadius", basis)
+            comp_udim(dm, &corner, "CornerRadius", basis, k)
         };
         r.max(0.0).min(basis * 0.5)
     });
@@ -524,36 +494,7 @@ fn stroke_items(dm: &DataModel, e: &Entry, items: &mut Vec<GuiItem>) {
 }
 
 fn screen_guis(dm: &DataModel) -> Vec<InstanceId> {
-    let mut roots = Vec::new();
-    fn push_from(dm: &DataModel, parent: InstanceId, roots: &mut Vec<InstanceId>) {
-        for &c in dm.children_of(parent) {
-            if matches!(dm.class_of(c), Some("ScreenGui" | "GuiMain")) {
-                if get_bool(dm, c, "Enabled", true) {
-                    roots.push(c);
-                }
-            } else if !dm.is_a(c, "GuiBase2d") && !dm.is_a(c, "BasePart") {
-                push_from(dm, c, roots);
-            }
-        }
-    }
-    let player_gui = dm
-        .local_player
-        .and_then(|p| dm.find_first_child_of_class(p, "PlayerGui"));
-    match player_gui {
-        Some(pg) => push_from(dm, pg, &mut roots),
-        None => {
-            if let Some(sg) = dm.find_service("StarterGui")
-                && get_bool(dm, sg, "ShowDevelopmentGui", true)
-            {
-                push_from(dm, sg, &mut roots);
-            }
-        }
-    }
-    if let Some(core) = dm.find_service("CoreGui") {
-        push_from(dm, core, &mut roots);
-    }
-    roots.sort_by_key(|r| get_i64(dm, *r, "DisplayOrder"));
-    roots
+    rbx_dom::gui::screen_gui_roots(dm)
 }
 
 pub fn extract(dm: &DataModel) -> Vec<GuiItem> {
@@ -688,6 +629,7 @@ fn messages(dm: &DataModel, items: &mut Vec<GuiItem>) {
                             yalign: rbx_text::YAlign::Center,
                             rect: bar,
                             color: [1.0, 1.0, 1.0, 1.0],
+                            tints: Vec::new(),
                             stroke: None,
                         }),
                         clip: None,
@@ -725,6 +667,7 @@ fn messages(dm: &DataModel, items: &mut Vec<GuiItem>) {
                         yalign: rbx_text::YAlign::Center,
                         rect: inner,
                         color: [1.0, 1.0, 1.0, 1.0],
+                        tints: Vec::new(),
                         stroke: Some([0.0, 0.0, 0.0, 1.0]),
                     }),
                     clip: None,
@@ -761,18 +704,40 @@ pub fn text_quads(cmd: &TextCmd) -> rbx_text::TextDraw {
         let reference = 100.0;
         let (m, _) = t.measure(&cmd.text, reference, [0.0, 0.0]);
         let fit = (r.width() / m[0].max(1.0)).min(r.height() / m[1].max(1.0)) * reference;
-        (fit.clamp(1.0, 100.0).floor(), false)
+        let fit = fit.clamp(1.0, 100.0);
+        (if t.is_legacy() { fit.floor() } else { fit }, false)
     } else {
         (cmd.size, cmd.scaled)
     };
-    t.draw(
+    let fractional = !t.is_legacy() && !scaled && size.fract() != 0.0;
+    let base = if fractional {
+        size.ceil().max(1.0)
+    } else {
+        size
+    };
+    let mut draw = t.draw(
         &cmd.text,
         pos,
-        size,
+        base,
         scaled,
         cmd.xalign,
         cmd.yalign,
         space,
         cmd.stroke.is_some(),
-    )
+    );
+    if fractional {
+        let k = size / base;
+        let anchor = pos;
+        let at = |v: f32, a: f32| a + (v - a) * k;
+        for q in &mut draw.quads {
+            q.x = at(q.x, anchor[0]);
+            q.y = at(q.y, anchor[1]);
+            q.w *= k;
+            q.h *= k;
+            q.pen = [at(q.pen[0], anchor[0]), at(q.pen[1], anchor[1])];
+            q.em *= k;
+        }
+        draw.size = [draw.size[0] * k, draw.size[1] * k];
+    }
+    draw
 }

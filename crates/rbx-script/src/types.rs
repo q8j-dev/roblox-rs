@@ -1633,7 +1633,15 @@ pub fn register_constructors(lua: &Lua, g: &Table) -> Result<()> {
     let ud2 = make("UDim2")?;
     ud2.set(
         "new",
-        lua.create_function(|_, args: MultiValue| {
+        lua.create_function(|lua, args: MultiValue| {
+            if let (Some(a), Some(b)) = (args.front(), args.get(1))
+                && let (Ok(x), Ok(y)) = (
+                    LUDim::from_lua(a.clone(), lua),
+                    LUDim::from_lua(b.clone(), lua),
+                )
+            {
+                return Ok(LUDim2(UDim2 { x: x.0, y: y.0 }));
+            }
             Ok(LUDim2(UDim2::new(
                 args.front().map(to_f32).unwrap_or(0.0),
                 args.get(1).map(to_i64).unwrap_or(0) as i32,

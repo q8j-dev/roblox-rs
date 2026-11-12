@@ -12,6 +12,7 @@ workspace = true
 tracing = "0.1.44"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+cpal = "0.18.2"
 kira = { version = "0.12", default-features = false, features = ["cpal", "cpal-realtime", "mp3", "ogg", "vorbis", "flac", "wav", "pcm"] }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]

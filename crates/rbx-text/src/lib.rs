@@ -143,6 +143,7 @@ pub struct GlyphQuad {
     pub stroke: bool,
     pub pen: [f32; 2],
     pub em: f32,
+    pub index: usize,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -224,16 +225,18 @@ const BORDER_OFFSETS: [(f32, f32); 5] = [
     (0.0, 0.0),
 ];
 
-fn adjust_x(x: f32, width: i32, scale: f32, align: XAlign) -> f32 {
+fn adjust_x(x: f32, width: i32, scale: f32, align: XAlign, exact: bool) -> f32 {
     match align {
+        XAlign::Center if exact => x - width as f32 * 0.5 * scale,
         XAlign::Center => x - (width / 2) as f32 * scale,
         XAlign::Right => x - width as f32 * scale,
         XAlign::Left => x,
     }
 }
 
-fn adjust_y(y: f32, height: i32, scale: f32, align: YAlign) -> f32 {
+fn adjust_y(y: f32, height: i32, scale: f32, align: YAlign, exact: bool) -> f32 {
     match align {
+        YAlign::Center if exact => y - height as f32 * 0.5 * scale,
         YAlign::Center => y - (height / 2) as f32 * scale,
         YAlign::Bottom => y - height as f32 * scale,
         YAlign::Top => y,
@@ -333,13 +336,21 @@ impl Typesetter {
         }
     }
 
+    pub fn is_legacy(&self) -> bool {
+        self.legacy_metrics
+    }
+
     pub fn em(&self, size: u32) -> f32 {
         size as f32 + self.size_padding()
     }
 
     pub fn ascender(&self, size: u32) -> i32 {
+        self.ascender_exact(size).round() as i32
+    }
+
+    fn ascender_exact(&self, size: u32) -> f32 {
         let mult = self.em(size) / self.face_height();
-        (self.face.ascent_unscaled() * mult).round() as i32
+        self.face.ascent_unscaled() * mult
     }
 
     fn scale(&self, size: u32) -> PxScale {
@@ -608,10 +619,11 @@ impl Typesetter {
             let is_stroke = index != 4;
             let mut previous = '\0';
             for line in lines {
-                let line_x = adjust_x(start.0, line.width, scale, xalign);
+                let line_x = adjust_x(start.0, line.width, scale, xalign, !self.legacy_metrics);
                 let line_y = start.1 + line.yoffset as f32 * scale;
                 let mut x = 0i32;
-                for &c in &text[line.start.min(text.len())..line.end.min(text.len())] {
+                let from = line.start.min(text.len());
+                for (offset, &c) in text[from..line.end.min(text.len())].iter().enumerate() {
                     if is_zero_width(c) {
                         continue;
                     }
@@ -632,6 +644,7 @@ impl Typesetter {
                                 line_y + dy + ascender as f32 * scale,
                             ],
                             em: self.em(measure_size) * scale,
+                            index: from + offset,
                         });
                     }
                     x += glyph.xadvance;
@@ -679,7 +692,13 @@ impl Typesetter {
             if out.alpha == 0.0 {
                 return out;
             }
-            let start_y = adjust_y(position[1], measured_h as i32, ratio, yalign);
+            let start_y = adjust_y(
+                position[1],
+                measured_h as i32,
+                ratio,
+                yalign,
+                !self.legacy_metrics,
+            );
             self.emit(
                 &text,
                 &lines,
@@ -705,8 +724,18 @@ impl Typesetter {
             &mut fits,
         );
         let ascender = self.ascender(height);
-        let start_x = position[0].round();
-        let start_y = adjust_y(position[1].round(), h, 1.0, yalign);
+        let exact = !self.legacy_metrics;
+        let start_x = if exact {
+            position[0]
+        } else {
+            position[0].round()
+        };
+        let start_y = if exact {
+            adjust_y(position[1], h, 1.0, yalign, true) + self.ascender_exact(height)
+                - ascender as f32
+        } else {
+            adjust_y(position[1].round(), h, 1.0, yalign, false)
+        };
         self.emit(
             &text,
             &lines,

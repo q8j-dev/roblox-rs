@@ -151,6 +151,7 @@ pub fn build_web(root: &Path, release: bool) -> Result<(), String> {
 pub const WEB_CONTENT_DIRS: &[&str] = &[
     "assets/content",
     "assets/platform-content/pc",
+    "assets/inexperience",
     "tests/places",
 ];
 

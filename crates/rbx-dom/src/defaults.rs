@@ -22,6 +22,7 @@ fn manual(class: &str, prop: &str) -> Option<Variant> {
         ("GuiObject", "BackgroundColor") => Variant::BrickColor(BrickColor::new(194)),
         ("GuiObject", "Visible") => Variant::Bool(true),
         ("GuiObject", "ZIndex") => Variant::Int(1),
+        ("UIListLayout" | "UITableLayout", "FillDirection") => Variant::Enum(1),
         ("GuiButton" | "TextBox", "Active") => Variant::Bool(true),
         ("GuiButton", "AutoButtonColor") => Variant::Bool(true),
         ("TextLabel", "Text") => Variant::String("Label".into()),

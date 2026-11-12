@@ -515,10 +515,11 @@ pub fn step(lua: &Lua, dt: f64) {
         let eng = engine(lua);
         let mut guard = eng.lock();
         let e = &mut *guard;
-        let master =
-            e.dm.find_service("UserGameSettings")
-                .map(|s| f32_prop(&e.dm, s, "MasterVolume", 1.0))
-                .unwrap_or(1.0);
+        let master = e
+            .user_game_settings
+            .filter(|s| e.dm.contains(*s))
+            .map(|s| f32_prop(&e.dm, s, "MasterVolume", 1.0))
+            .unwrap_or(1.0);
         if (master - e.audio_state.master).abs() > 1e-4 {
             e.audio_state.master = master;
             e.audio.set_master_volume(master);

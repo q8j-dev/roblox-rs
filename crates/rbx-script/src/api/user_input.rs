@@ -5,7 +5,7 @@ use crate::instance::push_instance;
 use crate::runtime::{engine, fire_lua, pump};
 use crate::types::{LCFrame, LRay};
 use mlua::{Lua, MultiValue, Result, Value};
-use rbx_dom::gui::{Placement, canvas, place_child, placement};
+use rbx_dom::gui::{Placement, canvas, placement};
 use rbx_dom::{DataModel, InstanceId, Variant};
 use rbx_math::{CFrame, Ray, Vec2, Vec3};
 use rustc_hash::FxHashMap as HashMap;
@@ -48,6 +48,17 @@ pub struct PointerState {
     pub hover: Vec<InstanceId>,
     pub pressed: HashMap<u32, InstanceId>,
     pub touch_enabled: bool,
+    pub hover_target: Option<InstanceId>,
+    pub frame_delta: Vec2,
+    pub last_frame_delta: Vec2,
+}
+
+pub fn mouse_sensitivity(e: &crate::runtime::Engine) -> f32 {
+    e.user_game_settings
+        .and_then(|s| e.dm.get(s, "MouseSensitivity").ok())
+        .and_then(|v| v.as_f64())
+        .map(|v| v as f32)
+        .unwrap_or(1.0)
 }
 
 fn state_value(kind: InputKind) -> u32 {
@@ -103,91 +114,92 @@ struct Candidate {
     order: usize,
 }
 
-fn walk(
-    dm: &DataModel,
-    id: InstanceId,
-    parent: Placement,
-    clip: Option<Rect>,
-    point: Vec2,
-    order: &mut usize,
-    out: &mut Vec<Candidate>,
-) {
-    let class = dm.class_of(id).unwrap_or("");
-    if class == "Folder" {
-        for &c in dm.children_of(id) {
-            walk(dm, c, parent, clip, point, order, out);
-        }
-        return;
-    }
-    if !dm.is_a(id, "GuiObject")
-        || !dm
-            .get(id, "Visible")
-            .ok()
-            .and_then(|v| v.as_bool())
-            .unwrap_or(true)
-    {
-        return;
-    }
-    let p = place_child(dm, id, parent);
-    let own = Rect::of(&p);
-    *order += 1;
-    if own.contains(point) && clip.is_none_or(|c| c.contains(point)) {
-        let z = dm
-            .get(id, "ZIndex")
-            .ok()
-            .and_then(|v| v.as_f32())
-            .unwrap_or(1.0) as i64;
-        out.push(Candidate {
-            id,
-            z,
-            order: *order,
-        });
-    }
-    let clips = dm.get_bool(id, "ClipsDescendants") || class == "ScrollingFrame";
-    let child_clip = if clips {
-        Some(clip.map_or(own, |c| c.intersect(&own)))
-    } else {
-        clip
-    };
-    let child_parent = canvas(dm, id, p);
-    for &c in dm.children_of(id) {
-        walk(dm, c, child_parent, child_clip, point, order, out);
+fn effective_bool(dm: &DataModel, id: InstanceId, name: &str, default: bool) -> bool {
+    match dm.effective(id, name) {
+        Ok(Variant::Bool(b)) => b,
+        _ => default,
     }
 }
 
-fn layer_roots(dm: &DataModel) -> Vec<InstanceId> {
-    let mut roots = Vec::new();
-    let mut push_from = |parent: InstanceId| {
-        let mut list: Vec<InstanceId> = dm
-            .children_of(parent)
-            .iter()
-            .copied()
-            .filter(|&c| matches!(dm.class_of(c), Some("ScreenGui" | "GuiMain")))
-            .collect();
-        list.reverse();
-        roots.extend(list);
-    };
-    if let Some(core) = dm.find_service("CoreGui") {
-        push_from(core);
+fn effective_z(dm: &DataModel, id: InstanceId) -> i64 {
+    dm.effective(id, "ZIndex")
+        .ok()
+        .and_then(|v| v.as_f64())
+        .unwrap_or(1.0) as i64
+}
+
+struct Walker<'a> {
+    dm: &'a DataModel,
+    point: Vec2,
+    sibling: bool,
+    order: usize,
+    out: Vec<Candidate>,
+}
+
+impl Walker<'_> {
+    fn walk(&mut self, id: InstanceId, clip: Option<Rect>) {
+        let dm = self.dm;
+        let class = dm.class_of(id).unwrap_or("");
+        if class == "Folder" {
+            for c in self.children(id) {
+                self.walk(c, clip);
+            }
+            return;
+        }
+        if !dm.is_a(id, "GuiObject") || !effective_bool(dm, id, "Visible", true) {
+            return;
+        }
+        let p = placement(dm, id);
+        let own = Rect::of(&p);
+        self.order += 1;
+        if own.contains(self.point)
+            && clip.is_none_or(|c| c.contains(self.point))
+            && effective_bool(dm, id, "Interactable", true)
+        {
+            self.out.push(Candidate {
+                id,
+                z: if self.sibling { 0 } else { effective_z(dm, id) },
+                order: self.order,
+            });
+        }
+        let clips = effective_bool(dm, id, "ClipsDescendants", false) || class == "ScrollingFrame";
+        let child_clip = if clips {
+            Some(clip.map_or(own, |c| c.intersect(&own)))
+        } else {
+            clip
+        };
+        for c in self.children(id) {
+            self.walk(c, child_clip);
+        }
     }
-    if let Some(pg) = dm
-        .local_player
-        .and_then(|p| dm.find_first_child_of_class(p, "PlayerGui"))
-    {
-        push_from(pg);
+
+    fn children(&self, id: InstanceId) -> Vec<InstanceId> {
+        let mut kids = self.dm.children_of(id).to_vec();
+        if self.sibling {
+            kids.sort_by_key(|k| effective_z(self.dm, *k));
+        }
+        kids
     }
-    roots
 }
 
 fn hits(dm: &DataModel, point: Vec2) -> Vec<Vec<InstanceId>> {
     let mut layers = Vec::new();
-    for root in layer_roots(dm) {
-        let base = placement(dm, root);
-        let mut cands = Vec::new();
-        let mut order = 0;
-        for &c in dm.children_of(root) {
-            walk(dm, c, base, None, point, &mut order, &mut cands);
+    for root in rbx_dom::gui::screen_gui_roots(dm).into_iter().rev() {
+        let sibling = dm
+            .effective(root, "ZIndexBehavior")
+            .ok()
+            .is_some_and(|v| matches!(v, Variant::Enum(1)));
+        let mut w = Walker {
+            dm,
+            point,
+            sibling,
+            order: 0,
+            out: Vec::new(),
+        };
+        for c in w.children(root) {
+            w.walk(c, None);
         }
+        let mut cands = w.out;
         cands.sort_by(|a, b| b.z.cmp(&a.z).then(b.order.cmp(&a.order)));
         layers.push(cands.into_iter().map(|c| c.id).collect());
     }
@@ -248,7 +260,14 @@ fn input_object(lua: &Lua, ev: &InputEvent) -> Option<InstanceId> {
     e.dm.set_unchecked(obj, "UserInputState", Variant::Enum(state_value(ev.kind)));
     e.dm.set_unchecked(obj, "KeyCode", Variant::Enum(key_code));
     e.dm.set_unchecked(obj, "Position", Variant::Vector3(position));
-    e.dm.set_unchecked(obj, "Delta", Variant::Vector3(ev.delta));
+    let delta = if ev.input_type == MOUSE_MOVEMENT {
+        let k = mouse_sensitivity(&e);
+        e.input.pointer.frame_delta += Vec2::new(ev.delta.x, ev.delta.y) * k;
+        ev.delta * k
+    } else {
+        ev.delta
+    };
+    e.dm.set_unchecked(obj, "Delta", Variant::Vector3(delta));
     Some(obj)
 }
 
@@ -362,7 +381,37 @@ fn text_input(lua: &Lua, ev: &InputEvent) -> bool {
     true
 }
 
-fn gui_mouse(lua: &Lua, ev: &InputEvent) -> bool {
+fn set_gui_state(lua: &Lua, id: InstanceId, state: u32) {
+    let eng = engine(lua);
+    let mut e = eng.lock();
+    if e.dm.contains(id)
+        && e.dm.property_descriptor(id, "GuiState").is_some()
+        && !matches!(e.dm.get(id, "GuiState"), Ok(Variant::Enum(v)) if v == state)
+    {
+        let _ = e.dm.set(id, "GuiState", Variant::Enum(state));
+    }
+}
+
+fn fire_input(lua: &Lua, chain: &[InstanceId], event: &'static str, obj: InstanceId) {
+    for &id in chain {
+        if let Ok(v) = push_instance(lua, obj) {
+            fire_lua(lua, id, event, MultiValue::from_vec(vec![v]));
+        }
+    }
+}
+
+fn input_chain(dm: &DataModel, under: &[InstanceId]) -> Vec<InstanceId> {
+    let mut chain = Vec::new();
+    for &id in under {
+        chain.push(id);
+        if is_active(dm, id) {
+            break;
+        }
+    }
+    chain
+}
+
+fn gui_mouse(lua: &Lua, ev: &InputEvent, obj: InstanceId) -> bool {
     let point = Vec2::new(ev.position.x, ev.position.y);
     let (layers, inset) = {
         let eng = engine(lua);
@@ -385,7 +434,29 @@ fn gui_mouse(lua: &Lua, ev: &InputEvent) -> bool {
         for &id in &under {
             fire_xy(lua, id, "MouseMoved", local);
         }
-        engine(lua).lock().input.pointer.hover = under;
+        let (chain, top, old, pressed) = {
+            let eng = engine(lua);
+            let mut e = eng.lock();
+            let chain = input_chain(&e.dm, &under);
+            let top = chain.last().copied().filter(|&t| is_active(&e.dm, t));
+            let pressed: Vec<InstanceId> = e.input.pointer.pressed.values().copied().collect();
+            e.input.pointer.hover = under;
+            let old = std::mem::replace(&mut e.input.pointer.hover_target, top);
+            (chain, top, old, pressed)
+        };
+        if old != top {
+            if let Some(o) = old
+                && !pressed.contains(&o)
+            {
+                set_gui_state(lua, o, 0);
+            }
+            if let Some(t) = top
+                && !pressed.contains(&t)
+            {
+                set_gui_state(lua, t, 1);
+            }
+        }
+        fire_input(lua, &chain, "InputChanged", obj);
         return false;
     }
     let target = {
@@ -442,9 +513,18 @@ fn gui_mouse(lua: &Lua, ev: &InputEvent) -> bool {
         {
             release_focus(lua, f, false);
         }
+        let chain = {
+            let eng = engine(lua);
+            let e = eng.lock();
+            input_chain(&e.dm, &under)
+        };
+        fire_input(lua, &chain, "InputBegan", obj);
         let Some(t) = target else {
             return false;
         };
+        if button == 1 {
+            set_gui_state(lua, t, 2);
+        }
         let (is_button, is_box) = {
             let eng = engine(lua);
             let e = eng.lock();
@@ -472,6 +552,22 @@ fn gui_mouse(lua: &Lua, ev: &InputEvent) -> bool {
         return true;
     }
     let pressed = engine(lua).lock().input.pointer.pressed.remove(&button);
+    let chain = {
+        let eng = engine(lua);
+        let e = eng.lock();
+        input_chain(&e.dm, &under)
+    };
+    fire_input(lua, &chain, "InputEnded", obj);
+    if button == 1 {
+        if let Some(p) = pressed
+            && Some(p) != target
+        {
+            set_gui_state(lua, p, 0);
+        }
+        if let Some(t) = target {
+            set_gui_state(lua, t, 1);
+        }
+    }
     if let Some(t) = target {
         let is_button = engine(lua).lock().dm.is_a(t, "GuiButton");
         if is_button {
@@ -503,6 +599,16 @@ fn gui_mouse(lua: &Lua, ev: &InputEvent) -> bool {
                     },
                     MultiValue::new(),
                 );
+                if button == 1
+                    && let Ok(v) = push_instance(lua, obj)
+                {
+                    fire_lua(
+                        lua,
+                        t,
+                        "Activated",
+                        MultiValue::from_vec(vec![v, Value::Integer(1)]),
+                    );
+                }
             }
         }
     }
@@ -721,7 +827,7 @@ fn gui_service_keys(lua: &Lua, ev: &InputEvent) -> bool {
             "SpecialKeyPressed",
             MultiValue::from_vec(vec![v, Value::String(m)]),
         );
-        return true;
+        return engine(lua).lock().input.focused_text_box.is_some();
     }
     if let Some(c) = character {
         let (Ok(k), Ok(m)) = (lua.create_string(c), lua.create_string("")) else {
@@ -817,7 +923,7 @@ pub fn process(lua: &Lua, ev: InputEvent) {
         sunk = gui_service_keys(lua, &ev);
     }
     if !sunk && is_mouse(ev.input_type) {
-        sunk = gui_mouse(lua, &ev);
+        sunk = gui_mouse(lua, &ev, obj);
     }
     let state = state_value(ev.kind);
     let action = if ev.input_type == KEYBOARD {
@@ -887,9 +993,9 @@ fn process_touch(lua: &Lua, ev: InputEvent) {
                 input_type: MOUSE_MOVEMENT,
                 ..touch_as_mouse(&ev)
             };
-            gui_mouse(lua, &moved);
+            gui_mouse(lua, &moved, obj);
         }
-        sunk = gui_mouse(lua, &mouse);
+        sunk = gui_mouse(lua, &mouse, obj);
     }
     let state = state_value(ev.kind);
     let action = ActionInput::InputType(TOUCH);
@@ -1047,6 +1153,12 @@ pub fn get_mouse_property(lua: &Lua, id: InstanceId, name: &str) -> Result<Optio
 
 pub fn render_step(lua: &Lua, dt: f64) {
     super::camera::step(lua, dt as f32);
+    {
+        let eng = engine(lua);
+        let mut e = eng.lock();
+        e.input.pointer.last_frame_delta = e.input.pointer.frame_delta;
+        e.input.pointer.frame_delta = Vec2::ZERO;
+    }
     let bindings: Vec<(mlua::Function, crate::security::Identity)> = {
         let eng = engine(lua);
         let e = eng.lock();

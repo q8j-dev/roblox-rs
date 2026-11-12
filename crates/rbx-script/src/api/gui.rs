@@ -120,7 +120,7 @@ pub fn register(r: &mut Registry) {
     r.add("GuiService", &["AddCenterDialog"], add_center_dialog);
     r.add("GuiService", &["RemoveCenterDialog"], remove_center_dialog);
     r.add("GuiService", &["OpenBrowserWindow"], ignore);
-    r.add("GuiService", &["ToggleFullscreen"], ignore);
+    r.add("GuiService", &["ToggleFullscreen"], toggle_fullscreen);
     r.add("GuiService", &["ShowStatsBasedOnInputString"], ignore);
     r.add("GuiService", &["AddSelectionParent"], add_selection_parent);
     r.add("GuiService", &["AddSelectionTuple"], add_selection_tuple);
@@ -168,18 +168,13 @@ fn text_wrapped(dm: &rbx_dom::DataModel, id: InstanceId) -> bool {
 }
 
 fn text_measure(dm: &rbx_dom::DataModel, id: InstanceId) -> ([f32; 2], bool) {
-    let text = match dm.get(id, "Text") {
-        Ok(Variant::String(s)) => s,
-        _ => String::new(),
-    };
     let rect = rbx_dom::gui::absolute_size(dm, id);
     let available = if text_wrapped(dm, id) {
         [rect.x, rect.y]
     } else {
         [0.0, 0.0]
     };
-    let (size, fits) =
-        rbx_text::typesetter(text_font(dm, id)).measure(&text, text_size(dm, id), available);
+    let (size, fits) = rbx_dom::gui_layout::measure_display_text(dm, id, available);
     let fits = fits && size[0] <= rect.x && size[1] <= rect.y;
     (size, fits)
 }
@@ -203,6 +198,9 @@ pub fn get_gui_property(
             }
             "AbsoluteWindowSize" if class == "ScrollingFrame" => {
                 Some(Variant::Vector2(rbx_dom::gui::absolute_window_size(dm, id)))
+            }
+            "AbsoluteCanvasSize" if class == "ScrollingFrame" => {
+                Some(Variant::Vector2(rbx_dom::gui::absolute_canvas_size(dm, id)))
             }
             "TextBounds" if matches!(class, "TextLabel" | "TextButton" | "TextBox") => {
                 if dm.frontend_processing {
@@ -347,6 +345,14 @@ fn remove_key(lua: &Lua, _id: InstanceId, args: &[Value]) -> Result<Ret> {
         ));
     }
     engine(lua).lock().gui.keys.remove(&key);
+    none()
+}
+
+fn toggle_fullscreen(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
+    let eng = engine(lua);
+    let mut e = eng.lock();
+    let target = !e.fullscreen_request.unwrap_or(e.fullscreen);
+    e.fullscreen_request = Some(target);
     none()
 }
 
@@ -744,4 +750,109 @@ fn connection_ok(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
 
 fn no_ad_teleport(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> {
     ret(lua, (0, 0))
+}
+
+const LAYOUT_PROPS: [&str; 6] = [
+    "AbsoluteSize",
+    "AbsolutePosition",
+    "AbsoluteContentSize",
+    "TextBounds",
+    "AbsoluteWindowSize",
+    "AbsoluteCanvasSize",
+];
+
+#[derive(Default)]
+pub struct LayoutSignals {
+    values: HashMap<(InstanceId, &'static str), Vec2>,
+}
+
+fn layout_value(
+    dm: &rbx_dom::DataModel,
+    layout: &rbx_dom::gui_layout::GuiLayout,
+    id: InstanceId,
+    prop: &str,
+) -> Option<Vec2> {
+    match prop {
+        "AbsoluteSize" if dm.is_a(id, "GuiBase2d") => Some(rbx_dom::gui::absolute_size(dm, id)),
+        "AbsolutePosition" if dm.is_a(id, "GuiBase2d") => {
+            Some(rbx_dom::gui::absolute_position(dm, id))
+        }
+        "AbsoluteWindowSize" if dm.class_of(id) == Some("ScrollingFrame") => {
+            Some(rbx_dom::gui::absolute_window_size(dm, id))
+        }
+        "AbsoluteCanvasSize" if dm.class_of(id) == Some("ScrollingFrame") => {
+            Some(rbx_dom::gui::absolute_canvas_size(dm, id))
+        }
+        "AbsoluteContentSize" => layout.content_sizes.get(&id).copied(),
+        "TextBounds" => layout.text_bounds.get(&id).copied(),
+        _ => None,
+    }
+}
+
+pub fn sync_layout_signals(lua: &Lua) {
+    {
+        let eng = engine(lua);
+        let mut e = eng.lock();
+        let clamps: Vec<(InstanceId, Vec2)> =
+            e.dm.gui_layout()
+                .canvas_clamps
+                .iter()
+                .map(|(k, v)| (*k, *v))
+                .collect();
+        for (id, v) in clamps {
+            if e.dm.contains(id) {
+                let _ = e.dm.set(id, "CanvasPosition", Variant::Vector2(v));
+            }
+        }
+    }
+    let watched: Vec<(InstanceId, &'static str)> = with_state(lua, |s| {
+        let mut out = Vec::new();
+        let keys = s
+            .by_event
+            .iter()
+            .filter(|(_, v)| !v.is_empty())
+            .map(|(k, _)| *k)
+            .chain(
+                s.waiters
+                    .iter()
+                    .filter(|(_, v)| !v.is_empty())
+                    .map(|(k, _)| *k),
+            );
+        for (id, event) in keys {
+            if event == "Changed" {
+                out.extend(LAYOUT_PROPS.iter().map(|p| (id, *p)));
+            } else if let Some(prop) = event.strip_prefix("Changed:")
+                && let Some(p) = LAYOUT_PROPS.iter().find(|p| **p == prop)
+            {
+                out.push((id, *p));
+            }
+        }
+        out
+    });
+    if watched.is_empty() {
+        return;
+    }
+    let eng = engine(lua);
+    let mut e = eng.lock();
+    let layout = e.dm.gui_layout();
+    let mut changed = Vec::new();
+    for (id, prop) in watched {
+        if !e.dm.contains(id) {
+            continue;
+        }
+        let Some(v) = layout_value(&e.dm, &layout, id, prop) else {
+            continue;
+        };
+        let previous = with_state(lua, |s| s.layout_signals.values.insert((id, prop), v));
+        let moved = match previous {
+            Some(p) => (p - v).length() > 0.001,
+            None => v != Vec2::ZERO,
+        };
+        if moved {
+            changed.push((id, prop));
+        }
+    }
+    for (id, prop) in changed {
+        e.dm.notify_changed(id, prop);
+    }
 }

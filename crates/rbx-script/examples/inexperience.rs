@@ -28,6 +28,10 @@ fn main() {
         .and_then(|s| s.parse().ok())
         .unwrap_or(180);
     let mut dm = DataModel::new();
+    if let Ok(place) = std::env::var("PLACE") {
+        let data = std::fs::read(&place).expect("place");
+        dm.load_place(&data).expect("load place");
+    }
     for s in [
         "Workspace",
         "Players",
@@ -44,6 +48,7 @@ fn main() {
         let _ = dm.set_parent(cam, Some(ws));
         let _ = dm.set(ws, "CurrentCamera", rbx_dom::Variant::Ref(Some(cam)));
     }
+    dm.gui_view.screen = rbx_math::Vec2::new(1511.0, 844.0);
     let mut engine = Engine::new(dm);
     engine.content_root = Some("assets/content".into());
     engine.core_package = Some("assets/inexperience/InExperience.rbxm".into());
@@ -65,7 +70,63 @@ fn main() {
             Some((f.parse().ok()?, k.parse().ok()?))
         })
         .collect();
+    let clicks: Vec<(usize, f32, f32)> = std::env::var("CLICKS")
+        .unwrap_or_default()
+        .split(';')
+        .filter_map(|s| {
+            let (xy, f) = s.split_once('@')?;
+            let (x, y) = xy.split_once(',')?;
+            Some((f.parse().ok()?, x.parse().ok()?, y.parse().ok()?))
+        })
+        .collect();
+    let texts: Vec<(usize, String)> = std::env::var("TEXT")
+        .unwrap_or_default()
+        .split(';')
+        .filter_map(|s| {
+            let (t, f) = s.rsplit_once('@')?;
+            Some((f.parse().ok()?, t.to_string()))
+        })
+        .collect();
     for frame in 0..frames {
+        for (_, t) in texts.iter().filter(|(f, _)| *f == frame) {
+            use rbx_script::api::user_input::{InputEvent, InputKind, KEYBOARD};
+            for c in t.chars() {
+                for kind in [InputKind::Began, InputKind::Ended] {
+                    rt.input(InputEvent {
+                        kind,
+                        input_type: KEYBOARD,
+                        key_code: 0,
+                        position: rbx_math::Vec3::ZERO,
+                        delta: rbx_math::Vec3::ZERO,
+                        text: (kind == InputKind::Began).then(|| c.to_string()),
+                    });
+                }
+            }
+        }
+        for &(_, x, y) in clicks.iter().filter(|(f, _, _)| *f == frame) {
+            use rbx_script::api::user_input::{
+                InputEvent, InputKind, MOUSE_BUTTON1, MOUSE_MOVEMENT,
+            };
+            let p = rbx_math::Vec3::new(x, y, 0.0);
+            rt.input(InputEvent {
+                kind: InputKind::Changed,
+                input_type: MOUSE_MOVEMENT,
+                key_code: 0,
+                position: p,
+                delta: rbx_math::Vec3::ZERO,
+                text: None,
+            });
+            for kind in [InputKind::Began, InputKind::Ended] {
+                rt.input(InputEvent {
+                    kind,
+                    input_type: MOUSE_BUTTON1,
+                    key_code: 0,
+                    position: p,
+                    delta: rbx_math::Vec3::ZERO,
+                    text: None,
+                });
+            }
+        }
         for &(_, code) in keys.iter().filter(|(f, _)| *f == frame) {
             use rbx_script::api::user_input::{InputEvent, InputKind, KEYBOARD};
             for kind in [InputKind::Began, InputKind::Ended] {
@@ -80,6 +141,28 @@ fn main() {
             }
         }
         rt.step(1.0 / 60.0);
+        rt.render_step(1.0 / 60.0);
+        if let Ok(src) = std::env::var("EACH") {
+            let from: usize = std::env::var("EACH_FROM")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(0);
+            if frame >= from {
+                let _ = rt.execute(
+                    &format!("local frame={frame} {src}"),
+                    "each",
+                    rbx_script::security::Identity::RobloxGameScript,
+                );
+            }
+        }
+        if std::env::var("COUNTS").is_ok() && frame % 100 == 0 {
+            println!(
+                "COUNTS frame={frame} threads={} held={} lua_mem={}",
+                rt.running_thread_count(),
+                rt.held_thread_count(),
+                rt.lua.used_memory()
+            );
+        }
     }
     if let Ok(src) = std::env::var("EXEC") {
         let r = rt.execute(
@@ -89,6 +172,22 @@ fn main() {
         );
         println!("EXEC {r:?}");
         rt.step(1.0 / 60.0);
+    }
+    if let Ok(src) = std::env::var("POST") {
+        for _ in 0..60 {
+            rt.step(1.0 / 60.0);
+        }
+        let r = rt.execute(
+            &src,
+            "post",
+            rbx_script::security::Identity::RobloxGameScript,
+        );
+        println!("POST {r:?}");
+    }
+    if std::env::var("WAITING").is_ok() {
+        for w in rt.describe_waiting() {
+            println!("WAITING {w}");
+        }
     }
     if let Ok(path) = std::env::var("FIND") {
         let e = rt.engine.lock();

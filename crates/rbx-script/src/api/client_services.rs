@@ -21,6 +21,110 @@ pub struct ClientServicesState {
     focused_contexts: Vec<String>,
     audio_contexts: Vec<i64>,
     audio_focus: Option<i64>,
+    movement_modes: HashMap<(InstanceId, usize), Vec<u32>>,
+}
+
+const MODE_KINDS: [(&str, &str, &str, &str, &[u32]); 4] = [
+    (
+        "ComputerCameraMovementMode",
+        "RegisterComputerCameraMovementMode",
+        "ClearComputerCameraMovementModes",
+        "GetRegisteredComputerCameraMovementModes",
+        &[1, 2],
+    ),
+    (
+        "ComputerMovementMode",
+        "RegisterComputerMovementMode",
+        "ClearComputerMovementModes",
+        "GetRegisteredComputerMovementModes",
+        &[1, 2],
+    ),
+    (
+        "TouchCameraMovementMode",
+        "RegisterTouchCameraMovementMode",
+        "ClearTouchCameraMovementModes",
+        "GetRegisteredTouchCameraMovementModes",
+        &[1, 2],
+    ),
+    (
+        "TouchMovementMode",
+        "RegisterTouchMovementMode",
+        "ClearTouchMovementModes",
+        "GetRegisteredTouchMovementModes",
+        &[1, 2, 3, 4],
+    ),
+];
+
+const MODE_EVENTS: [&str; 4] = [
+    "ComputerCameraMovementModeRegistered",
+    "ComputerMovementModeRegistered",
+    "TouchCameraMovementModeRegistered",
+    "TouchMovementModeRegistered",
+];
+
+fn mode_kind(name: &str) -> Option<(usize, u8)> {
+    MODE_KINDS.iter().enumerate().find_map(|(i, k)| {
+        if k.1 == name {
+            Some((i, 0))
+        } else if k.2 == name {
+            Some((i, 1))
+        } else if k.3 == name {
+            Some((i, 2))
+        } else {
+            None
+        }
+    })
+}
+
+fn movement_modes(lua: &Lua, id: InstanceId, name: &str, args: &[Value]) -> Result<Ret> {
+    let Some((kind, op)) = mode_kind(name) else {
+        return none();
+    };
+    let (enum_name, _, _, _, defaults) = MODE_KINDS[kind];
+    match op {
+        0 => {
+            let mode = match args.first() {
+                Some(v) => crate::convert::enum_value(lua, v, enum_name)?,
+                None => return Err(rt("Argument 1 missing or nil")),
+            };
+            with_state(lua, |s| {
+                let list = s
+                    .client_services
+                    .movement_modes
+                    .entry((id, kind))
+                    .or_default();
+                if !list.contains(&mode) {
+                    list.push(mode);
+                }
+            });
+            crate::runtime::fire_lua(lua, id, MODE_EVENTS[kind], MultiValue::new());
+            none()
+        }
+        1 => {
+            with_state(lua, |s| {
+                s.client_services
+                    .movement_modes
+                    .insert((id, kind), Vec::new());
+            });
+            crate::runtime::fire_lua(lua, id, MODE_EVENTS[kind], MultiValue::new());
+            none()
+        }
+        _ => {
+            let list = with_state(lua, |s| {
+                s.client_services.movement_modes.get(&(id, kind)).cloned()
+            })
+            .unwrap_or_else(|| defaults.to_vec());
+            let t = lua.create_table()?;
+            for m in list {
+                t.push(crate::convert::variant_to_lua(
+                    lua,
+                    &rbx_dom::Variant::Enum(m),
+                    Some(&rbx_reflection::ValueType::Enum(enum_name.into())),
+                )?)?;
+            }
+            ret(lua, t)
+        }
+    }
 }
 
 const ROOT_SID: &str = "root";
@@ -72,13 +176,61 @@ pub fn register(r: &mut Registry) {
     r.add("Workspace", &["GetServerTimeNow"], server_time_now);
     r.add(
         "PlayerScripts",
-        &[
-            "GetRegisteredComputerCameraMovementModes",
-            "GetRegisteredTouchCameraMovementModes",
-            "GetRegisteredComputerMovementModes",
-            "GetRegisteredTouchMovementModes",
-        ],
-        empty_array,
+        &["RegisterComputerCameraMovementMode"],
+        |l, i, a| movement_modes(l, i, "RegisterComputerCameraMovementMode", a),
+    );
+    r.add(
+        "PlayerScripts",
+        &["RegisterComputerMovementMode"],
+        |l, i, a| movement_modes(l, i, "RegisterComputerMovementMode", a),
+    );
+    r.add(
+        "PlayerScripts",
+        &["RegisterTouchCameraMovementMode"],
+        |l, i, a| movement_modes(l, i, "RegisterTouchCameraMovementMode", a),
+    );
+    r.add(
+        "PlayerScripts",
+        &["RegisterTouchMovementMode"],
+        |l, i, a| movement_modes(l, i, "RegisterTouchMovementMode", a),
+    );
+    r.add(
+        "PlayerScripts",
+        &["ClearComputerCameraMovementModes"],
+        |l, i, a| movement_modes(l, i, "ClearComputerCameraMovementModes", a),
+    );
+    r.add(
+        "PlayerScripts",
+        &["ClearComputerMovementModes"],
+        |l, i, a| movement_modes(l, i, "ClearComputerMovementModes", a),
+    );
+    r.add(
+        "PlayerScripts",
+        &["ClearTouchCameraMovementModes"],
+        |l, i, a| movement_modes(l, i, "ClearTouchCameraMovementModes", a),
+    );
+    r.add("PlayerScripts", &["ClearTouchMovementModes"], |l, i, a| {
+        movement_modes(l, i, "ClearTouchMovementModes", a)
+    });
+    r.add(
+        "PlayerScripts",
+        &["GetRegisteredComputerCameraMovementModes"],
+        |l, i, a| movement_modes(l, i, "GetRegisteredComputerCameraMovementModes", a),
+    );
+    r.add(
+        "PlayerScripts",
+        &["GetRegisteredComputerMovementModes"],
+        |l, i, a| movement_modes(l, i, "GetRegisteredComputerMovementModes", a),
+    );
+    r.add(
+        "PlayerScripts",
+        &["GetRegisteredTouchCameraMovementModes"],
+        |l, i, a| movement_modes(l, i, "GetRegisteredTouchCameraMovementModes", a),
+    );
+    r.add(
+        "PlayerScripts",
+        &["GetRegisteredTouchMovementModes"],
+        |l, i, a| movement_modes(l, i, "GetRegisteredTouchMovementModes", a),
     );
     r.add("CaptureService", &["RetrieveCaptures"], empty_array);
     r.add(
@@ -208,8 +360,8 @@ fn audio_registered(lua: &Lua, _id: InstanceId, _args: &[Value]) -> Result<Ret> 
 }
 
 fn now_ms() -> i64 {
-    std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
+    rbx_base::time::SystemTime::now()
+        .duration_since(rbx_base::time::UNIX_EPOCH)
         .map(|d| d.as_millis() as i64)
         .unwrap_or(0)
 }
